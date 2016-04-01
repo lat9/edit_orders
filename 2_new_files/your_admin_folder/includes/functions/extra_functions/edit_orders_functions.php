@@ -350,6 +350,100 @@ if(!function_exists('is_product_valid')) {
 		return false; //should never get here
 	}
 }
+if(!function_exists('validate_for_category')) {
+	function validate_for_category($product_id, $coupon_id) {
+		global $db;
+		$retVal = 'none';
+		$productCatPath = zen_get_product_path($product_id);
+		$catPathArray = array_reverse(explode('_', $productCatPath));
+		$sql = "SELECT count(*) AS total
+            FROM " . TABLE_COUPON_RESTRICT . "
+            WHERE category_id = -1
+            AND coupon_restrict = 'Y'
+            AND coupon_id = " . (int)$coupon_id . " LIMIT 1";
+		$checkQuery = $db->execute($sql);
+		foreach ($catPathArray as $catPath) {
+			$sql = "SELECT * FROM " . TABLE_COUPON_RESTRICT . "
+              WHERE category_id = " . (int)$catPath . "
+              AND coupon_id = " . (int)$coupon_id;
+			$result = $db->execute($sql);
+			if ($result->recordCount() > 0 && $result->fields['coupon_restrict'] == 'N') return true;
+			if ($result->recordCount() > 0 && $result->fields['coupon_restrict'] == 'Y') return false;
+		}
+		if ($checkQuery->fields['total'] > 0) {
+			return false;
+		} else {
+			return 'none';
+		}
+	}
+}
+if(!function_exists('validate_for_product')) {
+	function validate_for_product($product_id, $coupon_id) {
+		global $db;
+		$sql = "SELECT * FROM " . TABLE_COUPON_RESTRICT . "
+            WHERE product_id = " . (int)$product_id . "
+            AND coupon_id = " . (int)$coupon_id . " LIMIT 1";
+		$result = $db->execute($sql);
+		if ($result->recordCount() > 0) {
+			if ($result->fields['coupon_restrict'] == 'N') return true;
+			if ($result->fields['coupon_restrict'] == 'Y') return false;
+		} else {
+			return 'none';
+		}
+	}
+}
+if (!function_exists ('zen_product_in_category')) {
+  function zen_product_in_category($product_id, $cat_id) {
+    global $db;
+    $in_cat=false;
+    $category_query_raw = "select categories_id from " . TABLE_PRODUCTS_TO_CATEGORIES . "
+                           where products_id = '" . (int)$product_id . "'";
+
+    $category = $db->Execute($category_query_raw);
+
+    while (!$category->EOF) {
+      if ($category->fields['categories_id'] == $cat_id) $in_cat = true;
+      if (!$in_cat) {
+        $parent_categories_query = "select parent_id from " . TABLE_CATEGORIES . "
+                                    where categories_id = '" . $category->fields['categories_id'] . "'";
+
+        $parent_categories = $db->Execute($parent_categories_query);
+//echo 'cat='.$category->fields['categories_id'].'#'. $cat_id;
+
+        while (!$parent_categories->EOF) {
+          if (($parent_categories->fields['parent_id'] !=0) ) {
+            if (!$in_cat) $in_cat = zen_product_in_parent_category($product_id, $cat_id, $parent_categories->fields['parent_id']);
+          }
+          $parent_categories->MoveNext();
+        }
+      }
+      $category->MoveNext();
+    }
+    return $in_cat;
+  }
+}
+if (!function_exists ('zen_product_in_parent_category')) {
+  function zen_product_in_parent_category($product_id, $cat_id, $parent_cat_id) {
+    global $db;
+//echo $cat_id . '#' . $parent_cat_id;
+    if ($cat_id == $parent_cat_id) {
+      $in_cat = true;
+    } else {
+      $parent_categories_query = "select parent_id from " . TABLE_CATEGORIES . "
+                                  where categories_id = '" . (int)$parent_cat_id . "'";
+
+      $parent_categories = $db->Execute($parent_categories_query);
+
+      while (!$parent_categories->EOF) {
+        if ($parent_categories->fields['parent_id'] !=0 && !$in_cat) {
+          $in_cat = zen_product_in_parent_category($product_id, $cat_id, $parent_categories->fields['parent_id']);
+        }
+        $parent_categories->MoveNext();
+      }
+    }
+    return $in_cat;
+  }
+}
 
 // Start Edit Orders configuration functions
 function eo_debug_action_level_list($level) {
