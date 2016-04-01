@@ -1319,6 +1319,21 @@ function eo_update_database_order_totals($oID) {
 		for ($i=0, $n=sizeof($order_totals); $i<$n; $i++) {
 			eo_update_database_order_total($oID, $order_totals[$i]);
 		}
+
+        // -----
+        // Account for order totals that were present, but have been removed.
+        //
+        if (count ($order->totals) > $n) {
+          for ($i=0, $totals_titles = array (); $i<$n; $i++) {
+            $totals_titles[] = $order_totals[$i]['title'];
+          }
+          for ($i=0, $n=count($order->totals); $i<$n; $i++) {
+            if (!in_array ($order->totals[$i]['title'], $totals_titles)) {
+              $db->Execute ("DELETE FROM " . TABLE_ORDERS_TOTAL . " WHERE orders_id = $oID AND title = '" . zen_db_input ($order->totals[$i]['title']) . "' LIMIT 1");
+            }
+          }
+          unset ($totals_titles);
+        }
 		unset($order_totals);
 	}
 }
