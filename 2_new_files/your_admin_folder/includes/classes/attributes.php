@@ -207,8 +207,11 @@ class attributes extends base {
 		if(PRODUCTS_OPTIONS_TYPE_READONLY_IGNORED == '1' && $readonly === false) {
 			$query .= 'AND opt.products_options_type != \'' . PRODUCTS_OPTIONS_TYPE_READONLY . '\' ';
 		}
-
-		$query .= 'ORDER BY `opt`.`products_options_sort_order`, `attr`.`options_id`';
+        // -----
+        // Mimic the attributes' sort-order used on the storefront.
+        //
+//		$query .= 'ORDER BY `opt`.`products_options_sort_order`, `attr`.`options_id`';
+		$query .= 'ORDER BY `attr`.`options_id`, `attr`.`products_options_sort_order`';
 
 		if($this->cache_time == 0) $queryResult = $db->Execute($query);
 		else $queryResult = $db->Execute($query, false, true, $this->cache_time);
