@@ -218,21 +218,20 @@
 
 			$sql_data_array = array(
 				'orders_id' => (int)$oID,
-				'orders_status_id' => zen_db_input($status),
+				'orders_status_id' => (int)$status,
 				'date_added' => 'now()',
-				'customer_notified' => zen_db_input($customer_notified),
-				'comments' => zen_db_input($comments),
+				'customer_notified' => $customer_notified,
+				'comments' => $comments,
 			);
 			// BEGIN TY TRACKER 3 - INCLUDE DATABASE FIELDS IN STATUS UPDATE
 			foreach($track_id as $id => $track) {
-				$sql_data_array['track_id' . $id] = zen_db_input($track);
 			}
 			unset($id); unset($track);
 			// END TY TRACKER 3 - INCLUDE DATABASE FIELDS IN STATUS UPDATE
 			zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
 
 			$sql_data_array = array(
-				'orders_status' => zen_db_input($status),
+				'orders_status' => (int)$status,
 				'last_modified' => 'now()'
 			);
 			zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', 'orders_id = \'' . (int)$oID . '\'');
