@@ -1023,7 +1023,7 @@ function eo_remove_product_from_order($order_id, $orders_products_id) {
 			}
 			else {
 				$check = $db->Execute(
-					'SELECT `p`.`products_quantity` FROM `' . TABLE_PRODUCTS . '` ' .
+					'SELECT `p`.`products_quantity` FROM `' . TABLE_PRODUCTS . '` AS `p` ' .
 				 	'WHERE `p`.`products_id` = \'' . (int)$query->fields['products_id'] . '\''
 				);
 			}
