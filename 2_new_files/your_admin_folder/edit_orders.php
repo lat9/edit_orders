@@ -1752,4 +1752,5 @@ if($action == "add_prdct")
 </body>
 </html>
 <?php
+unset ($_SESSION['customer_id']);  //-Needed so admin tax-calculations aren't based on the last customer order edited.
 require(DIR_WS_INCLUDES . 'application_bottom.php');
