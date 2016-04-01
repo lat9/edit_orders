@@ -225,6 +225,7 @@
 			);
 			// BEGIN TY TRACKER 3 - INCLUDE DATABASE FIELDS IN STATUS UPDATE
 			foreach($track_id as $id => $track) {
+				$sql_data_array['track_id' . $id] = $track;
 			}
 			unset($id); unset($track);
 			// END TY TRACKER 3 - INCLUDE DATABASE FIELDS IN STATUS UPDATE
