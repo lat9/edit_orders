@@ -1,0 +1,1373 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<meta http-equiv="content-language" content="en">
+<meta name="ROBOTS" content="nofollow,noindex">
+<meta name="ROBOTS" content="noarchive">
+<meta http-equiv="pragma" content="no-cache">
+<meta name="description" content="Edit Orders is an admin modification that allows store owners to edit a customer's order">
+<title>Edit Orders 4.1.4</title>
+<link rel="stylesheet" type="text/css" href="includes/css/stylesheet.css">
+<script type="text/javascript" src="includes/jscript/jscript_tabs.js"></script>
+</head>
+<body><div id="wrapper">
+	<h2>Edit Orders 4.1.4</h2>
+	<p>Support thread: <a href="http://www.zen-cart.com/showthread.php?200407" target="_blank">http://www.zen-cart.com/showthread.php?200407</a><br />
+		Download link: <a href="http://www.zen-cart.com/downloads.php?do=file&amp;id=1513" target="_blank">http://www.zen-cart.com/downloads.php?do=file&amp;id=1513</a>
+	</p>
+	<div id="slidetabsmenu" style="display: none;"><ul>
+		<li><a id="sc1-tab" onclick="expandcontent('sc1', this)" href="javascript:void(0)"><span>Purpose &amp; Aim</span></a></li>
+		<li><a id="sc2-tab" onclick="expandcontent('sc2', this)" href="javascript:void(0)"><span>Installation</span></a></li>
+		<li><a id="sc3-tab" onclick="expandcontent('sc3', this)" href="javascript:void(0)"><span>How to Use</span></a></li>
+		<li><a id="sc4-tab" onclick="expandcontent('sc4', this)" href="javascript:void(0)"><span>Integration with Other Modules</span></a></li>
+		<li><a id="sc5-tab" onclick="expandcontent('sc5', this)" href="javascript:void(0)"><span>Credits &amp; Change History</span></a></li>
+		<li><a id="sc6-tab" onclick="expandcontent('sc6', this)" href="javascript:void(0)"><span>License</span></a></li>
+	</ul></div>
+	<br style="clear: both;">
+
+	<!--Begin tabcontainer-->
+	<div id="tabcontentcontainer">
+
+		<!--Begin sc1-->
+		<div class="tabcontent" id="sc1" style="display: block;"><div class="textcontent">
+			<div class="regularlist">
+				<h3>PURPOSE &amp; AIM</h3>
+				<p><strong>Edit Orders</strong> is an admin module that
+					allows administrative users to edit a customer's order
+					to change:</p>
+				<ul>
+					<li>The customer, billing or shipping information</li>
+					<li>Add, delete, and edit products in an order</li>
+					<li>Update product quantities and pricing</li>
+					<li>Modify product attributes</li>
+					<li>Add, delete, and edit order totals</li>
+				</ul>
+				<p>Store Owners can specify which users are allowed to edit orders.<br />
+					After following the installation instructions (and any
+					additional instructions as needed), it is very strongly
+					recommended that you read through the ENTIRE
+					<a onclick="expandcontent('sc3', this);" href="javascript:void(0)"><strong>How to Use</strong></a>
+					section. There you will find more details of the capabilities
+					of Edit Orders.
+				</p>
+				<p><b>*** READ EVERYTHING IN THIS README BEFORE YOU BEGIN ***</b></p>
+				<p>See the <a onclick="expandcontent('sc5', this);" href="javascript:void(0)"><strong>Credits &amp; History</strong></a>
+					section to see a detailed list of credits and the view the
+					change history of Edit Orders since the last version.
+				</p>
+				<h3>REQUIREMENTS</h3>
+				<div><ul>
+					<li>Working installation of Zen Cart 1.5.x</li>
+					<li>Secure FTP access to the Zen Cart installation (while you can use plain FTP it is not recommended)</li>
+					<li>An account to access Zen Cart's administrative interface</li>
+					<li>Read and agree to the <a onclick="expandcontent('sc6', this);" href="javascript:void(0)">License</a></li>
+				</ul></div>
+				<div class="boldemphasis">
+					<p>EDIT ORDERS 4.x IS NOT COMPATIBLE WITH VERSIONS OF
+						ZEN CART PRIOR TO ZEN CART 1.5!!
+					</p>
+					<p>There will be no support provided for Zen Cart v1.3.x
+						with v4.x of Edit Orders<br /><small>(if you are still
+						running an older version of Zen Cart we strongly
+						recommend that you upgrade as there are many security
+						and performance enhancements in Zen Cart v1.5.1)</small>
+					</p>
+				</div>
+				<h3>KNOWN ISSUES</h3>
+				<ul>
+					<li>Not all order total modules are fully supported. If you use a custom order_total module check with your module vendor.</li>
+					<li>Zen Cart FILE_UPLOAD attributes are not supported.</li>
+				</ul>
+				<h3>POTENTIAL FUTURE ENHANCEMENTS</h3>
+				<p>This module will only get better with the help of active
+					contributors. If you use this module please consider
+					helping answer questions in the Zen Cart forums regarding
+					this module and contributing to the development of future
+					versions.
+				</p>
+				<ul>
+					<li>Convert the &quot;state&quot; address field to a dropdown if enabled.</li>
+					<li>Add a dropdown to the addresses allowing quick selection
+						of an address from the customer's stored addresses.
+					</li>
+					<li>Add the ability to get an updated shipping quote.</li>
+					<li>Add the ability to resend order update (status history) E-Mails.</li>
+					<li>Refactor relevant functions into subclasses of existing Zen Cart classes.</li>
+					<li>Add integration with &quot;Stock by Attributes&quot; (for stock levels).</li>
+				</ul>
+				<h3>Do you use any other Zen Cart modules?</h3>
+				<p>We've complied a list of other Zen Cart modules known to be
+					compatible with Edit Orders and any special instructions
+					needed to allow them to interoperate with Edit Orders.
+					Before installing please check out <a onclick="expandcontent('sc4', this);" href="javascript:void(0)"><strong>Integration with Other Modules</strong></a> section to learn more!
+				</p>
+			</div>
+		</div></div>
+		<!--End sc1-->
+
+		<!--Begin sc2-->
+		<div class="tabcontent" id="sc2" style="display: block;">
+			<div class="textcontent">
+				<div class="regularlist">
+					<h3>INSTALLATION</h3>
+					<p>Inside the distribution zip for Edit Orders you will find the following folders:</p>
+					<ul>
+						<li>1_modified_core_files (core Zen Cart files)</li>
+						<li>2_new_files (files not part of Zen Cart)</li>
+						<li>3_install (installation files)</li>
+						<li>4_optional_items (optional stuff)</li>
+						<li>5_uninstall (removal files)</li>
+					</ul>
+
+					<div class="boldemphasis">
+						<p>*** READ EVERYTHING IN THIS README BEFORE YOU BEGIN ***</p>
+
+						<p>***** BACKUP YOUR STORE BEFORE YOU BEGIN*****</p>
+					</div>
+
+					<fieldset>
+						<legend>Installing / Upgrading Edit Orders</legend>
+						<p>Edit Orders 4.x includes an installation / upgrade
+							script and a removal script. These script will
+							handle the process of installing, upgrading, and
+							removing Edit Orders. You should not run any SQL
+							files from older versions of Edit Orders.
+						</p>
+						<p><strong>DO NOT RUN OLDER VERSIONS OF THE
+							INSTALL/UPGRADE SQL FILES when installing or
+							upgrading!!!!!!</strong><br />
+							<span class="emphasis">Doing so will cause issues
+							with the installation and may cause Edit Orders
+							to not function as expected.</span>
+						</p>
+						<p><strong>Do you use any other Zen Cart modules?</strong>
+							If you do make sure you read the <a onclick="expandcontent('sc4', this);" href="javascript:void(0)"><strong>Integration with Other Modules</strong></a>
+							section for special instructions regarding the
+							installation of Edit Orders <span class="boldemphasis">
+							PRIOR TO UPLOADING</span> any files to your store.
+						</p>
+						<p>Step by Step Installation Instructions</p>
+						<ol class="zero">
+							<li><strong>Pre-Installation</strong>.<ol>
+								<li>Backup your Zen Cart installation and
+									database. Best practice is to keep regular
+									backups and perform a manual backup prior
+									to the installation or modification
+									of any portion of Zen Cart.<br/>
+									<small>You can use Secure FTP to backup the
+									files. Two well known FTP programs are
+									WinSCP and FileZilla.<br /> 
+									You can backup the MySQL database either
+									using a tool such as PhpMyAdmin or from
+									the Zen Cart admin interface using DrByte's
+									<a href="http://www.zen-cart.com/downloads.php?do=file&amp;id=7" target="_blank">Backup MYSQL Plugin</a>
+									</small>
+								</li>
+								<li>Unzip the package contents to a temporary
+									directory on your computer.<br />
+									<small>For the rest of these instructions
+									we will refer to this location as &quot;/temp&quot;.
+									</small>
+								</li>
+							</ol></li>
+							<li><strong>Modified Core Files</strong>.
+								<small>(&quot;/temp/1_modified_core_files&quot;)</small><br />
+								Because these files are modified versions of
+								core Zen Cart files and will impact your store
+								and potentially other plugins, they have been
+								separated from the new files added by this
+								plugin for easy identification.
+								<ol>
+									<li>Rename the &quot;your_admin_folder&quot;
+										folder to match the name of your store's
+										admin folder.
+									</li>
+									<li>If you have installed any other plugins
+										or modifications to your Zen Cart
+										installation which make changes to any
+										of the <strong>Modified Core Files</strong>
+										you will need to use a tool like
+										Winmerge or Beyond Compare to incorporate
+										those changes into these files.<br />
+										<span class="emphasis">If you use
+										&quot;Ty Package Tracker&quot; or
+										&quot;Super Orders&quot; installed make
+										sure you read the <a onclick="expandcontent('sc4', this);" href="javascript:void(0)"><strong>Integration with Other Modules</strong></a>
+										section before uploading.</span>
+									</li>
+									<li>Upload all of the folders and files inside
+										the <strong>Modified Core Files</strong>
+										folder to the location of your Zen Cart
+										installation. The directory structure
+										should match your store's directory
+										structure.<br />
+										<span class="emphasis">Do not upload the
+										&quot;1_modified_core_files&quot; folder
+										to your store, just the files and folders
+										inside the <strong>Modified Core Files</strong>
+										directory.</span>
+									</li>
+								</ol>
+							</li>
+							<li><strong>New Files</strong>.
+								<small>(&quot;/temp/2_new_files&quot;)</small><br />
+								These files do not include modifications to any
+								core Zen Cart files. We will be adding these
+								new files to Zen Cart as part of the
+								installation of Edit Orders.
+								<ol>
+									<li>Rename the &quot;your_admin_folder&quot;
+										folder to match the name of your store's
+										admin folder.
+									</li>
+									<li>If you have installed any other plugins
+										or modifications to your Zen Cart
+										installation which make changes to any
+										of the <strong>New Files</strong>
+										you will need to use a tool like
+										Winmerge or Beyond Compare to incorporate
+										those changes into these files.
+									</li>
+									<li>Upload all of the folders and files inside
+										the <strong>New Files</strong> folder
+										to the location of your Zen Cart
+										installation. The directory structure
+										should match your store's directory
+										structure.<br />
+										<span class="emphasis">Do not upload the
+										&quot;2_new_files&quot; folder
+										to your store, just the files and folders
+										inside the <strong>New Files</strong>
+										directory.</span>
+									</li>
+								</ol>
+							</li>
+							<li><strong>Install</strong>.
+								<small>(&quot;/temp/3_install&quot;)</small><br />
+								These files trigger the installation or upgrade
+								scripts included with Edit Orders to run inside
+								the Zen Cart administrative interface.
+								<ol>
+									<li>Log into the admin side of your Zen Cart
+										installation using a web browser. Yes,
+										log into your admin interface now before
+										continuing.<br />
+										<span class="emphasis">Failing to first
+										login can result in you missing vital
+										installation and error messages.</span>
+									</li>
+									<li>Upload all of the folders and files inside
+										the <strong>Install</strong> folder
+										to the location of your Zen Cart
+										installation. The directory structure
+										should match your store's directory
+										structure.<br />
+										<span class="emphasis">Do not upload the
+										&quot;3_install&quot; folder
+										to your store, just the files and folders
+										inside the <strong>Install</strong>
+										directory.</span>
+									</li>
+									<li>Click on <strong>ANY</strong> link in
+										the admin interface (except edit orders).
+										The &quot;Admin Home&quot; link is a
+										good choice.
+									</li>
+									<li>Note any error or success messages which
+										appear on the top of the site.<ul>
+											<li>If all goes well it should report
+												success.<br /><small class="warning">
+												Success does not mean every step
+												of the install process has been
+												verified as completed correctly.
+												Manual steps (such as merging files
+												from different modules or core
+												Zen Cart files) may introduce
+												issues not detectable by the
+												installer.</small>
+											</li>
+											<li>If additional
+												steps need to be performed, follow
+												the instructions. When done go
+												back to <strong>Install</strong>
+												Step 3 (previous step).<br />
+												<small>The previous step should
+												start with the text &quot;Click
+												on <strong>ANY</strong> link&quot;
+												.</small></li>
+										</ul> 
+									</li>
+								</ol>
+							</li>
+							<li><strong>Optional Items</strong>.
+								<small>(&quot;/temp/4_optional_items&quot;)</small><br />
+								These are not officially maintained as part of
+								Edit Orders and may need in some cases to be
+								updated to work correctly with the current
+								version of Edit Orders. If you do update one of
+								these please contribute those changes to the
+								maintainers and / or the <a href="http://www.zen-cart.com/showthread.php?200407" target="_blank">Edit Orders support thread</a>.
+							</li>
+						</ol>
+					</fieldset>
+					<fieldset>
+						<legend>Removal Edit Orders</legend>
+						<p>Edit Orders 4.x includes a removal
+							script. This script will handle the process of
+							un-installing Edit Orders. You should not run any
+							SQL files from older versions of Edit Orders.
+						</p>
+						<p><strong>DO NOT RUN OLDER VERSIONS OF THE
+							UN-INSTALL / REMOVAL SQL FILES when removing!!!!!!</strong><br />
+							<span class="emphasis">Doing so will cause issues
+							with the removal and afterwards may cause
+							Zen Cart to not function as expected.</span>
+						</p>
+						<p>Step by Step Removal Instructions</p>
+						<ol>
+							<li><strong>Pre-Removal</strong>.<ol>
+								<li>Backup your Zen Cart installation and
+									database. Best practice is to keep regular
+									backups and perform a manual backup prior
+									to the installation or modification
+									of any portion of Zen Cart.<br/>
+									<small>You can use Secure FTP to backup the
+									files. Two well known FTP programs are
+									WinSCP and FileZilla.<br /> 
+									You can backup the MySQL database either
+									using a tool such as PhpMyAdmin or from
+									the Zen Cart admin interface using DrByte's
+									<a href="http://www.zen-cart.com/downloads.php?do=file&amp;id=7" target="_blank">Backup MYSQL Plugin</a>
+									</small>
+								</li>
+								<li>Unzip the package contents to a temporary
+									directory on your computer.<br />
+									<small>For the rest of these instructions
+									we will refer to this location as &quot;/temp&quot;.
+									</small>
+								</li>
+							</ol></li>
+							<li><strong>Un-Install</strong>.
+								<small>(&quot;/temp/5_uninstall&quot;)</small><br />
+								These files trigger the removal
+								scripts included with Edit Orders (these run
+								inside the Zen Cart administrative interface).
+								<ol>
+									<li>Log into the admin side of your Zen Cart
+										installation using a web browser. Yes,
+										log into your admin interface now before
+										continuing.<br />
+										<span class="emphasis">Failing to first
+										login can result in you missing vital
+										installation and error messages.</span>
+									</li>
+									<li>Upload all of the folders and files inside
+										the <strong>Un-Install</strong> folder
+										to the location of your Zen Cart
+										installation. The directory structure
+										should match your store's directory
+										structure.<br />
+										<span class="emphasis">Do not upload the
+										&quot;5_uninstall&quot; folder
+										to your store, just the files and folders
+										inside the <strong>Install</strong>
+										directory.</span>
+									</li>
+									<li>Click on <strong>ANY</strong> link in
+										the admin interface (except edit orders).
+										The &quot;Admin Home&quot; link is a
+										good choice.
+									</li>
+									<li>Note any error or success messages which
+										appear on the top of the site.<ul>
+											<li>If all goes well it should report
+												success.
+											</li>
+											<li>If additional steps need to be
+												performed, follow the instructions.
+												When done go back to
+												<strong>Install</strong>
+												Step 3 (previous step).<br />
+												<small>The previous step should
+												start with the text &quot;Click
+												on <strong>ANY</strong> link&quot;
+												.</small><br /><br />
+												<span class="emphasis">If a file
+												could not be deleted it is always
+												better to correct permissions and
+												allow the script to remove files.
+												If you manually remove files the
+												removal process may not ever be
+												completed.</span>
+											</li>
+										</ul> 
+									</li>
+								</ol>
+							</li>
+							<li><strong>Cleanup Modified Core Files</strong>.
+								<small>(&quot;/temp/1_modified_core_files&quot;)</small><br />
+								The un-installation script cannot automatically
+								remove the alterations made to core Zen Cart
+								files. These steps should aid you in undoing
+								the changes.
+								<ol>
+									<li>Rename the &quot;your_admin_folder&quot;
+										folder to &quot;admin&quot;.
+									</li>
+									<li><a href="http://sourceforge.net/projects/zencart/files/" target="_blank">Download a clean copy</a>
+										of your currently installed version of
+										Zen Cart or locate a file backup made
+										before Edit Orders was installed. Unzip
+										the contents to a temporary directory
+										on your computer.<br />
+										<small>For the rest of these instructions
+										we will refer to this location as &quot;/clean&quot;.</small>
+									</li>
+									<li>For each file found inside the
+										<strong>Modified Core Files</strong> folder
+										<small>&quot;/temp/1_modified_core_files&quot;</small>
+										replace the file with the corresponding
+										file from &quot;/clean&quot;.<br />
+										The directory structure of both locations
+										should be the same. You only need to copy
+										individual files from &quot;/clean&quot;
+										to &quot;/temp/1_modified_core_files&quot;.<br />
+										<span class="emphasis">Make sure you
+										replace every file including those in
+										folders underneath <strong>Modified Core
+										Files</strong> folder.</span>
+									</li>
+									<li>If you have installed any other plugins
+										or modifications to your Zen Cart
+										installation which make changes to any
+										of the Modified Core Files you will need
+										to use a tool like Winmerge or Beyond
+										Compare to incorporate those changes
+										into these files.
+									</li>
+									<li>Rename the &quot;admin&quot;
+										folder to match the name of your store's
+										admin folder.
+									</li>
+									<li>Upload all of the folders and files inside
+										the <strong>Modified Core Files</strong>
+										folder to the location of your Zen Cart
+										installation. The directory structure
+										should match your store's directory
+										structure.<br />
+										<span class="emphasis">Do not upload the
+										&quot;1_modified_core_files&quot; folder
+										to your store, just the files and folders
+										inside the <strong>Modified Core Files</strong>
+										directory.</span>
+									</li>
+								</ol>
+							</li>
+						</ol>
+					</fieldset>
+				</div>
+			</div>
+		</div>
+		<!--End sc2-->
+
+		<!--Begin sc3-->
+		<div class="tabcontent" id="sc3" style="display: block;">
+			<div class="textcontent">
+				<div>
+					<h3>HOW TO USE</h3>
+					<p>Edit Orders is EASY to use. The interface looks similar
+						to your orders (or Super Orders) page.
+					</p>
+					<p class="boldemphasis">We do not recommend clicking "Edit"
+						on completed orders. When you edit an order with this
+						version ALL Order Totals are recalculated including tax,
+						sub total, and total. Editing a completed order may
+						result in undesired changes.
+					</p>
+					<fieldset>
+						<legend>Table of Contents</legend>
+						<ul style="margin: 0 0 1em 0">
+							<li><a href="#configure">Configuring Edit Orders</a></li>
+							<li><a href="#open_for_edit">Open an order for editing</a></li>
+							<li><a href="#update_address">Update addresses for the order</a></li>
+							<li><a href="#add_product">Adding a Product to an order</a></li>
+							<li><a href="#update_product">Updating Products in the order</a></li>
+							<li><a href="#change_order_total">Changing Order Totals</a><ul>
+								<li><a href="#add_order_total">Adding an Order Total</a></li>
+								<li><a href="#remove_order_total">Removing an Order Total</a></li>
+								<li><a href="#update_order_total">Updating an Order Total</a></li>
+							</ul></li>
+						</ul>
+					</fieldset>
+				</div>
+				<div class="regularlist">
+					<fieldset>
+						<legend id="configure">Configuring Edit Orders</legend>
+						<ol>
+							<li>Login to your Zen Cart Administrative interface.</li>
+							<li>Navigate to &quot;Configuration&quot;-&gt;&quot;Edit Orders&quot;<br /><br />
+								<img src="images/zc-edit-order-menu.png" alt="configuration menu"/>
+							</li>
+							<li>Change the presented options as desired / needed.<br /><br />
+								<img src="images/zc-edit-order-options.png" alt="configuration menu"/>
+							</li>
+						</ol>
+						
+					</fieldset>
+					<fieldset>
+						<legend id="open_for_edit">Open an Order for editing</legend>
+						<ol>
+							<li>Login to your Zen Cart Administrative interface.</li>
+							<li>Navigate to &quot;customers&quot;-&gt;&quot;orders&quot;<br /><br />
+								<img src="images/zc-customer-order-menu.png" alt="customer menu"/>
+							</li>
+							<li>Select the order you want to edit from the list</li>
+							<li>Click the &quot;edit&quot; button (on the right) to edit the order<br /><br />
+								<img src="images/zc-customer-order-edit.png" alt="edit button"/>
+							</li>
+						</ol>
+					</fieldset>
+					<fieldset>
+						<legend id="update_address">Update addresses for the order</legend>
+						<ol>
+							<li>Open an Order for editing (see <a href="#open_for_edit">how to</a>).</li>
+							<li>Update (edit) the customer, billing, or
+								shipping address as needed.<br />
+								<small class="emphasis">You must enter a valid
+								country name (and state) found in the Zen Cart
+								database. Failure to do so may result in
+								incorrect calculation of taxes and order totals,
+								warnings in the Zen Cart debug logs, or
+								potentially more serious errors resulting
+								in the display of a &quot;blank page&quot; or
+								the inability to correctly load / edit the order
+								from the Zen Cart admin.
+								</small>
+							</li>
+							<li>Update (edit) the phone number associated with
+								the order as needed.
+							</li>
+							<li>Update (edit) the payment method as needed.<br />
+								<small class="emphasis">If you edit the CC number
+								associated with an order this module will sanitize
+								the CC number in the database removing portions of
+								the CC number.</small>
+							</li>
+							<li>To save the	changes click the &quot;update&quot; button.<br /><br />
+								<img src="images/zc-edit-order-address.png" alt="Edit Order customer and address"/>
+							</li>
+						</ol>
+					</fieldset>
+					<fieldset>
+						<legend id="add_product">Adding a Product to an order</legend>
+						<ol>
+							<li>Open an Order for editing (see <a href="#open_for_edit">how to</a>).</li>
+							<li>Click the &quot;Add Products&quot; button near the center of the page.</li>
+							<li>Step #1: Narrow down the list of products (pick one option):<ul>
+								<li>Select a category from the list.</li>
+								<li>Enter a search term and press the &quot;enter&quot; key on your keyboard.</li>
+							</ul></li>
+							<li>Step #2: Choose a product from the list.</li>
+							<li>Step #3: Choose any product options / attributes as needed.</li>
+							<li>Step #4: Select quantity and pricing options.<ol>
+								<li>Select the desired quantity. This field will
+									be subject to the product's min / max
+									configured settings. Inventory numbers will
+									be adjusted for the selected product in the
+									database.
+								</li>
+								<li>Select whether to use any configured store
+									specials or sales price for the product or
+									to only use the full product price.
+								</li>
+								<li>Click the &quot;Add now&quot; button.</li>
+							</ol></li>
+						</ol>
+						<img src="images/zc-edit-order-add-product.png" alt="Edit Order add product"/>
+					</fieldset>
+					<fieldset>
+						<legend id="update_product">Updating Products in the order</legend>
+						<ol>
+							<li>Open an Order for editing (see <a href="#open_for_edit">how to</a>).</li>
+							<li>Update (edit) the product quantity, name, model,
+								price, one time charges, and product options /
+								attributes.
+							</li>
+							<li>To save the	changes click the &quot;update&quot; button.</li>
+						</ol>
+						<img src="images/zc-edit-order-update-product.png" alt="Edit Order update product"/>
+					</fieldset>
+					<fieldset>
+						<legend id="change_order_total">Changing Order Totals</legend>
+						<p>Price calculations for Order Totals are processed by
+							the Order Total modules directly and not Edit Orders.
+							This helps prevent math errors and ensure consistency.
+							<span class="emphasis">Not all 3rd party Order Total
+							modules were written with the capability to be loaded
+							and run against an order from the Zen Cart admin
+							interface.</span>
+						</p>
+						<p>Many of the common Order Total modules are automatically
+							calculated for the order based upon store settings
+							and information present in the order.<span class="emphasis">
+							Automatically calculated Order Totals such as ot_tax,
+							ot_loworderfee, ot_subtotal, and ot_total cannot be
+							edited or removed from an order.</span>
+						</p>
+						<p>
+							<img src="images/zc-edit-order-change-order-total.png" alt="Edit Order change order totals"/>
+						</p>
+						<div id="add_order_total"><b>Adding an Order Total</b></div>
+						<ol>
+							<li>Open an Order for editing (see <a href="#open_for_edit">how to</a>).</li>
+							<li>Select the order total module to add to the order.<br />
+								<small>If you select shipping you will need to
+								also select the specific shipping module.</small>
+							</li>
+							<li>Enter the desired order total name (text) to be
+								shown to the customer.<br />
+								<small>Note some order total modules will
+								automatically change the name.</small>
+							</li>
+							<li>Add the desired order total cost.<br /><small>
+								Gift Certificates and Vouchers can be entered
+								as either a negative or positive value. They will
+								be shown as a negative number after saved.</small>
+							</li>
+							<li>To save the	changes click the &quot;update&quot; button.</li>
+						</ol>
+						<div id="remove_order_total"><b>Removing an Order Total</b></div>
+						<ol>
+							<li>Open an Order for editing (see <a href="#open_for_edit">how to</a>).</li>
+							<li>Clear the order total name shown to the customer.</li>
+							<li>Clear the order total cost for the order total.</li>
+							<li>To save the	changes click the &quot;update&quot; button.</li>
+						</ol>
+						<div id="update_order_total"><b>Updating an Order Total</b></div>
+						<ol>
+							<li>Open an Order for editing (see <a href="#open_for_edit">how to</a>).</li>
+							<li>If the order total corresponds to shipping
+								you may change the shipping module by selecting
+								the desired module from the dropdown list.
+							</li>
+							<li>Update the order total name (text) shown to the
+								customer.<br />
+								<small>Note some order total modules will
+								automatically change the name.</small>
+							</li>
+							<li>Update the order total cost to the desired amount.</li>
+							<li>To save the	changes click the &quot;update&quot; button.</li>
+						</ol>
+						<p class="emphasis">NOTE: The price will be shown with or without tax
+							based upon the storefront settings not the admin
+							settings. This is done on purpose to ensure pricing
+							is calculated correctly in all order total modules
+							<small>Most of the order total modules are designed
+							to run from the storefront / catalog side only).
+							See the Zen Cart configuration option
+							&quot;DISPLAY_PRICE_WITH_TAX&quot;</small>
+						</p>
+					</fieldset>
+					<fieldset>
+						<legend id="change_order_status">Changing the Order Status</legend>
+						<p>Update order comments and statuses as you do
+							within the orders (or Super Orders) page then
+							click the "Update" button.
+						</p>
+					</fieldset>
+				</div>
+			</div>
+		</div>
+		<!--End sc3-->
+
+		<!--Begin sc4-->
+		<div class="tabcontent" id="sc4" style="display: block;">
+			<div class="textcontent">
+				<div>
+					<h3>INTEGRATION WITH OTHER MODULES</h3>
+					<p>The following is a list of some commonly installed 3rd
+						party Zen Cart modules (plugins) known to be compatible
+						with Edit Orders. The list is mainly confined to 3rd
+						party plugins which also affect customer orders or placing
+						customer orders. Please refer to the apropriate module
+						for further notes and instructions (if any).
+					</p>
+					<fieldset>
+						<legend>Table of Contents</legend>
+						<ul style="margin: 0 0 1em 0">
+							<li><a href="#integration_ot">Order Total modules</a><ul>
+								<li><a href="#integration_onetime_discount">Onetime Discount</a></li>
+								<li><a href="#integration_local_sales_taxes">Local Sales Taxes</a></li>
+								<li><a href="#integration_ot_other">Other Modules (troubleshooting)</a></li>
+							</ul></li>
+							<li><a href="#integration_op">Enhanced Order Processing</a><ul>
+								<li><a href="#integration_super_orders">Super Orders</a></li>
+								<li><a href="#integration_ty_package_tracker">Ty Package Tracker</a></li>
+								<li><a href="#integration_admin_new_order">Admin New Order</a></li>
+								<li><a href="#integration_admin_new_customer">Admin New Customer</a></li>
+							</ul></li>
+						</ul>
+					</fieldset>
+				</div>
+				<h3 id="integration_ot">Order Total Modules</h3>
+				<p>Order Total modules are used to change the total cost of an
+					Order. Edit Orders uses the same Order Total modules as the
+					customer checkout process. Most of the Order Total modules
+					which ship with Zen Cart have been tested and work as expected
+					(coupon, gift voucher, low order fee, shipping, subtotal,
+					tax, and total). <span class="emphasis">Both ot_subtotal and
+					ot_total must be enabled for Edit Orders to function.</span>
+				</p>
+				<div class="regularlist">
+					<fieldset>
+						<legend id="integration_onetime_discount">Onetime Discount</legend>
+						<p>The &quot;Onetime Discount&quot; Order Total Module
+							is fully compatible with &quot;Edit Orders&quot;.
+						</p>
+						<p>A copy has been included in the &quot;optional
+							items&quot; folder of the &quot;Edit Orders&quot;
+							distribution zip file.
+						</p>
+						<small class="emphasis">
+							&quot;Onetime Discount&quot; is licensed
+							separately from &quot;Edit Orders&quot;. 
+						</small>
+					</fieldset>
+					<fieldset>
+						<legend id="integration_local_sales_taxes">Local Sales Taxes</legend>
+						<p>(<strong>You MUST have Local Sales Tax 2.3.5 or 
+							newer installed</strong>)
+						</p>
+						<p>You will need to follow the following steps to use
+							&quot;Edit Orders&quot; with Local Sales Tax 2.3.5
+							or newer.
+						</p>
+						<ul>
+							<li>Copy &quot;/includes/functions/extra_functions/functions_local_sales_taxes.php&quot;
+								to &quot;/your_admin_folder/includes/functions/extra_functions/functions_local_sales_taxes.php&quot;.<br />
+								<small>(&quot;your_admin_folder&quot; is the location
+								of your Zen Cart admin folder.)</small>
+							</li>
+						</ul>
+						<p class="emphasis">
+							The tax rate shown next to individual products only
+							replects the Zen Cart configured tax rate. It does
+							not include any tax rates defined by &quot;Local
+							Sales Tax&quot;. The sales tax rate cannot be adjusted
+							by Edit Orders for the Local Sales Taxes module.
+						</p>
+					</fieldset>
+					<fieldset>
+						<legend id="integration_ot_other">Other Modules (troubleshooting)</legend>
+						<p>Because Edit Orders loads the same Order Total modules
+							as the customer checkout process, all enabled modules
+							must be able to be loaded and processed from the Zen
+							Cart administrative interface. Because Zen Cart
+							traditionally does not process Order Total modules
+							from the administrative interface, many 3rd party
+							Order Total modules were designed without the
+							authors taking this into consideration.
+						</p>
+						<p>The most common sympton caused by a misbehaving Order
+							Total module (when editing an order) will be
+							encountering a &quot;blank&quot; page
+							when adding	a product to (or updating) the order.
+							<span class="emphasis">In most cases taking a look
+							at the <a href="http://www.zen-cart.com/content.php?124">error log generated by Zen Cart</a>
+							will provide valuable insight in how to correct the
+							problem.</span> Another option is to disable all
+							Order Total modules which do not ship with Zen Cart
+							and slowly enable more testing in between to
+							determine which Order Total module is causing the
+							blank page.
+						</p>
+						<div>Here are some common causes of issues with 3rd party
+							Order Total modules and howto fix:<ul>
+							<li>The module added functions to the catalog side of
+								Zen Cart but not the Zen Cart administrative side.
+								<b>FIX:</b> Copy the functions to the administrative
+								side of Zen Cart. 
+							</li>
+							<li>The module <b>only</b> uses $_SESSION['cart']
+								while processing data to determine the Order Total
+								value to display. <b>FIX:</b> Update the module
+								to check and use $order as a fallback. Disable
+								the &quot;mock&quot; shopping cart if neccessary.
+							</li>
+						</ul></div>
+					</fieldset>
+				</div>
+				<h3 id="integration_op">Enhanced Order Processing</h3>
+				<div class="regularlist">
+					<fieldset>
+						<legend id="integration_super_orders">Super Orders</legend>
+						<p>(<strong>You MUST have Super Orders installed to
+							use the Super Orders integration features</strong>)
+						</p>
+						<p>You will need to follow the following steps to use
+							Edit Orders with Super Orders v4.x.
+						</p>
+						<ul>
+							<li>If you are running <strong>Super Orders v4.x</strong>,
+								no patches or additional files are needed. DO
+								NOT UPLOAD the <strong>orders.php</strong> file
+								from the Edit Orders <strong>1_modified_core_files</strong>
+								folder.
+							</li>
+							<li>To add buttons that take you back to the
+								<strong>edit_orders.php</strong> page from the
+								Super Orders <strong>orders.php</strong> page,
+								go to <div class="emphasis">Admin &gt; Configuration
+								&gt; Super Orders</div>. Set the <strong>Edit
+								Orders Module Switch</strong> to &quot;True&quot;
+								to activate the Edit Orders navigation buttons
+								in Super Orders.
+							</li>
+						</ul>
+						<p class="emphasis">If you overwrite &quot;orders.php&quot;
+							after installing &quot;Edit Orders&quot; you may need
+							to run the &quot;Edit Orders&quot; installation
+							step 3 in order for links to &quot;Edit Orders&quot;
+							from &quot;Super Orders&quot; to function.
+						</p>
+					</fieldset>
+					<fieldset>
+						<legend id="integration_ty_package_tracker">Ty Package Tracker</legend>
+						<p>(<strong>You MUST have Ty Package Tracker installed
+							to use the Ty Package Tracker integration features
+							</strong>)
+						</p>
+						<p>You will need to follow the following steps to use
+							Edit Orders with Ty Package Tracker v3.1.3.
+						</p>
+						<ul>
+							<li>If you are running <strong>Ty Package Tracker
+								v3.1.3 </strong>, you will need to use a tool
+								like Winmerge or Beyond Compare to merge the
+								<strong>orders.php</strong> files from both
+								Edit Orders and Ty Package Tracker.
+								<div class="emphasis">
+									(if you are in using all three add-ons --
+									Super Orders, Edit Orders and Ty Package
+									Tracker -- skip this step and DO NOT UPLOAD
+									the <strong>orders.php</strong> file from the Edit Orders <strong>2_Modified_Core_Files folder.</strong>)
+								</div>
+							</li>
+							<li>If you'd like to add the
+								shipper tracking number fields to the
+								<strong>edit_orders.php</strong> page, go to
+								<div class="emphasis">Admin &gt; Configuration
+								&gt; Ty Package Tracker</div> . Set the
+								<strong>Ty Package Tracker Module Switch</strong>
+								to &quot;True&quot; to activate the Ty Package
+								Tracker shipper tracking number fields in Edit Orders.
+							</li>
+						</ul>
+						<p class="emphasis">If you overwrite &quot;orders.php&quot;
+							after installing &quot;Edit Orders&quot; you may need
+							to run the &quot;Edit Orders&quot; installation
+							step 3 in order for links to &quot;Edit Orders&quot;
+							from &quot;Ty Package Tracker&quot; to function.
+						</p>
+					</fieldset>
+					<fieldset>
+						<legend id="integration_admin_new_order">Admin New Order</legend>
+						<p>(<strong>You MUST have Admin New Order 1.3 or 
+							newer installed</strong>)
+						</p>
+						<p class="emphasis">If you overwrite &quot;new_orders.php&quot;
+							after installing &quot;Edit Orders&quot; you may need
+							to run the &quot;Edit Orders&quot; installation
+							step 3 in order for links to &quot;Edit Orders&quot;
+							from &quot;Admin New Order&quot; to function.
+						</p>
+					</fieldset>
+					<fieldset>
+						<legend id="integration_admin_new_customer">Admin New Customer</legend>
+						<p>(<strong>You MUST have Admin New Customer 1.2 or 
+							newer installed</strong>)
+						</p>
+						<p class="emphasis">If you have installed a version of
+							&quot;Admin New Customer&quot; &lt;= 1.2, you will
+							need to delete &quot;/admin/includes/extra_functions/new_customer.php&quot;.
+							This is not neccessary for versions of &quot;Admin
+							New Customer&quot; &gt;= 1.3.
+						</p>
+					</fieldset>
+					<p>Ready to get started? Just head over to the
+						<a onclick="expandcontent('sc2', this);" href="javascript:void(0)">Installation</a>
+						section and follow the provided instructions.
+					</p>
+				</div>
+			</div>
+		</div>
+		<!--End sc4-->
+
+		<!--Begin sc5-->
+		<div class="tabcontent" id="sc5" style="display: block;">
+			<div class="textcontent">
+				<div class="regularlist">
+					<h3>CREDITS &amp; CHANGE HISTORY</h3>
+					<p>A special thank you to all those who have taken the time
+						to BETA test Edit Orders and provide active feedback and
+						functionality testing. BETA testers have contributed to
+						the QA testing and helped create a better "Edit Orders"
+						module! <strong>Without you and others who have
+						contributed, this module would not exist or be as
+						full featured.</strong>
+					</p>
+					<p>We would also like to thank those who have joined the
+						Zen Cart community and provided active help to others
+						with Zen Cart, Edit Orders, and other modules. 
+					</p>
+					<fieldset>
+						<legend>v4.1.4 - 1/27/2014</legend>
+						A Ballanger: http://www.zen-cart.com/member.php?115838<br />
+						<ul>
+							<li>Updated the installation, upgrade, and removal process to use &quot;Plugin Manager&quot; 0.5rc2 core files.</li>
+						</ul>
+					</fieldset>
+					<hr><fieldset>
+						<legend>v4.1.3 - 1/6/2014</legend>
+						A Ballanger: http://www.zen-cart.com/member.php?115838<br />
+						Cindy Merkin: http://vinosdefrutastropicales.com/<br />
+						<ul>
+							<li>Updated the installation, upgrade, and removal process to use a newer version of &quot;Plugin Manager&quot; core files.</li>
+							<li>Cleaned up the english language files. Obsolete entries were removed and some new entries added.</li>
+							<li>Removed the optional language files as they no longer contain all the neccessary defined constants.</li>
+							<li>Added various changes to support Zen Cart 1.5.2 (including copying additional functions from the catalog side).</li>
+							<li>Added a mock &quot;shopping cart&quot; class which reads product data from the current order. This should help with Order Total modules which only look at the shopping cart ($_SESSION['cart']) and ignore the order ($order).</li>
+							<li>Added optional &quot;debug&quot; file logging. This should only be used for problem solving as it may adversely affect performance.</li>
+							<li>When a product is loaded from the database, additional fields are populated to match Zen Cart 1.5.2 handling.</li>
+							<li>Added handling for updating an order containing a deleted product. It is strongly recommended to not delete products until after all editing of orders containing the product are completed.<ul>
+								<li>The tax description is neccessary and will be generated using TEXT_UNKNOWN_TAX_RATE.</li>
+								<li>Tax class details will not be present or generated.</li>
+								<li>Attribute information may not fully populate or may be lost.</li>
+							</ul></li>
+							<li>One can now place the coupon code by itself in the &quot;title&quot; for &quot;ot_coupon&quot;</li>
+							<li>Included an optional &quot;Onetime Discount&quot; order total module.</li>
+							<li>Changes to the way order status / order history is handled:<ul>
+								<li>If the status is changed it will be recorded (with or without comment).</li>
+								<li>The comment (if any) will be added to the order history (previously only added if the status changed).</li>
+								<li>The tracking number(s) (if any) will be added to the order history.</li>
+								<li>If the option to notify the customer is selected the customer will be sent an email.</li>
+								<li>When the option to append comments is selected the following will be included in the email:<ul>
+									<li>The comment (if any) along with EMAIL_TEXT_COMMENTS_UPDATE.</li>
+									<li>The tracking number(s) along with EMAIL_TEXT_COMMENTS_TRACKING_UPDATE.</li>
+								</ul></li>
+							</ul></li>
+							<li>Added the option to &quot;strip&quot; HTML and PHP tags from the list of enabled shipping modules.</li>
+							<li>Added warning messages if ot_total or ot_subtotal are disabled.</li>
+							<li>Added a check (and repair) for missing core configuration directives related to attributes.</li>
+							<li>Moved initial checks and warnings performed by the edit orders admin page to a function.</li>
+							<li>Fixed a bug which did not allow products to use &quot;partial&quot; quantities (fractions).</li>
+							<li>Fixed a bug causing an obsolete file to not be removed upon install / upgrade.</li>
+							<li>File Upload attributes will now be passed along when updating the product. Removing a File Upload attribute is not supported.</li>
+							<li>Updated the code removing products from an order. These now use the Zen Cart "stock" configuration options to increment / decrement stock quantities.</li>
+						</ul>
+					</fieldset>
+					<hr>
+					<fieldset>
+						<legend>v4.1.2 - 7/28/2013</legend>
+						A Ballanger: http://www.zen-cart.com/member.php?115838<br />
+						<ul>
+							<li>Changed the "local_sales_tax" line to no longer be editable as the value is automatically generated based upon the order.</li>
+							<li>When adding a coupon code, if the code is not valid the order total will not be added (and if invalid and present will be removed).</li>
+							<li>Added a check when adding checkboxes to avoid generating a warning when no checkbox in the option group was selected.</li>
+							<li>When removing a product from the order, other items in the order are now correctly processed and updated (if changed).</li>
+							<li>Fixed a bug caused when adjusting the quantity of an item in an order (introducted in Edit Orders 4.1.1).</li>
+							<li>Fixed a bug when adding a product to an order w/ a text attribute containing a double quote (&quot;).</li>
+							<li>Functions handling form inputs now utilize zen_db_output (added in Zen Cart 1.5.1) or fall back to htmlspecialchars.</li>
+							<li>One Time Charges for a product are now reflected in the Total Price column for the product (were already added to the subtotal).</li>
+						</ul>
+					</fieldset>
+					<hr>
+					<fieldset>
+						<legend>v4.1.1 - 7/13/2013</legend>
+						A Ballanger: http://www.zen-cart.com/member.php?115838<br />
+						<ul>
+							<li>Updated tax calculations to Zen Cart 1.5.1 based code.</li>
+							<li>Fixed a tax calculation bug when all products were removed from an order.</li>
+							<li>Fixed the code handling product attribute updates to be more accurate.</li>
+							<li>Fixed a bug which caused the subtotal to always be zero.</li>
+							<li>Fixed a bug with the automatic calculation of onetime charges based on attributes (when adding a product).</li>
+							<li>When the order is loaded address information more closely matches the information found during checkout.
+								<ul>
+									<li>If we can determine the country by id, name, or iso code:
+									<ul>
+										<li>The &quot;country&quot; field will contain the Zen Cart country array.</li>
+										<li>The &quot;zone_id&quot; field will be populated based upon country and state.</li>
+									</ul>
+									<li>Otherwise, the &quot;country field will contain the country name. This allows one to see / update the country (to one found in the Zen Cart country database).</li>
+								</ul>
+							</li>
+							<li>The country listed for addresses will now be displayed as a dropdown if the country exists in the Zen Cart database. Otherwise it will be displayed as text.</li>
+							<li>Copied the catalog tax function &quot;zen_get_tax_rate_from_desc()&quot; from Zen Cart 1.5.1 to support additional order total modules.</li>
+							<li>Copied the catalog function &quot;zen_get_country_list&quot; from Zen Cart 1.5.1 to support country dropdowns in the addresses.</li>
+							<li>Zen Cart functions copied from the &quot;catalog&quot; side are only included if not already present.</li>
+							<li>Disabled manual editing of the &quot;Low Order Fee&quot; order total module. This is handled automatically.</li>
+							<li>If no remaining order total modules are available to add to an order, the order total entry fields will not be shown.</li>
+							<li>Ty Tracker will add a tracking number to the sent email when:
+								<ol>
+									<li>The order is updated and notify customer is selected.</li>
+									<li>Ty Tracker is installed and enabled.</li>
+									<li>A Tracking Code is present for the "shipper".</li>
+									<li>The "shipper" is enabled in Ty Tracker.</li>
+								</ol>
+							</li>
+							<li>Included the &quot;plugin&quot; class and associated files.
+								<ul>
+									<li>The class and files are not part of &quot;Edit Orders&quot;.</li>
+									<li>Provides for simplification of the installation / upgrade process.</li>
+									<li>Provides for simplification of the removal process.</li>
+									<li>Does some extra checks against Zen Cart's configure.php files.</li>
+								</ul>
+							</li>
+							<li>Created new install, upgrade, and removal processes.
+								<ul>
+									<li>Makes use of the &quot;plugin&quot; class and associated files</li>
+									<li>On upgrade attempts to make needed modifications to any existing orders.php from &quot;Super Orders&quot; or &quot;Admin New Order&quot;</li>
+								</ul>
+							</li>
+							<li>Cleaned up comments in &quot;orders.php&quot; to be more friendly.</li>
+							<li>Links in &quot;orders.php&quot; to edit will no longer appear if Edit Orders is not installed.</li>
+							<li>Moved 'BOX_CONFIGURATION_EDIT_ORDERS' into a language file (used to display the configuration menu item).</li>
+							<li>Updated readme (collaboration of Zen Cart forum members).</li>
+						</ul>
+					</fieldset>
+					<hr>
+					<fieldset>
+						<legend>v4.1 - 4/12/2013</legend>
+						A Ballanger: http://www.zen-cart.com/member.php?115838<br />
+						C Jones: http://overthehillweb.com<br />
+						<ul>
+							<li>Reduced duplicate code for Ty Package Tracker support.</li>
+							<li>Complete rewrite of the code handling products and attributes.
+								<ul>
+									<li>Utilizes Zen Cart functions and classes where possible.</li>
+									<li>Added many new functions to provide better support products and attributes.</li>
+									<li>Added a class used to abstract access to product attributes.</li>
+									<li>Used when displaying, updating, and adding products (including attributes).</li>
+								</ul>
+							</li>
+							<li>Added updated versions of some Zen Cart core classes to allow them to work correctly from the admin side of Zen Cart.
+								<ul>
+									<li><strong>admin/init_includes/init_currencies.php</strong> to load the currencies class.</li>
+									<li><strong>includes/classes/order_total.php</strong> to load the correct language files.</li>
+									<li><strong>includes/classes/shipping.php</strong> to load the correct language files.</li>
+								</ul>
+							</li>
+							<li>When adding a product:
+								<ul>
+									<li>You can now search by product id, name, description, and model.</li>
+									<li>Step 2 now shows both the product name and model.</li>
+									<li>The built-in Zen Cart functions are called in a similar manner as adding a product to your shopping cart. This ensures the order totals can be automatically updated.</li>
+									<li>You can disable the use of "specials / sales prices" still. This is not recommended.</li>
+									<li>The store settings for handling attributes (including showing / hiding) are utilized.</li>
+								</ul>
+							</li>
+							<li>When updating a product: product information is pulled from the database, then requested changes (such as name and price) are merged. This ensures the correct product information is always present in the order.</li>
+							<li>Updated to utilize the order_totals class and modules
+								<ul>
+									<li>Order Total modules are loaded when adding or updating a product.</li>
+									<li>Ensures proper calculation of subtotal and total.</li>
+									<li>Tax calculation now is done automatically using the store settings (same as during a customer checkout).</li>
+									<li>Order Total Lines are now added by selecting the desired module from a dropdown.</li>
+									<li>The Order Total dropdown contains a list of installed order totals not already present in the order.</li>
+									<li>Added support for specifying and changing the shipping module when a shipping line is used.</li>
+									<li>Removed field for changing the shipping tax. This is automatically calculated by <strong>includes/modules/order_total/ot_shipping.php</strong>.
+									</li>
+								</ul>
+							</li>
+							<li>Copied (and modified for use in the admin side of Zen Cart) a handful of the catalog tax functions to <strong>admin/functions/extra_functions/edit_orders_functions.php</strong></li>
+							<li>Updated the installation script to add additional failure messages and not report success if a step fails.</li>
+							<li>Fixed the order status dropdown to correctly select order status. This avoids the status being accidentally changed if the status is not "Pending (1)".</li>
+							<li>Moved the "edit" button in the order menu over so the "details" button is more likely to be clicked by someone quickly looking at an order. This should hopefully lower the number of "accidentally" edited orders.</li>
+							<li>Added special handling to support the "ot_loworderfee" module.</li>
+							<li>Added some "dummy" files for those upgrading from an older version.</li>
+							<li>Minor updates to the readme for version 4.1.</li>
+						</ul>
+					</fieldset>
+					<hr>
+					<fieldset>
+						<legend>v4.0.4 - 12/06/2012</legend>
+						chriscallan
+						<ul>
+							<li>When adding a product display the product model along with the name.</li>
+						</ul>
+					</fieldset>
+					<hr>
+					<fieldset>
+						<legend>v4.0.3 - 04/14/2012</legend>
+						C Jones: http://overthehillweb.com
+						<ul>
+							<li>Updated to to be compatible with Zen Cart v1.5</li>
+							<li>Removed Super Orders links to the <strong>super_orders.php</strong> page. Super Orders v4.0 is now integrated into the default <strong>orders.php</strong> file which makes the links to the <strong>super_orders.php</strong> page and the Super Orders on/off configuration switch in the Edit Orders configuration menu obsolete.
+							</li>
+							<li>Updated <strong>edit_orders.php</strong> commenting to implement the same commenting code as orders.php (remove the need for the <strong>includes/functions/extra_functions/common_orders_functions.php</strong> file)
+							</li>
+							<li>Removed additional stray hard coded text and replaced them with proper language file definitions</li>
+							<li>Added an admin setting to set the shipping tax (previous versions required an edit to the edit_orders.php to set this value)</li>
+						</ul>
+					</fieldset>
+					<hr>
+					<fieldset>
+						<legend>v3.03 - 01/06/2011</legend>
+						C Jones: http://overthehillweb.com &amp; Andrew Moore: hem@omnicia.com
+						<ul>
+							<li>Bug fix - Corrects issue where order comments which included apostrophe's would generate an error.</li>
+							<li>Bug fix - Corrects issue where on certain host configurations the shop owner would get language ID errors.</li>
+							<li>Buglet (little bug.. ) fix - Fixed Shipping method filed so that it no longer shows raw HTML outputs (affected mainly FedEx shipping users)</li>
+							<li>Added last updated field to properly support Rewards module</li>
+							<li>Added French language support (courtesy of sanji!!!) If anyone has other language translations, send them to me and I will update the fileset.</li>
+							<li>More formatting fixes to totals section. All entry fields now right align</li>
+							<li>Included required PHP version data in the Purpose &amp; Aim tab</li>
+							<li>Minor updates and tweaks to readme for clarity</li>
+						</ul>
+					</fieldset>
+					<hr>
+					<fieldset>
+						<legend>v3.02 - 12/11/2010</legend>
+						C Jones: http://overthehillweb.com
+						<ul>
+							<li>Full integration of Ty Package Tracker files</li>
+							<li>MINOR edit to the orders.php file. Added "Details" icon and modified the "Edit" icon to correctly redirect to the Edit Orders page</li>
+							<li>Formatting fixes so that numeric entry fields right align (taxes, prices, additional total options, etc.)</li>
+						</ul>
+					</fieldset>
+					<hr>
+					<fieldset>
+						<legend>v3.0 Rev 1a - 12/04/2010</legend>
+						C Jones: http://overthehillweb.com
+						<ul>
+							<li>Refined and corrected errors in the readme file</li>
+							<li>Added missing license.txt file</li>
+							<li>Included a set files required for <strong>Super Orders v1.3.9</strong> users
+							</li>
+						</ul>
+					</fieldset>
+					<hr>
+					<fieldset>
+						<legend>v3.0 Rev 1 - 11/28/2010)</legend>
+						C Jones: http://overthehillweb.com &amp; J Theed: http://gticustom.com
+						<ul>
+							<li>Clean up and reorganize the readme file</li>
+							<li>Removed all of the hard coded text and fixed file names and replaced them with proper language file definitions</li>
+							<li>Replaced "Add Product" text link with an "Add Products button</li>
+							<li>Add icons to the customer section</li>
+							<li>Corrected table format and layout of the customer section.</li>
+							<li>Modified customer section layout so that field labels appear next to each field for each customer address type.</li>
+							<li>Removed unused left column call and corrected &lt;head&gt; section to remove unused/erroneous code.</li>
+							<li>Order status and send email features now work like Zen Cart 1.3.9 (includes the no e-mail and hidden "admin" comments options)</li>
+							<li>Includes the properly modified orders.php file</li>
+							<li>The back button now returns to the order list page</li>
+							<li>Added an order details button to return to the detail page of the order you are editing</li>
+							<li>The back button on the add product section returns to the order editing page</li>
+							<li>Added an order details button on the add product section to return to the detail page of the order you are editing</li>
+							<li>Added an admin flag that toggles the display of navigation buttons required for use with Super Orders</li>
+							<li>Added an admin flag that toggles the display of input fields required for use with Ty Package Tracker</li>
+						</ul>
+					</fieldset>
+					<hr>
+
+					<fieldset>
+						<legend>Previous Version History</legend>
+						<br />
+
+						<p>
+							<strong>v 2.04 11/6/2010 - Scott Turner</strong>
+						</p>
+
+						<ol>
+							<li>Fixed problem with add product page in v1.3.9h.</li>
+						</ol>
+
+						<strong>v 2.03 2/21/2009 - Scott Turner</strong>
+
+						<ol>
+							<li>Fixed problems with updating text attributes when more than one text attribute is used in Zen Cart.</li>
+							<li>Fixed problems with adding a product with text attributes when more than one text attribute is used in Zen Cart.</li>
+							<li>Fixed problem with using apostrophes in a text attribute when adding a product.</li>
+
+						</ol>
+						<p>
+							<strong>v 2.02 2/18/2009 - Scott Turner</strong>
+						</p>
+						<ol>
+							<li>Fixed problem with adding products when they are in the Top Category (i.e. they aren't in a category folder).</li>
+							<li>Fixed problem with adding products that are not on special being added at $0 when the apply special price box is checked.</li>
+						</ol>
+						<strong>v 2.01 11/16/2008 - Scott Turner</strong>
+						<ol>
+							<li>Fixed problem with TABLE_ORDERS not updating when adding a new product.</li>
+							<li>Fixed problem with wrong currencies when adding a new product.</li>
+						</ol>
+						<p>
+							<strong>v 2.0 10/15/2008 - Scott Turner</strong>
+						</p>
+						<ol>
+							<li>Implemented new attributes handling in the following ways:
+								<ul>
+									<li>-- a) In addition to the more complicated attribute editor, a simpler option is available.
+										<ul>
+											<li>-- i) Select a new attribute from a drop-down menu in admin.</li>
+											<li>-- ii) The new price will be automatically calculated by subtracting the old attribute price and adding the new attribute price.<br />
+											</li>
+										</ul>
+									</li>
+									<li>-- b) Text attributes now are implemented through a text box.</li>
+									<li>-- c) Fixed attribute pricing for the following scenarios:
+										<ul>
+											<li>-- i) One Time Charges Implemented</li>
+											<li>-- ii) Price Factor &amp; Offset Implemented</li>
+											<li>-- iii) One Time Price Factor &amp; Offset Implemented</li>
+											<li>-- iv) Attributes Qty Price Implemented</li>
+											<li>-- v) One Time Attributes Qty Price Implemented</li>
+											<li>-- vi) Price Per Word &amp; Free Words Implemented</li>
+											<li>-- vii) Price Per Letter &amp; Free Letters Implemented</li>
+											<li>-- viii) Specials and Sales Implemented for Attributes When Option is Selected for Attribute</li>
+										</ul>
+									</li>
+									<li>-- d) Product one time charges are easily editable.</li>
+									<li>-- e) You can switch back and forth between the old advanced attribute editor and the easier one using a text-link.
+										<ul>
+											<li>-- i) The advanced attribute editor allows you to change the price and attribute option and value manually.</li>
+											<li>-- ii) The simple attribute editor allows you to choose from the attributes listed in your database.</li>
+											<li>-- iii) The advanced attribute editor will not update prices it leaves you to do this.</li>
+											<li>-- iv) The simple attribute editor updates prices automatically.</li>
+											<li>-- v) The simple attribute editor is the preferred method of altering attributes! The advanced is useful for advanced purposes.</li>
+										</ul>
+									</li>
+									<li>-- f) Downloads are now implemented correctly and will change automatically when using the simple attribute editor.</li>
+									<li>-- g) All attribute data from TABLE_PRODUCTS_ATTRIBUTES now moves successfully to TALBE_ORDERS_PRODUCTS_ATTRBIUTES when an attribute option is changed using the simple attribute editor.</li>
+								</ul>
+							</li>
+							<li>Adding products has added a few new features.
+								<ul>
+									<li>-- a) You can choose whether or not new products use the special or sales price.</li>
+									<li>-- b) Text attributes now work with a text box.</li>
+									<li>-- c) Many new attribute options are implemented correctly when calculating the price for new products. See 1-c for more info.</li>
+									<li>-- d) Downloads are now implemented correctly.</li>
+									<li>-- e) All attribute data from TABLE_PRODUCTS_ATTRIBUTES now moves successfully to TALBE_ORDERS_PRODUCTS_ATTRBIUTES when a new product is added with an attribute.</li>
+								</ul>
+							</li>
+							<li>Coupon and group discounts now calculate correctly with taxes. To do so, the mod uses your average tax rate for all the products that were purchased.</li>
+							<li>Fixed problem with quantity discounts adding to total instead of subtracting.</li>
+							<li>Changed behavior so that clicking "details" on the order screen will give you the original edit orders page that Zen Cart has built in.
+								<ul>
+									<li>-- a) This allows you to choose which page you want to use. Click "details" for just the basics. Click "edit" to make some changes to an order.</li>
+								</ul>
+							</li>
+							<li>Fixed problems with data in TABLE_ORDERS_PRODUCTS not updating includng products_price, products_tax, and final_price.</li>
+							<li>You can now enter a value for shipping taxes and this will calculate correctly. Zen Cart doesn't store this info in the database, so this must be changed every time when editing orders. A compromise, but better than nothing.</li>
+							<li>Added lines for edits to orders.php per popular demand on Zen Cart forums.</li>
+						</ol>
+						<p>
+							<strong>v 1.53 8/1/08 - Scott Turner</strong>
+						</p>
+						<ol>
+							<li>Fixed problem with customer's billing information not updating.</li>
+							<li>Fixed problem with adding product attributes with apostrophes causing an error.</li>
+							<li>Fixed problem with quotes and apostrophes being ignored.</li>
+						</ol>
+						<p>
+							<strong>v 1.52 7/31/08 - Scott Turner</strong>
+						</p>
+						<ol>
+							<li>Fixed problems with coupons and gift certificates adding to total instead of subtracting.</li>
+						</ol>
+						<p>
+							<strong>v 1.51 6/22/08 - Scott Turner</strong>
+						</p>
+						<ol>
+							<li>Fixed problems with emails when HTML emails are enabled.</li>
+						</ol>
+						<p>
+							<strong>v 1.5 5/24/08 - Scott Turner</strong>
+						</p>
+						<p>NOTE: 1.5 - Works With Zen Cart 1.3.8</p>
+						<ol>
+							<li>Fixed Issues with Adding a Product With Attributes</li>
+							<li>Adding Products with Attributes Will Automatically Recalculate Price</li>
+							<li>Fixed Issue with Deleting a Product (Thanks zc_tester)</li>
+							<li>Fixed Issue with Editing a Product Attribute (Thanks zc_tester)</li>
+							<li>Added Ability to Edit Product Attributes Price Increases/Decreases<br /> ---- NOTE: This will not change the unit price - this must be edited manually.
+							</li>
+							<li>Corrected PHP tags</li>
+							<li>Fixed Problems with Status/Comments Updates &amp; Emails</li>
+						</ol>
+						<p>
+							<strong>v 1.2.6 11/12/2007 - numinix</strong>
+						</p>
+						<ol>
+							<li>Re-added functions (required)</li>
+							<li>Re-added missing installation instructions</li>
+							<li>Re-wrote readme.txt</li>
+						</ol>
+						<p>
+							<strong>v 1.2.5 10/15/2007 - san</strong>
+						</p>
+						<ol>
+							<li>Bug fix</li>
+							<li>Removed functions</li>
+							<li>Code optimization</li>
+						</ol>
+						<p>
+							<strong>v 1.2.0 10/01/2007 - Chris Barnhill</strong>
+						</p>
+						<ol>
+							<li>Added additional payment options</li>
+							<li>Updated how credit card numbers are displayed</li>
+						</ol>
+						<p>
+							<strong>v 1.1.0 02/16/2007 - Igor Couto</strong>
+						</p>
+						<ol>
+							<li>Bug fix</li>
+							<li>Updated readme.txt</li>
+						</ol>
+						<p>
+							<strong>v 1.0.0 01/07/2007 - Kathleen</strong>
+						</p>
+						<ol>
+							<li>Ported from OSC for Zen Cart v1.2</li>
+						</ol>
+					</fieldset>
+				</div>
+			</div>
+		</div>
+		<!--End sc5-->
+
+		<!--Begin sc6-->
+		<div class="tabcontent" id="sc6" style="display: block;">
+			<div class="textcontent">
+				<h3>LICENSE</h3>
+				<p>
+					<strong>Edit Orders</strong> is released under the General Public License (see LICENSE)
+				</p>
+
+				<p>This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>
+				<p>Always backup your shop and database before making changes.</p>
+			</div>
+		</div>
+		<!--End sc6-->
+
+	</div>
+	<!--end tabcontainer-->
+	<script type="text/javascript">document.getElementById('sc2').style.display = 'none';</script>
+	<script type="text/javascript">document.getElementById('sc3').style.display = 'none';</script>
+	<script type="text/javascript">document.getElementById('sc4').style.display = 'none';</script>
+	<script type="text/javascript">document.getElementById('sc5').style.display = 'none';</script>
+	<script type="text/javascript">document.getElementById('sc6').style.display = 'none';</script>
+	<script type="text/javascript">ShowTabs()</script>
+<script type="text/javascript">
+// We only show the tab links if JavaScript is available/active.
+<!--
+if (document.getElementById("slidetabsmenu") != null) {
+	document.getElementById('slidetabsmenu').style.display = "block";
+}
+//-->
+</script>
+</div></body>
+</html>
