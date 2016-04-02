@@ -215,24 +215,25 @@
 				// hide comment
 				$customer_notified = '-1';
 			}
-
+//-bof-20160330-lat9-Don't over-prepare input (results in \n\n instead of two line-feeds).
 			$sql_data_array = array(
 				'orders_id' => (int)$oID,
-				'orders_status_id' => (int)$status,
+				'orders_status_id' => $status,
 				'date_added' => 'now()',
 				'customer_notified' => $customer_notified,
 				'comments' => $comments,
 			);
+//-eof-20160330-lat9
 			// BEGIN TY TRACKER 3 - INCLUDE DATABASE FIELDS IN STATUS UPDATE
 			foreach($track_id as $id => $track) {
-				$sql_data_array['track_id' . $id] = $track;
+				$sql_data_array['track_id' . $id] = zen_db_input($track);
 			}
 			unset($id); unset($track);
 			// END TY TRACKER 3 - INCLUDE DATABASE FIELDS IN STATUS UPDATE
 			zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
 
 			$sql_data_array = array(
-				'orders_status' => (int)$status,
+				'orders_status' => zen_db_input($status),
 				'last_modified' => 'now()'
 			);
 			zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', 'orders_id = \'' . (int)$oID . '\'');
@@ -590,7 +591,7 @@
 			$new_product = eo_get_new_product(
 				$add_product_products_id,
 				$add_product_quantity,
-				zen_db_prepare_input($_POST['id']),
+				zen_db_prepare_input($_POST['attr_info']),
 				isset($_POST['applyspecialstoprice'])
 			);
 
@@ -1615,21 +1616,21 @@ if($action == "add_prdct")
 							);
 						}
 						$selected_attribute = $products_options_array[0]['id'];
-						if(isset($_POST['id'][$optionID])) $selected_attribute = $_POST['id'][$optionID]['value'];
+						if(isset($_POST['attr_info'][$optionID])) $selected_attribute = $_POST['attr_info'][$optionID]['value'];
 						echo zen_draw_pull_down_menu(
-							'id[' . $optionID . '][value]', $products_options_array,
+							'attr_info[' . $optionID . '][value]', $products_options_array,
 							$selected_attribute, 'id="attrib-' . $optionID . '"'
 						) . "<br />\n";
 						unset($products_options_array); unset($selected_attribute);
 						unset($attributeId); unset($attributeValue);
-						echo zen_draw_hidden_field('id[' . $optionID . '][type]', $optionInfo['type']);
+						echo zen_draw_hidden_field('attr_info[' . $optionID . '][type]', $optionInfo['type']);
 						break;
 					case PRODUCTS_OPTIONS_TYPE_CHECKBOX:
 						echo '<div class="attribsCheckboxGroup"><div class="attribsCheckboxName">' . $optionInfo['name'] . '</div>';
 						foreach($optionInfo['options'] as $attributeId => $attributeValue) {
-							$checked = (isset($_POST['id'][$optionID]['value'][$attributeId]) ? true : false);
+							$checked = (isset($_POST['attr_info'][$optionID]['value'][$attributeId]) ? true : false);
 							echo zen_draw_checkbox_field(
-									'id[' . $optionID . '][value][' . $attributeId . ']',
+									'attr_info[' . $optionID . '][value][' . $attributeId . ']',
 									$attributeId, $checked, null, 'id="attrib-' .
 									$optionID . '-' . $attributeId . '"'
 								) . '<label class="attribsCheckbox" for="attrib-' .
@@ -1637,27 +1638,27 @@ if($action == "add_prdct")
 								$attributeValue . '</label><br />' . "\n";
 						}
 						unset($checked); unset($attributeId); unset($attributeValue);
-						echo zen_draw_hidden_field('id[' . $optionID . '][type]', $optionInfo['type']) . '</div>';
+						echo zen_draw_hidden_field('attr_info[' . $optionID . '][type]', $optionInfo['type']) . '</div>';
 						break;
 					case PRODUCTS_OPTIONS_TYPE_TEXT:
-						$text = (isset($_POST['id'][$optionID]['value']) ? $_POST['id'][$optionID]['value'] : '');
+						$text = (isset($_POST['attr_info'][$optionID]['value']) ? $_POST['attr_info'][$optionID]['value'] : '');
 						$text = zen_html_quotes($text);
 						echo '<label class="attribsInput" for="attrib-' . $optionID .
 							'">' . $optionInfo['name'] . '</label>';
 						if($optionInfo['rows'] > 1 ) {
 							echo zen_draw_textarea_field(
-								'id[' . $optionID . '][value]', 'hard',
+								'attr_info[' . $optionID . '][value]', 'hard',
 								$optionInfo['size'], $optionInfo['rows'], $text,
 								'class="attribsTextarea" id="attrib-' . $optionID . '"'
 							) . "<br />\n";
 						} else {
 							echo zen_draw_input_field(
-								'id[' . $optionID . '][value]', $text,
+								'attr_info[' . $optionID . '][value]', $text,
 								'size="' . $optionInfo['size'] . '" maxlength="' .
 									$optionInfo['size'] . '" id="attrib-' . $optionID . '"'
 							) . "<br />\n";
 						}
-						echo zen_draw_hidden_field('id[' . $optionID . '][type]', $optionInfo['type']);
+						echo zen_draw_hidden_field('attr_info[' . $optionID . '][type]', $optionInfo['type']);
 						break;
 					case PRODUCTS_OPTIONS_TYPE_FILE:
 						// TODO: Implement File Handling
@@ -1667,11 +1668,11 @@ if($action == "add_prdct")
 					case PRODUCTS_OPTIONS_TYPE_READONLY:
 					default:
 						$optionValue = array_shift($optionInfo['options']);
-						echo zen_draw_hidden_field('id[' . $optionID . '][value]', $optionValue) .
+						echo zen_draw_hidden_field('attr_info[' . $optionID . '][value]', $optionValue) .
 							'<span class="attribsRO">' . $optionInfo['name'] . ': ' .
 							$optionValue . '</span><br />';
 						unset($optionValue);
-						echo zen_draw_hidden_field('id[' . $optionID . '][type]', $optionInfo['type']);
+						echo zen_draw_hidden_field('attr_info[' . $optionID . '][type]', $optionInfo['type']);
 						break;
 				}
 			}
@@ -1695,23 +1696,23 @@ if($action == "add_prdct")
 		echo "<td class='dataTableContent' valign='top'>" . ADDPRODUCT_TEXT_CONFIRM_QUANTITY . "<input name='add_product_quantity' size='2' value='1'>&nbsp;&nbsp;&nbsp;&nbsp;<input type='checkbox' name='applyspecialstoprice' CHECKED>". ADDPRODUCT_SPECIALS_SALES_PRICE ."</td>";
 		echo "<td class='dataTableContent' align='center'><input type='submit' value='" . ADDPRODUCT_TEXT_CONFIRM_ADDNOW . "'>";
 
-		if($_POST['id'] != NULL)
+		if($_POST['attr_info'] != NULL)
 		{
-			foreach($_POST['id'] as $id => $value) {
+			foreach($_POST['attr_info'] as $id => $value) {
 				if(is_array($value)) {
 					foreach($value as $id2 => $value2) {
 						if(is_array($value2)) {
 							foreach($value2 as $id3 => $value3) {
-								echo '<input type="hidden" name="id[' . $id . '][' . $id2 .'][' . $id3 . ']" value="' . zen_html_quotes($value3) . '">';
+								echo '<input type="hidden" name="attr_info[' . $id . '][' . $id2 .'][' . $id3 . ']" value="' . zen_html_quotes($value3) . '">';
 							}
 						}
 						else {
-							echo '<input type="hidden" name="id[' . $id . '][' . $id2 .']" value="' . zen_html_quotes($value2) . '">';
+							echo '<input type="hidden" name="attr_info[' . $id . '][' . $id2 .']" value="' . zen_html_quotes($value2) . '">';
 						}
 					}
 				}
 				else {
-					echo '<input type="hidden" name="id[' . $id . ']" value="' . zen_html_quotes($value) . '">';
+					echo '<input type="hidden" name="attr_info[' . $id . ']" value="' . zen_html_quotes($value) . '">';
 				}
 			}
 		}
@@ -1752,5 +1753,5 @@ if($action == "add_prdct")
 </body>
 </html>
 <?php
-unset ($_SESSION['customer_id']);  //-Needed so admin tax-calculations aren't based on the last customer order edited.
+unset ($_SESSION['customer_id']);  //-20151205-lat9-Forum bugfix: https://www.zen-cart.com/showthread.php?200407-Edit-Orders-v4-0-Support-Thread&p=1271319#post1271319
 require(DIR_WS_INCLUDES . 'application_bottom.php');
