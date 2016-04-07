@@ -723,7 +723,7 @@ function eo_get_product_attribute_prices($attr_id, $attr_value = '', $qty = 1) {
 	);
 
 	$attr_id = (int)$attr_id;
-	$qty = (int)$qty;
+	$qty = (float)$qty;
 	$product_id = (int)$attribute_price->fields['products_id'];
 
 	// Only check when attributes is not free or the product is not free
