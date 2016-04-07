@@ -103,7 +103,7 @@
 			'cc_owner' => zen_db_prepare_input($_POST['update_info_cc_owner']),
 //-bof-20160407-lat9-Initialize tax value to 0, enables stores with split-tax display to properly update the tax
 			'cc_expires' => zen_db_prepare_input($_POST['update_info_cc_expires']),
-            'order_tax' => 0
+                        'order_tax' => 0
 //-eof-20160407-lat9
 		);
 
@@ -1534,14 +1534,15 @@ if($action == "add_prdct")
 		$query =
 			'SELECT `p`.`products_id`, `p`.`products_model`, `pd`.`products_name` ' .
 			'FROM `' . TABLE_PRODUCTS . '` `p` ' .
-			'LEFT JOIN `' . TABLE_PRODUCTS_DESCRIPTION . '` `pd` ON `pd`.`products_id`=`p`.`products_id` ';
+			'INNER JOIN `' . TABLE_PRODUCTS_DESCRIPTION . '` `pd` ' .
+			'ON `pd`.`products_id`=`p`.`products_id` ' .
+  				'AND `pd`.`language_id`=\'' . (int)$_SESSION['languages_id'] . '\' ';
 
 		if($add_product_categories_id >= 1)
 		{
 			$query .=
 				'LEFT JOIN `' . TABLE_PRODUCTS_TO_CATEGORIES . '` `ptc` ON `ptc`.`products_id`=`p`.`products_id` ' .
-				'WHERE `pd`.`language_id` = \'' . (int)$_SESSION['languages_id'] . '\' ' .
-				'AND `ptc`.`categories_id`=\'' . (int)$add_product_categories_id .'\' ORDER BY `p`.`products_id`';
+				'WHERE `ptc`.`categories_id`=\'' . (int)$add_product_categories_id .'\' ORDER BY `p`.`products_id`';
 		}
 		else if(zen_not_null($_POST['search']))
 		{
@@ -1549,13 +1550,11 @@ if($action == "add_prdct")
 			$keywords = zen_db_input(zen_db_prepare_input($_POST['search']));
 
 			$query .=
-				'WHERE `pd`.`language_id` = \'' . (int)$_SESSION['languages_id'] . '\' ' .
-				'AND ( ' .
-					'`pd`.`products_name` LIKE \'%' . $keywords . '%\' OR ' .
-					'`pd`.`products_description` LIKE \'%' . $keywords . '%\' OR ' .
-					'`p`.`products_id` = \'' . $keywords . '\' OR ' .
-					'`p`.`products_model` LIKE \'%' . $keywords . '%\' ' .
-				') ORDER BY `p`.`products_id`';
+				'WHERE (`pd`.`products_name` LIKE \'%' . $keywords . '%\' ' .
+					'OR `pd`.`products_description` LIKE \'%' . $keywords . '%\' ' .
+					'OR `p`.`products_id` = \'' . $keywords . '\' ' .
+					'OR `p`.`products_model` LIKE \'%' . $keywords . '%\') ';
+			$query .= 'ORDER BY `p`.`products_id`';
 		}
 
 		echo "<tr class='dataTableRow'>".zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action', 'oID')) . 'oID='.$oID.'&action=add_prdct', 'post', '', true);
