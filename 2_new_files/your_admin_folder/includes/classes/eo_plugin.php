@@ -33,6 +33,7 @@ class eo_plugin extends plugin {
 			DIR_FS_ADMIN . DIR_WS_CLASSES . 'attributes.php',
 			DIR_FS_ADMIN . DIR_WS_CLASSES . 'mock_cart.php',
 			DIR_FS_ADMIN . DIR_WS_INCLUDES . 'extra_configures/edit_orders.php',
+            DIR_FS_ADMIN . DIR_WS_INCLUDES . 'extra_datafiles/eo_sanitization.php',
 			DIR_FS_ADMIN . DIR_WS_FUNCTIONS . 'extra_functions/edit_orders_functions.php',
 			DIR_FS_ADMIN . DIR_WS_LANGUAGES . 'english/edit_orders.php',
 			DIR_FS_ADMIN . DIR_WS_LANGUAGES . 'english/extra_definitions/edit_orders.php',
