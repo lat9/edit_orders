@@ -13,3 +13,5 @@ List of "Optional Items"
 ===========================================================
 1. "onetime discount": This is an order total module which
    allows adding an onetime discount to an existing order.
+2. "Misc. Cost":  This is an order-total module that enables
+   adding a miscellaneous cost to an existing order.
