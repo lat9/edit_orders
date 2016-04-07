@@ -1314,7 +1314,6 @@ function eo_update_database_order_totals($oID) {
 
 		// Process the order totals
 		$order_totals = $GLOBALS['order_total_modules']->process();
-
 		// Update the order totals in the database
 		for ($i=0, $n=sizeof($order_totals); $i<$n; $i++) {
 			eo_update_database_order_total($oID, $order_totals[$i]);
@@ -1348,23 +1347,24 @@ function eo_update_database_order_total($oID, $order_total) {
 		'value' => (is_numeric($order_total['value'])) ? $order_total['value'] : '0',
 		'sort_order' => $order_total['sort_order']
 	);
-	// Update the Order Totals in the Database
+	// Update the Order Totals in the Database, recognizing that there might be multiple records for the product's tax
+    $and_clause = ($order_total['code'] == 'ot_tax' && SHOW_SPLIT_TAX_CHECKOUT == 'true') ? (" AND `title` = '" . $order_total['title'] . "'") : '';
 	$found = $db->Execute(
 		'SELECT `orders_id` FROM `' . TABLE_ORDERS_TOTAL . '` ' .
 		'WHERE `class`=\'' . $order_total['code'] .
-		'\' AND `orders_id`=\'' . (int)$oID .'\''
+		'\' AND `orders_id`=' . (int)$oID . $and_clause
 	);
 	if(!$found->EOF) {
 		if(zen_not_null($order_total['title']) && $order_total['title'] != ':') {
 			zen_db_perform(
 				TABLE_ORDERS_TOTAL, $sql_data_array, 'update',
-				'class=\'' . $order_total['code'] . '\' AND orders_id=\'' . (int)$oID .'\''
+				"class='" . $order_total['code'] . "' AND orders_id=" . (int)$oID . $and_clause
 			);
 		}
 		else {
 			$db->Execute(
 				'DELETE FROM `' . TABLE_ORDERS_TOTAL . '` ' .
-				'WHERE `class`=\'' . $order_total['code'] . '\' AND `orders_id`=\'' . (int)$oID . '\''
+				"WHERE `class`= '" . $order_total['code'] . "' AND orders_id`=" . (int)$oID . $and_clause
 			);
 		}
 		$updated = true;
@@ -1382,10 +1382,15 @@ function eo_update_database_order_total($oID, $order_total) {
 	// Update order if relevant
 	switch($order_total['code']) {
 		case 'ot_tax':
+//-bof-20160407-lat9-Any tax is now added to the order, so that stores using split-tax display can still use EO
+/*
 			zen_db_perform(
 				TABLE_ORDERS, array('order_tax' => $sql_data_array['value']), 'update',
 				'orders_id = \'' . (int)$oID . '\''
 			);
+*/
+            $db->Execute ("UPDATE " . TABLE_ORDERS . " SET order_tax = order_tax + " . $sql_data_array['value'] . " WHERE orders_id = " . (int)$oID . " LIMIT 1");
+//-eof-20160407-lat9
 			break;
 		case 'ot_total':
 			zen_db_perform(

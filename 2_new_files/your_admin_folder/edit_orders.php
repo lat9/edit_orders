@@ -101,7 +101,10 @@
 			'payment_method' => zen_db_prepare_input($_POST['update_info_payment_method']),
 			'cc_type' => zen_db_prepare_input($_POST['update_info_cc_type']),
 			'cc_owner' => zen_db_prepare_input($_POST['update_info_cc_owner']),
-			'cc_expires' => zen_db_prepare_input($_POST['update_info_cc_expires'])
+//-bof-20160407-lat9-Initialize tax value to 0, enables stores with split-tax display to properly update the tax
+			'cc_expires' => zen_db_prepare_input($_POST['update_info_cc_expires']),
+            'order_tax' => 0
+//-eof-20160407-lat9
 		);
 
 		// If the country was passed as an id, change it to the country name for
