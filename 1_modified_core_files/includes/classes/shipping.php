@@ -40,17 +40,17 @@ class shipping extends base {
       }
 
       for ($i=0, $n=sizeof($include_modules); $i<$n; $i++) {
-        // Fixes for when called from ADMIN
-      	$lang_file = null;
-      	$module_file = DIR_WS_MODULES . 'shipping/' . $include_modules[$i]['file'];
-      	if(IS_ADMIN_FLAG === true) {
-      		$lang_file = zen_get_file_directory(DIR_FS_CATALOG . DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/shipping/', $include_modules[$i]['file'], 'false');
-      		$module_file = DIR_FS_CATALOG . $module_file;
-      	}
-        else {
-        	$lang_file = zen_get_file_directory(DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/shipping/', $include_modules[$i]['file'], 'false');
+        // START edit orders patch (1 of 2)
+        $lang_file = null;
+        $module_file = DIR_WS_MODULES . 'shipping/' . $include_modules[$i]['file'];
+        if(IS_ADMIN_FLAG === true) {
+          $lang_file = zen_get_file_directory(DIR_FS_CATALOG . DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/shipping/', $include_modules[$i]['file'], 'false');
+          $module_file = DIR_FS_CATALOG . $module_file;
         }
-
+        else {
+          $lang_file = zen_get_file_directory(DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/shipping/', $include_modules[$i]['file'], 'false');
+        }
+        // END edit orders patch (1 of 2)
         if (@file_exists($lang_file)) {
           include_once($lang_file);
         } else {
@@ -64,7 +64,9 @@ class shipping extends base {
         $this->notify('NOTIFY_SHIPPING_MODULE_ENABLE', $include_modules[$i]['class']);
         if ($this->enabled)
         {
+          // START edit orders patch (2 of 2)
           include_once($module_file);
+          // END edit orders patch (2 of 2)
           $GLOBALS[$include_modules[$i]['class']] = new $include_modules[$i]['class'];
         }
       }
@@ -182,7 +184,7 @@ class shipping extends base {
       for ($i=0; $i<$size; $i++) {
         if (is_array($cheapest)) {
           // never quote storepickup as lowest - needs to be configured in shipping module
-          if ($rates[$i]['cost'] < $cheapest['cost'] && $rates[$i]['module'] != 'storepickup') {
+          if ($rates[$i]['cost'] < $cheapest['cost'] and $rates[$i]['module'] != 'storepickup') {
             $cheapest = $rates[$i];
           }
         } else {

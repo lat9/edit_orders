@@ -29,16 +29,17 @@ class order_total extends base {
 
       reset($module_list);
       while (list(, $value) = each($module_list)) {
-      	// Fixes for when called from ADMIN
-      	$lang_file = null;
-      	$module_file = DIR_WS_MODULES . 'order_total/' . $value;
-      	if(IS_ADMIN_FLAG === true) {
-      		$lang_file = zen_get_file_directory(DIR_FS_CATALOG . DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/order_total/', $value, 'false');
-      		$module_file = DIR_FS_CATALOG . $module_file;
-      	}
-        else {
-        	$lang_file = zen_get_file_directory(DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/order_total/', $value, 'false');
+        // START edit orders (1 of 2)
+        $lang_file = null;
+        $module_file = DIR_WS_MODULES . 'order_total/' . $value;
+        if(IS_ADMIN_FLAG === true) {
+          $lang_file = zen_get_file_directory(DIR_FS_CATALOG . DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/order_total/', $value, 'false');
+          $module_file = DIR_FS_CATALOG . $module_file;
         }
+        else {
+          $lang_file = zen_get_file_directory(DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/order_total/', $value, 'false');
+        }
+        // END edit orders patch (1 of 2)
         if (@file_exists($lang_file)) {
           include_once($lang_file);
         } else {
@@ -48,6 +49,7 @@ class order_total extends base {
             $messageStack->add_session(WARNING_COULD_NOT_LOCATE_LANG_FILE . $lang_file, 'caution');
           }
         }
+        // REMOVED LINES edit orders patch (2 of 2)
         if (@file_exists($module_file)) {
           include_once($module_file);
           $class = substr($value, 0, strrpos($value, '.'));
