@@ -12,9 +12,9 @@ if (defined ('PROJECT_VERSION_MAJOR') && version_compare (PROJECT_VERSION_MAJOR 
             'pages' => array('edit_orders'),
             'params' => array(
                 'update_products' => array('sanitizerType' => 'CONVERT_INT'),
-                'qty' => array('sanitizerType' => 'CONVERT_INT'),
+                'qty' => array('sanitizerType' => 'FLOAT_VALUE_REGEX'),
                 'name' => array('sanitizerType' => 'PRODUCT_DESC_REGEX'),
-                'onetime_charges' => array('sanitizerType' => 'CURRENCY_VALUE_REGEX'),
+                'onetime_charges' => array('sanitizerType' => 'FLOAT_VALUE_REGEX'),
                 'attr' => array(
                     'sanitizerType' => 'MULTI_DIMENSIONAL',
                     'params' => array(
@@ -24,8 +24,8 @@ if (defined ('PROJECT_VERSION_MAJOR') && version_compare (PROJECT_VERSION_MAJOR 
                     )
                 ),
                 'model' => array('sanitizerType' => 'WORDS_AND_SYMBOLS_REGEX'),
-                'tax' => array('sanitizerType' => 'CURRENCY_VALUE_REGEX'),
-                'final_price' => array('sanitizerType' => 'CURRENCY_VALUE_REGEX'),
+                'tax' => array('sanitizerType' => 'FLOAT_VALUE_REGEX'),
+                'final_price' => array('sanitizerType' => 'FLOAT_VALUE_REGEX'),
             )
         )
     );
