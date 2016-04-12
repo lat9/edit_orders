@@ -1,9 +1,9 @@
 <?php
 // -----
 // Part of the Edit Orders plugin, v4.1.4a or later.  This file defines the level of "sanitization" required by the adminSanitizer function,
-// introduced in Zen Cart v1.5.5.
+// introduced in a patch-level of Zen Cart v1.5.5, so need to make sure that the "proper" version of the class is included.
 //
-if (defined ('PROJECT_VERSION_MAJOR') && version_compare (PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR, '1.5.5', '>=')) {
+if (defined ('PROJECT_VERSION_MAJOR') && version_compare (PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR, '1.5.5', '>=') && class_exists ('AdminRequestSanitizer') && method_exists ('AdminRequestSanitizer', 'getInstance')) {
     $eo_sanitizer = AdminRequestSanitizer::getInstance();
     $eo_group = array(
         'update_products' => array(

@@ -863,9 +863,7 @@ function eo_add_product_to_order($order_id, $product) {
 		'products_price' => $product['price'],
 		'final_price' => $product['final_price'],
 		'onetime_charges' => $product['onetime_charges'],
-//-bof-20151004-lat9-Unconditionally set tax to 0 (GitHub #96).  The value can be changed if necessary
-		'products_tax' => /*$product['tax']*/ 0,
-//-eof-20151004-lat9
+		'products_tax' => $product['tax'],
 		'products_quantity' => $product['qty'],
 		'products_priced_by_attribute' => $product['products_priced_by_attribute'],
 		'product_is_free' => $product['product_is_free'],
@@ -1346,7 +1344,7 @@ function eo_update_database_order_total($oID, $order_total) {
 	$sql_data_array = array(
 		'title' => $order_total['title'],
 		'text' => $order_total['text'],
-		'value' => (is_numeric($order_total['value'])) ? $order_total['value'] : 0,
+		'value' => (is_numeric($order_total['value'])) ? $order_total['value'] : '0',
 		'sort_order' => $order_total['sort_order']
 	);
 	// Update the Order Totals in the Database, recognizing that there might be multiple records for the product's tax
@@ -1366,7 +1364,7 @@ function eo_update_database_order_total($oID, $order_total) {
 		else {
 			$db->Execute(
 				'DELETE FROM `' . TABLE_ORDERS_TOTAL . '` ' .
-				"WHERE `class`= '" . $order_total['code'] . "' AND orders_id = " . (int)$oID . $and_clause
+				"WHERE `class`= '" . $order_total['code'] . "' AND orders_id`=" . (int)$oID . $and_clause
 			);
 		}
 		$updated = true;
@@ -1522,7 +1520,7 @@ function eo_get_order_by_id($oID) {
 			$order->customer['zone_id'] = zen_get_zone_id($order->customer['country']['id'], $order->customer['state']);
 		}
 	}
-	if(is_array ($order->delivery) && array_key_exists('country', $order->delivery)) { //-20150811-lat9-Add is_array since virtual products don't have a delivery address
+	if(array_key_exists('country', $order->delivery)) {
 		$country = eo_get_country($order->delivery['country']);
 		if($country !== null) {
 			$order->delivery['country'] = $country;
@@ -1580,15 +1578,6 @@ function eo_shopping_cart() {
 
 function eo_checks_and_warnings() {
 	global $db, $messageStack;
-    // -----
-    // Check to see if we're currently running on a Zen Cart 1.5.5 (or later) installation.  If so, check for the presence 
-    // of the AdminRequestSanitizer class -- it was released in a Zen Cart 1.5.5 point-release.  EO will not run properly
-    // on Zen Cart 1.5.5 without the sanitizer.
-    //
-    if (version_compare (PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR, '1.5.5', '>=') && !(class_exists ('AdminRequestSanitizer') && method_exists ('AdminRequestSanitizer', 'filterMultiDimensional'))) {
-        $messageStack->add_session (ERROR_ZC155_NO_SANITIZER);
-        zen_redirect (zen_href_link (FILENAME_DEFAULT));
-    }
 
 	$result = $db->Execute('SELECT `project_version_major`, `project_version_minor` FROM `' . TABLE_PROJECT_VERSION . '` WHERE `project_version_key`=\'Zen-Cart Database\'');
 	$version = $result->fields['project_version_major'] . '.' . $result->fields['project_version_minor'];

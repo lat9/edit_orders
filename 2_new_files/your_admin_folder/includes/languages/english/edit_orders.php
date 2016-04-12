@@ -73,6 +73,7 @@ define('WARNING_ORDER_NOT_UPDATED', 'Warning: Nothing to change. The order was n
 define('WARNING_ORDER_QTY_OVER_MAX', 'Warning: The quantity requested exceeded the maximum allowed for an order. The quantity added was reduced to the maximum allowed per order.');
 define('WARNING_ORDER_COUPON_BAD', 'Warning: The coupon code was not found in the database. Note: the title / text of a coupon is usually formated like &quot;Discount Coupon : coupon_code :&quot;. ');
 
+define ('ERROR_ZC155_NO_SANITIZER', 'You must install the Zen Cart 1.5.5 <em>AdminRequestSanitizer</em> class before you can use Edit Orders on this site.');
 // Product & Attribute Display
 define('TEXT_ATTRIBUTES_ONE_TIME_CHARGE', 'One Time Charges: &nbsp;&nbsp;');
 define('TEXT_ATTRIBUTES_UPLOAD_NONE', 'No file was uploaded');

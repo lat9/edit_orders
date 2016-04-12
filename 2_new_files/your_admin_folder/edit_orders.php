@@ -16,15 +16,19 @@
 // | license@zen-cart.com so we can mail you a copy immediately.          |
 // +----------------------------------------------------------------------+
 
-  global $db;
-
   require('includes/application_top.php');
 
   // Check for commonly broken attribute related items
   eo_checks_and_warnings();
 
   // Start the currencies code
-  include_once(DIR_WS_INCLUDES . 'init_includes/init_currencies.php');
+  if (!class_exists ('currencies')) {
+      require (DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php');
+  }
+  if (!isset ($_SESSION['currency'])) {
+      $_SESSION['currency'] = DEFAULT_CURRENCY;
+  }
+  $currencies = new currencies ();
 
   // Use the normal order class instead of the admin one
   include(DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php');
@@ -1376,7 +1380,7 @@
           echo zen_image(DIR_WS_ICONS . 'unlocked.gif', TEXT_VISIBLE) . "</td>\n";
         }
         echo '            <td class="smallText" valign="top">' . $orders_status_array[$orders_history->fields['orders_status_id']] . '</td>' . "\n";
-        echo '            <td class="smallText" valign="top">' . nl2br(zen_html_quotes($orders_history->fields['comments'])) . '&nbsp;</td>' . "\n" .
+        echo '            <td class="smallText" valign="top">' . nl2br(zen_db_output($orders_history->fields['comments'])) . '&nbsp;</td>' . "\n" .
              '          </tr>' . "\n";
         $orders_history->MoveNext();
       }
