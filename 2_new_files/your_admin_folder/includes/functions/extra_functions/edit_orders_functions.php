@@ -863,9 +863,7 @@ function eo_add_product_to_order($order_id, $product) {
 		'products_price' => $product['price'],
 		'final_price' => $product['final_price'],
 		'onetime_charges' => $product['onetime_charges'],
-//-bof-20151004-lat9-Unconditionally set tax to 0 (GitHub #96).  The value can be changed if necessary
-		'products_tax' => /*$product['tax']*/ 0,
-//-eof-20151004-lat9
+		'products_tax' => $product['tax'],
 		'products_quantity' => $product['qty'],
 		'products_priced_by_attribute' => $product['products_priced_by_attribute'],
 		'product_is_free' => $product['product_is_free'],
