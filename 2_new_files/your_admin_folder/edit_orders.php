@@ -1536,7 +1536,7 @@ if($action == "add_prdct")
 	// Step 2: Choose Product
 	if($step > 1 && ($add_product_categories_id != .5 || zen_not_null($_POST['search']))) {
 		$query =
-			'SELECT `p`.`products_id`, `p`.`products_model`, `pd`.`products_name` ' .
+			'SELECT `p`.`products_id`, `p`.`products_model`, `pd`.`products_name`, `p`.`products_status` ' .
 			'FROM `' . TABLE_PRODUCTS . '` `p` ' .
 			'INNER JOIN `' . TABLE_PRODUCTS_DESCRIPTION . '` `pd` ' .
 			'ON `pd`.`products_id`=`p`.`products_id` ' .
@@ -1546,8 +1546,7 @@ if($action == "add_prdct")
 		{
 			$query .=
 				'LEFT JOIN `' . TABLE_PRODUCTS_TO_CATEGORIES . '` `ptc` ON `ptc`.`products_id`=`p`.`products_id` ' .
-				'WHERE  `p`.products_status = "1" ' .
-				'AND `ptc`.`categories_id`=\'' . (int)$add_product_categories_id .'\' ORDER BY `p`.`products_id`';
+				'WHERE `ptc`.`categories_id`=\'' . (int)$add_product_categories_id .'\' ORDER BY `p`.`products_id`';
 		}
 		else if(zen_not_null($_POST['search']))
 		{
@@ -1559,7 +1558,6 @@ if($action == "add_prdct")
 					'OR `pd`.`products_description` LIKE \'%' . $keywords . '%\' ' .
 					'OR `p`.`products_id` = \'' . $keywords . '\' ' .
 					'OR `p`.`products_model` LIKE \'%' . $keywords . '%\') ';
-			$query .= 'AND `p`.products_status = "1" ';
 			$query .= 'ORDER BY `p`.`products_id`';
 		}
 
@@ -1572,7 +1570,7 @@ if($action == "add_prdct")
 		{
 			$ProductOptions .= '<option value="' . $result->fields['products_id'] .
 				'">' . $result->fields['products_name'] .
-				' [' . $result->fields['products_model'] . ']</option>' . PHP_EOL;
+				' [' . $result->fields['products_model'] . '] ' . ($result->fields['products_status'] == 0 ? " (OOS)":"") . '</option>' . PHP_EOL;
 			$result->MoveNext();
 		}
 		$ProductOptions = str_replace(
