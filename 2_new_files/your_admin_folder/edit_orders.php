@@ -1546,7 +1546,8 @@ if($action == "add_prdct")
 		{
 			$query .=
 				'LEFT JOIN `' . TABLE_PRODUCTS_TO_CATEGORIES . '` `ptc` ON `ptc`.`products_id`=`p`.`products_id` ' .
-				'WHERE `ptc`.`categories_id`=\'' . (int)$add_product_categories_id .'\' ORDER BY `p`.`products_id`';
+				'WHERE  `p`.products_status = "1" ' .
+				'AND `ptc`.`categories_id`=\'' . (int)$add_product_categories_id .'\' ORDER BY `p`.`products_id`';
 		}
 		else if(zen_not_null($_POST['search']))
 		{
@@ -1558,6 +1559,7 @@ if($action == "add_prdct")
 					'OR `pd`.`products_description` LIKE \'%' . $keywords . '%\' ' .
 					'OR `p`.`products_id` = \'' . $keywords . '\' ' .
 					'OR `p`.`products_model` LIKE \'%' . $keywords . '%\') ';
+			$query .= 'AND `p`.products_status = "1" ';
 			$query .= 'ORDER BY `p`.`products_id`';
 		}
 
