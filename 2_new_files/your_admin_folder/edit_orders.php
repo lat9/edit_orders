@@ -1536,7 +1536,7 @@ if($action == "add_prdct")
 	// Step 2: Choose Product
 	if($step > 1 && ($add_product_categories_id != .5 || zen_not_null($_POST['search']))) {
 		$query =
-			'SELECT `p`.`products_id`, `p`.`products_model`, `pd`.`products_name` ' .
+			'SELECT `p`.`products_id`, `p`.`products_model`, `pd`.`products_name`, `p`.`products_status` ' .
 			'FROM `' . TABLE_PRODUCTS . '` `p` ' .
 			'INNER JOIN `' . TABLE_PRODUCTS_DESCRIPTION . '` `pd` ' .
 			'ON `pd`.`products_id`=`p`.`products_id` ' .
@@ -1570,7 +1570,7 @@ if($action == "add_prdct")
 		{
 			$ProductOptions .= '<option value="' . $result->fields['products_id'] .
 				'">' . $result->fields['products_name'] .
-				' [' . $result->fields['products_model'] . ']</option>' . PHP_EOL;
+				' [' . $result->fields['products_model'] . '] ' . ($result->fields['products_status'] == 0 ? " (OOS)":"") . '</option>' . PHP_EOL;
 			$result->MoveNext();
 		}
 		$ProductOptions = str_replace(
