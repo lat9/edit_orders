@@ -1584,7 +1584,7 @@ function eo_checks_and_warnings() {
     // on Zen Cart 1.5.5 without the sanitizer.
     //
     if (version_compare (PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR, '1.5.5', '>=') && !(class_exists ('AdminRequestSanitizer') && method_exists ('AdminRequestSanitizer', 'filterMultiDimensional'))) {
-        $messageStack->add_session (ERROR_ZC155_NO_SANITIZER);
+        $messageStack->add_session (ERROR_ZC155_NO_SANITIZER, 'error');
         zen_redirect (zen_href_link (FILENAME_DEFAULT));
     }
 
