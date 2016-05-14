@@ -35,9 +35,8 @@ if (class_exists ('AdminRequestSanitizer') && method_exists ('AdminRequestSaniti
             'params' => array (
                 'id' => array ('sanitizerType' => 'CONVERT_INT'),
                 'type' => array ('sanitizerType' => 'CONVERT_INT'),
-                'value' => array ('sanitizerType' => 'PRODUCT_DESC_REGEX',
+                'value' => array ('sanitizerType' => 'PRODUCT_DESC_REGEX'),
             ),
-            
         )
     );
     $eo_sanitizer->addComplexSanitization ($eo_group);
