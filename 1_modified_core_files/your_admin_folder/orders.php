@@ -328,7 +328,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=<?php echo CHARSET; ?>">
 <title><?php echo TITLE; ?></title>
 <link rel="stylesheet" type="text/css" href="includes/stylesheet.css">
-<link rel="stylesheet" type="text/css" href="includes/edit_orders.css">
+<link rel="stylesheet" type="text/css" href="includes/edit_orders.css"> <?php //-bof-edit_orders-Add CSS file   *** 1 of 5 ?>
 <link rel="stylesheet" type="text/css" media="print" href="includes/stylesheet_print.css">
 <link rel="stylesheet" type="text/css" href="includes/cssjsmenuhover.css" media="all" id="hoverJS">
 <script language="javascript" src="includes/menu.js"></script>
@@ -741,7 +741,7 @@ function couponpopupWindow(url) {
         </table></td>
       </form></tr>
       <tr>
-        <!-- START edit orders patch (1 of 4) Add Edit Orders button //-->
+        <!-- START edit orders patch (2 of 5) Add Edit Orders button //-->
         <td colspan="2" align="right" class="noprint">
           <a href="<?php echo zen_href_link(FILENAME_ORDERS_INVOICE, 'oID=' . $_GET['oID']) ?>" target="_blank">
             <?php echo zen_image_button('button_invoice.gif', IMAGE_ORDERS_INVOICE); ?>
@@ -755,7 +755,7 @@ function couponpopupWindow(url) {
             </a>
           <?php } ?>
         </td>
-        <!-- END edit orders patch (1 of 4) Add Edit Orders button //-->
+        <!-- END edit orders patch (2 of 5) Add Edit Orders button //-->
       </tr>
 <?php
 // check if order has open gv
@@ -961,7 +961,7 @@ if (($_GET['page'] == '' or $_GET['page'] <= 1) and $_GET['oID'] != '') {
                 <td class="dataTableContent" align="center"><?php echo zen_datetime_short($orders->fields['date_purchased']); ?></td>
                 <td class="dataTableContent" align="right"><?php echo $orders->fields['orders_status_name']; ?></td>
                 <td class="dataTableContent" align="center"><?php echo (zen_get_orders_comments($orders->fields['orders_id']) == '' ? '' : zen_image(DIR_WS_IMAGES . 'icon_yellow_on.gif', TEXT_COMMENTS_YES, 16, 16)); ?></td>
-                <!-- START edit orders patch (2 of 4) Add Edit Orders action icon //-->
+                <!-- START edit orders patch (3 of 5) Add Edit Orders action icon //-->
                 <td class="dataTableContent" align="right">
                 <?php if (defined('FILENAME_EDIT_ORDERS')) { ?>
                   <a href="<?php echo zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . 'oID=' . $orders->fields['orders_id'] . '&action=edit', 'NONSSL'); ?>">
@@ -980,7 +980,7 @@ if (($_GET['page'] == '' or $_GET['page'] <= 1) and $_GET['oID'] != '') {
                   </a>
                 <?php } ?>
                 </td>
-                <!-- END edit orders patch (2 of 4) Add Edit Orders action icon //-->
+                <!-- END edit orders patch (3 of 5) Add Edit Orders action icon //-->
               </tr>
 <?php
       $orders->MoveNext();
@@ -1030,10 +1030,10 @@ if (($_GET['page'] == '' or $_GET['page'] <= 1) and $_GET['oID'] != '') {
       if (isset($oInfo) && is_object($oInfo)) {
         $heading[] = array('text' => '<strong>[' . $oInfo->orders_id . ']&nbsp;&nbsp;' . zen_datetime_short($oInfo->date_purchased) . '</strong>');
 
-        // START edit orders patch (3 of 4) Add Edit orders button (selected order)
+        // START edit orders patch (4 of 5) Add Edit orders button (selected order)
 		$contents[] = array('align' => 'center', 'text' => '<a href="' . zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('oID', 'action')) . 'oID=' . $oInfo->orders_id . '&action=edit', 'NONSSL') . '">' . zen_image_button('button_details.gif', IMAGE_DETAILS) . '</a>&nbsp;' . (defined('FILENAME_EDIT_ORDERS') ? '<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . 'oID=' . $oInfo->orders_id . '&action=edit', 'NONSSL') . '">' . zen_image_button('button_edit.gif', IMAGE_EDIT) . '</a>&nbsp;<a href="' . zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('oID', 'action')) . 'oID=' . $oInfo->orders_id . '&action=delete', 'NONSSL') . '">' . zen_image_button('button_delete.gif', IMAGE_DELETE) . '</a>' : ''));
         $contents[] = array('align' => 'center', 'text' => '<a href="' . zen_href_link(FILENAME_ORDERS_INVOICE, 'oID=' . $oInfo->orders_id) . '" TARGET="_blank">' . zen_image_button('button_invoice.gif', IMAGE_ORDERS_INVOICE) . '</a>&nbsp;<a href="' . zen_href_link(FILENAME_ORDERS_PACKINGSLIP, 'oID=' . $oInfo->orders_id) . '" TARGET="_blank">' . zen_image_button('button_packingslip.gif', IMAGE_ORDERS_PACKINGSLIP) . '</a>');
-        // END edit orders patch (3 of 4) Add Edit orders button (selected order)
+        // END edit orders patch (4 of 5) Add Edit orders button (selected order)
         $contents[] = array('text' => '<br />' . TEXT_DATE_ORDER_CREATED . ' ' . zen_date_short($oInfo->date_purchased));
         $contents[] = array('text' => '<br />' . $oInfo->customers_email_address);
         $contents[] = array('text' => TEXT_INFO_IP_ADDRESS . ' ' . $oInfo->ip_address);
@@ -1076,9 +1076,9 @@ if (($_GET['page'] == '' or $_GET['page'] <= 1) and $_GET['oID'] != '') {
       }
 
       if (sizeof($order->products) > 0) {
-        // START edit orders patch (4 of 4) Add Edit orders button (page bottom)
+        // START edit orders patch (5 of 5) Add Edit orders button (page bottom)
         $contents[] = array('align' => 'center', 'text' => '<a href="' . zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('oID', 'action')) . 'oID=' . $oInfo->orders_id . '&action=edit', 'NONSSL') . '">' . zen_image_button('button_details.gif', IMAGE_DETAILS) . '</a>&nbsp;' . (defined('FILENAME_EDIT_ORDERS') ? '<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . 'oID=' . $oInfo->orders_id . '&action=edit', 'NONSSL') . '">' . zen_image_button('button_edit.gif', IMAGE_EDIT) . '</a>' : ''));
-        // END edit orders patch (4 of 4) Add Edit orders button (page bottom)
+        // END edit orders patch (5 of 5) Add Edit orders button (page bottom)
       }
       break;
   }
