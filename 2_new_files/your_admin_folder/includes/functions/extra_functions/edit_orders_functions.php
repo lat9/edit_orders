@@ -1582,11 +1582,10 @@ function eo_shopping_cart() {
 function eo_checks_and_warnings() {
     global $db, $messageStack;
     // -----
-    // Check to see if we're currently running on a Zen Cart 1.5.5 (or later) installation.  If so, check for the presence 
-    // of the AdminRequestSanitizer class -- it was released in a Zen Cart 1.5.5 point-release.  EO will not run properly
-    // on Zen Cart 1.5.5 without the sanitizer.
+    // Check to see if the AdminRequestSanitizer class is present and, if so, that the multi-dimensional method
+    // exists; EO will not run properly in the presence of the originally-issued version of the class (without that method).
     //
-    if (version_compare (PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR, '1.5.5', '>=') && !(class_exists ('AdminRequestSanitizer') && method_exists ('AdminRequestSanitizer', 'filterMultiDimensional'))) {
+    if (class_exists ('AdminRequestSanitizer') && !method_exists ('AdminRequestSanitizer', 'filterMultiDimensional')) {
         $messageStack->add_session (ERROR_ZC155_NO_SANITIZER, 'error');
         zen_redirect (zen_href_link (FILENAME_DEFAULT));
     }
