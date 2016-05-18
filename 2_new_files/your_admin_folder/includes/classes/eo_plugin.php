@@ -26,17 +26,16 @@ class eo_plugin extends plugin {
 		);
 	}
 	public function getNewFiles() {
-		return array(
+
+        $new_files_array = array (
 			DIR_FS_ADMIN . 'edit_orders.php',
 			DIR_FS_ADMIN . DIR_WS_INCLUDES . 'edit_orders.css',
 			DIR_FS_ADMIN . DIR_WS_INCLUDES . 'auto_loaders/config.eo.php',
-            DIR_FS_ADMIN . DIR_WS_INCLUDES . 'auto_loaders/config.zc154_compatibility.php',
 			DIR_FS_ADMIN . DIR_WS_CLASSES . 'attributes.php',
 			DIR_FS_ADMIN . DIR_WS_CLASSES . 'mock_cart.php',
 			DIR_FS_ADMIN . DIR_WS_INCLUDES . 'extra_configures/edit_orders.php',
             DIR_FS_ADMIN . DIR_WS_INCLUDES . 'extra_datafiles/eo_sanitization.php',
 			DIR_FS_ADMIN . DIR_WS_FUNCTIONS . 'extra_functions/edit_orders_functions.php',
-            DIR_FS_ADMIN . DIR_WS_INCLUDES . 'init_includes/init_zc154_compatibility.php',
 			DIR_FS_ADMIN . DIR_WS_LANGUAGES . 'english/edit_orders.php',
 			DIR_FS_ADMIN . DIR_WS_LANGUAGES . 'english/extra_definitions/edit_orders.php',
 			DIR_FS_ADMIN . DIR_WS_LANGUAGES . 'english/images/buttons/button_add_product.gif',
@@ -48,6 +47,12 @@ class eo_plugin extends plugin {
 			DIR_FS_ADMIN . DIR_WS_IMAGES . 'icon_details.gif',
 			DIR_FS_ADMIN . DIR_WS_IMAGES . 'icon_invoice.gif'
 		);
+        $current_version = PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR;
+        if (version_compare ($current_version, '1.5.4', '<')) {
+            $new_files_needed[] = DIR_FS_ADMIN . DIR_WS_INCLUDES . 'auto_loaders/config.zc154_compatibility.php';
+            $new_files_needed[] = DIR_FS_ADMIN . DIR_WS_INCLUDES . 'init_includes/init_zc154_compatibility.php';
+        }
+        return $new_files_needed;
 	}
 	public function getObsoleteFiles() {
 		return array(
