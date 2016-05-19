@@ -49,10 +49,10 @@ class eo_plugin extends plugin {
 		);
         $current_version = PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR;
         if (version_compare ($current_version, '1.5.4', '<')) {
-            $new_files_needed[] = DIR_FS_ADMIN . DIR_WS_INCLUDES . 'auto_loaders/config.zc154_compatibility.php';
-            $new_files_needed[] = DIR_FS_ADMIN . DIR_WS_INCLUDES . 'init_includes/init_zc154_compatibility.php';
+            $new_files_array[] = DIR_FS_ADMIN . DIR_WS_INCLUDES . 'auto_loaders/config.zc154_compatibility.php';
+            $new_files_array[] = DIR_FS_ADMIN . DIR_WS_INCLUDES . 'init_includes/init_zc154_compatibility.php';
         }
-        return $new_files_needed;
+        return $new_files_array;
 	}
 	public function getObsoleteFiles() {
 		return array(
