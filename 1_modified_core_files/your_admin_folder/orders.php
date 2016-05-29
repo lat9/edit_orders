@@ -750,7 +750,7 @@ function couponpopupWindow(url) {
           </a>&nbsp;<a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('action'))); ?>">
             <?php echo zen_image_button('button_orders.gif', IMAGE_ORDERS); ?>
           </a>&nbsp;<?php if (defined('FILENAME_EDIT_ORDERS')) {
-            ?><a href="<?php zen_href_link(FILENAME_EDIT_ORDERS, 'oID=' . $oID); ?>">
+            ?><a href="<?php echo zen_href_link(FILENAME_EDIT_ORDERS, 'oID=' . $oID); ?>">
               <?php echo zen_image_button('button_edit.gif', IMAGE_EDIT); ?>
             </a>
           <?php } ?>
