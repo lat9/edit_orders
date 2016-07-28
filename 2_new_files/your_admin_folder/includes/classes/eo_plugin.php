@@ -33,6 +33,7 @@ class eo_plugin extends plugin {
             DIR_FS_ADMIN . DIR_WS_INCLUDES . 'auto_loaders/config.eo.php',
             DIR_FS_ADMIN . DIR_WS_CLASSES . 'attributes.php',
             DIR_FS_ADMIN . DIR_WS_CLASSES . 'mock_cart.php',
+            DIR_FS_ADMIN . DIR_WS_CLASSES . 'eoHelper.php',
             DIR_FS_ADMIN . DIR_WS_INCLUDES . 'extra_configures/edit_orders.php',
             DIR_FS_ADMIN . DIR_WS_INCLUDES . 'extra_datafiles/eo_sanitization.php',
             DIR_FS_ADMIN . DIR_WS_FUNCTIONS . 'extra_functions/edit_orders_functions.php',
@@ -48,7 +49,7 @@ class eo_plugin extends plugin {
             DIR_FS_ADMIN . DIR_WS_IMAGES . 'icon_invoice.gif'
         );
         $current_version = PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR;
-        if (version_compare ($current_version, '1.5.4', '<')) {
+        if ($current_version < '1.5.4') {
             $new_files_array[] = DIR_FS_ADMIN . DIR_WS_INCLUDES . 'auto_loaders/config.zc154_compatibility.php';
             $new_files_array[] = DIR_FS_ADMIN . DIR_WS_INCLUDES . 'init_includes/init_zc154_compatibility.php';
         }

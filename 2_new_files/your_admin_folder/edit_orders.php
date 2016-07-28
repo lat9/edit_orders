@@ -38,6 +38,12 @@
   $add_product_categories_id = zen_db_prepare_input($_POST['add_product_categories_id']);
   $add_product_products_id = zen_db_prepare_input($_POST['add_product_products_id']);
   $add_product_quantity = zen_db_prepare_input($_POST['add_product_quantity']);
+  
+  // -----
+  // Include and instantiate the eoHelper class.
+  //
+  require (DIR_WS_CLASSES . 'eoHelper.php');
+  $eo_helper = new eoHelper ($oID);
 
   $orders_statuses = array();
   $orders_status_array = array();
@@ -54,14 +60,7 @@
   $action = (isset($_GET['action']) ? $_GET['action'] : 'edit');
 
   if (zen_not_null($action)) {
-      if(EO_DEBUG_ACTION_LEVEL > 0) eo_log(
-        '============================================================' . PHP_EOL .
-        '= Edit Orders (' . EO_VERSION . ') Action Log' . PHP_EOL .
-        '============================================================' . PHP_EOL .
-        'Order ID: ' . $oID . PHP_EOL .
-        'Action Requested: ' . $action . PHP_EOL .
-        'Enabled Order Totals: ' . str_replace('.php', '', MODULE_ORDER_TOTAL_INSTALLED) . PHP_EOL
-      );
+    $eo_helper->eoLog ("Edit Orders entered (". EO_VERSION . ") action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
 
     switch ($action) {
 
@@ -252,28 +251,21 @@
         // Load the order details.
         $GLOBALS['order'] = eo_get_order_by_id($oID);
 
-        switch(true) {
-            case EO_DEBUG_ACTION_LEVEL > 2:
-                eo_log('Order Subtotal: ' . $GLOBALS['order']->info['subtotal']);
-                eo_log('Order Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL);
-            case EO_DEBUG_ACTION_LEVEL > 1:
-                eo_log('Order Tax (total): ' . $GLOBALS['order']->info['tax']);
-                eo_log('Order Tax Groups:' . PHP_EOL . var_export($GLOBALS['order']->info['tax_groups'], true) . PHP_EOL);
-            default:
-        }
+        $eo_helper->eoLog (
+            PHP_EOL . 'Order Subtotal: ' . $GLOBALS['order']->info['subtotal'] . PHP_EOL .
+            'Order Totals:' . PHP_EOL . var_export ($GLOBALS['order']->totals, true) . PHP_EOL .
+            'Order Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
+            'Order Tax Groups:' . PHP_EOL . var_export ($GLOBALS['order']->info['tax_groups'], true)
+        );
 
         // Handle updating products and attributes as needed
         if(array_key_exists('update_products', $_POST)) {
             $_POST['update_products'] = zen_db_prepare_input($_POST['update_products']);
 
-            if(EO_DEBUG_ACTION_LEVEL > 0) eo_log(
-                PHP_EOL . '============================================================' .
-                PHP_EOL . '= Processing Requested Updates to Products' .
-                PHP_EOL . '============================================================' .
-                PHP_EOL . PHP_EOL .
-                PHP_EOL . eo_log('Requested Products:' . PHP_EOL . var_export($_POST['update_products'], true) . PHP_EOL)
+            $eo_helper->eoLog (
+                PHP_EOL . 'Requested Products:' . PHP_EOL . var_export ($_POST['update_products'], true) . PHP_EOL .
+                'Products in Original Order: ' . PHP_EOL . var_export ($GLOBALS['order']->products, true)
             );
-            if(EO_DEBUG_ACTION_LEVEL > 3) eo_log('Products in Original Order: ' . PHP_EOL . var_export($GLOBALS['order']->products, true) . PHP_EOL);
 
             foreach($_POST['update_products'] as $orders_products_id => $product_update) {
                 $product_update['qty'] = (float) $product_update['qty'];
@@ -289,42 +281,36 @@
                 }
                 unset($orders_products_id_mapping); unset($i);
 
-                if(EO_DEBUG_ACTION_LEVEL > 3) {
-                    eo_log('Order Product ID: ' . $orders_products_id . ' Row ID: ' . $rowID);
-                    eo_log('Product in Request: ' . PHP_EOL . var_export($product_update, true) . PHP_EOL);
-                }
+                $eo_helper->eoLog (
+                    PHP_EOL . 'Order Product ID: ' . $orders_products_id . ' Row ID: ' . $rowID . PHP_EOL .
+                    'Product in Request: ' . PHP_EOL . var_export ($product_update, true)
+                );
+ 
 
                 // Only update if there is an existing item in the order
                 if($rowID >= 0) {
                     // Grab the old product + attributes
                     $old_product = $order->products[$rowID];
 
-                    switch(true) {
-                        case EO_DEBUG_ACTION_LEVEL > 3:
-                            eo_log('Old Product:' . PHP_EOL . var_export($old_product, true) . PHP_EOL);
-                        case EO_DEBUG_ACTION_LEVEL > 2:
-                            eo_log('Old Order Subtotal: ' . $GLOBALS['order']->info['subtotal']);
-                            eo_log('Old Order Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL);
-                        case EO_DEBUG_ACTION_LEVEL > 1:
-                            eo_log('Old Tax (total): ' . $GLOBALS['order']->info['tax']);
-                            eo_log('Old Tax Groups:' . PHP_EOL . var_export($GLOBALS['order']->info['tax_groups'], true) . PHP_EOL);
-                        default:
-                    }
+                    $eo_helper->eoLog (
+                        PHP_EOL . 'Old Product:' . PHP_EOL . var_export($old_product, true) . PHP_EOL .
+                        'Old Order Subtotal: ' . $GLOBALS['order']->info['subtotal'] . PHP_EOL .
+                        'Old Order Totals:' . PHP_EOL . var_export ($GLOBALS['order']->totals, true) . PHP_EOL .
+                        'Old Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
+                        'Old Tax Groups:' . PHP_EOL . var_export ($GLOBALS['order']->info['tax_groups'], true)
+                    );
                     // Remove the product from the order
                     eo_remove_product_from_order((int)$oID, $orders_products_id);
 
                     // Update Subtotal and Pricing
                     eo_update_order_subtotal((int)$oID, $old_product, false);
 
-                    switch(true) {
-                        case EO_DEBUG_ACTION_LEVEL > 2:
-                            eo_log('Removed Product Order Subtotal: ' . $GLOBALS['order']->info['subtotal']);
-                            eo_log('Removed Product Order Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL);
-                        case EO_DEBUG_ACTION_LEVEL > 1:
-                            eo_log('Removed Product Tax (total): ' . $GLOBALS['order']->info['tax']);
-                            eo_log('Removed Product Tax Groups:' . PHP_EOL . var_export($GLOBALS['order']->info['tax_groups'], true) . PHP_EOL);
-                        default:
-                    }
+                    $eo_helper->eoLog (
+                        PHP_EOL . 'Removed Product Order Subtotal: ' . $GLOBALS['order']->info['subtotal'] . PHP_EOL .
+                        'Removed Product Order Totals:' . PHP_EOL . var_export ($GLOBALS['order']->totals, true) . PHP_EOL .
+                        'Removed Product Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
+                        'Removed Product Tax Groups:' . PHP_EOL . var_export ($GLOBALS['order']->info['tax_groups'], true)
+                    );
 
                     if($product_update['qty'] > 0) {
 
@@ -371,17 +357,13 @@
                         // Update Subtotal and Pricing
                         eo_update_order_subtotal((int)$oID, $new_product);
 
-                        switch(true) {
-                            case EO_DEBUG_ACTION_LEVEL > 3:
-                                eo_log('Added Product:' . PHP_EOL . var_export($new_product, true) . PHP_EOL);
-                            case EO_DEBUG_ACTION_LEVEL > 2:
-                                eo_log('Added Product Order Subtotal: ' . $GLOBALS['order']->info['subtotal']);
-                                eo_log('Added Product Order Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL);
-                            case EO_DEBUG_ACTION_LEVEL > 1:
-                                eo_log('Added Product Tax (total): ' . $GLOBALS['order']->info['tax']);
-                                eo_log('Added Product Tax Groups:' . PHP_EOL . var_export($GLOBALS['order']->info['tax_groups'], true) . PHP_EOL);
-                            default:
-                        }
+                        $eo_helper->eoLog (
+                            PHP_EOL . 'Added Product:' . PHP_EOL . var_export($new_product, true) . PHP_EOL .
+                            'Added Product Order Subtotal: ' . $GLOBALS['order']->info['subtotal'] . PHP_EOL .
+                            'Added Product Order Totals:' . PHP_EOL . var_export ($GLOBALS['order']->totals, true) . PHP_EOL .
+                            'Added Product Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
+                            'Added Product Tax Groups:' . PHP_EOL . var_export ($GLOBALS['order']->info['tax_groups'], true)
+                        );
                     }
 
                     $order_updated = true;
@@ -406,35 +388,26 @@
                 $GLOBALS['order'] = eo_get_order_by_id($oID);
             }
 
-            switch(true) {
-                case EO_DEBUG_ACTION_LEVEL > 3:
-                    eo_log('Updated Products in Order:' . PHP_EOL . var_export($GLOBALS['order']->products, true) . PHP_EOL);
-                case EO_DEBUG_ACTION_LEVEL > 2:
-                    eo_log('Updated Products Order Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL);
-                case EO_DEBUG_ACTION_LEVEL > 1:
-                     eo_log('Updated Products Tax (total): ' . $GLOBALS['order']->info['tax']);
-                    eo_log('Updated Products Tax Groups:' . PHP_EOL . var_export($GLOBALS['order']->info['tax_groups'], true) . PHP_EOL);
-                default:
-            }
+            $eo_helper->eoLog (
+                PHP_EOL . 'Updated Products in Order:' . PHP_EOL . var_export ($GLOBALS['order']->products, true) . PHP_EOL .
+                'Updated Products Order Totals:' . PHP_EOL . var_export ($GLOBALS['order']->totals, true) . PHP_EOL .
+                'Updated Products Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
+                'Updated Products Tax Groups:' . PHP_EOL . var_export ($GLOBALS['order']->info['tax_groups'], true) . PHP_EOL
+            );
         }
 
         // Update order totals (or delete if no title / value)
-        if(array_key_exists('update_total', $_POST)) {
-            if(EO_DEBUG_ACTION_LEVEL > 0) eo_log(
+        if (array_key_exists('update_total', $_POST)) {
+            $eo_helper->eoLog (
                 PHP_EOL . '============================================================' .
                 PHP_EOL . '= Processing Requested Updates to Order Totals' .
                 PHP_EOL . '============================================================' .
                 PHP_EOL . PHP_EOL .
-                PHP_EOL . eo_log('Requested Order Totals:' . PHP_EOL . var_export($_POST['update_total'], true) . PHP_EOL)
+                'Requested Order Totals:' . PHP_EOL . var_export ($_POST['update_total'], true) . PHP_EOL .
+                'Starting Order Totals:' . PHP_EOL . var_export ($GLOBALS['order']->totals, true) . PHP_EOL .
+                'Starting Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
+                'Starting Tax Groups:' . PHP_EOL . var_export ($GLOBALS['order']->info['tax_groups'], true)
             );
-            switch(true) {
-                case EO_DEBUG_ACTION_LEVEL > 2:
-                    eo_log('Starting Order Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL);
-                case EO_DEBUG_ACTION_LEVEL > 1:
-                    eo_log('Starting Tax (total): ' . $GLOBALS['order']->info['tax']);
-                    eo_log('Starting Tax Groups:' . PHP_EOL . var_export($GLOBALS['order']->info['tax_groups'], true) . PHP_EOL);
-                default:
-            }
 
             foreach($_POST['update_total'] as $order_total) {
                 $order_total['text'] = $currencies->format($order_total['value'], true, $order->info['currency'], $order->info['currency_value']);
@@ -531,14 +504,11 @@
             $GLOBALS['order'] = eo_get_order_by_id($oID);
             eo_update_database_order_totals($oID);
 
-            switch(true) {
-                case EO_DEBUG_ACTION_LEVEL > 2:
-                    eo_log('Updated Order Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL);
-                case EO_DEBUG_ACTION_LEVEL > 1:
-                    eo_log('Updated Tax (total): ' . $GLOBALS['order']->info['tax']);
-                    eo_log('Updated Tax Groups:' . PHP_EOL . var_export($GLOBALS['order']->info['tax_groups'], true) . PHP_EOL);
-                default:
-            }
+            $eo_helper->eoLog (
+                PHP_EOL . 'Updated Order Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL .
+                'Updated Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
+                'Updated Tax Groups:' . PHP_EOL . var_export ($GLOBALS['order']->info['tax_groups'], true)
+            );
 
             // Unset some session variables after updating the order totals
             if(array_key_exists('cot_gv', $_SESSION)) unset($_SESSION['cot_gv']);
@@ -555,28 +525,23 @@
             $messageStack->add_session(WARNING_ORDER_NOT_UPDATED, 'warning');
         }
 
-        if(EO_DEBUG_ACTION_LEVEL > 0) eo_log(
+        $eo_helper->eoLog (
             PHP_EOL . '============================================================' .
             PHP_EOL . '= Done Processing Requested Updates to the Order' .
             PHP_EOL . '============================================================' .
-            PHP_EOL . PHP_EOL
+            PHP_EOL . PHP_EOL .
+            'Final Subtotal: ' . $GLOBALS['order']->info['subtotal'] . PHP_EOL .
+            'Final Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL .
+            'Final Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
+            'Final Tax Groups:' . PHP_EOL . var_export ($GLOBALS['order']->info['tax_groups'], true)
         );
-        switch(true) {
-            case EO_DEBUG_ACTION_LEVEL > 2:
-                eo_log('Final Subtotal: ' . $GLOBALS['order']->info['subtotal']);
-                eo_log('Final Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL);
-            case EO_DEBUG_ACTION_LEVEL > 1:
-                eo_log('Final Tax (total): ' . $GLOBALS['order']->info['tax']);
-                eo_log('Final Tax Groups:' . PHP_EOL . var_export($GLOBALS['order']->info['tax_groups'], true) . PHP_EOL);
-            default:
-        }
 
         zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit', 'NONSSL'));
         break;
 
     case 'add_prdct':
         if(!zen_not_null($step)) $step = 1;
-        if(EO_DEBUG_ACTION_LEVEL > 0) eo_log(
+        $eo_helper->eoLog (
             PHP_EOL . '============================================================' .
             PHP_EOL . '= Adding a new product to the order (step ' . $step . ')' .
             PHP_EOL . '============================================================' .
@@ -603,7 +568,7 @@
             );
 
             // Add the product to the order
-            if(EO_DEBUG_ACTION_LEVEL > 3) eo_log('Product Being Added:' . PHP_EOL . var_export($new_product, true) . PHP_EOL);
+            $eo_helper->eoLog (PHP_EOL . 'Product Being Added:' . PHP_EOL . var_export ($new_product, true) . PHP_EOL);
             eo_add_product_to_order($oID, $new_product);
 
             // Update Subtotal and Pricing
@@ -631,18 +596,14 @@
             $GLOBALS['order'] = eo_get_order_by_id($oID);
                eo_update_database_order_totals($oID);
 
-               switch(true) {
-                   case EO_DEBUG_ACTION_LEVEL > 3:
-                       eo_log('Final Products in Order:' . PHP_EOL . var_export($GLOBALS['order']->products, true) . PHP_EOL);
-                   case EO_DEBUG_ACTION_LEVEL > 2:
-                       eo_log('Final Order Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL);
-                   case EO_DEBUG_ACTION_LEVEL > 1:
-                       eo_log('Final Tax (total): ' . $GLOBALS['order']->info['tax']);
-                       eo_log('Final Tax Groups:' . PHP_EOL . var_export($GLOBALS['order']->info['tax_groups'], true) . PHP_EOL);
-                   default:
-               }
+            $eo_helper->eoLog (
+                PHP_EOL . 'Final Products in Order:' . PHP_EOL . var_export($GLOBALS['order']->products, true) . PHP_EOL .
+                'Final Order Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL .
+                'Final Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
+                'Final Tax Groups:' . PHP_EOL . var_export($GLOBALS['order']->info['tax_groups'], true) . PHP_EOL
+            );
 
-               zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit'));
+             zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit'));
         }
         break;
     }
@@ -996,17 +957,18 @@
       </tr>
 
     <!-- Begin Products Listings Block -->
-    <?php
+<?php
     $orders_products_id_mapping = eo_get_orders_products_id_mappings((int)$oID);
     for($i=0; $i<sizeof($order->products); $i++) {
         $orders_products_id = $orders_products_id_mapping[$i];
-        if(EO_DEBUG_ACTION_LEVEL > 3) eo_log(
+        $eo_helper->eoLog (
             PHP_EOL . '============================================================' .
             PHP_EOL . '= Creating display of Order Product #' . $orders_products_id .
             PHP_EOL . '============================================================' .
             PHP_EOL . 'Product Details:' .
             PHP_EOL . var_export($order->products[$i],true) . PHP_EOL
-        ); ?>
+        ); 
+?>
 
         <tr class="dataTableRow">
             <td class="dataTableContent" valign="top" align="left"><input name="update_products[<?php echo $orders_products_id; ?>][qty]" size="2" value="<?php echo zen_db_prepare_input($order->products[$i]['qty']); ?>" />&nbsp;&nbsp;&nbsp;&nbsp; X</td>
@@ -1025,11 +987,11 @@
                 $optionInfo = $attrs[$optionID[$j]];
                 $orders_products_attributes_id = $selected_attributes_id_mapping[$optionID[$j]];
 
-                if(EO_DEBUG_ACTION_LEVEL > 3) {
-                    eo_log('Options ID #' . $optionID[$j]);
-                    eo_log('Product Attribute: ' . PHP_EOL . var_export($orders_products_attributes_id, true) . PHP_EOL);
-                    eo_log('Options Info:' . PHP_EOL . var_export($optionInfo, true) . PHP_EOL);
-                }
+                $eo_helper->eoLog (
+                    PHP_EOL . 'Options ID #' . $optionID[$j] . PHP_EOL .
+                    'Product Attribute: ' . PHP_EOL . var_export ($orders_products_attributes_id, true) . PHP_EOL .
+                    'Options Info:' . PHP_EOL . var_export ($optionInfo, true)
+                );
 
                 switch($optionInfo['type']) {
                     case PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID:
