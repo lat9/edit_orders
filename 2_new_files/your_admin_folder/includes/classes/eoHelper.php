@@ -27,4 +27,44 @@ class eoHelper extends base
             error_log ($message . PHP_EOL, 3, $this->logfile_name);
         }
     }
+    
+    public function eoOrderIsVirtual ($order)
+    {
+        global $db;
+        $order_is_virtual = false;
+        foreach ($order->products as $current_product) {
+            $products_id = (int)$current_product['id'];
+            $virtual_check = $db->Execute ("SELECT products_virtual, products_model FROM " . TABLE_PRODUCTS . " WHERE products_id = $products_id LIMIT 1");
+            $this->eoLog (PHP_EOL . "Checking product ID#$products_id for virtual status" . PHP_EOL . var_export ($virtual_check, true));
+            if (!$virtual_check->EOF) {
+                if ($virtual_check->fields['products_virtual'] == 1 || strpos ($virtual_check->fields['products_model'], 'GIFT') === 0) {
+                    $order_is_virtual = true;
+                    break;  //-Out of foreach products loop
+                }
+                
+                if (isset ($current_product['attributes'])) {
+                    foreach ($current_product['attributes'] as $current_attribute) {
+                        $download_check = $db->Execute (
+                            "SELECT pa.products_id FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa, " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
+                              WHERE pa.products_id = $products_id
+                                AND pa.options_values_id = " . (int)$current_attribute['value_id'] . "
+                                AND pa.options_id = " . (int)$current_attribute['option_id'] . "
+                                AND pa.products_attributes_id = pad.products_attributes_id
+                              LIMIT 1"
+                        );
+                        $this->eoLog ("\tChecking whether the product's attribute is a download, option_id = " . $current_attribute['option_id'] . ", value_id = " . $current_attribute['value_id'] . ": (" . $download_check->EOF . ")");
+                        if (!$download_check->EOF) {
+                            $order_is_virtual = true;
+                            break;  //-Out of foreach attributes loop
+                        }
+                    }
+                    if ($order_is_virtual) {
+                        break;  //-Out of foreach products loop
+                    }
+                }
+            }
+        }
+        return $order_is_virtual;
+    }
+    
 }

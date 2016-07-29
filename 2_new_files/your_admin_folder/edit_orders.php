@@ -60,7 +60,7 @@
   $action = (isset($_GET['action']) ? $_GET['action'] : 'edit');
 
   if (zen_not_null($action)) {
-    $eo_helper->eoLog ("Edit Orders entered (". EO_VERSION . ") action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
+    $eo_helper->eoLog (date ('Y-m-d H:i:s') . ", Edit Orders entered (". EO_VERSION . ") action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
 
     switch ($action) {
 
@@ -358,7 +358,7 @@
                         eo_update_order_subtotal((int)$oID, $new_product);
 
                         $eo_helper->eoLog (
-                            PHP_EOL . 'Added Product:' . PHP_EOL . var_export($new_product, true) . PHP_EOL .
+                            PHP_EOL . 'Added Product:' . PHP_EOL . var_export ($new_product, true) . PHP_EOL .
                             'Added Product Order Subtotal: ' . $GLOBALS['order']->info['subtotal'] . PHP_EOL .
                             'Added Product Order Totals:' . PHP_EOL . var_export ($GLOBALS['order']->totals, true) . PHP_EOL .
                             'Added Product Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
@@ -615,13 +615,13 @@
     if (!$orders_query->RecordCount()) {
       $order_exists = false;
       $messageStack->add(sprintf(ERROR_ORDER_DOES_NOT_EXIST, $oID), 'error');
-    }
-    else {
+    } else {
         $order = eo_get_order_by_id($oID);
 
-        if(!is_array($order->customer['country']) || !array_key_exists('id', $order->customer['country']) ||
-            !is_array($order->billing['country']) || !array_key_exists('id', $order->billing['country']) ||
-            !is_array($order->delivery['country']) || !array_key_exists('id', $order->delivery['country'])) {
+        if (!$eo_helper->eoOrderIsVirtual ($order) &&
+               ( !is_array($order->customer['country']) || !array_key_exists('id', $order->customer['country']) ||
+                 !is_array($order->billing['country']) || !array_key_exists('id', $order->billing['country']) ||
+                 !is_array($order->delivery['country']) || !array_key_exists('id', $order->delivery['country']) )) {
             $messageStack->add(WARNING_ADDRESS_COUNTRY_NOT_FOUND, 'warning');
         }
     }
