@@ -126,76 +126,76 @@ if(!function_exists('zen_html_unquote')) {
 
 if(!function_exists('zen_get_tax_description')) {
     function zen_get_tax_description($class_id, $country_id = -1, $zone_id = -1) {
-        global $db, $customer_zone_id, $customer_country_id;
-
+        global $db;
+        
         if ( ($country_id == -1) && ($zone_id == -1) ) {
-            if (!$_SESSION['customer_id']) {
-                $country_id = STORE_COUNTRY;
-                $zone_id = STORE_ZONE;
-            } else {
-                $country_id = $customer_country_id;
-                $zone_id = $customer_zone_id;
-            }
+          if (isset($_SESSION['customer_id'])) {
+            $country_id = $_SESSION['customer_country_id'];
+            $zone_id = $_SESSION['customer_zone_id'];
+          } else {
+            $country_id = STORE_COUNTRY;
+            $zone_id = STORE_ZONE;
+          }
         }
 
         $tax_query = "select tax_description
-        from (" . TABLE_TAX_RATES . " tr
-        left join " . TABLE_ZONES_TO_GEO_ZONES . " za on (tr.tax_zone_id = za.geo_zone_id)
-        left join " . TABLE_GEO_ZONES . " tz on (tz.geo_zone_id = tr.tax_zone_id) )
-        where (za.zone_country_id is null or za.zone_country_id = 0
-        or za.zone_country_id = '" . (int)$country_id . "')
-        and (za.zone_id is null
-        or za.zone_id = 0
-        or za.zone_id = '" . (int)$zone_id . "')
-        and tr.tax_class_id = '" . (int)$class_id . "'
-        order by tr.tax_priority";
+                      from (" . TABLE_TAX_RATES . " tr
+                      left join " . TABLE_ZONES_TO_GEO_ZONES . " za on (tr.tax_zone_id = za.geo_zone_id)
+                      left join " . TABLE_GEO_ZONES . " tz on (tz.geo_zone_id = tr.tax_zone_id) )
+                      where (za.zone_country_id is null or za.zone_country_id = 0
+                      or za.zone_country_id = '" . (int)$country_id . "')
+                      and (za.zone_id is null
+                      or za.zone_id = 0
+                      or za.zone_id = '" . (int)$zone_id . "')
+                      and tr.tax_class_id = '" . (int)$class_id . "'
+                      order by tr.tax_priority";
 
         $tax = $db->Execute($tax_query);
 
         if ($tax->RecordCount() > 0) {
-            $tax_description = '';
-            while (!$tax->EOF) {
-                $tax_description .= $tax->fields['tax_description'] . ' + ';
-                $tax->MoveNext();
-            }
-            $tax_description = substr($tax_description, 0, -3);
+          $tax_description = '';
+          while (!$tax->EOF) {
+            $tax_description .= $tax->fields['tax_description'] . ' + ';
+            $tax->MoveNext();
+          }
+          $tax_description = substr($tax_description, 0, -3);
 
-            return $tax_description;
+          return $tax_description;
         } else {
-            return null;
+          return TEXT_UNKNOWN_TAX_RATE;
         }
     }
 }
 
 if(!function_exists('zen_get_all_tax_descriptions')) {
     function zen_get_all_tax_descriptions($country_id = -1, $zone_id = -1) {
-        global $db, $customer_country_id, $customer_zone_id;
+        global $db;
         if ( ($country_id == -1) && ($zone_id == -1) ) {
-            if (!$_SESSION['customer_id']) {
-                $country_id = STORE_COUNTRY;
-                $zone_id = STORE_ZONE;
-            } else {
-                $country_id = $customer_country_id;
-                $zone_id = $customer_zone_id;
-            }
+          if (isset($_SESSION['customer_id'])) {
+            $country_id = $_SESSION['customer_country_id'];
+            $zone_id = $_SESSION['customer_zone_id'];
+          } else {
+            $country_id = STORE_COUNTRY;
+            $zone_id = STORE_ZONE;
+          }
         }
 
-        $sql = "select tr.*
-            from (" . TABLE_TAX_RATES . " tr
-            left join " . TABLE_ZONES_TO_GEO_ZONES . " za on (tr.tax_zone_id = za.geo_zone_id)
-            left join " . TABLE_GEO_ZONES . " tz on (tz.geo_zone_id = tr.tax_zone_id) )
-            where (za.zone_country_id is null
-            or za.zone_country_id = 0
-            or za.zone_country_id = '" . (int)$country_id . "')
-            and (za.zone_id is null
-            or za.zone_id = 0
-            or za.zone_id = '" . (int)$zone_id . "')";
+        $sql = "select tr.* 
+               from (" . TABLE_TAX_RATES . " tr
+               left join " . TABLE_ZONES_TO_GEO_ZONES . " za on (tr.tax_zone_id = za.geo_zone_id)
+               left join " . TABLE_GEO_ZONES . " tz on (tz.geo_zone_id = tr.tax_zone_id) )
+               where (za.zone_country_id is null
+               or za.zone_country_id = 0
+               or za.zone_country_id = '" . (int)$country_id . "')
+               and (za.zone_id is null
+               or za.zone_id = 0
+               or za.zone_id = '" . (int)$zone_id . "')";
         $result = $db->Execute($sql);
         $taxDescriptions =array();
         while (!$result->EOF)
         {
-            $taxDescriptions[] = $result->fields['tax_description'];
-            $result->moveNext();
+         $taxDescriptions[] = $result->fields['tax_description'];
+         $result->moveNext();
         }
         return $taxDescriptions;
     }
@@ -208,14 +208,14 @@ if(!function_exists('zen_get_tax_rate_from_desc')) {
 
         $tax_descriptions = explode(' + ', $tax_desc);
         foreach ($tax_descriptions as $tax_description) {
-            $tax_query = "SELECT tax_rate
-                FROM " . TABLE_TAX_RATES . "
-                WHERE tax_description = :taxDescLookup";
-            $tax_query = $db->bindVars($tax_query, ':taxDescLookup', $tax_description, 'string');
+          $tax_query = "SELECT tax_rate
+                        FROM " . TABLE_TAX_RATES . "
+                        WHERE tax_description = :taxDescLookup";
+          $tax_query = $db->bindVars($tax_query, ':taxDescLookup', $tax_description, 'string'); 
 
-            $tax = $db->Execute($tax_query);
+          $tax = $db->Execute($tax_query);
 
-            $tax_rate += $tax->fields['tax_rate'];
+          $tax_rate += $tax->fields['tax_rate'];
         }
 
         return $tax_rate;
@@ -236,16 +236,16 @@ if(!function_exists('zen_get_multiple_tax_rates')) {
         }
 
         $tax_query = "select tax_description, tax_rate, tax_priority
-            from (" . TABLE_TAX_RATES . " tr
-            left join " . TABLE_ZONES_TO_GEO_ZONES . " za on (tr.tax_zone_id = za.geo_zone_id)
-            left join " . TABLE_GEO_ZONES . " tz on (tz.geo_zone_id = tr.tax_zone_id) )
-            where (za.zone_country_id is null or za.zone_country_id = 0
-            or za.zone_country_id = '" . (int)$country_id . "')
-            and (za.zone_id is null
-            or za.zone_id = 0
-            or za.zone_id = '" . (int)$zone_id . "')
-            and tr.tax_class_id = '" . (int)$class_id . "'
-            order by tr.tax_priority";
+                      from (" . TABLE_TAX_RATES . " tr
+                      left join " . TABLE_ZONES_TO_GEO_ZONES . " za on (tr.tax_zone_id = za.geo_zone_id)
+                      left join " . TABLE_GEO_ZONES . " tz on (tz.geo_zone_id = tr.tax_zone_id) )
+                      where (za.zone_country_id is null or za.zone_country_id = 0
+                      or za.zone_country_id = '" . (int)$country_id . "')
+                      and (za.zone_id is null
+                      or za.zone_id = 0
+                      or za.zone_id = '" . (int)$zone_id . "')
+                      and tr.tax_class_id = '" . (int)$class_id . "'
+                      order by tr.tax_priority";
         $tax = $db->Execute($tax_query);
 
         // calculate appropriate tax rate respecting priorities and compounding
@@ -462,26 +462,6 @@ function eo_debug_action_level_list($level) {
 }
 
 // Start Edit Orders functions
-function eo_log($string) {
-    global $eo_logfile;
-    global $action;
-
-    // Determine logfile name if not already calculated
-    if(!isset($eo_logfile)) {
-        $eo_logfile = (defined('DIR_FS_LOGS') ? DIR_FS_LOGS : DIR_FS_SQL_CACHE . '/logs') .
-            '/edit_orders/DEBUG-' . (zen_not_null($action) ? $action . '-' : '') .
-            time() . '-' . mt_rand(1000,999999) . '.log';
-    }
-
-    // Create any needed directories (disables if error occurs)
-    if(!is_dir(dirname($eo_logfile)) && !mkdir(dirname($eo_logfile), 0777, true)) {
-        $eo_logfile = null;
-    }
-
-    if($eo_logfile !== null) {
-        error_log($string . PHP_EOL, 3, $eo_logfile);
-    }
-}
 
 /**
  * Retrieves the country id, name, iso_code_2, and iso_code_3 from the database
@@ -1035,7 +1015,7 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
 }
 
 function eo_get_product_taxes($product, $shown_price = -1, $add = true) {
-    global $db, $currencies, $order;
+    global $db, $currencies, $order, $eo_helper;
 
     if(DISPLAY_PRICE_WITH_TAX == 'true') {
         $shown_price = (zen_round($product['final_price'], $currencies->get_decimal_places($_SESSION['currency'])) + zen_calculate_tax($product['final_price'], $product['tax'])) * $product['qty'];
@@ -1048,21 +1028,23 @@ function eo_get_product_taxes($product, $shown_price = -1, $add = true) {
     // Not standard Zen Cart - but clears up some math issues later
     $shown_price = zen_round($shown_price, $currencies->get_decimal_places($_SESSION['currency']));
 
-    if(array_key_exists('tax_description', $product)) $products_tax_description = $product['tax_description'];
-    else {
+    $query = false;
+    if (isset ($product['tax_description'])) {
+        $products_tax_description = $product['tax_description'];
+    } else {
         $query = $db->Execute(
             'SELECT `products_tax_class_id` ' .
-            'FROM `' . TABLE_PRODUCTS . '` WHERE `products_id`=\'' . (int)$product['id'] . '\' '
+            'FROM `' . TABLE_PRODUCTS . '` WHERE `products_id`= ' . (int)$product['id'] . ' LIMIT 1'
         );
-        if(!$query->EOF) {
-            $products_tax_description = zen_get_tax_description($query->fields['products_tax_class_id']);
-        }
-        else if(array_key_exists('tax', $product)) {
-            $products_tax_description = TEXT_UNKNOWN_TAX_RATE .
-            ' (' . zen_display_tax_value($product['tax']) . '%)';
+        if (!$query->EOF) {
+            $products_tax_description = zen_get_tax_description ($query->fields['products_tax_class_id']);
+        } elseif (isset ($product['tax'])) {
+            $products_tax_description = TEXT_UNKNOWN_TAX_RATE . ' (' . zen_display_tax_value ($product['tax']) . '%)';
         }
     }
 
+    $eo_helper->eoLog ("eo_get_product_taxes ($products_tax_description)\n" . var_export ($query, true) . var_export ($product, true));
+    
     $totalTaxAdd = 0;
     if(zen_not_null($products_tax_description)) {
         $taxAdd = 0;
