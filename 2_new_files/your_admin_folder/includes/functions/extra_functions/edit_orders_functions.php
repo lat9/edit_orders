@@ -279,21 +279,32 @@ if(!function_exists('zen_get_multiple_tax_rates')) {
 if(!function_exists('zen_get_tax_locations')) {
     function zen_get_tax_locations($store_country = -1, $store_zone = -1) {
         global $order;
-        if(STORE_PRODUCT_TAX_BASIS != 'Store') {
+        if (STORE_PRODUCT_TAX_BASIS == 'Store') {
+            $GLOBALS['customer_country_id'] = STORE_COUNTRY;
+            $GLOBALS['customer_zone_id'] = STORE_ZONE;
+        } else {
             $_SESSION['customer_id'] = $order->customer['id'];
 
-            if(STORE_PRODUCT_TAX_BASIS == 'Shipping') {
-                $GLOBALS['customer_country_id'] = zen_get_country_id($GLOBALS['order']->delivery['country']);
-                $GLOBALS['customer_zone_id'] = zen_get_zone_id($GLOBALS['customer_country_id'], $GLOBALS['order']->delivery['state']);
-            }
-            else if(STORE_PRODUCT_TAX_BASIS == 'Billing') {
-                $GLOBALS['customer_country_id'] = zen_get_country_id($GLOBALS['order']->billing['country']);
-                $GLOBALS['customer_zone_id'] = zen_get_zone_id($GLOBALS['customer_country_id'], $GLOBALS['order']->billing['state']);
+            if (STORE_PRODUCT_TAX_BASIS == 'Shipping') {
+                global $eo_helper;
+                if ($eo_helper->eoOrderIsVirtual ($GLOBALS['order'])) {
+                    $GLOBALS['customer_country_id'] = zen_get_country_id ($GLOBALS['order']->billing['country']);
+                    $GLOBALS['customer_zone_id'] = zen_get_zone_id ($GLOBALS['customer_country_id'], $GLOBALS['order']->billing['state']);
+                } else {
+                    $GLOBALS['customer_country_id'] = zen_get_country_id ($GLOBALS['order']->delivery['country']);
+                    $GLOBALS['customer_zone_id'] = zen_get_zone_id ($GLOBALS['customer_country_id'], $GLOBALS['order']->delivery['state']);
+                }
+            } elseif (STORE_PRODUCT_TAX_BASIS == 'Billing') {
+                $GLOBALS['customer_country_id'] = zen_get_country_id ($GLOBALS['order']->billing['country']);
+                $GLOBALS['customer_zone_id'] = zen_get_zone_id ($GLOBALS['customer_country_id'], $GLOBALS['order']->billing['state']);
             }
         }
+        $_SESSION['customer_country_id'] = $GLOBALS['customer_country_id'];
+        $_SESSION['customer_zone_id'] = $GLOBALS['customer_zone_id'];
+        
         return array(
             'zone_id' => $GLOBALS['customer_zone_id'],
-                'country_id' => $GLOBALS['customer_country_id']
+            'country_id' => $GLOBALS['customer_country_id']
         );
     }
 }
@@ -1520,6 +1531,12 @@ function eo_get_order_by_id($oID) {
         }
     }
     unset($country);
+    
+    // -----
+    // Later versions of Zen Cart's zen_get_tax_rate (on the admin-side anyway) now expect the customer's countries_id and
+    // zone_id to be in globally-available variables while earlier versions expect the values to be in session variables.
+    //
+    
 
     // Handle shipping costs (module will automatically handle tax)
     if(!array_key_exists('shipping_cost', $order->info)) {

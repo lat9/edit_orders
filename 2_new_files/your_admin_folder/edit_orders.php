@@ -106,7 +106,7 @@
             'cc_owner' => zen_db_prepare_input($_POST['update_info_cc_owner']),
 //-bof-20160407-lat9-Initialize tax value to 0, enables stores with split-tax display to properly update the tax
             'cc_expires' => zen_db_prepare_input($_POST['update_info_cc_expires']),
-                        'order_tax' => 0
+            'order_tax' => 0
 //-eof-20160407-lat9
         );
 
@@ -575,8 +575,8 @@
             eo_update_order_subtotal($oID, $new_product);
 
             // Save the changes
-               eo_update_database_order_totals($oID);
-               $GLOBALS['order'] = eo_get_order_by_id($oID);
+            eo_update_database_order_totals($oID);
+            $GLOBALS['order'] = eo_get_order_by_id($oID);
 
                // Remove the low order fee (will automatically repopulate if needed)
             foreach($GLOBALS['order']->totals as $key => $total) {
@@ -1721,5 +1721,5 @@ if($action == "add_prdct")
 </body>
 </html>
 <?php
-unset ($_SESSION['customer_id']);  //-20151205-lat9-Forum bugfix: https://www.zen-cart.com/showthread.php?200407-Edit-Orders-v4-0-Support-Thread&p=1271319#post1271319
+unset ($_SESSION['customer_id'], $_SESSION['customer_country_id'], $_SESSION['customer_zone_id']);
 require(DIR_WS_INCLUDES . 'application_bottom.php');
