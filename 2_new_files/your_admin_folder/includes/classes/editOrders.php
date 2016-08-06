@@ -2,7 +2,7 @@
 // -----
 // Part of the Edit Orders plugin (v4.1.6 and later).
 //
-class eoHelper extends base
+class editOrders extends base
 {
     public function __construct ($orders_id)
     {

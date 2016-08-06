@@ -40,10 +40,10 @@
   $add_product_quantity = zen_db_prepare_input($_POST['add_product_quantity']);
   
   // -----
-  // Include and instantiate the eoHelper class.
+  // Include and instantiate the editOrders class.
   //
-  require (DIR_WS_CLASSES . 'eoHelper.php');
-  $eo_helper = new eoHelper ($oID);
+  require (DIR_WS_CLASSES . 'editOrders.php');
+  $eo = new editOrders ($oID);
 
   $orders_statuses = array();
   $orders_status_array = array();
@@ -60,7 +60,7 @@
   $action = (isset($_GET['action']) ? $_GET['action'] : 'edit');
 
   if (zen_not_null($action)) {
-    $eo_helper->eoLog (date ('Y-m-d H:i:s') . ", Edit Orders entered (". EO_VERSION . ") action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
+    $eo->eoLog (date ('Y-m-d H:i:s') . ", Edit Orders entered (". EO_VERSION . ") action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
 
     switch ($action) {
 
@@ -251,7 +251,7 @@
         // Load the order details.
         $GLOBALS['order'] = eo_get_order_by_id($oID);
 
-        $eo_helper->eoLog (
+        $eo->eoLog (
             PHP_EOL . 'Order Subtotal: ' . $GLOBALS['order']->info['subtotal'] . PHP_EOL .
             'Order Totals:' . PHP_EOL . var_export ($GLOBALS['order']->totals, true) . PHP_EOL .
             'Order Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
@@ -262,7 +262,7 @@
         if(array_key_exists('update_products', $_POST)) {
             $_POST['update_products'] = zen_db_prepare_input($_POST['update_products']);
 
-            $eo_helper->eoLog (
+            $eo->eoLog (
                 PHP_EOL . 'Requested Products:' . PHP_EOL . var_export ($_POST['update_products'], true) . PHP_EOL .
                 'Products in Original Order: ' . PHP_EOL . var_export ($GLOBALS['order']->products, true)
             );
@@ -281,7 +281,7 @@
                 }
                 unset($orders_products_id_mapping); unset($i);
 
-                $eo_helper->eoLog (
+                $eo->eoLog (
                     PHP_EOL . 'Order Product ID: ' . $orders_products_id . ' Row ID: ' . $rowID . PHP_EOL .
                     'Product in Request: ' . PHP_EOL . var_export ($product_update, true)
                 );
@@ -292,7 +292,7 @@
                     // Grab the old product + attributes
                     $old_product = $order->products[$rowID];
 
-                    $eo_helper->eoLog (
+                    $eo->eoLog (
                         PHP_EOL . 'Old Product:' . PHP_EOL . var_export($old_product, true) . PHP_EOL .
                         'Old Order Subtotal: ' . $GLOBALS['order']->info['subtotal'] . PHP_EOL .
                         'Old Order Totals:' . PHP_EOL . var_export ($GLOBALS['order']->totals, true) . PHP_EOL .
@@ -305,7 +305,7 @@
                     // Update Subtotal and Pricing
                     eo_update_order_subtotal((int)$oID, $old_product, false);
 
-                    $eo_helper->eoLog (
+                    $eo->eoLog (
                         PHP_EOL . 'Removed Product Order Subtotal: ' . $GLOBALS['order']->info['subtotal'] . PHP_EOL .
                         'Removed Product Order Totals:' . PHP_EOL . var_export ($GLOBALS['order']->totals, true) . PHP_EOL .
                         'Removed Product Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
@@ -357,7 +357,7 @@
                         // Update Subtotal and Pricing
                         eo_update_order_subtotal((int)$oID, $new_product);
 
-                        $eo_helper->eoLog (
+                        $eo->eoLog (
                             PHP_EOL . 'Added Product:' . PHP_EOL . var_export ($new_product, true) . PHP_EOL .
                             'Added Product Order Subtotal: ' . $GLOBALS['order']->info['subtotal'] . PHP_EOL .
                             'Added Product Order Totals:' . PHP_EOL . var_export ($GLOBALS['order']->totals, true) . PHP_EOL .
@@ -388,7 +388,7 @@
                 $GLOBALS['order'] = eo_get_order_by_id($oID);
             }
 
-            $eo_helper->eoLog (
+            $eo->eoLog (
                 PHP_EOL . 'Updated Products in Order:' . PHP_EOL . var_export ($GLOBALS['order']->products, true) . PHP_EOL .
                 'Updated Products Order Totals:' . PHP_EOL . var_export ($GLOBALS['order']->totals, true) . PHP_EOL .
                 'Updated Products Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
@@ -398,7 +398,7 @@
 
         // Update order totals (or delete if no title / value)
         if (array_key_exists('update_total', $_POST)) {
-            $eo_helper->eoLog (
+            $eo->eoLog (
                 PHP_EOL . '============================================================' .
                 PHP_EOL . '= Processing Requested Updates to Order Totals' .
                 PHP_EOL . '============================================================' .
@@ -504,7 +504,7 @@
             $GLOBALS['order'] = eo_get_order_by_id($oID);
             eo_update_database_order_totals($oID);
 
-            $eo_helper->eoLog (
+            $eo->eoLog (
                 PHP_EOL . 'Updated Order Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL .
                 'Updated Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
                 'Updated Tax Groups:' . PHP_EOL . var_export ($GLOBALS['order']->info['tax_groups'], true)
@@ -525,7 +525,7 @@
             $messageStack->add_session(WARNING_ORDER_NOT_UPDATED, 'warning');
         }
 
-        $eo_helper->eoLog (
+        $eo->eoLog (
             PHP_EOL . '============================================================' .
             PHP_EOL . '= Done Processing Requested Updates to the Order' .
             PHP_EOL . '============================================================' .
@@ -541,7 +541,7 @@
 
     case 'add_prdct':
         if(!zen_not_null($step)) $step = 1;
-        $eo_helper->eoLog (
+        $eo->eoLog (
             PHP_EOL . '============================================================' .
             PHP_EOL . '= Adding a new product to the order (step ' . $step . ')' .
             PHP_EOL . '============================================================' .
@@ -568,7 +568,7 @@
             );
 
             // Add the product to the order
-            $eo_helper->eoLog (PHP_EOL . 'Product Being Added:' . PHP_EOL . var_export ($new_product, true) . PHP_EOL);
+            $eo->eoLog (PHP_EOL . 'Product Being Added:' . PHP_EOL . var_export ($new_product, true) . PHP_EOL);
             eo_add_product_to_order($oID, $new_product);
 
             // Update Subtotal and Pricing
@@ -596,7 +596,7 @@
             $GLOBALS['order'] = eo_get_order_by_id($oID);
                eo_update_database_order_totals($oID);
 
-            $eo_helper->eoLog (
+            $eo->eoLog (
                 PHP_EOL . 'Final Products in Order:' . PHP_EOL . var_export($GLOBALS['order']->products, true) . PHP_EOL .
                 'Final Order Totals:' . PHP_EOL . var_export($GLOBALS['order']->totals, true) . PHP_EOL .
                 'Final Tax (total): ' . $GLOBALS['order']->info['tax'] . PHP_EOL .
@@ -618,7 +618,7 @@
     } else {
         $order = eo_get_order_by_id($oID);
 
-        if (!$eo_helper->eoOrderIsVirtual ($order) &&
+        if (!$eo->eoOrderIsVirtual ($order) &&
                ( !is_array($order->customer['country']) || !array_key_exists('id', $order->customer['country']) ||
                  !is_array($order->billing['country']) || !array_key_exists('id', $order->billing['country']) ||
                  !is_array($order->delivery['country']) || !array_key_exists('id', $order->delivery['country']) )) {
@@ -961,7 +961,7 @@
     $orders_products_id_mapping = eo_get_orders_products_id_mappings((int)$oID);
     for($i=0; $i<sizeof($order->products); $i++) {
         $orders_products_id = $orders_products_id_mapping[$i];
-        $eo_helper->eoLog (
+        $eo->eoLog (
             PHP_EOL . '============================================================' .
             PHP_EOL . '= Creating display of Order Product #' . $orders_products_id .
             PHP_EOL . '============================================================' .
@@ -987,7 +987,7 @@
                 $optionInfo = $attrs[$optionID[$j]];
                 $orders_products_attributes_id = $selected_attributes_id_mapping[$optionID[$j]];
 
-                $eo_helper->eoLog (
+                $eo->eoLog (
                     PHP_EOL . 'Options ID #' . $optionID[$j] . PHP_EOL .
                     'Product Attribute: ' . PHP_EOL . var_export ($orders_products_attributes_id, true) . PHP_EOL .
                     'Options Info:' . PHP_EOL . var_export ($optionInfo, true)

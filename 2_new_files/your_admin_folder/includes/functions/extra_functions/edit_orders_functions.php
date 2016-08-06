@@ -286,8 +286,8 @@ if(!function_exists('zen_get_tax_locations')) {
             $_SESSION['customer_id'] = $order->customer['id'];
 
             if (STORE_PRODUCT_TAX_BASIS == 'Shipping') {
-                global $eo_helper;
-                if ($eo_helper->eoOrderIsVirtual ($GLOBALS['order'])) {
+                global $eo;
+                if ($eo->eoOrderIsVirtual ($GLOBALS['order'])) {
                     $GLOBALS['customer_country_id'] = zen_get_country_id ($GLOBALS['order']->billing['country']);
                     $GLOBALS['customer_zone_id'] = zen_get_zone_id ($GLOBALS['customer_country_id'], $GLOBALS['order']->billing['state']);
                 } else {
@@ -1026,7 +1026,7 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
 }
 
 function eo_get_product_taxes($product, $shown_price = -1, $add = true) {
-    global $db, $currencies, $order, $eo_helper;
+    global $db, $currencies, $order, $eo;
 
     if(DISPLAY_PRICE_WITH_TAX == 'true') {
         $shown_price = (zen_round($product['final_price'], $currencies->get_decimal_places($_SESSION['currency'])) + zen_calculate_tax($product['final_price'], $product['tax'])) * $product['qty'];
@@ -1054,7 +1054,7 @@ function eo_get_product_taxes($product, $shown_price = -1, $add = true) {
         }
     }
 
-    $eo_helper->eoLog ("eo_get_product_taxes ($products_tax_description)\n" . var_export ($query, true) . var_export ($product, true));
+    $eo->eoLog ("eo_get_product_taxes ($products_tax_description)\n" . var_export ($query, true) . var_export ($product, true));
     
     $totalTaxAdd = 0;
     if(zen_not_null($products_tax_description)) {
