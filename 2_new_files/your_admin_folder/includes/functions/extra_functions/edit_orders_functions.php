@@ -461,12 +461,11 @@ function eo_debug_action_level_list($level) {
     global $template;
 
     $levels = array(
-        array('id' => '0', 'text' => 'NONE'),
-        array('id' => '1', 'text' => 'TRACE'),
-        array('id' => '2', 'text' => 'TAXES'),
-        array('id' => '3', 'text' => 'TOTALS'),
-        array('id' => '4', 'text' => 'PRODUCTS')
+        array('id' => '0', 'text' => 'Off'),
+        array('id' => '1', 'text' => 'On'),
     );
+    
+    $level = ($level == 0) ? $level : 1;
 
     // Generate the configuration pulldown
     return zen_draw_pull_down_menu('configuration_value', $levels, $level);
