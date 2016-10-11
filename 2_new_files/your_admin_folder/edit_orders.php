@@ -428,6 +428,7 @@
                             $GLOBALS['order']->info['tax'] = $order_total['value'];
                             break;
                         case 'ot_loworderfee':
+                        case 'ot_cod_fee':
                             // Always remove this entry, it will be automatically
                             // Readded to the order if needed.
                             $order_total['title'] = '';
@@ -578,9 +579,9 @@
             eo_update_database_order_totals($oID);
             $GLOBALS['order'] = eo_get_order_by_id($oID);
 
-               // Remove the low order fee (will automatically repopulate if needed)
+            // Remove the low order and/or cod fees (will automatically repopulate if needed)
             foreach($GLOBALS['order']->totals as $key => $total) {
-                if($total['class'] == 'ot_loworderfee') {
+                if ($total['class'] == 'ot_loworderfee' || $total['class'] == 'ot_cod_fee') {
                     // Update the information in the order
                     $total['title'] = '';
                     $total['value'] = 0;
@@ -1163,6 +1164,7 @@
 
             // Include these in the update but do not allow them to be changed
             case 'ot_group_pricing':
+            case 'ot_cod_fee':
             case 'ot_loworderfee': ?>
                     <td align="right"><?php echo zen_draw_hidden_field('update_total[' . $index . '][code]', $total['class']); ?></td>
                     <td align="right" class="main"><?php

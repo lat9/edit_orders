@@ -35,7 +35,7 @@ class editOrders extends base
         foreach ($order->products as $current_product) {
             $products_id = (int)$current_product['id'];
             $virtual_check = $db->Execute ("SELECT products_virtual, products_model FROM " . TABLE_PRODUCTS . " WHERE products_id = $products_id LIMIT 1");
-            $this->eoLog (PHP_EOL . "Checking product ID#$products_id for virtual status" . PHP_EOL . var_export ($virtual_check, true));
+            $this->eoLog (PHP_EOL . "Checking product ID#$products_id for virtual status: " . PHP_EOL . var_export ($virtual_check->fields, true));
             if (!$virtual_check->EOF) {
                 if ($virtual_check->fields['products_virtual'] == 1 || strpos ($virtual_check->fields['products_model'], 'GIFT') === 0) {
                     $order_is_virtual = true;
