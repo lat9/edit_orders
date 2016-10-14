@@ -65,6 +65,7 @@ class eo_plugin extends plugin {
     public function getModifiedCoreFiles($install = true) {
         return array(
             // TODO: Add either search / replace keys or checks
+            DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php',
             DIR_FS_CATALOG . DIR_WS_CLASSES . 'order_total.php',
             DIR_FS_CATALOG . DIR_WS_CLASSES . 'shipping.php',
 
