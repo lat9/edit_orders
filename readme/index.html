@@ -7,12 +7,12 @@
 <meta name="ROBOTS" content="noarchive">
 <meta http-equiv="pragma" content="no-cache">
 <meta name="description" content="Edit Orders is an admin modification that allows store owners to edit a customer's order">
-<title>Edit Orders 4.1.6</title>
+<title>Edit Orders 4.1.7</title>
 <link rel="stylesheet" type="text/css" href="includes/css/stylesheet.css">
 <script type="text/javascript" src="includes/jscript/jscript_tabs.js"></script>
 </head>
 <body><div id="wrapper">
-  <h2>Edit Orders 4.1.6</h2>
+  <h2>Edit Orders 4.1.7</h2>
   <p>Support thread: <a href="http://www.zen-cart.com/showthread.php?200407" target="_blank">http://www.zen-cart.com/showthread.php?200407</a><br />
     Download link: <a href="http://www.zen-cart.com/downloads.php?do=file&amp;id=1513" target="_blank">http://www.zen-cart.com/downloads.php?do=file&amp;id=1513</a>
   </p>
@@ -113,8 +113,9 @@
               <li><strong>Modified Core Files</strong>. <small>(&quot;/temp/1_modified_core_files&quot;)</small><br />Because these files are modified versions of core Zen Cart files and will impact your store and potentially other plugins, they have been separated from the new files added by this plugin for easy identification.<ol>
                   <li>Rename the &quot;your_admin_folder&quot; folder to match the name of your store's admin folder.</li>
                   <li>The following core-files are in this folder:<ol>
-                    <li><em>/includes/classes/order_total.php</em>.  This is the unmodified version from the Zen Cart 1.5.5 distribution.</li>
-                    <li><em>/includes/classes/shipping.php</em>.  This is the unmodified version from the Zen Cart 1.5.5 distribution.</li>
+                    <li><em>/includes/classes/order.php</em>.  This is a <b>modified</b> version of the file from the Zen Cart 1.5.5a distribution.  There are two (2) change sections that add the &quot;value&quot; to each of the order's totals.</li>
+                    <li><em>/includes/classes/order_total.php</em>.  This is the unmodified version from the Zen Cart 1.5.5a distribution.</li>
+                    <li><em>/includes/classes/shipping.php</em>.  This is the unmodified version from the Zen Cart 1.5.5a distribution.</li>
                     <li><em>/your_admin_folder/orders.php</em>.  This is a <em>modified</em> version of the Zen Cart 1.5.4 distribution's file.  There are five (5) change sections that apply to &quot;Edit Orders&quot; and other sections that introduce the Super Orders navigation to the orders' handling.  If you are installing/upgrading on Zen Cart 1.5.5 or later, these navigation-related changes are already incorporated, but you'll need to merge the five change-sections into your version of this file.</li>
                     <li><em>/your_admin_folder/images/icon_edit.gif</em>.  This replaces the like-named icon.</li>
                     <li><em>/your_admin_folder/includes/languages/english/orders.php</em>.  This is a <em>modified</em> version of the Zen Cart 1.5.4 distribution's file, adding some language constants that are used by &quot;Edit Orders&quot;.  If you are installing/upgrading on Zen Cart 1.5.5 or later, you'll need to merge the block of constants towards the bottom of that file.</li>
@@ -863,6 +864,13 @@
             Zen Cart community and provided active help to others
             with Zen Cart, Edit Orders, and other modules. 
           </p>
+          <fieldset>
+            <legend>v4.1.7 - 10/xx/2016</legend>
+            Cindy Merkin (lat9): http://www.zen-cart.com/member.php?81053<br />
+            <ul>
+              <li>BUGFIX: Modify <em>order.php</em> to include the &quot;value&quot; for each order-total in the order.</li>
+            </ul>
+          </fieldset>
           <fieldset>
             <legend>v4.1.6 - 08/06/2016</legend>
             Cindy Merkin (lat9): http://www.zen-cart.com/member.php?81053<br />
