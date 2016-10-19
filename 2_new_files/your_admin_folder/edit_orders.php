@@ -25,19 +25,32 @@
   if (!class_exists ('currencies')) {
       require (DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php');
   }
-  if (!isset ($_SESSION['currency'])) {
-      $_SESSION['currency'] = DEFAULT_CURRENCY;
-  }
   $currencies = new currencies ();
 
   // Use the normal order class instead of the admin one
   include(DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php');
 
   $oID = zen_db_prepare_input($_GET['oID']);
-  $step = zen_db_prepare_input($_POST['step']);
-  $add_product_categories_id = zen_db_prepare_input($_POST['add_product_categories_id']);
-  $add_product_products_id = zen_db_prepare_input($_POST['add_product_products_id']);
-  $add_product_quantity = zen_db_prepare_input($_POST['add_product_quantity']);
+  $step = (isset ($_POST['step'])) ? (int)$_POST['step'] : 0;
+  if (isset ($_POST['add_product_categories_id'])) {
+    $add_product_categories_id = zen_db_prepare_input ($_POST['add_product_categories_id']);
+  }
+  if (isset ($_POST['add_product_products_id'])) {
+    $add_product_products_id = zen_db_prepare_input($_POST['add_product_products_id']);
+  }
+  if (isset ($_POST['add_product_quantity'])) {
+    $add_product_quantity = zen_db_prepare_input($_POST['add_product_quantity']);
+  }
+  
+  // -----
+  // The "queryCache" functionality present in the Zen Cart core can get in the way of
+  // Edit Orders due to the amount of database manipulation.  Remove the default instance
+  // of the class (used by the database-class) and replace it with a stubbed-out version
+  // for the EO processing.
+  //
+  unset ($queryCache);
+  require (DIR_WS_CLASSES . 'EditOrdersQueryCache.php');
+  $queryCache = new EditOrdersQueryCache ();
   
   // -----
   // Include and instantiate the editOrders class.
@@ -104,10 +117,7 @@
             'payment_method' => zen_db_prepare_input($_POST['update_info_payment_method']),
             'cc_type' => zen_db_prepare_input($_POST['update_info_cc_type']),
             'cc_owner' => zen_db_prepare_input($_POST['update_info_cc_owner']),
-//-bof-20160407-lat9-Initialize tax value to 0, enables stores with split-tax display to properly update the tax
             'cc_expires' => zen_db_prepare_input($_POST['update_info_cc_expires']),
-            'order_tax' => 0
-//-eof-20160407-lat9
         );
 
         // If the country was passed as an id, change it to the country name for
@@ -312,7 +322,7 @@
                         'Removed Product Tax Groups:' . PHP_EOL . var_export ($GLOBALS['order']->info['tax_groups'], true)
                     );
 
-                    if($product_update['qty'] > 0) {
+                    if ($product_update['qty'] > 0) {
 
                         // Retrieve the information for the new product
                         $attrs = $product_update['attr'];
@@ -330,15 +340,14 @@
                         // Removing the product will cause issues with links
                         // on invoices (order history) and will not allow the
                         // price(s) or tax(es) to be recalculated by Zen Cart.
-                        if(!array_key_exists('price', $new_product)) {
+                        if (!isset ($new_product['price'])) {
                             $new_product['price'] = $old_product['price'];
                             $new_product['tax'] = $old_product['tax'];
-                            if($new_product['tax'] > 0) {
+                            if ($new_product['tax'] > 0) {
                                 // Should match what is set by eo_get_product_taxes()
                                 // When no description is present in the database but
                                 // a tax rate exists on a product.
-                                $new_product['tax_description'] = TEXT_UNKNOWN_TAX_RATE .
-                                    ' (' . zen_display_tax_value($new_product['tax']) . '%)';
+                                $new_product['tax_description'] = TEXT_UNKNOWN_TAX_RATE . ' (' . zen_display_tax_value($new_product['tax']) . '%)';
                             }
 
                             $new_product['products_discount_type'] = $old_product['products_discount_type'];
@@ -349,13 +358,13 @@
 
                         // Adjust the product information based upon the
                         // data found in update_products
-                        $new_product = array_merge($new_product, $product_update);
+                        $new_product = array_merge ($new_product, $product_update);
 
                         // Add the product to the order
-                        eo_add_product_to_order((int)$oID, $new_product);
+                        eo_add_product_to_order ((int)$oID, $new_product);
 
                         // Update Subtotal and Pricing
-                        eo_update_order_subtotal((int)$oID, $new_product);
+                        eo_update_order_subtotal ((int)$oID, $new_product);
 
                         $eo->eoLog (
                             PHP_EOL . 'Added Product:' . PHP_EOL . var_export ($new_product, true) . PHP_EOL .
@@ -370,14 +379,16 @@
                 }
             }
             // Reset order if updated
-            if($order_updated) {
+            if ($order_updated) {
                 eo_update_database_order_totals($oID);
 
                 // Need to force update the tax field if the tax is zero
                 // This runs after the shipping tax is added by the above update
                 $decimals = $currencies->get_decimal_places($_SESSION['currency']);
-                if(zen_round($GLOBALS['order']->info['tax'], $decimals) == 0) {
-                    if(!array_key_exists('update_total', $_POST)) $_POST['update_total'] = array();
+                if (zen_round($GLOBALS['order']->info['tax'], $decimals) == 0) {
+                    if(!array_key_exists('update_total', $_POST)) {
+                        $_POST['update_total'] = array();
+                    }
                     $_POST['update_total'][] = array(
                         'code' => 'ot_tax',
                         'title' => '',
@@ -409,7 +420,7 @@
                 'Starting Tax Groups:' . PHP_EOL . var_export ($GLOBALS['order']->info['tax_groups'], true)
             );
 
-            foreach($_POST['update_total'] as $order_total) {
+            foreach ($_POST['update_total'] as $order_total) {
                 $order_total['text'] = $currencies->format($order_total['value'], true, $order->info['currency'], $order->info['currency_value']);
                 $order_total['sort_order'] = $GLOBALS[$order_total['code']]->sort_order;
 
@@ -426,13 +437,6 @@
                                 $order_total['value'] = 0;
                             }
                             $GLOBALS['order']->info['tax'] = $order_total['value'];
-                            break;
-                        case 'ot_loworderfee':
-                        case 'ot_cod_fee':
-                            // Always remove this entry, it will be automatically
-                            // Readded to the order if needed.
-                            $order_total['title'] = '';
-                            $order_total['value'] = 0;
                             break;
                         case 'ot_gv':
                             if($order_total['value'] < 0) $order_total['value'] = $order_total['value'] * -1;
@@ -471,11 +475,12 @@
 
                             break;
                         default:
+                            break;
                     }
                 }
 
                 $found = false;
-                foreach($GLOBALS['order']->totals as $key => $total) {
+                foreach ($GLOBALS['order']->totals as $key => $total) {
                     if($total['class'] == $order_total['code']) {
                         // Update the information in the order
                         $GLOBALS['order']->totals[$key]['title'] = $order_total['title'];
@@ -487,7 +492,7 @@
                     }
                 }
 
-                if(!$found) {
+                if (!$found) {
                     $GLOBALS['order']->totals[] = array(
                         'class' => $order_total['code'],
                         'title' => $order_total['title'],
@@ -498,7 +503,7 @@
                 }
 
                 // Always update the database (allows delete)
-                eo_update_database_order_total($oID, $order_total);
+                eo_update_database_order_total ($oID, $order_total);
             }
 
             // Reset order and resave (fixes some edge cases)
@@ -512,17 +517,21 @@
             );
 
             // Unset some session variables after updating the order totals
-            if(array_key_exists('cot_gv', $_SESSION)) unset($_SESSION['cot_gv']);
-            if(array_key_exists('cot_voucher', $_SESSION)) unset($_SESSION['cot_voucher']);
-            if(array_key_exists('cc_id', $_SESSION)) unset($_SESSION['cc_id']);
-
+            if (array_key_exists('cot_gv', $_SESSION)) {
+                unset ($_SESSION['cot_gv']);
+            }
+            if (array_key_exists('cot_voucher', $_SESSION)) {
+                unset ($_SESSION['cot_voucher']);
+            }
+            if (array_key_exists('cc_id', $_SESSION)) {
+                unset ($_SESSION['cc_id']);
+            }
             $order_updated = true;
         }
 
-        if($order_updated) {
+        if ($order_updated) {
             $messageStack->add_session(SUCCESS_ORDER_UPDATED, 'success');
-        }
-        else {
+        } else {
             $messageStack->add_session(WARNING_ORDER_NOT_UPDATED, 'warning');
         }
 
@@ -1149,7 +1158,8 @@
     for($i=0, $index=0, $n=count($order->totals); $i<$n; $i++, $index++) { ?>
                 <tr><?php
         $total = $order->totals[$i];
-        $details = array_shift(eo_get_order_total_by_order((int)$oID, $total['class']));
+        $order_total_info = eo_get_order_total_by_order((int)$oID, $total['class']);
+        $details = array_shift ($order_total_info);
         switch($total['class']) {
             // Automatically generated fields, those should never be included
             case 'ot_subtotal':
@@ -1268,7 +1278,7 @@
       <tr>
         <td class="main">
         <table border="1" cellspacing="0" cellpadding="5" width="60%">
-<?php if (TY_TRACKER == 'True') { ?>
+<?php if (defined ('TY_TRACKER') && TY_TRACKER == 'True') { ?>
           <tr class="dataTableHeadingRow">
             <td class="dataTableHeadingContent smallText" valign="top"  width="15%"><strong><?php echo TABLE_HEADING_DATE_ADDED; ?></strong></td>
             <td class="dataTableHeadingContent smallText" align="center" valign="top" width="12%"><strong><?php echo TABLE_HEADING_CUSTOMER_NOTIFIED; ?></strong></td>
@@ -1380,7 +1390,7 @@
       </tr>
 
 <!-- TY TRACKER 7 BEGIN, ENTER TRACKING INFORMATION -->
-<?php if(defined(TY_TRACKER) && TY_TRACKER == 'True') { ?>
+<?php if (defined ('TY_TRACKER') && TY_TRACKER == 'True') { ?>
     <tr>
         <td class="main">
             <table border="0" cellpadding="3" cellspacing="0">
@@ -1452,10 +1462,10 @@ if($action == "add_prdct")
       <tr><td><table border='0'>
 <?php
     // Set Defaults
-    if(!IsSet($add_product_categories_id))
+    if(!isset($add_product_categories_id))
         $add_product_categories_id = .5;
 
-    if(!IsSet($add_product_products_id))
+    if(!isset($add_product_products_id))
         $add_product_products_id = 0;
 
     // Step 1: Choose Category
@@ -1463,21 +1473,21 @@ if($action == "add_prdct")
         // Handle initial population of categories
         $categoriesarr = zen_get_category_tree();
         $catcount = count($categoriesarr);
-        $texttempcat1 = $categoriesarr[0][text];
-        $idtempcat1 = $categoriesarr[0][id];
+        $texttempcat1 = $categoriesarr[0]['text'];
+        $idtempcat1 = $categoriesarr[0]['id'];
         $catcount++;
         for ($i=1; $i<$catcount; $i++) {
-            $texttempcat2 = $categoriesarr[$i][text];
-            $idtempcat2 = $categoriesarr[$i][id];
-            $categoriesarr[$i][id] = $idtempcat1;
-            $categoriesarr[$i][text] = $texttempcat1;
+            $texttempcat2 = $categoriesarr[$i]['text'];
+            $idtempcat2 = $categoriesarr[$i]['id'];
+            $categoriesarr[$i]['id'] = $idtempcat1;
+            $categoriesarr[$i]['text'] = $texttempcat1;
             $texttempcat1 = $texttempcat2;
             $idtempcat1 = $idtempcat2;
         }
 
 
-        $categoriesarr[0][text] = "Choose Category";
-        $categoriesarr[0][id] = .5;
+        $categoriesarr[0]['text'] = "Choose Category";
+        $categoriesarr[0]['id'] = .5;
 
 
         $categoryselectoutput = zen_draw_pull_down_menu('add_product_categories_id', $categoriesarr, $current_category_id, 'onChange="this.form.submit();"');
@@ -1723,5 +1733,5 @@ if($action == "add_prdct")
 </body>
 </html>
 <?php
-unset ($_SESSION['customer_id'], $_SESSION['customer_country_id'], $_SESSION['customer_zone_id']);
+unset ($_SESSION['customer_id'], $_SESSION['customer_country_id'], $_SESSION['customer_zone_id'], $_SESSION['cart'], $_SESSION['shipping'], $_SESSION['payment']);
 require(DIR_WS_INCLUDES . 'application_bottom.php');

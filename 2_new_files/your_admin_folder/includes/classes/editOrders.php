@@ -1,12 +1,32 @@
 <?php
 // -----
-// Part of the Edit Orders plugin (v4.1.6 and later).
+// Part of the Edit Orders plugin (v4.1.6 and later) by lat9 (lat9@vinosdefrutastropicales.com).
+// Copyright (C) 2016, Vinos de Frutas Tropicales
 //
+if (!defined ('EO_DEBUG_TAXES_ONLY')) define ('EO_DEBUG_TAXES_ONLY', 'false');  //-Either 'true' or 'false'
 class editOrders extends base
 {
     public function __construct ($orders_id)
     {
+        global $db, $currencies;
+        
         $this->eo_action_level = EO_DEBUG_ACTION_LEVEL;
+        $this->orders_id = (int)$orders_id;
+        $this->tax_updated = false;
+        
+        $currency_info = $db->Execute ("SELECT currency, currency_value FROM " . TABLE_ORDERS . " WHERE orders_id = " . $this->orders_id . " LIMIT 1");
+        $this->currency = $currency_info->fields['currency'];
+        $this->currency_value = $currency_info->fields['currency_value'];
+        unset ($currency_info);
+        
+        if (!isset ($currencies)) {
+            if (!class_exists ('currencies')) {
+                require (DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php');
+            }
+            $currencies = new currencies ();
+        }
+        $_SESSION['currency'] = $this->currency;
+        $this->order_currency = $currencies->currencies[$this->currency];
 
         // -----
         // Create the edit_orders directory, if not already present.
@@ -22,10 +42,42 @@ class editOrders extends base
         }
     }
     
-    public function eoLog ($message) {
+    public function eoLog ($message, $message_type = 'general') {
         if ($this->eo_action_level != 0) {
-            error_log ($message . PHP_EOL, 3, $this->logfile_name);
+            if (!(EO_DEBUG_TAXES_ONLY == 'true' && $message_type != 'tax')) {
+                error_log ($message . PHP_EOL, 3, $this->logfile_name);
+            }
         }
+    }
+    
+    public function eoFormatTaxInfoForLog ($include_caller = false)
+    {
+        global $order;
+        $log_info = PHP_EOL;
+        
+        if ($include_caller) {
+            $trace = debug_backtrace ();
+            $log_info = ' Called by ' . $trace[1]['file'] . ' on line #' . $trace[1]['line'] . PHP_EOL;
+        }
+        
+        if (!is_object ($order)) {
+            $log_info .= "\t" . 'Order-object is not set.' . PHP_EOL;
+        } else {
+            $log_info .= "\t" .
+                'Subtotal: ' . ((isset ($order->info['subtotal'])) ? $order->info['subtotal'] : '(not set)') . ', ' .
+                'Shipping: ' . ((isset ($order->info['shipping_cost'])) ? $order->info['shipping_cost'] : '(not set)') . ', ' .
+                'Shipping Tax: ' . ((isset ($order->info['shipping_tax'])) ? $order->info['shipping_tax'] : '(not set)') . ', ' .
+                'Tax: ' . $order->info['tax'] . ', ' .
+                'Total: ' . $order->info['total'] . PHP_EOL;
+                
+            $log_info .= "\t" .
+                '$_SESSION[\'shipping\']: ' . ((isset ($_SESSION['shipping'])) ? var_export ($_SESSION['shipping'], true) : '(not set)');
+                
+            foreach ($order->totals as $current_total) {
+                $log_info .= "\t\t" . $current_total['class'] . '. Text: ' . $current_total['text'] . ', Value: ' . ((isset ($current_total['value'])) ? $current_total['value'] : '(not set)') . PHP_EOL;
+            }
+        }
+        return $log_info;
     }
     
     public function eoOrderIsVirtual ($order)
@@ -67,4 +119,36 @@ class editOrders extends base
         return $order_is_virtual;
     }
     
+    // -----
+    // Some order-total modules (like ot_cod_fee and ot_loworder_fee) are taxable but there's no built-in
+    // way to determine the tax that they're adding to the order.  Since EO "re-builds" the order after a
+    // product is added, that results in accumulating order-total taxes on each addition.
+    //
+    // Unfortunately, the order-object contains only the "formatted" version of the order-total's price,
+    // so we need to access the numeric value associated that total from the database.
+    //
+    public function eoGetOrderTotalTax ($oID, $ot_class)
+    {
+        global $db, $order;
+        $order_total_tax = 0;
+        if ($ot_class == 'ot_cod_fee') {
+            $ot_tax_class_name = 'MODULE_ORDER_TOTAL_COD_TAX_CLASS';
+        } else {
+            $ot_tax_class_name = 'MODULE_ORDER_TOTAL_' . strtoupper (str_replace ('ot_', '', $ot_class)) . '_TAX_CLASS';
+        }
+        $ot_tax_class = constant ($ot_tax_class_name);
+        if ($ot_tax_class != null) {
+            $tax_location = zen_get_tax_locations ();
+            $tax_rate = zen_get_tax_rate ($ot_tax_class, $tax_location['country_id'], $tax_location['zone_id']);
+            if ($tax_rate != 0) {
+                $ot_value_info = $db->Execute ("SELECT value FROM " . TABLE_ORDERS_TOTAL . " WHERE orders_id = $oID AND class = '$ot_class' LIMIT 1");
+                if (!$ot_value_info->EOF) {
+                    $order_total_tax = $GLOBALS['currencies']->value (zen_calculate_tax ($ot_value_info->fields['value'], $tax_rate), false, $order->info['currency'], $order->info['currency_value']);
+                }
+            }
+        }
+        $this->eoLog ("Checking taxes for $ot_class: Tax class ($ot_tax_class_name:$ot_tax_class), $order_total_tax", 'tax');
+        return $order_total_tax;
+    }
+     
 }

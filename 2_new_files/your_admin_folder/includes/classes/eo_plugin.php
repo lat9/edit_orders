@@ -2,7 +2,7 @@
 
 @require_once DIR_FS_ADMIN . DIR_WS_CLASSES . 'plugin.php';
 class eo_plugin extends plugin {
-    public function getVersion() { return '4.1.7-beta1'; }
+    public function getVersion() { return '4.1.7-beta2'; }
     public function getUniqueKey() { return 'EO'; }
     public function getUniqueName() { return BOX_CONFIGURATION_EDIT_ORDERS; }
     public function getDescription() { return EO_DESCRIPTION; }
@@ -34,6 +34,7 @@ class eo_plugin extends plugin {
             DIR_FS_ADMIN . DIR_WS_CLASSES . 'attributes.php',
             DIR_FS_ADMIN . DIR_WS_CLASSES . 'mock_cart.php',
             DIR_FS_ADMIN . DIR_WS_CLASSES . 'editOrders.php',
+            DIR_FS_ADMIN . DIR_WS_CLASSES . 'EditOrdersQueryCache.php',
             DIR_FS_ADMIN . DIR_WS_INCLUDES . 'extra_configures/edit_orders.php',
             DIR_FS_ADMIN . DIR_WS_INCLUDES . 'extra_datafiles/eo_sanitization.php',
             DIR_FS_ADMIN . DIR_WS_FUNCTIONS . 'extra_functions/edit_orders_functions.php',
