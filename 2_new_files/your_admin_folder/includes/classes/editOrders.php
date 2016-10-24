@@ -129,7 +129,7 @@ class editOrders extends base
     //
     public function eoGetOrderTotalTax ($oID, $ot_class)
     {
-        global $db, $order;
+        global $db;
         $order_total_tax = 0;
         if ($ot_class == 'ot_cod_fee') {
             $ot_tax_class_name = 'MODULE_ORDER_TOTAL_COD_TAX_CLASS';
@@ -143,12 +143,22 @@ class editOrders extends base
             if ($tax_rate != 0) {
                 $ot_value_info = $db->Execute ("SELECT value FROM " . TABLE_ORDERS_TOTAL . " WHERE orders_id = $oID AND class = '$ot_class' LIMIT 1");
                 if (!$ot_value_info->EOF) {
-                    $order_total_tax = $GLOBALS['currencies']->value (zen_calculate_tax ($ot_value_info->fields['value'], $tax_rate), false, $order->info['currency'], $order->info['currency_value']);
+                    $order_total_tax = $this->eoRoundCurrencyValue (zen_calculate_tax ($ot_value_info->fields['value'], $tax_rate));
                 }
             }
         }
         $this->eoLog ("Checking taxes for $ot_class: Tax class ($ot_tax_class_name:$ot_tax_class), $order_total_tax", 'tax');
         return $order_total_tax;
+    }
+    
+    public function eoRoundCurrencyValue ($value)
+    {
+        return $GLOBALS['currencies']->value ($value, false, $this->currency, $this->currency_value);
+    }
+    
+    public function eoFormatCurrencyValue ($value)
+    {
+        return $GLOBALS['currencies']->format ($this->eoRoundCurrencyValue ($value), true, $this->currency, $this->currency_value);
     }
      
 }

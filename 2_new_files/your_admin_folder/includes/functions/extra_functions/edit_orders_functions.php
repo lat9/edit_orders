@@ -974,7 +974,7 @@ function eo_add_product_to_order($order_id, $product) {
 }
 
 function eo_update_order_subtotal($order_id, $product, $add = true) {
-    global $currencies, $db, $order, $eo;
+    global $db, $order, $eo;
 
     // Retrieve running subtotal
     if (!isset ($order->info['subtotal'])) {
@@ -984,32 +984,32 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
             'AND `class`=\'ot_subtotal\''
         );
         if (!$query->EOF) {
-            $order->info['subtotal'] = $query->fields['value'];
+            $order->info['subtotal'] = $eo->eoRoundCurrencyValue ($query->fields['value']);
         }
     }
     
     $eo->eoLog ("eo_update_order_subtotal ($add), taxes on entry. " . $eo->eoFormatTaxInfoForLog (true), 'tax');
 
     // Determine the product price
+    $shown_price = $eo->eoRoundCurrencyValue ($product['final_price'] * $product['qty']);
+    $onetime_charges = $eo->eoRoundCurrencyValue ($product['onetime_charges']);
     if(DISPLAY_PRICE_WITH_TAX == 'true') {
-        $shown_price = (zen_round($product['final_price'], $currencies->get_decimal_places($_SESSION['currency'])) + zen_calculate_tax($product['final_price'], $product['tax'])) * $product['qty'];
-        $shown_price += zen_round($product['onetime_charges'], $currencies->get_decimal_places($_SESSION['currency'])) + zen_calculate_tax($product['onetime_charges'], $product['tax']);
-    } else {
-        $shown_price = $product['final_price'] * $product['qty'];
-        $shown_price += $product['onetime_charges'];
+        $shown_price += $eo->eoRoundCurrencyValue (zen_calculate_tax ($shown_price, $product['tax']));
+        $onetime_charges += $eo->eoRoundCurrencyValue (zen_calculate_tax ($onetime_charges, $product['tax']));
     }
-    // Not standard Zen Cart - but clears up some math issues later
-    $shown_price = zen_round($shown_price, $currencies->get_decimal_places($_SESSION['currency']));
+    $shown_price += $onetime_charges;
 
     // Update the order information
     if ($add) {
         $order->info['subtotal'] += $shown_price;
-        $order->info['tax'] += eo_get_product_taxes($product, $shown_price, $add);
+        $order->info['tax'] += $eo->eoRoundCurrencyValue (eo_get_product_taxes ($product, $shown_price, $add));
     } else {
         $order->info['subtotal'] -= $shown_price;
-        $order->info['tax'] -= eo_get_product_taxes($product, $shown_price, $add);
+        $order->info['tax'] -= $eo->eoRoundCurrencyValue (eo_get_product_taxes ($product, $shown_price, $add));
     }
     unset($shown_price);
+    
+    $order->info['shipping_cost'] = $eo->eoRoundCurrencyValue ($order->info['shipping_cost']);
 
     // Update the final total to include tax if not already tax-inc
     if (DISPLAY_PRICE_WITH_TAX == 'true') {
@@ -1023,15 +1023,15 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
         switch($total['class']) {
             case 'ot_subtotal':
                 $order->totals[$index]['value'] = $order->info['subtotal'];
-                $order->totals[$index]['text'] = $currencies->format($order->totals[$index]['value'], true, $order->info['currency'], $order->info['currency_value']);
+                $order->totals[$index]['text'] = $eo->eoFormatCurrencyValue ($order->totals[$index]['value']);
                 break;
             case 'ot_tax':
                 $order->totals[$index]['value'] = $order->info['tax'];
-                $order->totals[$index]['text'] = $currencies->format($order->totals[$index]['value'], true, $order->info['currency'], $order->info['currency_value']);
+                $order->totals[$index]['text'] = $eo->eoFormatCurrencyValue ($order->totals[$index]['value']);
                 break;
             case 'ot_total':
                 $order->totals[$index]['value'] = $order->info['total'];
-                $order->totals[$index]['text'] = $currencies->format($order->totals[$index]['value'], true, $order->info['currency'], $order->info['currency_value']);
+                $order->totals[$index]['text'] = $eo->eoFormatCurrencyValue ($order->totals[$index]['value']);
                 break;
             default:
         }
@@ -1041,18 +1041,15 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
 }
 
 function eo_get_product_taxes($product, $shown_price = -1, $add = true) {
-    global $db, $currencies, $order, $eo;
+    global $db, $order, $eo;
 
-    if(DISPLAY_PRICE_WITH_TAX == 'true') {
-        $shown_price = (zen_round($product['final_price'], $currencies->get_decimal_places($_SESSION['currency'])) + zen_calculate_tax($product['final_price'], $product['tax'])) * $product['qty'];
-        $shown_price += zen_round($product['onetime_charges'], $currencies->get_decimal_places($_SESSION['currency'])) + zen_calculate_tax($product['onetime_charges'], $product['tax']);
+    $shown_price = $eo->eoRoundCurrencyValue ($product['final_price'] * $product['qty']);
+    $onetime_charges = $eo->eoRoundCurrencyValue ($product['onetime_charges']);
+    if (DISPLAY_PRICE_WITH_TAX == 'true') {
+        $shown_price += $eo->eoRoundCurrencyValue (zen_calculate_tax ($shown_price, $product['tax']));
+        $onetime_charges += $eo->eoRoundCurrencyValue (zen_calculate_tax ($product['onetime_charges'], $product['tax']));
     }
-    else {
-        $shown_price = $product['final_price'] * $product['qty'];
-        $shown_price += $product['onetime_charges'];
-    }
-    // Not standard Zen Cart - but clears up some math issues later
-    $shown_price = zen_round($shown_price, $currencies->get_decimal_places($_SESSION['currency']));
+    $shown_price += $onetime_charges;
 
     $query = false;
     if (isset ($product['tax_description'])) {
@@ -1072,25 +1069,22 @@ function eo_get_product_taxes($product, $shown_price = -1, $add = true) {
     $eo->eoLog (PHP_EOL . "eo_get_product_taxes ($products_tax_description)\n" . (($query === false) ? var_export ($query, true) : (($query->EOF) ? 'EOF' : var_export ($query->fields, true))) . var_export ($product, true));
     
     $totalTaxAdd = 0;
-    if(zen_not_null($products_tax_description)) {
+    if (zen_not_null($products_tax_description)) {
         $taxAdd = 0;
         // Done this way to ensure we calculate
         if(DISPLAY_PRICE_WITH_TAX == 'true') {
             $taxAdd = $shown_price - ($shown_price / (($product['tax'] < 10) ? "1.0" . str_replace('.', '', $product['tax']) : "1." . str_replace('.', '', $product['tax'])));
+        } else {
+            $taxAdd = zen_calculate_tax ($shown_price, $product['tax']);
         }
-        else {
-            $taxAdd = zen_calculate_tax($shown_price, $product['tax']);
-        }
-        if(isset($order->info['tax_groups'][$products_tax_description]))
-        {
-            if($add) {
+        $taxAdd = $eo->eoRoundCurrencyValue ($taxAdd);
+        if (isset ($order->info['tax_groups'][$products_tax_description])) {
+            if ($add) {
                 $order->info['tax_groups'][$products_tax_description] += $taxAdd;
-            }
-            else {
+            } else {
                 $order->info['tax_groups'][$products_tax_description] -= $taxAdd;
             }
-        }
-        else if($add) {
+        } else if ($add) {
             $order->info['tax_groups'][$products_tax_description] = $taxAdd;
         }
         $totalTaxAdd += $taxAdd;
@@ -1177,7 +1171,7 @@ function eo_remove_product_from_order($order_id, $orders_products_id) {
 }
 
 function eo_get_order_total_by_order($order_id, $class = null) {
-    global $db;
+    global $db, $eo;
 
     // Retreive the raw value
     $ot = $db->Execute(
@@ -1314,11 +1308,13 @@ function eo_update_database_order_totals ($oID) {
         // This fixes an issue caused by ot_shipping assuming shipping tax amount
         // has not already been added to the shipping cost and order tax.
         if (isset ($order->info['shipping_tax'])) {
+            $order->info['shipping_tax'] = $eo->eoRoundCurrencyValue ($order->info['shipping_tax']);
             $order->info['tax'] -= $order->info['shipping_tax'];
             if (DISPLAY_PRICE_WITH_TAX == 'true') {
                 $order->info['shipping_cost'] -= $order->info['shipping_tax'];
             }
         }
+        $order->info['shipping_cost'] = $eo->eoRoundCurrencyValue ($order->info['shipping_cost']);
         
         // -----
         // Cycle through the order-totals to see if any are currently taxed.  If so, remove the
@@ -1557,7 +1553,7 @@ function eo_get_order_by_id($oID) {
             'AND `class`=\'ot_subtotal\''
         );
         if(!$query->EOF) {
-            $order->info['subtotal'] = $query->fields['value'];
+            $order->info['subtotal'] = $eo->eoRoundCurrencyValue ($query->fields['value']);
         }
     }
 
@@ -1603,7 +1599,7 @@ function eo_get_order_by_id($oID) {
             'AND `class` = \'ot_shipping\''
         );
         if(!$query->EOF) {
-            $order->info['shipping_cost'] = $query->fields['value'];
+            $order->info['shipping_cost'] = $eo->eoRoundCurrencyValue ($query->fields['value']);
 
             $_SESSION['shipping'] = array(
                 'title' => $order->info['shipping_method'],

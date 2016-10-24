@@ -421,7 +421,7 @@
             );
 
             foreach ($_POST['update_total'] as $order_total) {
-                $order_total['text'] = $currencies->format($order_total['value'], true, $order->info['currency'], $order->info['currency_value']);
+                $order_total['text'] = $eo->eoFormatCurrencyValue ($order_total['value']);
                 $order_total['sort_order'] = $GLOBALS[$order_total['code']]->sort_order;
 
                 // TODO Special processing for some modules
@@ -440,12 +440,12 @@
                             break;
                         case 'ot_gv':
                             if($order_total['value'] < 0) $order_total['value'] = $order_total['value'] * -1;
-                            $order_total['text'] = $currencies->format($order_total['value'], true, $order->info['currency'], $order->info['currency_value']);
+                            $order_total['text'] = $eo->eoFormatCurrencyValue ($order_total['value']);
                             $_SESSION['cot_gv'] = $order_total['value'];
                             break;
                         case 'ot_voucher':
                             if($order_total['value'] < 0) $order_total['value'] = $order_total['value'] * -1;
-                            $order_total['text'] = $currencies->format($order_total['value'], true, $order->info['currency'], $order->info['currency_value']);
+                            $order_total['text'] = $eo->eoFormatCurrencyValue ($order_total['value']);
                             $_SESSION['cot_voucher'] = $order_total['value'];
                             break;
                         case 'ot_coupon':
@@ -517,15 +517,7 @@
             );
 
             // Unset some session variables after updating the order totals
-            if (array_key_exists('cot_gv', $_SESSION)) {
-                unset ($_SESSION['cot_gv']);
-            }
-            if (array_key_exists('cot_voucher', $_SESSION)) {
-                unset ($_SESSION['cot_voucher']);
-            }
-            if (array_key_exists('cc_id', $_SESSION)) {
-                unset ($_SESSION['cc_id']);
-            }
+            unset ($_SESSION['cot_gv'], $_SESSION['cot_voucher'], $_SESSION['cc_id']);
             $order_updated = true;
         }
 
