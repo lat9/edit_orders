@@ -2,7 +2,7 @@
 
 @require_once DIR_FS_ADMIN . DIR_WS_CLASSES . 'plugin.php';
 class eo_plugin extends plugin {
-    public function getVersion() { return '4.1.7-beta2'; }
+    public function getVersion() { return '4.1.7'; }
     public function getUniqueKey() { return 'EO'; }
     public function getUniqueName() { return BOX_CONFIGURATION_EDIT_ORDERS; }
     public function getDescription() { return EO_DESCRIPTION; }
