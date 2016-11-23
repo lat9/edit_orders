@@ -999,6 +999,7 @@
                     case PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID:
                     case PRODUCTS_OPTIONS_TYPE_RADIO:
                     case PRODUCTS_OPTIONS_TYPE_SELECT:
+                    case PRODUCTS_OPTIONS_TYPE_SELECT_SBA:
                         echo '<label class="attribsSelect" for="opid-' .
                             $orders_products_id . '-oid-' . $optionID[$j] .
                             '">' . $optionInfo['name'] . '</label>';
