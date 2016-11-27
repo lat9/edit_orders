@@ -1732,4 +1732,9 @@ function eo_checks_and_warnings() {
             define('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID', '-1');
         }
     }
+    
+    // Check for the installation of "Potteryhouse's/mc12345678's Stock By Attributes"
+    if(!defined('PRODUCTS_OPTIONS_TYPE_SELECT_SBA')) {
+        define('PRODUCTS_OPTIONS_TYPE_SELECT_SBA', '-1');
+    }
 }
