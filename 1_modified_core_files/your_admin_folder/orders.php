@@ -485,7 +485,7 @@ function couponpopupWindow(url) {
             <td valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="2">
               <tr>
 <!-- BEGIN - Add Super Orders Order Icon -->
-                <td class="main" valign="top"><strong><?php echo ENTRY_CUSTOMER_ADDRESS . '<br />' . zen_image(DIR_WS_IMAGES . 'icon_customers.png', ENTRY_CUSTOMER_ADDRESS); ?></strong></td>
+                <td class="main" valign="top"><strong><?php echo EO_ENTRY_CUSTOMER_ADDRESS . '<br />' . zen_image(DIR_WS_IMAGES . 'icon_customers.png', EO_ENTRY_CUSTOMER_ADDRESS); ?></strong></td>
 <!-- END - Add Super Orders Order Icon -->
                 <td class="main"><?php echo zen_address_format($order->customer['format_id'], $order->customer, 1, '', '<br />'); ?></td>
               </tr>
@@ -514,7 +514,7 @@ function couponpopupWindow(url) {
             <td valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="2">
               <tr>
 <!-- BEGIN - Add Super Orders Order Icon -->
-                <td class="main" valign="top"><strong><?php echo ENTRY_SHIPPING_ADDRESS . '<br />' . zen_image(DIR_WS_IMAGES . 'icon_shipping.png', ENTRY_SHIPPING_ADDRESS); ?></strong></td>
+                <td class="main" valign="top"><strong><?php echo EO_ENTRY_SHIPPING_ADDRESS . '<br />' . zen_image(DIR_WS_IMAGES . 'icon_shipping.png', EO_ENTRY_SHIPPING_ADDRESS); ?></strong></td>
 <!-- END - Add Super Orders Order Icon -->
                 <td class="main"><?php echo zen_address_format($order->delivery['format_id'], $order->delivery, 1, '', '<br />'); ?></td>
               </tr>
@@ -522,7 +522,7 @@ function couponpopupWindow(url) {
             <td valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="2">
               <tr>
 <!-- BEGIN - Add Super Orders Order Icon -->
-                <td class="main" valign="top"><strong><?php echo ENTRY_BILLING_ADDRESS . '<br />' . zen_image(DIR_WS_IMAGES . 'icon_billing.png', ENTRY_BILLING_ADDRESS); ?></strong></td>
+                <td class="main" valign="top"><strong><?php echo EO_ENTRY_BILLING_ADDRESS . '<br />' . zen_image(DIR_WS_IMAGES . 'icon_billing.png', EO_ENTRY_BILLING_ADDRESS); ?></strong></td>
 <!-- END - Add Super Orders Order Icon -->
                 <td class="main"><?php echo zen_address_format($order->billing['format_id'], $order->billing, 1, '', '<br />'); ?></td>
               </tr>

@@ -1,16 +1,20 @@
 <?php
 /**
  * @package admin
- * @copyright Copyright 2003-2007 Zen Cart Development Team
+ * @copyright Copyright 2003-2016 Zen Cart Development Team
  * @copyright Portions Copyright 2003 osCommerce
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
- * @version $Id: orders.php 6214 2007-04-17 02:24:25Z ajeh $
+ * @version $Id: Author: DrByte  Sun Feb 28 02:42:59 2016 -0500 Modified in v1.5.5 $
  */
 
 define('HEADING_TITLE', 'Orders');
+define('HEADING_TITLE_DETAILS', 'Order Details');
 define('HEADING_TITLE_SEARCH', 'Order ID:');
 define('HEADING_TITLE_STATUS', 'Status:');
-define('HEADING_TITLE_SEARCH_DETAIL_ORDERS_PRODUCTS', 'Search by Product Name or <strong>ID:XX</strong> or Model ');
+define('HEADING_TITLE_SEARCH_DETAIL_ORDERS_PRODUCTS', 'Product Name or ID:XX or Model');
+define('HEADING_TITLE_SEARCH_ALL','Search: ');
+define('HEADING_TITLE_SEARCH_PRODUCTS','Product search: ');
+define('TEXT_RESET_FILTER', 'Remove search filter');
 define('TEXT_INFO_SEARCH_DETAIL_FILTER_ORDERS_PRODUCTS', 'Search Filter: ');
 define('TABLE_HEADING_PAYMENT_METHOD', 'Payment<br />Shipping');
 define('TABLE_HEADING_ORDERS_ID','ID');
@@ -38,11 +42,12 @@ define('TABLE_HEADING_CUSTOMER_NOTIFIED', 'Customer Notified');
 define('TABLE_HEADING_DATE_ADDED', 'Date Added');
 
 define('ENTRY_CUSTOMER', 'Customer:');
+define('ENTRY_CUSTOMER_ADDRESS', 'Customer Address:<br><i class="fa fa-2x fa-user"></i>');
 define('ENTRY_SOLD_TO', 'SOLD TO:');
 define('ENTRY_DELIVERY_TO', 'Delivery To:');
 define('ENTRY_SHIP_TO', 'SHIP TO:');
-define('ENTRY_SHIPPING_ADDRESS', 'Shipping Address:');
-define('ENTRY_BILLING_ADDRESS', 'Billing Address:');
+define('ENTRY_SHIPPING_ADDRESS', 'Shipping Address:<br><i class="fa fa-2x fa-truck"></i>');
+define('ENTRY_BILLING_ADDRESS', 'Billing Address:<br><i class="fa fa-2x fa-credit-card"></i>');
 define('ENTRY_PAYMENT_METHOD', 'Payment Method:');
 define('ENTRY_CREDIT_CARD_TYPE', 'Credit Card Type:');
 define('ENTRY_CREDIT_CARD_OWNER', 'Credit Card Owner:');
@@ -54,10 +59,10 @@ define('ENTRY_TAX', 'Tax:');
 define('ENTRY_SHIPPING', 'Shipping:');
 define('ENTRY_TOTAL', 'Total:');
 define('ENTRY_DATE_PURCHASED', 'Date Purchased:');
-define('ENTRY_STATUS', 'Update Status:');
+define('ENTRY_STATUS', 'Status:');
 define('ENTRY_DATE_LAST_UPDATED', 'Date Last Updated:');
-define('ENTRY_NOTIFY_CUSTOMER', 'Notify Customer?');
-define('ENTRY_NOTIFY_COMMENTS', 'Append Comments?');
+define('ENTRY_NOTIFY_CUSTOMER', 'Notify Customer:');
+define('ENTRY_NOTIFY_COMMENTS', 'Append Comments:');
 define('ENTRY_PRINTABLE', 'Print Invoice');
 
 define('TEXT_INFO_HEADING_DELETE_ORDER', 'Delete Order');
@@ -70,7 +75,6 @@ define('TEXT_PAID', 'Paid');
 define('TEXT_UNPAID', 'Un-paid');
 
 define('TEXT_ALL_ORDERS', 'All Orders');
-define('TEXT_NO_ORDER_HISTORY', 'No Order History Available');
 
 define('EMAIL_SEPARATOR', '------------------------------------------------------');
 define('EMAIL_TEXT_SUBJECT', 'Order Update');
@@ -86,7 +90,7 @@ define('ERROR_ORDER_DOES_NOT_EXIST', 'Error: Order does not exist.');
 define('SUCCESS_ORDER_UPDATED', 'Success: Order has been successfully updated.');
 define('WARNING_ORDER_NOT_UPDATED', 'Warning: Nothing to change. The order was not updated.');
 
-define('ENTRY_ORDER_ID','Order #');
+define('ENTRY_ORDER_ID','Invoice No. ');
 define('TEXT_INFO_ATTRIBUTE_FREE', '&nbsp;-&nbsp;<span class="alert">FREE</span>');
 
 define('TEXT_DOWNLOAD_TITLE', 'Order Download Status');
@@ -119,6 +123,13 @@ define('TABLE_HEADING_CUSTOMER_COMMENTS', 'Customer<br />Comments');
 define('TEXT_COMMENTS_YES', 'Customer Comments - YES');
 define('TEXT_COMMENTS_NO', 'Customer Comments - NO');
 
+define('TEXT_CUSTOMER_LOOKUP', '<i class="fa fa-search"></i> Lookup Customer');
+
+define('TEXT_INVALID_ORDER_STATUS', '<span class="alert">(Invalid Order Status)</span>');
+
+define('BUTTON_TO_LIST', 'Order List');
+define('SELECT_ORDER_LIST', 'Jump to Order:');
+
 // BEGIN EDIT ORDERS  ----------------------------------------------
 define('ENTRY_CUSTOMER_ADDRESS', 'Customer Address:');
 define('TEXT_MAILTO', 'mailto');
@@ -127,5 +138,7 @@ define('TEXT_WHOIS_LOOKUP', 'whois');
 
 define('BUTTON_TO_LIST', 'Order List');
 define('SELECT_ORDER_LIST', 'Jump to Order:');
-
+define('EO_ENTRY_SHIPPING_ADDRESS', 'Shipping Address:');
+define('EO_ENTRY_BILLING_ADDRESS', 'Billing Address:');
+define('EO_ENTRY_CUSTOMER_ADDRESS', 'Customer Address:');
 // END EDIT ORDERS  ----------------------------------------------
