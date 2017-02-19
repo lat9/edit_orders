@@ -16,3 +16,14 @@ $autoLoadConfig[200][] = array (
     'autoType' => 'init_script',
     'loadFile' => 'init_eo_config.php'
 );
+
+$autoLoadConfig[200][] = array (
+    'autoType'  => 'class',
+    'loadFile'  => 'observers/EditOrdersAdminObserver.php',
+    'classPath' => DIR_WS_CLASSES
+);
+$autoLoadConfig[200][] = array (
+    'autoType'   => 'classInstantiate',
+    'className'  => 'EditOrdersAdminObserver',
+    'objectName' => 'EditOrdersAdminObserver'
+);
