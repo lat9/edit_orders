@@ -145,17 +145,21 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                 <li>Rename the YOUR_ADMIN folder to match your custom admin folder's name.</li>
                 <li>Merge any pre-existing <span class="corefile">core-file</span> changes with the changes required by <em>Edit Orders</em>:<ol>
                   <li><span class="corefile">/includes/classes/order.php</span> <span class="smaller">(2 marked change-sections)</span></li>
-                  <li><span class="corefile">/YOUR_ADMIN/orders.php</span> <span class="smaller">(?? marked change-sections)</span></li>
+                  <li><span class="corefile">/YOUR_ADMIN/orders.php</span> <span class="smaller">(3 marked change-sections)</span></li>
                 </ol></li>
                 <li>Sign into your Zen Cart's admin panel.</li>
                 <li>Copy the plugin's files to your store's folder structure:<ol>
+                  <li>/includes/auto_loaders/config.vinos_common.php</li>
                   <li><span class="corefile">/includes/classes/order.php</span></li>
+                  <li>/includes/classes/VinosAutoload.php <span class="smaller">(Added in v4.2.0)</span></li>
+                  <li>/includes/classes/vinos/common/NotiferCheck.php <span class="smaller">(Added in v4.2.0)</span></li>
+                  <li>/includes/init_includes/init_vinos_autoload.php <span class="smaller">(Added in v4.2.0)</span></li>
                   <li>/includes/languages/english/modules/order_total/ot_onetime_discount.php</li>
                   <li>/includes/languages/english/modules/order_total/ot_misc_cost.php</li>
                   <li>/includes/modules/order_total/ot_onetime_discount.php</li>
                   <li>/includes/modules/order_total/ot_misc_cost.php</li>
                   <li>/YOUR_ADMIN/edit_orders.php</li>
-                  <li><span class="corefile">/YOUR_ADMIN/orders.php</span></li>
+                  <li><span class="corefile">/YOUR_ADMIN/orders.php</span> <span class="smaller">(Zen Cart 1.5.5d version, with additional notifiers)</span></li>
                   <li>/YOUR_ADMIN/images/icon_billing.png</li>
                   <li>/YOUR_ADMIN/images/icon_comment_add.png</li>
                   <li>/YOUR_ADMIN/images/icon_customers.png</li>
@@ -164,10 +168,12 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                   <li>/YOUR_ADMIN/images/icon_track_add.png</li>
                   <li>/YOUR_ADMIN/includes/edit_orders.css</li>
                   <li>/YOUR_ADMIN/includes/auto_loaders/config.eo.php</li>
+                  <li>/YOUR_ADMIN/includes/auto_loaders/config.vinos_common_admin.php <span class="smaller">(Added in v4.2.0)</span></li>
                   <li>/YOUR_ADMIN/includes/classes/attributes.php</li>
                   <li>/YOUR_ADMIN/includes/classes/editOrders.php</li>
                   <li>/YOUR_ADMIN/includes/classes/EditOrdersQueryCache.php</li>
                   <li>/YOUR_ADMIN/includes/classes/mock_cart.php</li>
+                  <li>/YOUR_ADMIN/includes/classes/EditOrdersAdminObserver.php <span class="smaller">(Added in v4.2.0)</span></li>
                   <li>/YOUR_ADMIN/includes/extra_configures/edit_orders.php <span class="smaller">(Non-processing module, can be safely removed)</span></li>
                   <li>/YOUR_ADMIN/includes/extra_datafiles/edit_orders_defines.php</li>
                   <li>/YOUR_ADMIN/includes/extra_datafiles/eo_sanitization.php</li>
@@ -224,7 +230,6 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                 <tr><td>/2_new_files/your_admin_folder/includes/functions/extra_functions/common_orders_functions.php <span class="smaller">(Placeholder, can be removed)</span></td><td>/YOUR_ADMIN/includes/functions/extra_functions/common_orders_functions.php <span class="smaller">(Placeholder, can be removed)</span></td></tr>
                 <tr><td>/2_new_files/your_admin_folder/includes/functions/extra_functions/edit_orders_functions.php</td><td>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</td></tr>                <tr><td>/2_new_files/your_admin_folder/includes/init_includes/init_eo_config.php</td><td>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</td></tr>
                 <tr><td>/2_new_files/your_admin_folder/includes/init_includes/init_zc154_compatibility.php</td><td>&mdash;</td></tr>
-                <tr><td>/2_new_files/your_admin_folder/includes/init_includes/init_eo_config.php</td><td>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</td></tr>
                 <tr><td>/2_new_files/your_admin_folder/includes/languages/english/edit_orders.php</td><td>/YOUR_ADMIN/includes/languages/english/edit_orders.php</td></tr>
                 <tr><td>/2_new_files/your_admin_folder/includes/languages/english/extra_definitions/edit_orders.php</td><td>/YOUR_ADMIN/includes/languages/english/extra_definitions/edit_orders.php</td></tr>                <tr><td>/2_new_files/your_admin_folder/includes/languages/english/images/buttons/button_add_product.gif</td><td>/YOUR_ADMIN/includes/languages/english/images/buttons/button_add_product.gif</td></tr>
                 <tr><td>/2_new_files/your_admin_folder/includes/languages/english/modules/plugin/eo.php</td><td>&mdash;</td></tr>
@@ -240,8 +245,8 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             
             <div id="notifiers">
               <noscript><h3>Required Notifiers</h3></noscript>
-              <p>Part of the simplification of the <em>EO</em> installation process is the distribution of <span class="corefile">core-file</span> changes.  Zen Cart 1.5.5a has been updated to include additional notifiers, allowing this and other plugins to be independent of a store's Zen Cart version and <em>EO</em> makes use of those notifications.</p>
-              <p>The possibility does exist, however, that these required notifiers didn't get included when a store's Zen Cart installation was upgraded from a prior version.  The following table lists the presumed built-in notifications that allow the plugin to perform its processing.</p>
+              <p>Part of the simplification of the <em>EO</em> installation process is to lessen the <span class="corefile">core-file</span> changes required.  Zen Cart 1.5.5a has been updated to include additional notifiers within the admin's <em>Customers-&gt;Orders</em> processing and Zen Cart 1.6.0 expands on that update.  <em>EO</em> now makes use of those notifications to add its buttons and icons to that tool.</p>
+              <p>The possibility does exist, however, that these required notifiers didn't get included when a store's Zen Cart installation was upgraded from a prior version.  The following table lists the notifiers that allow <em>EO</em> to perform its processing.</p>
               <table>
                 <tr>
                   <th>Module Name</th>
@@ -422,6 +427,35 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
+          <li>v4.2.0, 2017-02-xx (lat9)<ul>
+            <li>CHANGE: Require Zen Cart 1.5.5a or later.</li>
+            <li>CHANGE: Remove integration with <em>Ty Package Tracker</em>.</li>
+            <li>CHANGE: Restructure plugin installation.</li>
+            <li>The following files were changed, <span class="added">added</span> or <span class="removed">removed</span>:<ol>
+              <li><span class="added">/includes/auto_loaders/init_vinos_autoload.php</span></li>
+              <li><span class="removed">/includes/classes/order_total.php</span><sup>1</sup></li>
+              <li><span class="removed">/includes/classes/shipping.php</span><sup>1</sup></li>
+              <li><span class="added">/includes/classes/VinosAutoload.php</span></li>
+              <li><span class="added">/includes/classes/vinos/common/NotifierCheck.php</span></li>
+              <li><span class="added">/includes/init_includes/init_vinos_autoload.php</span></li>
+              <li>/YOUR_ADMIN/orders.php</li>
+              <li><span class="removed">/YOUR_ADMIN/images/icon_edit.gif</span><sup>1</sup></li>
+              <li>/YOUR_ADMIN/includes/auto_loaders/config.eo.php</li>
+              <li><span class="removed">/YOUR_ADMIN/includes/auto_loaders/config.zc154_compatibility.php</span></li>
+              <li><span class="removed">/YOUR_ADMIN/includes/classes/eo_plugin.php</span></li>
+              <li><span class="removed">/YOUR_ADMIN/includes/classes/plugin.php</span><sup>2</sup></li>
+              <li><span class="added">/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php</span></li>
+              <li>/YOUR_ADMIN/includes/extra_configures/edit_orders.php</li>
+              <li>/YOUR_ADMIN/includes/extra_datafiles/edit_orders_defines.php</li>
+              <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
+              <li><span class="added">/YOUR_ADMIN/includes/init_includes/init_vinos_common_admin.php</span></li>
+              <li><span class="removed">/YOUR_ADMIN/includes/init_includes/init_zc154_compatibility.php</span></li>
+              <li><span class="removed">/YOUR_ADMIN/includes/languages/english/orders.php</span><sup>1</sup></li>
+              <li>/YOUR_ADMIN/includes/languages/english/extra_definitions/edit_orders.php</li>
+              <li><span class="removed">/YOUR_ADMIN/includes/languages/english/plugins/eo.php</span></li>
+              <li><span class="removed">/YOUR_ADMIN/includes/languages/english/plugins/plugin.php</span><sup>2</sup></li>
+            </ol><sup>1</sup>Identifies that the file was removed from this plugin's distribution <strong>only</strong>; use the version associated with your Zen Cart distribution.<br /><sup>2</sup>Other plugins, notably <em>Ultimate SEO URLs</em>, that make use of a module using the same name but different contents; make sure that the module isn't required by others prior to removing.</li>
+          </ul></li>
           <li>v4.1.7, 2016-10-24 (lat9)<ul>
             <li>BUGFIX: Modify <em>order.php</em> to include the &quot;value&quot; for each order-total in the order.</li>
             <li>BUGFIX: Correct interaction with &quot;ot_cod_fee&quot;.</li>

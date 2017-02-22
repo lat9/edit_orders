@@ -85,5 +85,22 @@ if (!defined ('EO_VERSION')) {
 // Update the configuration reflect the current EO version, if not already set.
 //
 if (EO_VERSION != EO_CURRENT_VERSION) {
-    $db->Execute ("UPDATE " . TABLE_CONFIGURATION . " SET configuration_value = '" . EO_CURRENT_VERSION . "' WHERE configuration_key = 'EO_VERSION' LIMIT 1");
+    $notifier_check = new \Vinos\Common\NotifierCheck (EO_INIT_MISSING_NOTIFIERS, EO_INIT_MISSING_FILES);
+    $notifier_check->setList (
+        array (
+            array (
+                'filename' => DIR_FS_ADMIN . 'orders.php',
+                'required' => true,
+                'notifiers' => array (
+                    'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS', 
+                    'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END',
+                    'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS',
+                    'NOTIFY_ADMIN_ORDERS_LISTING_ROW',
+                ),
+            ),
+        )
+    );
+    if ($notifier_check->process ()) {
+        $db->Execute ("UPDATE " . TABLE_CONFIGURATION . " SET configuration_value = '" . EO_CURRENT_VERSION . "' WHERE configuration_key = 'EO_VERSION' LIMIT 1");
+    }
 }
