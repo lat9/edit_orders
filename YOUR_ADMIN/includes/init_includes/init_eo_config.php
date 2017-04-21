@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define ('EO_CURRENT_VERSION', '4.2.2');
+define ('EO_CURRENT_VERSION', '4.2.3');
 
 $configurationGroupTitle = 'Edit Orders';
 $configuration = $db->Execute (
