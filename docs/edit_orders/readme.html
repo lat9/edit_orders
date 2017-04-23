@@ -27,6 +27,7 @@ td, th { padding: 5px; }
 th { text-align: left; }
 span.title { font-style: italic; font-weight: bold; color: #006666; }
 .corefile, .red { color: red; }
+.bold-red { color: red; font-weight: bold; }
 .template { color: green; }
 .added { color: blue; }
 .removed { text-decoration: line-through; }
@@ -388,14 +389,37 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h2>Integration With Other Modules</h2></noscript>
         <p>The following is a list of some commonly installed 3rd party Zen Cart modules (plugins) known to be compatible with Edit Orders. The list is mainly confined to 3rd party plugins which also affect customer orders or placing customer orders. Please refer to the appropriate module for further notes and instructions (if any).</p>
         <p>Order-total modules are used to change the total cost of an order. <em>Edit Orders</em> uses the same order-total modules as the storefront checkout process. Most of the order-total modules which ship with Zen Cart have been validated and work as expected (ot_coupon, ot_gv, ot_loworderfee, ot_shipping, ot_subtotal, ot_tax and ot_total). Both <code class="no-pad">ot_subtotal</code> and <code class="no-pad">ot_total</code> must be enabled for <em>Edit Orders</em> to function correctly.</p>
+        </ol>
         <div class="tab-container" id="inner-container2">
           <ul class="etabs">
+            <li class="tab"><a href="#attributes">Attributes</a></li>
             <li class="tab"><a href="#local-sales">Local Sales Tax</a></li>
             <li class="tab"><a href="#other-modules">Other Modules (Troubleshooting)</a></li>
           </ul>
           
           <div class="panel-container">
-            
+           
+            <div id="attributes">
+              <noscript><h3>Attributes</h3></noscript>
+              <p>If your store includes products with attributes and your want EO to display your products' attributes <em>in the same order</em> as the storefront operation, you'll need to make a change to <code>/includes/modules/attributes.php</code>.  See <a href="https://www.zen-cart.com/showthread.php?222184-Product-attribute-sorting" target="_blank">this</a> Zen Cart posting for additional information.</p>
+              <ol>
+                <li>If you don't already have a template-override version of the file, make one by copying /includes/modules/attributes.php to /includes/modules/YOUR_TEMPLATE/attributes.php.</li>
+                <li>Locate the following section (towards the top of the file):<pre>
+                    if (PRODUCTS_OPTIONS_SORT_ORDER=='0') {
+                      $options_order_by= ' order by LPAD(popt.products_options_sort_order,11,"0")';
+                    } else {
+                      $options_order_by= ' order by popt.products_options_name';
+                    }
+                </pre></li>
+                <li>Change the line indicated:<pre>
+                    if (PRODUCTS_OPTIONS_SORT_ORDER=='0') {
+                      $options_order_by= ' order by LPAD(popt.products_options_sort_order,11,"0"<span class="bold-red">, popt.products_options_name)</span>';
+                    } else {
+                      $options_order_by= ' order by popt.products_options_name';
+                    }
+                </pre></li>
+            </div>
+                        
             <div id="local-sales">
               <noscript><h3>Local Sales Tax</h3></noscript>
               <p><em>Edit Orders</em> has been validated with <em>Local Sales Tax</em> v2.3.5 or newer installed; previous versions are not supported.  To integrate the two plugins, you'll need to copy the file <code class="no-pad">/includes/functions/extra_functions/functions_local_sales_taxes.php</code> to <code class="no-pad">/YOUR_ADMIN/includes/functions/extra_functions/functions_local_sales_taxes.php</code> for that order-total module to &quot;find&quot; the functions it needs!</p>
@@ -427,7 +451,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.2.3, 2017-04-xx (lat9)<ul>
+          <li>v4.2.3, 2017-04-23 (lat9)<ul>
             <li>BUGFIX: Correct attribute-sorting issue.</li>
             <li>The following files were changed:<ol>
               <li>/YOUR_ADMIN/includes/classes/attributes.php</li>
