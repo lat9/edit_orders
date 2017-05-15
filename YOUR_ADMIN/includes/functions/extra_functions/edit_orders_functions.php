@@ -1111,7 +1111,7 @@ function eo_remove_product_from_order($order_id, $orders_products_id) {
         while (!$query->EOF) {
             if (DOWNLOAD_ENABLED == 'true') {
                 $check = $db->Execute(
-                    'SELECT `p`.`products_quantity`, `pad`.`products_attributes_filename`, `p`.`product_is_always_free_shipping` ' .
+                    'SELECT `p`.`products_quantity`, `p`.`products_ordered`, `pad`.`products_attributes_filename`, `p`.`product_is_always_free_shipping` ' .
                     'FROM `' . TABLE_PRODUCTS . '` AS `p` ' .
                     'LEFT JOIN `' . TABLE_PRODUCTS_ATTRIBUTES . '` AS `pa` ON `p`.`products_id`=`pa`.`products_id` ' .
                     'LEFT JOIN `' . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . '` AS `pad` ON `pa`.`products_attributes_id`=`pad`.`products_attributes_id` ' .
@@ -1120,7 +1120,7 @@ function eo_remove_product_from_order($order_id, $orders_products_id) {
             }
             else {
                 $check = $db->Execute(
-                    'SELECT `p`.`products_quantity` FROM `' . TABLE_PRODUCTS . '` AS `p` ' .
+                    'SELECT `p`.`products_quantity`, `p`.`products_ordered` FROM `' . TABLE_PRODUCTS . '` AS `p` ' .
                      'WHERE `p`.`products_id` = \'' . (int)$query->fields['products_id'] . '\''
                 );
             }
