@@ -143,6 +143,12 @@
             $sql_data_array['cc_number'] = $update_info_cc_number;
             unset($_POST['update_info_cc_number']);
         }
+        
+        // -----
+        // Give any listening observer the opportunity to make modifications to the SQL data associated
+        // with the updated order.
+        //
+        $zco_notifier->notify('EDIT_ORDERS_PRE_UPDATE_ORDER', $oID, $sql_data_array);
 
         zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', 'orders_id = \'' . (int)$oID . '\'');
 
@@ -849,6 +855,13 @@
             <input name="update_delivery_country" size="45" value="<?php echo zen_html_quotes($order->delivery['country']); ?>">
         <?php } ?>
   </tr>
+  
+<?php
+    $additional_rows = '';
+    $zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_ADDRESS_ROWS', $order, $additional_rows);
+    echo $additional_rows;
+?>
+
 </table>
 </td></tr></table>
 <!-- End Addresses Block -->
