@@ -166,9 +166,9 @@ class mockCart extends base {
 						'category' => $products->fields['master_categories_id'],
 						'image' => $products->fields['products_image'],
 						'weight' => $products->fields['products_weight'],
-						'products_virtual' => $query->fields['products_virtual'],
-						'product_is_always_free_shipping' => $query->fields['product_is_always_free_shipping'],
-						'tax_class_id' => $query->fields['products_tax_class_id']
+						'products_virtual' => $products->fields['products_virtual'],
+						'product_is_always_free_shipping' => $products->fields['product_is_always_free_shipping'],
+						'tax_class_id' => $products->fields['products_tax_class_id']
 				);
 				$product = array_merge($product, $merge);
 				unset($merge);
