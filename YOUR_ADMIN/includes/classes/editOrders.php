@@ -1,7 +1,7 @@
 <?php
 // -----
 // Part of the Edit Orders plugin (v4.1.6 and later) by lat9 (lat9@vinosdefrutastropicales.com).
-// Copyright (C) 2016, Vinos de Frutas Tropicales
+// Copyright (C) 2016-2017, Vinos de Frutas Tropicales
 //
 if (!defined ('EO_DEBUG_TAXES_ONLY')) define ('EO_DEBUG_TAXES_ONLY', 'false');  //-Either 'true' or 'false'
 class editOrders extends base
@@ -136,7 +136,7 @@ class editOrders extends base
         } else {
             $ot_tax_class_name = 'MODULE_ORDER_TOTAL_' . strtoupper (str_replace ('ot_', '', $ot_class)) . '_TAX_CLASS';
         }
-        $ot_tax_class = constant ($ot_tax_class_name);
+        $ot_tax_class = (defined($ot_tax_class_name)) ? constant($ot_tax_class_name) : null;
         if ($ot_tax_class != null) {
             $tax_location = zen_get_tax_locations ();
             $tax_rate = zen_get_tax_rate ($ot_tax_class, $tax_location['country_id'], $tax_location['zone_id']);

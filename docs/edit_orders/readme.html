@@ -456,8 +456,10 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>CHANGE: Add notifiers to enable additional address fields to be inserted.</li>
             <li>BUGFIX: Use &quot;correct&quot; variable in the mock cart's <code>get_products</code> function.</li>
             <li>BUGFIX: Correct PHP &quot;notify&quot; logs for missing/undefined variables.</li>
+            <li>BUGFIX: Correct PHP &quot;notify&quot; logs when an order-total doesn't include a TAX_CLASS.</li>
             <li>The following files were changed:<ol>
               <li>/YOUR_ADMIN/edit_orders.php</li>
+              <li>/YOUR_ADMIN/includes/classes/editOrders.php</li>
               <li>/YOUR_ADMIN/includes/classes/mock_cart.php</li>
               <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
