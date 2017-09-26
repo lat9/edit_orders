@@ -928,7 +928,7 @@
     <?php } ?>
 
     <?php
-        if( (zen_not_null($order->info['account_name']) || zen_not_null($order->info['account_number']) || zen_not_null($order->info['po_number'])) ) {
+        if (isset($order->info['account_name']) || isset($order->info['account_number']) || isset($order->info['po_number'])) {
         ?>
       <tr>
         <td colspan="2"><?php echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?></td>
@@ -989,7 +989,7 @@
             <td class="dataTableContent" valign="top" align="left"><input name="update_products[<?php echo $orders_products_id; ?>][qty]" size="2" value="<?php echo zen_db_prepare_input($order->products[$i]['qty']); ?>" />&nbsp;&nbsp;&nbsp;&nbsp; X</td>
             <td class="dataTableContent" valign="top" align="left"><input name="update_products[<?php echo $orders_products_id; ?>][name]" size="55" value="<?php echo zen_html_quotes($order->products[$i]['name']); ?>" /><?php
 
-        if(sizeof($order->products[$i]['attributes']) > 0) { ?>
+        if (isset($order->products[$i]['attributes']) && count($order->products[$i]['attributes']) > 0) { ?>
                 <br/><nobr><small>&nbsp;<i>
                     <?php echo TEXT_ATTRIBUTES_ONE_TIME_CHARGE ?><input name="update_products[<?php echo $orders_products_id; ?>][onetime_charges]" size="8" value="<?php echo zen_db_prepare_input($order->products[$i]['onetime_charges']); ?>" />&nbsp;&nbsp;&nbsp;&nbsp;
                 </i></small></nobr><br/><?php
