@@ -2,7 +2,7 @@
 namespace Vinos\Common;
 
 // -----
-// Common class used by various plugins by lat9 (lat9@vinosdefrutastropicales.com), v1.0.0.
+// Common class used by various plugins by lat9 (lat9@vinosdefrutastropicales.com), v1.0.1.
 // Copyright (C) 2017, Vinos de Frutas Tropicales
 //
 class NotifierCheck
@@ -73,6 +73,7 @@ class NotifierCheck
                         }
                         if (count ($not_found_list) != 0) {
                             $not_found_list = implode (', ', $not_found_list);
+                            $all_files_ok = false;
                             $messageStack->add_session (sprintf ($this->format_notifier_missing, $filename, $not_found_list), 'error');
                         }
                     }
