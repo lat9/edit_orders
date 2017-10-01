@@ -286,6 +286,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
       <div id="customization">
         <noscript><h2>Using <em>Edit Orders</em></h2></noscript>
         <p><em>Edit Orders</em> is easy to use; the interface looks similar to the <em>Customers-&gt;Orders</em> processing that is built into Zen Cart.  Once the plugin is installed, navigate to <em>Customers-&gt;Orders</em> and click the &quot;edit&quot; button to view the editable details of the order.</p>
+        <p>Starting with v4.3.0 of <em>EO</em>, a checkbox input (&quot;Reset totals prior to update?&quot;) appears next to the upper <b>update</b> button.  Its default value is controlled by <em>Configuration-&gt;Edit Orders-&gt;Reset Totals on Update &mdash; Default</em>.  If an order includes order-total modules (like <em>Group Pricing</em>) that affect both the order's total and tax values, you might need to tick that box to have <em>EO</em> correctly calculate any updated order.</p>
         <p><strong>Note:</strong> We do not recommend clicking &quot;edit&quot; on completed orders. When you edit an order, <b>all</b> order-totals are recalculated including tax, sub-total and total. Editing a completed order may result in undesired changes!</p>
         <div class="tab-container" id="inner-container2">
           <ul class="etabs">
@@ -451,17 +452,22 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.3.0, 2017-09-26 (lat9)<ul>
+          <li>v4.3.0, 2017-10-xx (lat9)<ul>
             <li>BUGFIX: Include &quot;products_ordered&quot; in columns retrieved from the &quot;products&quot; table.</li>
             <li>CHANGE: Add notifiers to enable additional address fields to be inserted.</li>
             <li>BUGFIX: Use &quot;correct&quot; variable in the mock cart's <code>get_products</code> function.</li>
             <li>BUGFIX: Correct PHP &quot;notify&quot; logs for missing/undefined variables.</li>
             <li>BUGFIX: Correct PHP &quot;notify&quot; logs when an order-total doesn't include a TAX_CLASS.</li>
+            <li>BUGFIX: Missing notifiers were not being reported.</li>
+            <li>BUGFIX: Order-total recalculation incorrect when some order-totals (e.g. Group Pricing) are included.</li>
             <li>The following files were changed:<ol>
+              <li>/includes/classes/vinos/common/NotifierCheck.php</li>
               <li>/YOUR_ADMIN/edit_orders.php</li>
               <li>/YOUR_ADMIN/includes/classes/editOrders.php</li>
               <li>/YOUR_ADMIN/includes/classes/mock_cart.php</li>
               <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
+              <li>/YOUR_ADMIN/includes/languages/english/edit_orders.php</li>
+              <li>/YOUR_ADMIN/includes/languages/english/extra_definitions/edit_orders.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
             </ol></li>
           </ul></li>

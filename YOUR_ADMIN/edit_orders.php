@@ -276,6 +276,17 @@
 
         // Handle updating products and attributes as needed
         if(array_key_exists('update_products', $_POST)) {
+            // -----
+            // Sometimes, EO needs a reset to its order-totals processing, especially in the presence
+            // of order-totals that make tax-related changes (like group_pricing).  If the admin has ticked the "Reset" box,
+            // clear out all the tax and total-related values and also reset the order-totals currently 
+            // applied to start afresh.
+            //
+            if (isset($_POST['reset_totals'])) {
+                $order->info['tax'] = $order->info['shipping_tax'] = $order->info['total'] = 0;
+                $order->totals = array();
+            }
+            
             $_POST['update_products'] = zen_db_prepare_input($_POST['update_products']);
 
             $eo->eoLog (
@@ -952,7 +963,7 @@
     </table></td>
       </tr>
       <tr>
-    <td valign="top"><?php echo zen_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
+        <td valign="top"><?php echo zen_image_submit('button_update.gif', IMAGE_UPDATE, 'name="update_button"') . '&nbsp;<b>' . RESET_TOTALS . '</b>' . zen_draw_checkbox_field('reset_totals', '', (EO_TOTAL_RESET_DEFAULT == 'on')); ?></td>
       </tr>
 <!-- End Payment Block -->
 

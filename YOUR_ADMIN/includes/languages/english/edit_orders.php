@@ -118,3 +118,6 @@ define('HEADING_TITLE_ORDER_DETAILS', 'Order # ');
 
 // Absolute's Product Attribute Grid
 define('WARNING_ATTRIBUTE_OPTION_GRID', 'Warning: Absolute\'s Product Attribute Grid was detected, however the Product Option Type for Attribute Grid was not fully installed in the database. Temporarily configuring PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID = 23997.');
+
+// Other elements
+define('RESET_TOTALS', 'Reset totals prior to update? ');
