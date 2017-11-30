@@ -90,7 +90,7 @@ if (isset($_SESSION['admin_id'])) {
         define('EO_INIT_FILE_MISSING', '1');  //-Set so that the notifier checks will run upon initial installation.
         define('EO_VERSION', '0.0.0');
         
-        $messageStack->add(EO_INIT_INSTALLED, 'success');
+        $messageStack->add(sprintf(EO_INIT_INSTALLED, EO_CURRENT_VERSION), 'success');
         
     // -----
     // Otherwise, we're updating an existing version; perform any configuration changes necessary.
@@ -128,7 +128,7 @@ if (isset($_SESSION['admin_id'])) {
     // -----
     // Update the configuration reflect the current EO version.
     //
-    if (EO_VERSION != EO_CURRENT_VERSION) {
+    if (EO_VERSION != EO_CURRENT_VERSION && EO_VERSION != '0.0.0') {
         $messageStack->add(sprintf(EO_INIT_VERSION_UPDATED, EO_VERSION, EO_CURRENT_VERSION), 'success');
         $db->Execute(
             "UPDATE " . TABLE_CONFIGURATION . "
