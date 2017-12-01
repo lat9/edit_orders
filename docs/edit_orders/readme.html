@@ -455,8 +455,11 @@ div.totals-desc h4 { border-top: 1px solid #666; }
           <li>v4.3.1, 2017-12-xx (lat9)<ul>
             <li>BUGFIX: Correct shipping-tax calculations when a store &quot;Displays prices with tax&quot;.</li>
             <li>BUGFIX: Correct unwanted multiple messages on initial plugin installation.</li>
+            <li>BUGFIX: Allow &quot;special characters&quot; in updated address fields.</li>
             <li>The following files were changed:<ol>
+              <li>/YOUR_ADMIN/edit_orders.php</li>
               <li>/YOUR_ADMIN/includes/classes/editOrders.php</li>
+              <li>/YOUR_ADMIN/includes/extra_datafiles/eo_sanitization.php</li>
               <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
             </ol></li>

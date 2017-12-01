@@ -31,14 +31,14 @@
   include(DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php');
 
   $oID = zen_db_prepare_input($_GET['oID']);
-  $step = (isset ($_POST['step'])) ? (int)$_POST['step'] : 0;
-  if (isset ($_POST['add_product_categories_id'])) {
+  $step = (isset($_POST['step'])) ? (int)$_POST['step'] : 0;
+  if (isset($_POST['add_product_categories_id'])) {
     $add_product_categories_id = zen_db_prepare_input ($_POST['add_product_categories_id']);
   }
-  if (isset ($_POST['add_product_products_id'])) {
+  if (isset($_POST['add_product_products_id'])) {
     $add_product_products_id = zen_db_prepare_input($_POST['add_product_products_id']);
   }
-  if (isset ($_POST['add_product_quantity'])) {
+  if (isset($_POST['add_product_quantity'])) {
     $add_product_quantity = zen_db_prepare_input($_POST['add_product_quantity']);
   }
   
@@ -85,39 +85,39 @@
 
         $order_updated = false;
         $sql_data_array = array(
-            'customers_name' => zen_db_prepare_input($_POST['update_customer_name']),
-            'customers_company' => zen_db_prepare_input($_POST['update_customer_company']),
-            'customers_street_address' => zen_db_prepare_input($_POST['update_customer_street_address']),
-            'customers_suburb' => zen_db_prepare_input($_POST['update_customer_suburb']),
-            'customers_city' => zen_db_prepare_input($_POST['update_customer_city']),
-            'customers_state' => zen_db_prepare_input($_POST['update_customer_state']),
-            'customers_postcode' => zen_db_prepare_input($_POST['update_customer_postcode']),
-            'customers_country' => zen_db_prepare_input($_POST['update_customer_country']),
-            'customers_telephone' => zen_db_prepare_input($_POST['update_customer_telephone']),
-            'customers_email_address' => zen_db_prepare_input($_POST['update_customer_email_address']),
+            'customers_name' => $_POST['update_customer_name'],
+            'customers_company' => $_POST['update_customer_company'],
+            'customers_street_address' => $_POST['update_customer_street_address'],
+            'customers_suburb' => $_POST['update_customer_suburb'],
+            'customers_city' => $_POST['update_customer_city'],
+            'customers_state' => $_POST['update_customer_state'],
+            'customers_postcode' => $_POST['update_customer_postcode'],
+            'customers_country' => $_POST['update_customer_country'],
+            'customers_telephone' => $_POST['update_customer_telephone'],
+            'customers_email_address' => $_POST['update_customer_email_address'],
             'last_modified' => 'now()',
 
-            'billing_name' => zen_db_prepare_input($_POST['update_billing_name']),
-            'billing_company' => zen_db_prepare_input($_POST['update_billing_company']),
-            'billing_street_address' => zen_db_prepare_input($_POST['update_billing_street_address']),
-            'billing_suburb' => zen_db_prepare_input($_POST['update_billing_suburb']),
-            'billing_city' => zen_db_prepare_input($_POST['update_billing_city']),
-            'billing_state' => zen_db_prepare_input($_POST['update_billing_state']),
-            'billing_postcode' => zen_db_prepare_input($_POST['update_billing_postcode']),
-            'billing_country' => zen_db_prepare_input($_POST['update_billing_country']),
+            'billing_name' => $_POST['update_billing_name'],
+            'billing_company' => $_POST['update_billing_company'],
+            'billing_street_address' => $_POST['update_billing_street_address'],
+            'billing_suburb' => $_POST['update_billing_suburb'],
+            'billing_city' => $_POST['update_billing_city'],
+            'billing_state' => $_POST['update_billing_state'],
+            'billing_postcode' => $_POST['update_billing_postcode'],
+            'billing_country' => $_POST['update_billing_country'],
 
-            'delivery_name' => zen_db_prepare_input($_POST['update_delivery_name']),
-            'delivery_company' => zen_db_prepare_input($_POST['update_delivery_company']),
-            'delivery_street_address' => zen_db_prepare_input($_POST['update_delivery_street_address']),
-            'delivery_suburb' => zen_db_prepare_input($_POST['update_delivery_suburb']),
-            'delivery_city' => zen_db_prepare_input($_POST['update_delivery_city']),
-            'delivery_state' => zen_db_prepare_input($_POST['update_delivery_state']),
-            'delivery_postcode' => zen_db_prepare_input($_POST['update_delivery_postcode']),
-            'delivery_country' => zen_db_prepare_input($_POST['update_delivery_country']),
-            'payment_method' => zen_db_prepare_input($_POST['update_info_payment_method']),
-            'cc_type' => zen_db_prepare_input($_POST['update_info_cc_type']),
-            'cc_owner' => zen_db_prepare_input($_POST['update_info_cc_owner']),
-            'cc_expires' => zen_db_prepare_input($_POST['update_info_cc_expires']),
+            'delivery_name' => $_POST['update_delivery_name'],
+            'delivery_company' => $_POST['update_delivery_company'],
+            'delivery_street_address' => $_POST['update_delivery_street_address'],
+            'delivery_suburb' => $_POST['update_delivery_suburb'],
+            'delivery_city' => $_POST['update_delivery_city'],
+            'delivery_state' => $_POST['update_delivery_state'],
+            'delivery_postcode' => $_POST['update_delivery_postcode'],
+            'delivery_country' => $_POST['update_delivery_country'],
+            'payment_method' => $_POST['update_info_payment_method'],
+            'cc_type' => $_POST['update_info_cc_type'],
+            'cc_owner' => $_POST['update_info_cc_owner'],
+            'cc_expires' => $_POST['update_info_cc_expires'],
         );
 
         // If the country was passed as an id, change it to the country name for
@@ -149,8 +149,7 @@
         // with the updated order.
         //
         $zco_notifier->notify('EDIT_ORDERS_PRE_UPDATE_ORDER', $oID, $sql_data_array);
-
-        zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', 'orders_id = \'' . (int)$oID . '\'');
+        zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', 'orders_id = ' . (int)$oID);
 
         // BEGIN TY TRACKER 1 - READ FROM POST
         $track_id = array();
