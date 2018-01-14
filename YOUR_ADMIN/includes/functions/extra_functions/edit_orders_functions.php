@@ -1521,9 +1521,14 @@ function eo_get_available_shipping_modules() {
 
 function eo_get_order_by_id($oID) 
 {
-    global $db, $order, $eo;
+    // -----
+    // Note: The order-object is declared global, allowing the various functions to
+    // have access to the just-created information.
+    //
+    global $db, $eo, $order;
 
     // Retrieve the order
+    $oID = (int)$oID;
     $order = new order($oID);
     
     $eo->eoLog('eo_get_order_by_id, on entry:' . $eo->eoFormatTaxInfoForLog(true) . var_export($order->info, true), 'tax');
@@ -1541,11 +1546,13 @@ function eo_get_order_by_id($oID)
     }
 
     // Correctly add the running subtotal (broken code in order.php)
-    if (!isset ($order->info['subtotal'])) {
+    if (!isset($order->info['subtotal'])) {
         $query = $db->Execute(
-            'SELECT `value` FROM `' . TABLE_ORDERS_TOTAL . '` ' .
-            'WHERE `orders_id`=\'' . (int)$oID . '\' ' .
-            'AND `class`=\'ot_subtotal\''
+            "SELECT `value` 
+               FROM " . TABLE_ORDERS_TOTAL . "
+              WHERE orders_id = $oID
+                AND `class` = 'ot_subtotal'
+              LIMIT 1"
         );
         if (!$query->EOF) {
             $order->info['subtotal'] = $eo->eoRoundCurrencyValue($query->fields['value']);
@@ -1563,19 +1570,19 @@ function eo_get_order_by_id($oID)
     }
     if (is_array($order->delivery) && isset($order->delivery['country'])) { //-20150811-lat9-Add is_array since virtual products don't have a delivery address
         $country = eo_get_country($order->delivery['country']);
-        if($country !== null) {
+        if ($country !== null) {
             $order->delivery['country'] = $country;
             $order->delivery['zone_id'] = zen_get_zone_id($order->delivery['country']['id'], $order->delivery['state']);
         }
     }
     if (isset($order->billing['country'])) {
         $country = eo_get_country($order->billing['country']);
-        if($country !== null) {
+        if ($country !== null) {
             $order->billing['country'] = $country;
             $order->billing['zone_id'] = zen_get_zone_id($order->billing['country']['id'], $order->billing['state']);
         }
     }
-    unset ($country);
+    unset($country);
     
     // -----
     // Some order-totals (notably ot_cod_fee) rely on the payment-module code being present in the session ...
@@ -1590,11 +1597,13 @@ function eo_get_order_by_id($oID)
     //
     if (!isset($order->info['shipping_cost'])) {
         $query = $db->Execute(
-            'SELECT `value` FROM `' . TABLE_ORDERS_TOTAL . '` ' .
-            'WHERE `orders_id` = \'' . (int)$oID . '\' ' .
-            'AND `class` = \'ot_shipping\''
+            "SELECT `value` 
+               FROM " . TABLE_ORDERS_TOTAL . "
+              WHERE orders_id = $oID
+                AND class = 'ot_shipping'
+              LIMIT 1"
         );
-        if(!$query->EOF) {
+        if (!$query->EOF) {
             $order->info['shipping_cost'] = $eo->eoRoundCurrencyValue($query->fields['value']);
 
             $_SESSION['shipping'] = array(
@@ -1625,12 +1634,11 @@ function eo_get_order_by_id($oID)
 }
 
 function eo_shopping_cart() {
-    if(!isset($_SESSION['cart'])) {
-        if(defined('EO_MOCK_SHOPPING_CART') && EO_MOCK_SHOPPING_CART === 'true') {
+    if (!isset($_SESSION['cart'])) {
+        if (defined('EO_MOCK_SHOPPING_CART') && EO_MOCK_SHOPPING_CART === 'true') {
             $_SESSION['cart'] = new mockCart();
-        }
-        else {
-            require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'shopping_cart.php');
+        } else {
+            require_once DIR_FS_CATALOG . DIR_WS_CLASSES . 'shopping_cart.php';
             $_SESSION['cart'] = new shoppingCart();
         }
     }
@@ -1642,9 +1650,9 @@ function eo_checks_and_warnings() {
     // Check to see if the AdminRequestSanitizer class is present and, if so, that the multi-dimensional method
     // exists; EO will not run properly in the presence of the originally-issued version of the class (without that method).
     //
-    if (class_exists ('AdminRequestSanitizer') && !method_exists ('AdminRequestSanitizer', 'filterMultiDimensional')) {
-        $messageStack->add_session (ERROR_ZC155_NO_SANITIZER, 'error');
-        zen_redirect (zen_href_link (FILENAME_DEFAULT));
+    if (class_exists('AdminRequestSanitizer') && !method_exists('AdminRequestSanitizer', 'filterMultiDimensional')) {
+        $messageStack->add_session(ERROR_ZC155_NO_SANITIZER, 'error');
+        zen_redirect(zen_href_link(FILENAME_DEFAULT));
     }
 
     $result = $db->Execute('SELECT `project_version_major`, `project_version_minor` FROM `' . TABLE_PROJECT_VERSION . '` WHERE `project_version_key`=\'Zen-Cart Database\'');
@@ -1653,8 +1661,8 @@ function eo_checks_and_warnings() {
 
     // Core checks first. If reload needed after set reload to true
     $reload = false;
-    if(!defined('PRODUCTS_OPTIONS_TYPE_SELECT')) {
-        if(version_compare($version, '1.5', '>=')) {
+    if (!defined('PRODUCTS_OPTIONS_TYPE_SELECT')) {
+        if (version_compare($version, '1.5', '>=')) {
             $sql_data_array = array(
                 'configuration_title' => 'Product option type Select',
                 'configuration_key' => 'PRODUCTS_OPTIONS_TYPE_SELECT',
@@ -1672,8 +1680,8 @@ function eo_checks_and_warnings() {
         }
     }
 
-    if(!defined('UPLOAD_PREFIX')) {
-        if(version_compare($version, '1.5', '>=')) {
+    if (!defined('UPLOAD_PREFIX')) {
+        if (version_compare($version, '1.5', '>=')) {
             $sql_data_array = array(
                 'configuration_title' => 'Upload prefix',
                 'configuration_key' => 'UPLOAD_PREFIX',
@@ -1691,8 +1699,8 @@ function eo_checks_and_warnings() {
         }
     }
 
-    if(!defined('TEXT_PREFIX')) {
-        if(version_compare($version, '1.5', '>=')) {
+    if (!defined('TEXT_PREFIX')) {
+        if (version_compare($version, '1.5', '>=')) {
             $sql_data_array = array(
                 'configuration_title' => 'Text prefix',
                 'configuration_key' => 'TEXT_PREFIX',
@@ -1709,37 +1717,38 @@ function eo_checks_and_warnings() {
             $reload = true;
         }
     }
-    if($reload) zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit'));
+    if ($reload) {
+        zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit'));
+    }
     unset($reload);
 
     // Warn user about subtotal calculations
-    if(DISPLAY_PRICE_WITH_TAX_ADMIN !== DISPLAY_PRICE_WITH_TAX) {
+    if (DISPLAY_PRICE_WITH_TAX_ADMIN !== DISPLAY_PRICE_WITH_TAX) {
         $messageStack->add(WARNING_DISPLAY_PRICE_WITH_TAX, 'warning');
     }
 
     // Warn user about potential issues with subtotal / total calculations
     $module_list = explode(';', (str_replace('.php', '', MODULE_ORDER_TOTAL_INSTALLED)));
-    if(!in_array('ot_subtotal', $module_list)) {
+    if (!in_array('ot_subtotal', $module_list)) {
         $messageStack->add(WARNING_ORDER_TOTAL_SUBTOTAL, 'warning');
     }
-    if(!in_array('ot_total', $module_list)) {
+    if (!in_array('ot_total', $module_list)) {
         $messageStack->add(WARNING_ORDER_TOTAL_TOTAL, 'warning');
     }
     unset($module_list);
 
     // Check for the installation of "Absolute's Product Attribute Grid"
-    if(!defined('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID')) {
-        if(defined('CONFIG_ATTRIBUTE_OPTION_GRID_INSTALLED')) {
+    if (!defined('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID')) {
+        if (defined('CONFIG_ATTRIBUTE_OPTION_GRID_INSTALLED')) {
             define('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID', '23997');
             $messageStack->add(WARNING_ATTRIBUTE_OPTION_GRID, 'warning');
-        }
-        else {
+        } else {
             define('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID', '-1');
         }
     }
     
     // Check for the installation of "Potteryhouse's/mc12345678's Stock By Attributes"
-    if(!defined('PRODUCTS_OPTIONS_TYPE_SELECT_SBA')) {
+    if (!defined('PRODUCTS_OPTIONS_TYPE_SELECT_SBA')) {
         define('PRODUCTS_OPTIONS_TYPE_SELECT_SBA', '-1');
     }
 }
