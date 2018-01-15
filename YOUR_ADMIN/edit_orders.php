@@ -82,7 +82,7 @@ while (!$orders_status_query->EOF) {
 $action = (isset($_GET['action']) ? $_GET['action'] : 'edit');
 
 if (zen_not_null($action)) {
-    $eo->eoLog(date('Y-m-d H:i:s') . ", Edit Orders entered (". EO_VERSION . ") action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
+    $eo->eoLog(PHP_EOL . date('Y-m-d H:i:s') . ", Edit Orders entered (". EO_VERSION . ") action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
 
     switch ($action) {
         // Update Order
@@ -123,9 +123,9 @@ if (zen_not_null($action)) {
                 'delivery_postcode' => $_POST['update_delivery_postcode'],
                 'delivery_country' => $_POST['update_delivery_country'],
                 'payment_method' => $_POST['update_info_payment_method'],
-                'cc_type' => $_POST['update_info_cc_type'],
-                'cc_owner' => $_POST['update_info_cc_owner'],
-                'cc_expires' => $_POST['update_info_cc_expires'],
+                'cc_type' => (isset($_POST['update_info_cc_type'])) ? $_POST['update_info_cc_type'] : '',
+                'cc_owner' => (isset($_POST['update_info_cc_owner'])) ? $_POST['update_info_cc_owner'] : '',
+                'cc_expires' => (isset($_POST['update_info_cc_expires'])) ? $_POST['update_info_cc_expires'] : ''
             );
 
             // If the country was passed as an id, change it to the country name for
@@ -319,7 +319,7 @@ if (zen_not_null($action)) {
                 // applied to start afresh.
                 //
                 if (isset($_POST['reset_totals'])) {
-                    $order->info['tax'] = $order->info['shipping_tax'] = $order->info['total'] = 0;
+                    $order->info['tax'] = $order->info['shipping_tax'] = $order->info['shipping_cost'] = $order->info['total'] = 0;
                     $order->totals = array();
                 }
                 
@@ -378,7 +378,7 @@ if (zen_not_null($action)) {
                         if ($product_update['qty'] > 0) {
 
                             // Retrieve the information for the new product
-                            $attrs = $product_update['attr'];
+                            $attrs = (isset($product_update['attr'])) ? $product_info['attr'] : '';
                             unset($product_update['attr']);
                             $new_product = eo_get_new_product(
                                 $old_product['id'],
