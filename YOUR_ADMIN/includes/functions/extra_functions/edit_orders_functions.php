@@ -1469,11 +1469,6 @@ function eo_get_available_shipping_modules() {
     return $retval;
 }
 
-function eo_get_order_by_id($oID) 
-{
-    return $GLOBALS['eo']->getOrderInfo();
-}
-
 function eo_shopping_cart() {
     if (!isset($_SESSION['cart'])) {
         if (defined('EO_MOCK_SHOPPING_CART') && EO_MOCK_SHOPPING_CART === 'true') {

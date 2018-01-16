@@ -301,7 +301,7 @@ if (zen_not_null($action)) {
             // End - Update Status History & Email Customer if Necessary
 
             // Load the order details.
-            $order = eo_get_order_by_id($oID);
+            $order = $eo->getOrderInfo();
 
             $eo->eoLog (
                 PHP_EOL . 'Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
@@ -448,7 +448,7 @@ if (zen_not_null($action)) {
                             'value' => 0,
                         );
                     }
-                    $order = eo_get_order_by_id($oID);
+                    $order = $eo->getOrderInfo();
                 }
 
                 $eo->eoLog (
@@ -562,7 +562,7 @@ if (zen_not_null($action)) {
                 }
 
                 // Reset order and resave (fixes some edge cases)
-                $order = eo_get_order_by_id($oID);
+                $order = $eo->getOrderInfo();
                 eo_update_database_order_totals($oID);
 
                 $eo->eoLog (
@@ -609,7 +609,7 @@ if (zen_not_null($action)) {
             if ($step == 5) {
 
                 // Get Order Info
-                $order = eo_get_order_by_id($oID);
+                $order = $eo->getOrderInfo();
 
                 // Check qty field
                 $add_max = zen_get_products_quantity_order_max($add_product_products_id);
@@ -635,7 +635,7 @@ if (zen_not_null($action)) {
 
                 // Save the changes
                 eo_update_database_order_totals($oID);
-                $order = eo_get_order_by_id($oID);
+                $order = $eo->getOrderInfo();
 
                 // Remove the low order and/or cod fees (will automatically repopulate if needed)
                 foreach ($order->totals as $key => $total) {
@@ -652,7 +652,7 @@ if (zen_not_null($action)) {
                 }
 
                 // Requires $GLOBALS['order'] to be reset and populated
-                $order = eo_get_order_by_id($oID);
+                $order = $eo->getOrderInfo();
                 eo_update_database_order_totals($oID);
 
                 $eo->eoLog(
@@ -682,7 +682,7 @@ if ($action == 'edit' && isset($_GET['oID'])) {
       $order_exists = false;
       $messageStack->add(sprintf(ERROR_ORDER_DOES_NOT_EXIST, $oID), 'error');
     } else {
-        $order = eo_get_order_by_id($oID);
+        $order = $eo->getOrderInfo();
         if (!$eo->eoOrderIsVirtual($order) &&
                ( !is_array($order->customer['country']) || !array_key_exists('id', $order->customer['country']) ||
                  !is_array($order->billing['country']) || !array_key_exists('id', $order->billing['country']) ||
