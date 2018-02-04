@@ -15,6 +15,15 @@
 // | license@zen-cart.com so we can mail you a copy immediately.          |
 // +----------------------------------------------------------------------+
 
+// -----
+// Since other plugins (like "Admin New Order") also provide some of these functions,
+// continue this function-file "load" only if the current page-load is on
+// behalf of "Edit Orders" processing.
+//
+if (basename($PHP_SELF, '.php') != FILENAME_EDIT_ORDERS) {
+    return;
+}
+
 // Include various Zen Cart functions (with any necessary changes for admin)
 if(!function_exists('zen_get_country_id')) {
     function zen_get_country_id($country_name) {
