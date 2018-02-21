@@ -69,7 +69,7 @@ class editOrders extends base
         // Retrieve the formatted order.
         //
         $order = new order($oID);
-        $this->eoLog('getOrderInfo, on entry:' . $this->eoFormatTaxInfoForLog(true) . var_export($order->info, true), 'tax');
+        $this->eoLog('getOrderInfo, on entry:' .  $this->eoFormatTaxInfoForLog(true), 'tax');
         
         // -----
         // Add some required customer information for tax calculation.
@@ -181,7 +181,7 @@ class editOrders extends base
         $shipping_module = $order->info['shipping_module_code'];
         $this->removeTaxFromShippingCost($order, $shipping_module);
         
-        $this->eoLog('getOrderInfo, on exit:' . var_export($GLOBALS[$shipping_module], true) . var_export($order, true) . $this->eoFormatTaxInfoForLog(), 'tax');
+        $this->eoLog('getOrderInfo, on exit:' . PHP_EOL . json_decode($GLOBALS[$shipping_module]) . $this->eoFormatTaxInfoForLog(), 'tax');
         return $order;
     }
     
@@ -240,13 +240,13 @@ class editOrders extends base
             }
         }
 
-        $this->eoLog(PHP_EOL . "getProductTaxes($products_tax_description)\n" . (($query === false) ? var_export($query, true) : (($query->EOF) ? 'EOF' : var_export($query->fields, true))) . var_export($product, true));
+        $this->eoLog(PHP_EOL . "getProductTaxes($products_tax_description)\n" . (($query === false) ? 'false' : (($query->EOF) ? 'EOF' : json_encode($query->fields))) . json_encode($product));
         
         $totalTaxAdd = 0;
         if (zen_not_null($products_tax_description)) {
             $taxAdd = 0;
             // Done this way to ensure we calculate
-            if(DISPLAY_PRICE_WITH_TAX == 'true') {
+            if (DISPLAY_PRICE_WITH_TAX == 'true') {
                 $taxAdd = $shown_price - ($shown_price / (($product['tax'] < 10) ? "1.0" . str_replace('.', '', $product['tax']) : "1." . str_replace('.', '', $product['tax'])));
             } else {
                 $taxAdd = zen_calculate_tax($shown_price, $product['tax']);
@@ -264,6 +264,7 @@ class editOrders extends base
             $totalTaxAdd += $taxAdd;
             unset($taxAdd);
         }
+        $this->eoLog("getProductTaxes, returning $totalTaxAdd." . PHP_EOL);
         return $totalTaxAdd;
     }
     
@@ -285,24 +286,25 @@ class editOrders extends base
                 'Shipping: ' . ((isset($order->info['shipping_cost'])) ? $order->info['shipping_cost'] : '(not set)') . ', ' .
                 'Shipping Tax: ' . ((isset($order->info['shipping_tax'])) ? $order->info['shipping_tax'] : '(not set)') . ', ' .
                 'Tax: ' . $order->info['tax'] . ', ' .
-                'Total: ' . $order->info['total'] . PHP_EOL;
+                'Total: ' . $order->info['total'] . ', ' .
+                'Tax Groups: ' . json_encode($order->info['tax_groups']) . PHP_EOL;
                 
             $log_info .= "\t" .
-                '$_SESSION[\'shipping\']: ' . ((isset($_SESSION['shipping'])) ? var_export($_SESSION['shipping'], true) : '(not set)');
+                '$_SESSION[\'shipping\']: ' . ((isset($_SESSION['shipping'])) ? json_encode($_SESSION['shipping'], true) : '(not set)') . PHP_EOL;
                 
             $log_info .= $this->eoFormatOrderTotalsForLog($order);
         }
         return $log_info;
     }
     
-    public function eoFormatOrderTotalsForLog($order)
+    public function eoFormatOrderTotalsForLog($order, $title = '')
     {
-        $log_info = PHP_EOL . 'Order Totals' . PHP_EOL;
+        $log_info = ($title === '') ? (PHP_EOL . 'Order Totals' . PHP_EOL) : $title;
         foreach ($order->totals as $current_total) {
             $log_info .= "\t\t" . $current_total['class'] . '. Text: ' . $current_total['text'] . ', Value: ' . ((isset($current_total['value'])) ? $current_total['value'] : '(not set)') . PHP_EOL;
         }
         return $log_info;
-     }
+    }
     
     public function eoOrderIsVirtual($order)
     {
@@ -340,7 +342,7 @@ class editOrders extends base
         }
         
         $product_count = count($order->products);
-        $this->eoLog(PHP_EOL . "Checking order for virtual status.  Order contains $product_count products, $virtual_products of those are virtual");
+        $this->eoLog(PHP_EOL . "Checking order for virtual status.  Order contains $product_count unique products, $virtual_products of those are virtual");
         
         return ($virtual_products == $product_count);
     }

@@ -993,32 +993,32 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
             'AND `class`=\'ot_subtotal\''
         );
         if (!$query->EOF) {
-            $order->info['subtotal'] = $eo->eoRoundCurrencyValue ($query->fields['value']);
+            $order->info['subtotal'] = $eo->eoRoundCurrencyValue($query->fields['value']);
         }
     }
     
-    $eo->eoLog ("eo_update_order_subtotal ($add), taxes on entry. " . $eo->eoFormatTaxInfoForLog (true), 'tax');
+    $eo->eoLog ("eo_update_order_subtotal ($add), taxes on entry. " . $eo->eoFormatTaxInfoForLog(true), 'tax');
 
     // Determine the product price
-    $shown_price = $eo->eoRoundCurrencyValue ($product['final_price'] * $product['qty']);
-    $onetime_charges = $eo->eoRoundCurrencyValue ($product['onetime_charges']);
+    $shown_price = $eo->eoRoundCurrencyValue($product['final_price'] * $product['qty']);
+    $onetime_charges = $eo->eoRoundCurrencyValue($product['onetime_charges']);
     if(DISPLAY_PRICE_WITH_TAX == 'true') {
-        $shown_price += $eo->eoRoundCurrencyValue (zen_calculate_tax ($shown_price, $product['tax']));
-        $onetime_charges += $eo->eoRoundCurrencyValue (zen_calculate_tax ($onetime_charges, $product['tax']));
+        $shown_price += $eo->eoRoundCurrencyValue(zen_calculate_tax($shown_price, $product['tax']));
+        $onetime_charges += $eo->eoRoundCurrencyValue(zen_calculate_tax($onetime_charges, $product['tax']));
     }
     $shown_price += $onetime_charges;
 
     // Update the order information
     if ($add) {
         $order->info['subtotal'] += $shown_price;
-        $order->info['tax'] += $eo->eoRoundCurrencyValue (eo_get_product_taxes ($product, $shown_price, $add));
+        $order->info['tax'] += $eo->eoRoundCurrencyValue(eo_get_product_taxes($product, $shown_price, $add));
     } else {
         $order->info['subtotal'] -= $shown_price;
-        $order->info['tax'] -= $eo->eoRoundCurrencyValue (eo_get_product_taxes ($product, $shown_price, $add));
+        $order->info['tax'] -= $eo->eoRoundCurrencyValue(eo_get_product_taxes($product, $shown_price, $add));
     }
     unset($shown_price);
     
-    $order->info['shipping_cost'] = $eo->eoRoundCurrencyValue ($order->info['shipping_cost']);
+    $order->info['shipping_cost'] = $eo->eoRoundCurrencyValue($order->info['shipping_cost']);
 
     // Update the final total to include tax if not already tax-inc
     if (DISPLAY_PRICE_WITH_TAX == 'true') {
@@ -1032,21 +1032,21 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
         switch($total['class']) {
             case 'ot_subtotal':
                 $order->totals[$index]['value'] = $order->info['subtotal'];
-                $order->totals[$index]['text'] = $eo->eoFormatCurrencyValue ($order->totals[$index]['value']);
+                $order->totals[$index]['text'] = $eo->eoFormatCurrencyValue($order->totals[$index]['value']);
                 break;
             case 'ot_tax':
                 $order->totals[$index]['value'] = $order->info['tax'];
-                $order->totals[$index]['text'] = $eo->eoFormatCurrencyValue ($order->totals[$index]['value']);
+                $order->totals[$index]['text'] = $eo->eoFormatCurrencyValue($order->totals[$index]['value']);
                 break;
             case 'ot_total':
                 $order->totals[$index]['value'] = $order->info['total'];
-                $order->totals[$index]['text'] = $eo->eoFormatCurrencyValue ($order->totals[$index]['value']);
+                $order->totals[$index]['text'] = $eo->eoFormatCurrencyValue($order->totals[$index]['value']);
                 break;
             default:
         }
     }
     unset($index, $total);
-    $eo->eoLog ('eo_update_order_subtotal, taxes on exit. ' . $eo->eoFormatTaxInfoForLog (), 'tax');
+    $eo->eoLog ('eo_update_order_subtotal, taxes on exit. ' . $eo->eoFormatTaxInfoForLog(), 'tax');
 }
 
 function eo_get_product_taxes($product, $shown_price = -1, $add = true) {
@@ -1089,9 +1089,10 @@ function eo_remove_product_from_order($order_id, $orders_products_id) {
                     'products_quantity' => $check->fields['products_quantity'] + $query->fields['products_quantity'],
                     'products_ordered' => $check->fields['products_ordered'] - $query->fields['products_quantity']
                 );
-                if($sql_data_array['products_ordered'] < 0) $sql_data_array['products_ordered'] = 0;
-                if($sql_data_array['products_quantity'] > 0) {
-
+                if ($sql_data_array['products_ordered'] < 0) {
+                    $sql_data_array['products_ordered'] = 0;
+                }
+                if ($sql_data_array['products_quantity'] > 0) {
                     // Only set status to on when not displaying sold out
                     if (SHOW_PRODUCTS_SOLD_OUT == '0') {
                         $sql_data_array['products_status'] = 1;
@@ -1118,7 +1119,7 @@ function eo_remove_product_from_order($order_id, $orders_products_id) {
     $db->Execute(sprintf($remove_query, TABLE_ORDERS_PRODUCTS_DOWNLOAD));
     unset($remove_query);
 
-    // Hande the internal products array
+    // Handle the internal products array
     for($i=0; $i<sizeof($order->products); $i++) {
         if($orders_products_id == $orders_products_id_mapping[$i]) {
             // Remove from the product from the array
@@ -1255,7 +1256,7 @@ function eo_update_database_order_totals($oID)
 
     // Load required modules for order totals if enabled
     if (defined('MODULE_ORDER_TOTAL_INSTALLED') && zen_not_null(MODULE_ORDER_TOTAL_INSTALLED)) {
-        $eo->eoLog('eo_update_database_order_totals, taxes/totals on entry. ' . $eo->eoFormatTaxInfoForLog(true) . var_export($order->info, true) . $eo->eoFormatOrderTotalsForLog($order), 'tax');
+        $eo->eoLog('eo_update_database_order_totals, taxes/totals on entry. ' . $eo->eoFormatTaxInfoForLog(true), 'tax');
         
         $eo->tax_updated = false;
         
@@ -1288,37 +1289,37 @@ function eo_update_database_order_totals($oID)
             $order->info['total'] = $order->info['subtotal'] + $order->info['tax'] + $order->info['shipping_cost'];
         }
         
-        $eo->eoLog ('eo_update_database_order_totals, after adjustments: order_total: ' . $order->info['total'] . ', order_tax: ' . $order->info['tax'], 'tax');
+        $eo->eoLog('eo_update_database_order_totals, after adjustments: order_total: ' . $order->info['total'] . ', order_tax: ' . $order->info['tax'], 'tax');
 
         // Process the order totals
         $order_totals = $GLOBALS['order_total_modules']->process();
-        $eo->eoLog ('eo_update_database_order_totals, after process: order_total: ' . $order->info['total'] . ', order_tax: ' . $order->info['tax'], 'tax');
+        $eo->eoLog('eo_update_database_order_totals, after process: order_total: ' . $order->info['total'] . ', order_tax: ' . $order->info['tax'], 'tax');
         
         // Update the order totals in the database
-        for ($i=0, $n=count ($order_totals); $i<$n; $i++) {
-            eo_update_database_order_total ($oID, $order_totals[$i]);
+        for ($i = 0, $n = count($order_totals); $i < $n; $i++) {
+            eo_update_database_order_total($oID, $order_totals[$i]);
         }
 
         // -----
         // Account for order totals that were present, but have been removed.
         //
-        if (count ($order->totals) > $n) {
-            for ($i=0, $totals_titles = array (); $i<$n; $i++) {
+        if (count($order->totals) > $n) {
+            for ($i=0, $totals_titles = array(); $i < $n; $i++) {
                 $totals_titles[] = $order_totals[$i]['title'];
             }
             for ($i=0, $n=count($order->totals); $i<$n; $i++) {
-                if (!in_array ($order->totals[$i]['title'], $totals_titles)) {
-                    $db->Execute ("DELETE FROM " . TABLE_ORDERS_TOTAL . " WHERE orders_id = $oID AND title = '" . zen_db_input ($order->totals[$i]['title']) . "' LIMIT 1");
+                if (!in_array($order->totals[$i]['title'], $totals_titles)) {
+                    $db->Execute("DELETE FROM " . TABLE_ORDERS_TOTAL . " WHERE orders_id = $oID AND title = '" . zen_db_input ($order->totals[$i]['title']) . "' LIMIT 1");
                 }
             }
             unset ($totals_titles);
         }
         unset($order_totals);
-        $eo->eoLog ('eo_update_database_order_totals, taxes on exit. ' . $eo->eoFormatTaxInfoForLog (), 'tax');
+        $eo->eoLog('eo_update_database_order_totals, taxes on exit. ' . $eo->eoFormatTaxInfoForLog(), 'tax');
     }
 }
 
-function eo_update_database_order_total ($oID, $order_total) {
+function eo_update_database_order_total($oID, $order_total) {
     global $db, $eo;
     $updated = false;
 
@@ -1336,8 +1337,7 @@ function eo_update_database_order_total ($oID, $order_total) {
         '\' AND `orders_id`=' . (int)$oID . $and_clause
     );
     
-    $current_order = $db->Execute ("SELECT order_total, order_tax FROM " . TABLE_ORDERS . " WHERE orders_id = $oID LIMIT 1");
-    $eo->eoLog ("eo_update_database_order_total: and_clause: ($and_clause), found (" . (int)$found->EOF . "), " . var_export ($order_total, true) . var_export ($current_order->fields, true), 'tax');
+    $eo->eoLog ("eo_update_database_order_total: and_clause: ($and_clause), found (" . (int)$found->EOF . "), " . var_export($order_total, true), 'tax');
     if (!$found->EOF) {
         if (zen_not_null($order_total['title']) && $order_total['title'] != ':') {
             zen_db_perform(
