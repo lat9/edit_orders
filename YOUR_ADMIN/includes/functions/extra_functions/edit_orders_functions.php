@@ -1008,13 +1008,16 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
     }
     $shown_price += $onetime_charges;
 
-    // Update the order information
+    // -----
+    // Update the order information, either adding or removing the product's cost and taxes
+    // from the order's subtotal/tax.
+    //
     if ($add) {
         $order->info['subtotal'] += $shown_price;
-        $order->info['tax'] += $eo->eoRoundCurrencyValue(eo_get_product_taxes($product, $shown_price, $add));
+        $order->info['tax'] += $eo->eoRoundCurrencyValue($eo->getProductTaxes($product, $shown_price, $add));
     } else {
         $order->info['subtotal'] -= $shown_price;
-        $order->info['tax'] -= $eo->eoRoundCurrencyValue(eo_get_product_taxes($product, $shown_price, $add));
+        $order->info['tax'] -= $eo->eoRoundCurrencyValue($eo->getProductTaxes($product, $shown_price, $add));
     }
     unset($shown_price);
     
@@ -1047,10 +1050,7 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
     }
     unset($index, $total);
     $eo->eoLog ('eo_update_order_subtotal, taxes on exit. ' . $eo->eoFormatTaxInfoForLog(), 'tax');
-}
 
-function eo_get_product_taxes($product, $shown_price = -1, $add = true) {
-    return $GLOBALS['eo']->getProductTaxes($product, $shown_price, $add);
 }
 
 function eo_remove_product_from_order($order_id, $orders_products_id) {
@@ -1256,7 +1256,7 @@ function eo_update_database_order_totals($oID)
 
     // Load required modules for order totals if enabled
     if (defined('MODULE_ORDER_TOTAL_INSTALLED') && zen_not_null(MODULE_ORDER_TOTAL_INSTALLED)) {
-        $eo->eoLog('eo_update_database_order_totals, taxes/totals on entry. ' . $eo->eoFormatTaxInfoForLog(true), 'tax');
+        $eo->eoLog(PHP_EOL . 'eo_update_database_order_totals, taxes/totals on entry. ' . $eo->eoFormatTaxInfoForLog(true), 'tax');
         
         $eo->tax_updated = false;
         
