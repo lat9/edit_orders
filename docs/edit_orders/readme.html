@@ -452,9 +452,13 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.3.2, 2018-02-xx (lat9)<ul>
+          <li>v4.3.2, 2018-03-07 (lat9)<ul>
+            <li>BUGFIX: Attributes are lost from products when an order is updated.</li>
             <li>BUGFIX: Load admin extra functions only for <code class="no-pad">edit_orders</code> use; corrects unwanted interaction with <em>Admin New Order</em>.</li>
+            <li>CHANGE: Log-file formatting updates.</li>
             <li>The following files were changed:<ol>
+              <li>/YOUR_ADMIN/includes/edit_orders.php</li>
+              <li>/YOUR_ADMIN/includes/classes/editOrders.php</li>
               <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
             </ol></li>

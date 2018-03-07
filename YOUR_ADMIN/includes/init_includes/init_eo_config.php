@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.3.2-alpha1');
+define('EO_CURRENT_VERSION', '4.3.2');
 
 // -----
 // Only update configuration when an admin is logged in.
