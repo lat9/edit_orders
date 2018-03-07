@@ -374,11 +374,10 @@ if (zen_not_null($action)) {
                             'Removed Product Tax (total): ' . $order->info['tax'] . PHP_EOL .
                             'Removed Product Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups'])
                         );
-
                         if ($product_update['qty'] > 0) {
 
                             // Retrieve the information for the new product
-                            $attrs = (isset($product_update['attr'])) ? $product_info['attr'] : '';
+                            $attrs = (isset($product_update['attr'])) ? $product_update['attr'] : '';
                             unset($product_update['attr']);
                             $new_product = eo_get_new_product(
                                 $old_product['id'],

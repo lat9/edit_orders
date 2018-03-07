@@ -181,7 +181,7 @@ class editOrders extends base
         $shipping_module = $order->info['shipping_module_code'];
         $this->removeTaxFromShippingCost($order, $shipping_module);
         
-        $this->eoLog('getOrderInfo, on exit:' . PHP_EOL . json_decode($GLOBALS[$shipping_module]) . $this->eoFormatTaxInfoForLog(), 'tax');
+        $this->eoLog('getOrderInfo, on exit:' . PHP_EOL . json_encode($GLOBALS[$shipping_module]) . $this->eoFormatTaxInfoForLog(), 'tax');
         return $order;
     }
     
