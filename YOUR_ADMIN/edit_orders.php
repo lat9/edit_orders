@@ -386,7 +386,7 @@ if (zen_not_null($action)) {
                                 false
                             );
                             unset($attrs);
-
+                            
                             // Handle the case where the product was deleted
                             // from the store. This should probably never be done.
                             // Removing the product will cause issues with links
@@ -410,7 +410,7 @@ if (zen_not_null($action)) {
 
                             // Adjust the product information based upon the
                             // data found in update_products
-                            $new_product = array_merge($new_product, $product_update);
+                            $new_product = array_merge($product_update, $new_product);
 
                             // Add the product to the order
                             eo_add_product_to_order($oID, $new_product);
