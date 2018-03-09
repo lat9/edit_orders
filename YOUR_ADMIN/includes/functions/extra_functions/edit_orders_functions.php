@@ -818,6 +818,19 @@ function eo_get_product_attribute_prices($attr_id, $attr_value = '', $qty = 1) {
 
 function eo_add_product_to_order($order_id, $product) {
     global $db, $order, $zco_notifier;
+    
+    // -----
+    // If the store has set Configuration->Stock->Allow Checkout to 'false', check to see that sufficient
+    // stock is fulfill this order.  Unlike the storefront, the product-add is allowed but the admin
+    // receives a message indicating the situation.
+    //
+    if (STOCK_ALLOW_CHECKOUT == 'false') {
+        $qty_available = $GLOBALS['eo']->getProductsStock($product['id']);
+        $GLOBALS['eo']->eoLog("quantity available: $qty_available, requested " . $product['qty']);
+        if ($qty_available < $product['qty']) {
+            $GLOBALS['messageStack']->add_session(sprintf(WARNING_INSUFFICIENT_PRODUCT_STOCK, $product['name'], (string)$product['qty'], (string)$qty_available), 'warning');
+        }
+    }
 
     // Stock Update - Joao Correia
     if (STOCK_LIMITED == 'true') {

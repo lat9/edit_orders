@@ -1,5 +1,7 @@
 <?php
-
+// -----
+// Language constants used by the /admin/edit_orders.php processing (Edit Orders).
+//
 // Page / Section Headings
 define('HEADING_TITLE', 'Editing Order');
 define('HEADING_TITLE_SEARCH', 'Order ID:');
@@ -71,7 +73,8 @@ define('WARNING_DISPLAY_PRICE_WITH_TAX', 'Warning: You have configured Zen Cart 
 define('WARNING_ADDRESS_COUNTRY_NOT_FOUND', 'Warning: One or more of the customer address fields contains a country name unknown to Zen Cart (&quot;Locations / Taxes&quot;-&gt;&quot;Countries&quot;).<br />Taxes and some shipping modules may not function correctly until the issue has been resolved.<br /><br />This typically occurs if someone deletes or renames a country&#39;s name from Zen Cart (&quot;Locations / Taxes&quot;-&gt;&quot;Countries&quot;). You can fix the issue by doing one of the following: <ul><li>Add the country (and name) back to the Zen Cart database.</li><li>Adjust the country name to match one of the country names in the Zen Cart database.</li></ul>');
 define('WARNING_ORDER_NOT_UPDATED', 'Warning: Nothing to change. The order was not updated.');
 define('WARNING_ORDER_QTY_OVER_MAX', 'Warning: The quantity requested exceeded the maximum allowed for an order. The quantity added was reduced to the maximum allowed per order.');
-define('WARNING_ORDER_COUPON_BAD', 'Warning: The coupon code was not found in the database. Note: the title / text of a coupon is usually formated like &quot;Discount Coupon : coupon_code :&quot;. ');
+define('WARNING_ORDER_COUPON_BAD', 'Warning: The coupon code was not found in the database. Note: the title / text of a coupon is usually formatted like &quot;Discount Coupon : coupon_code :&quot;. ');
+define('WARNING_INSUFFICIENT_PRODUCT_STOCK', 'Insufficient stock for <em>%1$s</em>, requested %2$s with %3$s available.');
 
 define ('ERROR_ZC155_NO_SANITIZER', 'You must install the Zen Cart 1.5.5 <em>AdminRequestSanitizer</em> class before you can use Edit Orders on this site.');
 // Product & Attribute Display

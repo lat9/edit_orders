@@ -440,5 +440,28 @@ class editOrders extends base
     {
         return $GLOBALS['currencies']->format($this->eoRoundCurrencyValue($value), true, $this->currency, $this->currency_value);
     }
-     
+    
+    // -----
+    // This class function mimics the zen_get_products_stock function, present in /includes/functions/functions_lookups.php.
+    //
+    public function getProductsStock($products_id)
+    {
+        $stock_handled = false;
+        $stock_quantity = 0;
+        $this->notify('NOTIFY_EO_GET_PRODUCTS_STOCK', $products_id, $stock_quantity, $stock_handled);
+        if (!$stock_handled) {
+            $check = $GLOBALS['db']->Execute(
+                "SELECT products_quantity
+                   FROM " . TABLE_PRODUCTS . "
+                  WHERE products_id = " . (int)zen_get_prid($products_id) . "
+                  LIMIT 1",
+                false,
+                false,
+                0,
+                true
+            );
+            $stock_quantity = ($check->EOF) ? 0 : $check->fields['products_quantity'];
+        }
+        return $stock_quantity;
+    } 
 }
