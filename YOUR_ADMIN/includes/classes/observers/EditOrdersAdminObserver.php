@@ -1,7 +1,7 @@
 <?php
 // -----
 // Admin-level observer class, adds "Edit Orders" buttons and links to Customers->Orders processing.
-// Copyright (C) 2017, Vinos de Frutas Tropicales.
+// Copyright (C) 2017-2018, Vinos de Frutas Tropicales.
 //
 if (!defined('IS_ADMIN_FLAG') || IS_ADMIN_FLAG !== true) {
     die('Illegal Access');
@@ -17,7 +17,8 @@ class EditOrdersAdminObserver extends base
                 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS', 
                 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END',
                 'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS',
-                'NOTIFY_ADMIN_ORDERS_LISTING_ROW',
+                'NOTIFY_ADMIN_ORDERS_LISTING_ROW',              //-This is a "legacy" notification, defined in the EO update to /admin/orders.php
+                'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE',    //-This is the zc156+ version of the above notification.
             )
         );
     }
@@ -63,7 +64,8 @@ class EditOrdersAdminObserver extends base
             // $p4 ... A reference to the $extra_action_icons variable, which will be augmented with an icon
             //         linking to this order's EO processing.
             //
-            case 'NOTIFY_ADMIN_ORDERS_LISTING_ROW':
+            case 'NOTIFY_ADMIN_ORDERS_LISTING_ROW':             //-Fall-through ... legacy EO notifier
+            case 'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE':
                 $p4 .= $this->createEditOrdersLink ($p2['orders_id'], zen_image (DIR_WS_IMAGES . 'icon_details.gif', EO_ICON_DETAILS));
                 break;
       
