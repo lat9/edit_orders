@@ -454,9 +454,14 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <ul>
           <li>v4.3.3, 2018-03-xx (lat9)<ul>
             <li>BUGFIX: Product price not updated when attributes are changed.</li>
+            <li>BUGFIX: Incorporate zc156+ notification.</li>
+            <li>CHANGE: Display warning if <em>Configuration-&gt;Stock-&gt;Allow Checkout</em> is set to 'false' and insufficient stock is available.</li>
             <li>The following files were changed:<ol>
               <li>/YOUR_ADMIN/includes/edit_orders.php</li>
+              <li>/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php</li>
+              <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
+              <li>/YOUR_ADMIN/includes/languages/english/edit_orders.php</li>
             </ol></li>
           </ul></li>
           <li>v4.3.2, 2018-03-07 (lat9)<ul>
