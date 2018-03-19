@@ -125,7 +125,8 @@ if (zen_not_null($action)) {
                 'payment_method' => $_POST['update_info_payment_method'],
                 'cc_type' => (isset($_POST['update_info_cc_type'])) ? $_POST['update_info_cc_type'] : '',
                 'cc_owner' => (isset($_POST['update_info_cc_owner'])) ? $_POST['update_info_cc_owner'] : '',
-                'cc_expires' => (isset($_POST['update_info_cc_expires'])) ? $_POST['update_info_cc_expires'] : ''
+                'cc_expires' => (isset($_POST['update_info_cc_expires'])) ? $_POST['update_info_cc_expires'] : '',
+                'order_tax' => 0
             );
 
             // If the country was passed as an id, change it to the country name for
@@ -432,8 +433,6 @@ if (zen_not_null($action)) {
                 }
                 // Reset order if updated
                 if ($order_updated) {
-                    eo_update_database_order_totals($oID);
-
                     // Need to force update the tax field if the tax is zero
                     // This runs after the shipping tax is added by the above update
                     $decimals = $currencies->get_decimal_places($_SESSION['currency']);
@@ -447,9 +446,19 @@ if (zen_not_null($action)) {
                             'value' => 0,
                         );
                     }
-                    $order = $eo->getOrderInfo();
                 }
 
+                // -----
+                // Fix-up the order's product-based taxes by summing all values present in the order's
+                // tax-groups prior to running the order-totals.  Any addition for shipping will be added
+                // later.
+                //
+                if (isset($order->info['tax_groups']) && is_array($order->info['tax_groups'])) {
+                    $order->info['tax'] = 0;
+                    foreach ($order->info['tax_groups'] as $tax_class => $tax_value) {
+                        $order->info['tax'] += $tax_value;
+                    }
+                }
                 $eo->eoLog (
                     PHP_EOL . 'Updated Products in Order:' . PHP_EOL . var_export($order->products, true) . PHP_EOL .
                     $eo->eoFormatOrderTotalsForLog($order, 'Updated Products Order Totals:') .
@@ -560,8 +569,7 @@ if (zen_not_null($action)) {
                     eo_update_database_order_total($oID, $order_total);
                 }
 
-                // Reset order and resave (fixes some edge cases)
-                $order = $eo->getOrderInfo();
+                // Update the order's order-totals
                 eo_update_database_order_totals($oID);
 
                 $eo->eoLog (

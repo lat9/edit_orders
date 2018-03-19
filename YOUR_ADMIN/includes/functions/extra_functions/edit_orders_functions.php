@@ -1023,10 +1023,13 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
     }
     $shown_price += $onetime_charges;
 
-    // -----
-    // Update the order information, either adding or removing the product's cost and taxes
-    // from the order's subtotal/tax.
-    //
+    $starting_totals = array (
+        'subtotal' => $order->info['subtotal'],
+        'tax' => $order->info['tax'],
+        'total' => $order->info['total']
+    );
+
+    // Update the order information
     if ($add) {
         $order->info['subtotal'] += $shown_price;
         $order->info['tax'] += $eo->eoRoundCurrencyValue($eo->getProductTaxes($product, $shown_price, $add));
@@ -1322,16 +1325,29 @@ function eo_update_database_order_totals($oID)
         // -----
         // Account for order totals that were present, but have been removed.
         //
-        if (count($order->totals) > $n) {
-            for ($i=0, $totals_titles = array(); $i < $n; $i++) {
+        for ($i=0, $totals_titles = $totals_codes = array(); $i < $n; $i++) {
                 $totals_titles[] = $order_totals[$i]['title'];
+            $totals_codes[] = $order_totals[$i]['code'];
             }
             for ($i=0, $n=count($order->totals); $i<$n; $i++) {
-                if (!in_array($order->totals[$i]['title'], $totals_titles)) {
-                    $db->Execute("DELETE FROM " . TABLE_ORDERS_TOTAL . " WHERE orders_id = $oID AND title = '" . zen_db_input ($order->totals[$i]['title']) . "' LIMIT 1");
+            if (!in_array($order->totals[$i]['title'], $totals_titles) || !in_array($order->totals[$i]['code'], $totals_codes)) {
+                // -----
+                // If the to-be-removed order-total is the tax (ot_tax), make sure that the tax value in the
+                // base order's record is set to 0.
+                //
+                if ($order->totals[$i]['code'] == 'ot_tax') {
+                    $order->info['tax'] = 0;
                 }
+                $and_clause = (!in_array($order->totals[$i]['title'], $totals_titles)) ? ("title = '" . zen_db_input($order->totals[$i]['title']) . "'") : '';
+                if (!in_array($order->totals[$i]['code'], $totals_codes)) {
+                    if ($and_clause != '') {
+                        $and_clause = "$and_clause OR ";
+                    }
+                    $and_clause .= ("`class` = '" . $order->totals[$i]['code'] . "'");
+                }
+                $eo->eoLog("Removing order-total, and-clause: $and_clause");
+                $db->Execute("DELETE FROM " . TABLE_ORDERS_TOTAL . " WHERE orders_id = $oID AND ($and_clause) LIMIT 1");
             }
-            unset ($totals_titles);
         }
         unset($order_totals);
         $eo->eoLog('eo_update_database_order_totals, taxes on exit. ' . $eo->eoFormatTaxInfoForLog(), 'tax');
