@@ -481,6 +481,7 @@ if (zen_not_null($action)) {
                 );
 
                 foreach ($_POST['update_total'] as $order_total) {
+                    $order_total['value'] = (float)$order_total['value'];
                     $order_total['text'] = $eo->eoFormatCurrencyValue($order_total['value']);
                     $order_total['sort_order'] = $GLOBALS[$order_total['code']]->sort_order;
 
