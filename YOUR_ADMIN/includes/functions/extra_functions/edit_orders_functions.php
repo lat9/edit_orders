@@ -832,8 +832,10 @@ function eo_add_product_to_order($order_id, $product) {
         }
     }
 
-    // Stock Update - Joao Correia
-    if (STOCK_LIMITED == 'true') {
+    // Handle product stock
+    $doStockDecrement = true;
+    $zco_notifier->notify ('EDIT_ORDERS_ADD_PRODUCT_STOCK_DECREMENT', array ( 'order_id' => $order_id, 'product' => $product ), $doStockDecrement);
+    if (STOCK_LIMITED == 'true' && $doStockDecrement) {
         if (DOWNLOAD_ENABLED == 'true') {
             $stock_query_raw = "select p.products_quantity, pad.products_attributes_filename, p.product_is_always_free_shipping
             from " . TABLE_PRODUCTS . " p
@@ -1073,7 +1075,9 @@ function eo_remove_product_from_order($order_id, $orders_products_id) {
     $orders_products_id_mapping = eo_get_orders_products_id_mappings((int)$order_id);
 
     // Handle product stock
-    if (STOCK_LIMITED == 'true') {
+    $doStockDecrement = true;
+    $zco_notifier->notify ('EDIT_ORDERS_REMOVE_PRODUCT_STOCK_DECREMENT', array ( 'order_id' => $order_id, 'orders_products_id' => $orders_products_id ), $doStockDecrement);
+    if (STOCK_LIMITED == 'true' && $doStockDecrement) {
         $query = $db->Execute(
             'SELECT `products_id`, `products_quantity` ' .
             'FROM `' . TABLE_ORDERS_PRODUCTS . '` ' .
@@ -1308,8 +1312,10 @@ function eo_update_database_order_totals($oID)
         $order_totals = $GLOBALS['order_total_modules']->process();
         $eo->eoLog('eo_update_database_order_totals, after process: order_total: ' . $order->info['total'] . ', order_tax: ' . $order->info['tax'], 'tax');
         
+        $GLOBALS['zco_notifier']->notify('EO_UPDATE_DATABASE_ORDER_TOTALS_MAIN', $oID);
         // Update the order totals in the database
         for ($i = 0, $n = count($order_totals); $i < $n; $i++) {
+            $GLOBALS['zco_notifier']->notify('EO_UPDATE_DATABASE_ORDER_TOTALS_ITEM', $oID, $order_totals[$i]);
             eo_update_database_order_total($oID, $order_totals[$i]);
         }
 
