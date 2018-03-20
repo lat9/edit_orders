@@ -562,7 +562,7 @@ function eo_get_product_attributes_options($products_id, $readonly = false) {
     return $retval;
 }
 
-function eo_get_new_product($product_id, $product_qty = 1, $product_options = array(), $use_specials = true) {
+function eo_get_new_product($product_id, $product_qty, $product_tax, $product_options = array(), $use_specials = true) {
     global $db;
 
     $product_id = (int)$product_id;
@@ -571,6 +571,7 @@ function eo_get_new_product($product_id, $product_qty = 1, $product_options = ar
     $retval = array(
         'id' => $product_id,
         'qty' => $product_qty,
+        'tax' => (float)$product_tax,
     );
 
     $query = $db->Execute(
@@ -599,7 +600,7 @@ function eo_get_new_product($product_id, $product_qty = 1, $product_options = ar
             'product_is_free' => $query->fields['product_is_free'],
             'products_virtual' => $query->fields['products_virtual'],
             'product_is_always_free_shipping' => $query->fields['product_is_always_free_shipping'],
-            'tax' => number_format(zen_get_tax_rate_value($query->fields['products_tax_class_id']), 4),
+            'tax' => (($product_tax === false) ? number_format(zen_get_tax_rate_value($query->fields['products_tax_class_id']), 4) : ((float)$product_tax),
             'tax_description' => zen_get_tax_description($query->fields['products_tax_class_id'])
         ));
 
@@ -1326,10 +1327,10 @@ function eo_update_database_order_totals($oID)
         // Account for order totals that were present, but have been removed.
         //
         for ($i=0, $totals_titles = $totals_codes = array(); $i < $n; $i++) {
-                $totals_titles[] = $order_totals[$i]['title'];
+            $totals_titles[] = $order_totals[$i]['title'];
             $totals_codes[] = $order_totals[$i]['code'];
-            }
-            for ($i=0, $n=count($order->totals); $i<$n; $i++) {
+        }
+        for ($i=0, $n=count($order->totals); $i<$n; $i++) {
             if (!in_array($order->totals[$i]['title'], $totals_titles) || !in_array($order->totals[$i]['code'], $totals_codes)) {
                 // -----
                 // If the to-be-removed order-total is the tax (ot_tax), make sure that the tax value in the

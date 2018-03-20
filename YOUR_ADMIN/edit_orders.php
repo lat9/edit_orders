@@ -383,6 +383,7 @@ if (zen_not_null($action)) {
                             $new_product = eo_get_new_product(
                                 $old_product['id'],
                                 $product_update['qty'],
+                                $product_update['tax'],
                                 $attrs,
                                 false
                             );
@@ -630,6 +631,7 @@ if (zen_not_null($action)) {
                 $new_product = eo_get_new_product(
                     $add_product_products_id,
                     $add_product_quantity,
+                    false,
                     zen_db_prepare_input($_POST['id']),
                     isset($_POST['applyspecialstoprice'])
                 );
