@@ -124,3 +124,6 @@ define('WARNING_ATTRIBUTE_OPTION_GRID', 'Warning: Absolute\'s Product Attribute 
 
 // Other elements
 define('RESET_TOTALS', 'Reset totals prior to update? ');
+define('PAYMENT_CALC_MANUAL', 'Product prices, entered manually? ');
+define('PRODUCT_PRICES_CALC_AUTO', ' <b>Note:</b> Pricing for products will be <em>automatically</em> calculated.');
+define('PRODUCT_PRICES_CALC_MANUAL', ' <b>Note:</b> Pricing for products will use the value(s) that you enter.');

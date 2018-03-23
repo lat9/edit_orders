@@ -457,11 +457,13 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>BUGFIX: Correct interaction with various order-total plugins, especially with tax calculations.</li>
             <li>BUGFIX: Correct PHP 7.1+ warning about &quot;A non-numeric value&quot;.</li>
             <li>CHANGE: Modify <em>ot_onetime_discount</em> to enable the entry of both additions to and deductions from an order's total.  You'll need to remove and re-install the order-total module prior to use.</li>
+            <li>BUGFIX/CHANGE: Entered product prices no longer honored after v4.3.3 update; additional configuration settings added.</li>
             <li>The following files were changed:<ol>
               <li>/includes/modules/order_total/ot_onetime_discount.php</li>
               <li>/YOUR_ADMIN/edit_orders.php</li>
               <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
-              <li>/YOUR_ADMIN/incudes/init_includes/init_eo_config.php</li>
+              <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
+              <li>/YOUR_ADMIN/includes/languages/english/edit_orders.php</li>
             </ol></li>
           </ul></li>
           <li>v4.3.3, 2018-03-09 (lat9)<ul>

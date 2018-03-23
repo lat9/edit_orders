@@ -600,7 +600,7 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
             'product_is_free' => $query->fields['product_is_free'],
             'products_virtual' => $query->fields['products_virtual'],
             'product_is_always_free_shipping' => $query->fields['product_is_always_free_shipping'],
-            'tax' => (($product_tax === false) ? number_format(zen_get_tax_rate_value($query->fields['products_tax_class_id']), 4) : ((float)$product_tax),
+            'tax' => ($product_tax === false) ? number_format(zen_get_tax_rate_value($query->fields['products_tax_class_id']), 4) : ((float)$product_tax),
             'tax_description' => zen_get_tax_description($query->fields['products_tax_class_id'])
         ));
 
@@ -1314,7 +1314,7 @@ function eo_update_database_order_totals($oID)
 
         // Process the order totals
         $order_totals = $GLOBALS['order_total_modules']->process();
-        $eo->eoLog('eo_update_database_order_totals, after process: order_total: ' . $order->info['total'] . ', order_tax: ' . $order->info['tax'], 'tax');
+        $eo->eoLog('eo_update_database_order_totals, after process: order_total: ' . $order->info['total'] . ', order_tax: ' . $order->info['tax'] . PHP_EOL . json_encode($order_totals) . PHP_EOL . json_encode($order->totals), 'tax');
         
         $GLOBALS['zco_notifier']->notify('EO_UPDATE_DATABASE_ORDER_TOTALS_MAIN', $oID);
         // Update the order totals in the database
@@ -1351,6 +1351,19 @@ function eo_update_database_order_totals($oID)
             }
         }
         unset($order_totals);
+        
+        // -----
+        // Handle a corner-case:  If the store has set Configuration->My Store->Sales Tax Display Status to '0' (no tax displayed
+        // if it's 0), and the admin has removed the tax (setting the tax-percentages to 0) for this order.
+        //
+        // In that case, an ot_tax value doesn't get generated for this order-update but there might have previously been
+        // a tax value set.  If this situation is detected, simply remove the ot_tax value from the order's stored
+        // order-totals.
+        //
+        if (STORE_TAX_DISPLAY_STATUS == '0' && $order->info['tax'] == 0) {
+            $db->Execute("DELETE FROM " . TABLE_ORDERS_TOTAL . " WHERE orders_id = $oID AND `class` = 'ot_tax'");
+        }
+        
         $eo->eoLog('eo_update_database_order_totals, taxes on exit. ' . $eo->eoFormatTaxInfoForLog(), 'tax');
     }
 }

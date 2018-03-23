@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.3.4-beta1');
+define('EO_CURRENT_VERSION', '4.3.4-beta2');
 
 // -----
 // Only update configuration when an admin is logged in.
@@ -122,6 +122,21 @@ if (isset($_SESSION['admin_id'])) {
             if (!defined('EO_INIT_FILE_MISSING')) {
                 define('EO_INIT_FILE_MISSING', '1');
             }
+        }
+        
+        if (version_compare(EO_VERSION, '4.3.4', '<')) {
+            $db->Execute (
+                "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
+                    ( configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function ) 
+                 VALUES 
+                    ( 'Product Price Calculation &mdash; Method', 'EO_PRODUCT_PRICE_CALC_METHOD', 'Auto', 'Choose the <em>method</em> that &quot;EO&quot; uses to calculate product prices when an order is updated, one of:<ol><li><b>Auto</b>: Each product-price is re-calculated.  If your products have attributes, this enables changes to a product\'s attributes to automatically update the associated product-price.</li><li><b>Manual</b>: Each product-price is based on the <b><i>admin-entered price</i></b> for the product.</li><li><b>Choose</b>: The product-price calculation method varies on an order-by-order basis, via the &quot;tick&quot; of a checkbox.  The default method used (<em>Auto</em> vs. <em>Manual</em> is defined by the <em>Product Price Calculation &mdash; Default</em> setting.</li></ol>', $cgi, 20, now(), NULL, 'zen_cfg_select_option(array(\'Auto\', \'Manual\', \'Choose\'),')"
+            );
+            $db->Execute (
+                "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
+                    ( configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function ) 
+                 VALUES 
+                    ( 'Product Price Calculation &mdash; Default', 'EO_PRODUCT_PRICE_CALC_DEFAULT', 'Auto', 'If the product price-calculation method is <b>Choose</b>, what method should be used as the <em>default</em> method?', $cgi, 24, now(), NULL, 'zen_cfg_select_option(array(\'Auto\', \'Manual\'),')"
+            );
         }
     }
 

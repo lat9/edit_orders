@@ -410,9 +410,17 @@ if (zen_not_null($action)) {
                                 $new_product['product_is_free'] = $old_product['product_is_free'];
                             }
 
-                            // Adjust the product information based upon the
-                            // data found in update_products
-                            $new_product = array_merge($product_update, $new_product);
+                            // -----
+                            // Depending on the product-price calculation method, either the values entered
+                            // or the pricing just calculated "rule".
+                            //
+                            if (EO_PRODUCT_PRICE_CALC_METHOD == 'Auto' || (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose' && !isset($_POST['payment_calc_manual']))) {
+                                $price_calc_method = 'Pricing was automatically calculated.';
+                                $new_product = array_merge($product_update, $new_product);
+                            } else {
+                                $price_calc_method = 'Pricing, as entered, was used.';
+                                $new_product = array_merge($new_product, $product_update);
+                            }
 
                             // Add the product to the order
                             eo_add_product_to_order($oID, $new_product);
@@ -421,7 +429,8 @@ if (zen_not_null($action)) {
                             eo_update_order_subtotal($oID, $new_product);
 
                             $eo->eoLog (
-                                PHP_EOL . 'Added Product:' . PHP_EOL . json_encode($new_product) . PHP_EOL .
+                                PHP_EOL . $price_calc_method . PHP_EOL .
+                                'Added Product:' . PHP_EOL . json_encode($new_product) . PHP_EOL .
                                 'Added Product Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
                                  $eo->eoFormatOrderTotalsForLog($order, 'Added Product Order Totals:') .
                                 'Added Product Tax (total): ' . $order->info['tax'] . PHP_EOL .
@@ -1023,7 +1032,22 @@ if ($action == 'edit' && $order_exists) {
                         </table></td>
                     </tr>
                     <tr>
-                        <td valign="top"><?php echo zen_image_submit('button_update.gif', IMAGE_UPDATE, 'name="update_button"') . '&nbsp;<b>' . RESET_TOTALS . '</b>' . zen_draw_checkbox_field('reset_totals', '', (EO_TOTAL_RESET_DEFAULT == 'on')); ?></td>
+                        <td valign="top">
+<?php 
+//-bof-20180323-lat9-GitHub#75, Multiple product-price calculation methods.
+    $reset_totals_block = '<b>' . RESET_TOTALS . '</b>' . zen_draw_checkbox_field('reset_totals', '', (EO_TOTAL_RESET_DEFAULT == 'on'));
+    $payment_calc_choice = '';
+    if (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose') {
+        $payment_calc_choice = '<b>' . PAYMENT_CALC_MANUAL . '</b>' . zen_draw_checkbox_field('payment_calc_manual', '', (EO_PRODUCT_PRICE_CALC_DEFAULT == 'Manual'));
+    } elseif (EO_PRODUCT_PRICE_CALC_METHOD == 'Manual') {
+        $payment_calc_choice = PRODUCT_PRICES_CALC_MANUAL;
+    } else {
+        $payment_calc_choice = PRODUCT_PRICES_CALC_AUTO;
+    }
+    echo zen_image_submit('button_update.gif', IMAGE_UPDATE, 'name="update_button"') . "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice"; 
+//-eof-20180323-lat9
+?>
+                        </td>
                     </tr>
 <!-- End Payment Block -->
 
