@@ -500,6 +500,7 @@ if (zen_not_null($action)) {
                         switch ($order_total['code']) {
                             case 'ot_shipping':
                                 $order->info['shipping_cost'] = $order_total['value'];
+                                $order->info['shipping_method'] = $order_total['title'];
                                 $order->info['shipping_module_code'] = $order_total['shipping_module'];
                                 break;
                             case 'ot_tax':
