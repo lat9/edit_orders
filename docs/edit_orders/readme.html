@@ -452,7 +452,9 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.3.4, 2018-03-xx (lat9)<ul>
+          <li>v4.3.4, 2018-04-xx (lat9)<ul>
+            <li>BUGFIX/CHANGE: Re-align /YOUR_ADMIN/orders.php notifiers with v1.5.6 and later.</li>
+            <li>BUGFIX: Change to shipping-method doesn't &quot;stick&quot;.</li>
             <li>CHANGE: Additional notifiers for stock-decrement and order-total processing.</li>
             <li>BUGFIX: Correct interaction with various order-total plugins, especially with tax calculations.</li>
             <li>BUGFIX: Correct PHP 7.1+ warning about &quot;A non-numeric value&quot;.</li>
@@ -461,6 +463,8 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>The following files were changed:<ol>
               <li>/includes/modules/order_total/ot_onetime_discount.php</li>
               <li>/YOUR_ADMIN/edit_orders.php</li>
+              <li><span class="corefile">/YOUR_ADMIN/orders.php</span></li>
+              <li>/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php</li>
               <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
               <li>/YOUR_ADMIN/includes/languages/english/edit_orders.php</li>

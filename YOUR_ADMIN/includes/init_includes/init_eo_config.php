@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.3.4-beta2');
+define('EO_CURRENT_VERSION', '4.3.4-beta3');
 
 // -----
 // Only update configuration when an admin is logged in.
@@ -168,7 +168,7 @@ if (isset($_SESSION['admin_id'])) {
                         'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS', 
                         'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END',
                         'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS',
-                        'NOTIFY_ADMIN_ORDERS_LISTING_ROW',
+                        'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE',
                     ),
                 ),
             )

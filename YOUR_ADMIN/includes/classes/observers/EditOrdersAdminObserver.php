@@ -9,21 +9,20 @@ if (!defined('IS_ADMIN_FLAG') || IS_ADMIN_FLAG !== true) {
 
 class EditOrdersAdminObserver extends base 
 {
-    public function __construct () 
+    public function __construct() 
     {
-        $this->attach (
+        $this->attach(
             $this, 
-            array (
+            array(
                 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS', 
                 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END',
                 'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS',
-                'NOTIFY_ADMIN_ORDERS_LISTING_ROW',              //-This is a "legacy" notification, defined in the EO update to /admin/orders.php
                 'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE',    //-This is the zc156+ version of the above notification.
             )
         );
     }
   
-    public function update (&$class, $eventID, $p1, &$p2, &$p3, &$p4) 
+    public function update(&$class, $eventID, $p1, &$p2, &$p3, &$p4) 
     {
         switch ($eventID) {
             // -----
@@ -34,9 +33,9 @@ class EditOrdersAdminObserver extends base
             //         with the built-in button list.
             //
             case 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS': 
-                if (is_object ($p1)) {
-                    $index_to_update = count ($p2) - 2;
-                    $p2[$index_to_update]['text'] = $this->addEditOrderButton ($p1->orders_id, $p2[$index_to_update]['text']);
+                if (is_object($p1)) {
+                    $index_to_update = count($p2) - 2;
+                    $p2[$index_to_update]['text'] = $this->addEditOrderButton($p1->orders_id, $p2[$index_to_update]['text']);
                 }
                 break;
       
@@ -48,9 +47,9 @@ class EditOrdersAdminObserver extends base
             //         with the built-in button list.
             //
             case 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END':
-                if (is_object ($p1)) {
-                    $index_to_update = count ($p2) - 1;
-                    $p2[$index_to_update]['text'] = $this->addEditOrderButton ($p1->orders_id, $p2[$index_to_update]['text']);
+                if (is_object($p1)) {
+                    $index_to_update = count($p2) - 1;
+                    $p2[$index_to_update]['text'] = $this->addEditOrderButton($p1->orders_id, $p2[$index_to_update]['text']);
                 }
                 break;
                 
@@ -64,9 +63,8 @@ class EditOrdersAdminObserver extends base
             // $p4 ... A reference to the $extra_action_icons variable, which will be augmented with an icon
             //         linking to this order's EO processing.
             //
-            case 'NOTIFY_ADMIN_ORDERS_LISTING_ROW':             //-Fall-through ... legacy EO notifier
             case 'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE':
-                $p4 .= $this->createEditOrdersLink ($p2['orders_id'], zen_image (DIR_WS_IMAGES . 'icon_details.gif', EO_ICON_DETAILS));
+                $p4 .= $this->createEditOrdersLink($p2['orders_id'], zen_image(DIR_WS_IMAGES . 'icon_details.gif', EO_ICON_DETAILS));
                 break;
       
             // -----
@@ -78,7 +76,7 @@ class EditOrdersAdminObserver extends base
             // $p3 ... A reference to the $extra_buttons string, which is updated to include that edit button.
             //
             case 'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS':
-                $p3 .= '&nbsp;' . $this->createEditOrdersLink ($p1, zen_image_button ('button_edit.gif', IMAGE_EDIT));
+                $p3 .= '&nbsp;' . $this->createEditOrdersLink($p1, zen_image_button('button_edit.gif', IMAGE_EDIT));
                 break;
                 
             default:
@@ -86,24 +84,24 @@ class EditOrdersAdminObserver extends base
         }
     }
     
-    protected function addEditOrderButton ($orders_id, $button_list)
+    protected function addEditOrderButton($orders_id, $button_list)
     {
-        $updated_button_list = str_replace (
-            array (
+        $updated_button_list = str_replace(
+            array(
                 'button_edit.gif',
                 IMAGE_EDIT,
             ),
-            array (
+            array(
                 'button_details.gif',
                 IMAGE_DETAILS
             ),
             $button_list
         );
-        return $updated_button_list . '&nbsp;' . $this->createEditOrdersLink ($orders_id, zen_image_button ('button_edit.gif', IMAGE_EDIT));
+        return $updated_button_list . '&nbsp;' . $this->createEditOrdersLink($orders_id, zen_image_button('button_edit.gif', IMAGE_EDIT));
     }
     
-    protected function createEditOrdersLink ($orders_id, $link_text)
+    protected function createEditOrdersLink($orders_id, $link_text)
     {
-        return '<a href="' . zen_href_link (FILENAME_EDIT_ORDERS, zen_get_all_get_params (array ('oID', 'action')) . "oID=$orders_id&action=edit", 'NONSSL') . "\">$link_text</a>";
+        return '<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$orders_id&action=edit", 'NONSSL') . "\">$link_text</a>";
     }
 }

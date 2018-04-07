@@ -925,7 +925,7 @@ if (($_GET['page'] == '' or $_GET['page'] <= 1) and $_GET['oID'] != '') {
       }
 //-bof-edit_orders-lat9  *** 2 of 3 *** (Pull in notifier added in Zen Cart 1.6.0)
       $extra_action_icons = '';
-      $zco_notifier->notify('NOTIFY_ADMIN_ORDERS_LISTING_ROW', array (), $orders->fields, $show_difference, $extra_action_icons);
+      $zco_notifier->notify('NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE', array (), $orders->fields, $show_difference, $extra_action_icons);
 //-eof-edit_orders-lat9  *** 2 of 3 ***
       $show_payment_type = $orders->fields['payment_module_code'] . '<br />' . $orders->fields['shipping_module_code'];
 ?>
