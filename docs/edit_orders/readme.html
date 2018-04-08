@@ -229,10 +229,12 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                 <tr><td>/2_new_files/your_admin_folder/includes/extra_datafiles/edit_orders_defines.php <span class="smaller">(Placeholder, can be removed)</span></td><td>/YOUR_ADMIN/includes/extra_datafiles/edit_orders_defines.php</td></tr>
                 <tr><td>/2_new_files/your_admin_folder/includes/extra_datafiles/eo_sanitization.php</td><td>/YOUR_ADMIN/includes/extra_datafiles/eo_sanitization.php</td></tr>
                 <tr><td>/2_new_files/your_admin_folder/includes/functions/extra_functions/common_orders_functions.php <span class="smaller">(Placeholder, can be removed)</span></td><td>/YOUR_ADMIN/includes/functions/extra_functions/common_orders_functions.php <span class="smaller">(Placeholder, can be removed)</span></td></tr>
-                <tr><td>/2_new_files/your_admin_folder/includes/functions/extra_functions/edit_orders_functions.php</td><td>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</td></tr>                <tr><td>/2_new_files/your_admin_folder/includes/init_includes/init_eo_config.php</td><td>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</td></tr>
+                <tr><td>/2_new_files/your_admin_folder/includes/functions/extra_functions/edit_orders_functions.php</td><td>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</td></tr>
+                <tr><td>/2_new_files/your_admin_folder/includes/init_includes/init_eo_config.php</td><td>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</td></tr>
                 <tr><td>/2_new_files/your_admin_folder/includes/init_includes/init_zc154_compatibility.php</td><td>&mdash;</td></tr>
                 <tr><td>/2_new_files/your_admin_folder/includes/languages/english/edit_orders.php</td><td>/YOUR_ADMIN/includes/languages/english/edit_orders.php</td></tr>
-                <tr><td>/2_new_files/your_admin_folder/includes/languages/english/extra_definitions/edit_orders.php</td><td>/YOUR_ADMIN/includes/languages/english/extra_definitions/edit_orders.php</td></tr>                <tr><td>/2_new_files/your_admin_folder/includes/languages/english/images/buttons/button_add_product.gif</td><td>/YOUR_ADMIN/includes/languages/english/images/buttons/button_add_product.gif</td></tr>
+                <tr><td>/2_new_files/your_admin_folder/includes/languages/english/extra_definitions/edit_orders.php</td><td>/YOUR_ADMIN/includes/languages/english/extra_definitions/edit_orders.php</td></tr>
+                <tr><td>/2_new_files/your_admin_folder/includes/languages/english/images/buttons/button_add_product.gif</td><td>/YOUR_ADMIN/includes/languages/english/images/buttons/button_add_product.gif</td></tr>
                 <tr><td>/2_new_files/your_admin_folder/includes/languages/english/modules/plugin/eo.php</td><td>&mdash;</td></tr>
                 <tr><td>/2_new_files/your_admin_folder/includes/languages/english/modules/plugin/plugin.php</td><td>&mdash;</td></tr>
                 <tr><td>/3_install/your_admin_folder/includes/auto_loaders/config.eo_onetime.php</td><td>&mdash;</td></tr>
@@ -246,7 +248,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             
             <div id="notifiers">
               <noscript><h3>Required Notifiers</h3></noscript>
-              <p>Part of the simplification of the <em>EO</em> installation process is to lessen the <span class="corefile">core-file</span> changes required.  Zen Cart 1.5.5a has been updated to include additional notifiers within the admin's <em>Customers-&gt;Orders</em> processing and Zen Cart 1.6.0 expands on that update.  <em>EO</em> now makes use of those notifications to add its buttons and icons to that tool.</p>
+              <p>Part of the simplification of the <em>EO</em> installation process is to lessen the <span class="corefile">core-file</span> changes required.  Zen Cart 1.5.5a has been updated to include additional notifiers within the admin's <em>Customers-&gt;Orders</em> processing and Zen Cart 1.5.6 (and later) expands on that update.  <em>EO</em> now makes use of those notifications to add its buttons and icons to that tool.</p>
               <p>The possibility does exist, however, that these required notifiers didn't get included when a store's Zen Cart installation was upgraded from a prior version.  The following table lists the notifiers that allow <em>EO</em> to perform its processing.</p>
               <table>
                 <tr>
@@ -266,13 +268,13 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                 </tr>
                 <tr>
                   <td>/YOUR_ADMIN/orders.php</td>
-                  <td>NOTIFY_ADMIN_ORDERS_LISTING_ROW</td>
-                  <td><span class="added">Added</span>, issued during the orders-listing display, enabling additional icons to be associated with each order's line-item when creating the bottom button-group.  This notifier is based on the like-named one in the Zen Cart 1.6.0 repository.</td>
+                  <td>NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE</td>
+                  <td><span class="added">Added</span>, issued during the orders-listing display, enabling additional icons to be associated with each order's line-item when creating the bottom button-group.  This notifier is based on the like-named one in the Zen Cart 1.5.6+ repository.</td>
                 </tr>
                 <tr>
                   <td>/YOUR_ADMIN/orders.php</td>
                   <td>NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS</td>
-                  <td><span class="added">Added</span>, issued during an order's detailed view when creating the bottom button-group.  This notifier is based on the like-named one in the Zen Cart 1.6.0 repository.</td>
+                  <td><span class="added">Added</span>, issued during an order's detailed view when creating the bottom button-group.  This notifier is based on the like-named one in the Zen Cart 1.5.6+ repository.</td>
                 </tr>
               </table>
             </div>
@@ -452,7 +454,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.3.4, 2018-04-xx (lat9)<ul>
+          <li>v4.3.4, 2018-04-08 (lat9)<ul>
             <li>BUGFIX/CHANGE: Re-align /YOUR_ADMIN/orders.php notifiers with v1.5.6 and later.</li>
             <li>BUGFIX: Change to shipping-method doesn't &quot;stick&quot;.</li>
             <li>CHANGE: Additional notifiers for stock-decrement and order-total processing.</li>
@@ -463,7 +465,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>The following files were changed:<ol>
               <li>/includes/modules/order_total/ot_onetime_discount.php</li>
               <li>/YOUR_ADMIN/edit_orders.php</li>
-              <li><span class="corefile">/YOUR_ADMIN/orders.php</span></li>
+              <li><span class="corefile">/YOUR_ADMIN/orders.php</span> <span class="smaller">Single line (#928) changed, modifying notification id from <code class="no-pad">NOTIFY_ADMIN_ORDERS_LISTING_ROW</code> to <code class="no-pad">NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE</code>.</span></li>
               <li>/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php</li>
               <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
