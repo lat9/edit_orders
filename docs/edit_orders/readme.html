@@ -416,7 +416,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                 </pre></li>
                 <li>Change the line indicated:<pre>
                     if (PRODUCTS_OPTIONS_SORT_ORDER=='0') {
-                      $options_order_by= ' order by LPAD(popt.products_options_sort_order,11,"0"<span class="bold-red">, popt.products_options_name)</span>';
+                      $options_order_by= ' order by LPAD(popt.products_options_sort_order,11,"0")<span class="bold-red">, popt.products_options_name</span>';
                     } else {
                       $options_order_by= ' order by popt.products_options_name';
                     }
