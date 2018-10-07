@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.3.4');
+define('EO_CURRENT_VERSION', '4.3.5-beta1');
 
 // -----
 // Only update configuration when an admin is logged in.
@@ -90,53 +90,52 @@ if (isset($_SESSION['admin_id'])) {
         define('EO_VERSION', '0.0.0');
         
         $messageStack->add(sprintf(EO_INIT_INSTALLED, EO_CURRENT_VERSION), 'success');
-        
+    }
+
     // -----
-    // Otherwise, we're updating an existing version; perform any configuration changes necessary.
+    // Next, check for any version-related updates ...
     //
-    } else {
-        if (EO_VERSION <= '4.1.1') {
-            $db->Execute(
-                "DELETE FROM " . TABLE_CONFIGURATION . "
-                  WHERE configuration_key = 'EO_SHIPPING_TAX'
-                  LIMIT 1"
-            );
-        }
+    if (EO_VERSION <= '4.1.1') {
+        $db->Execute(
+            "DELETE FROM " . TABLE_CONFIGURATION . "
+              WHERE configuration_key = 'EO_SHIPPING_TAX'
+              LIMIT 1"
+        );
+    }
+    
+    if (version_compare(EO_VERSION, '4.3.0', '<') || !defined('EO_TOTAL_RESET_DEFAULT')) {
+        $db->Execute(
+            "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
+                ( configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function ) 
+             VALUES 
+                ( 'Reset Totals on Update &mdash; Default', 'EO_TOTAL_RESET_DEFAULT', 'off', 'Choose the default value for the <em>Reset totals prior to update</em> checkbox.  If your store uses order-total modules that perform tax-related recalculations (like &quot;Group Pricing&quot;), set this value to <b>on</b>.', $cgi, 5, now(), NULL, 'zen_cfg_select_option(array(\'on\', \'off\'),')"
+        );
+      
+        $db->Execute(
+            "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
+                ( configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function ) 
+             VALUES 
+                ( 'Edit Orders File Missing', 'EO_INIT_FILE_MISSING', '0', 'This (hidden) value is set to 1 if <em>EO</em> has detected missing files.', 6, 92, now(), NULL, NULL)"
+        );
         
-        if (version_compare(EO_VERSION, '4.3.0', '<')) {
-            $db->Execute(
-                "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
-                    ( configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function ) 
-                 VALUES 
-                    ( 'Reset Totals on Update &mdash; Default', 'EO_TOTAL_RESET_DEFAULT', 'off', 'Choose the default value for the <em>Reset totals prior to update</em> checkbox.  If your store uses order-total modules that perform tax-related recalculations (like &quot;Group Pricing&quot;), set this value to <b>on</b>.', $cgi, 5, now(), NULL, 'zen_cfg_select_option(array(\'on\', \'off\'),')"
-            );
-          
-            $db->Execute(
-                "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
-                    ( configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function ) 
-                 VALUES 
-                    ( 'Edit Orders File Missing', 'EO_INIT_FILE_MISSING', '0', 'This (hidden) value is set to 1 if <em>EO</em> has detected missing files.', 6, 92, now(), NULL, NULL)"
-            );
-            
-            if (!defined('EO_INIT_FILE_MISSING')) {
-                define('EO_INIT_FILE_MISSING', '1');
-            }
+        if (!defined('EO_INIT_FILE_MISSING')) {
+            define('EO_INIT_FILE_MISSING', '1');
         }
-        
-        if (version_compare(EO_VERSION, '4.3.4', '<')) {
-            $db->Execute(
-                "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
-                    ( configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function ) 
-                 VALUES 
-                    ( 'Product Price Calculation &mdash; Method', 'EO_PRODUCT_PRICE_CALC_METHOD', 'Auto', 'Choose the <em>method</em> that &quot;EO&quot; uses to calculate product prices when an order is updated, one of:<ol><li><b>Auto</b>: Each product-price is re-calculated.  If your products have attributes, this enables changes to a product\'s attributes to automatically update the associated product-price.</li><li><b>Manual</b>: Each product-price is based on the <b><i>admin-entered price</i></b> for the product.</li><li><b>Choose</b>: The product-price calculation method varies on an order-by-order basis, via the &quot;tick&quot; of a checkbox.  The default method used (<em>Auto</em> vs. <em>Manual</em> is defined by the <em>Product Price Calculation &mdash; Default</em> setting.</li></ol>', $cgi, 20, now(), NULL, 'zen_cfg_select_option(array(\'Auto\', \'Manual\', \'Choose\'),')"
-            );
-            $db->Execute(
-                "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
-                    ( configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function ) 
-                 VALUES 
-                    ( 'Product Price Calculation &mdash; Default', 'EO_PRODUCT_PRICE_CALC_DEFAULT', 'Auto', 'If the product price-calculation method is <b>Choose</b>, what method should be used as the <em>default</em> method?', $cgi, 24, now(), NULL, 'zen_cfg_select_option(array(\'Auto\', \'Manual\'),')"
-            );
-        }
+    }
+    
+    if (version_compare(EO_VERSION, '4.3.4', '<') || !defined('EO_PRODUCT_PRICE_CALC_METHOD')) {
+        $db->Execute(
+            "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
+                ( configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function ) 
+             VALUES 
+                ( 'Product Price Calculation &mdash; Method', 'EO_PRODUCT_PRICE_CALC_METHOD', 'Auto', 'Choose the <em>method</em> that &quot;EO&quot; uses to calculate product prices when an order is updated, one of:<ol><li><b>Auto</b>: Each product-price is re-calculated.  If your products have attributes, this enables changes to a product\'s attributes to automatically update the associated product-price.</li><li><b>Manual</b>: Each product-price is based on the <b><i>admin-entered price</i></b> for the product.</li><li><b>Choose</b>: The product-price calculation method varies on an order-by-order basis, via the &quot;tick&quot; of a checkbox.  The default method used (<em>Auto</em> vs. <em>Manual</em> is defined by the <em>Product Price Calculation &mdash; Default</em> setting.</li></ol>', $cgi, 20, now(), NULL, 'zen_cfg_select_option(array(\'Auto\', \'Manual\', \'Choose\'),')"
+        );
+        $db->Execute(
+            "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
+                ( configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function ) 
+             VALUES 
+                ( 'Product Price Calculation &mdash; Default', 'EO_PRODUCT_PRICE_CALC_DEFAULT', 'Auto', 'If the product price-calculation method is <b>Choose</b>, what method should be used as the <em>default</em> method?', $cgi, 24, now(), NULL, 'zen_cfg_select_option(array(\'Auto\', \'Manual\'),')"
+        );
     }
 
     // -----
