@@ -1169,7 +1169,7 @@ function eo_get_order_total_by_order($order_id, $class = null) {
             'title' => $ot->fields['title'],
             'text' => $ot->fields['text'],
             'value' => $ot->fields['value'],
-            'sort_order' => $ot->fields['sort_order'],
+            'sort_order' => (int)$ot->fields['sort_order'],
         );
         $ot->moveNext();
     }
@@ -1376,7 +1376,7 @@ function eo_update_database_order_total($oID, $order_total) {
         'title' => $order_total['title'],
         'text' => $order_total['text'],
         'value' => (is_numeric($order_total['value'])) ? $order_total['value'] : 0,
-        'sort_order' => $order_total['sort_order']
+        'sort_order' => (int)$order_total['sort_order']
     );
     // Update the Order Totals in the Database, recognizing that there might be multiple records for the product's tax
     $and_clause = ($order_total['code'] == 'ot_tax' && SHOW_SPLIT_TAX_CHECKOUT == 'true') ? (" AND `title` = '" . $order_total['title'] . "'") : '';
@@ -1493,7 +1493,7 @@ function eo_get_available_order_totals_class_values($oID)
         $retval[] = array(
             'id' => $class,
             'text' => $GLOBALS[$class]->title,
-            'sort_order' => $GLOBALS[$class]->sort_order
+            'sort_order' => (int)$GLOBALS[$class]->sort_order
         );
     }
 
