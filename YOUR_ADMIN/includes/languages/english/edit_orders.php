@@ -47,6 +47,7 @@ define('ENTRY_CREDIT_CARD_NUMBER', 'Credit Card Number:');
 define('ENTRY_CREDIT_CARD_EXPIRES', 'Credit Card Expires:');
 define('ENTRY_UPDATE_TO_CC', 'Enter <strong>Credit Card</strong> to view CC fields.');
 define('ENTRY_UPDATE_TO_CK', 'Enter the payment method used for this order to hide CC fields. (<strong>PayPal, Check/Money Order, Western Union, etc</strong>)');
+define('ENTRY_PURCHASE_ORDER_NUMBER', 'Purchase Order:');
 
 // Order Status Entries
 define('ENTRY_STATUS', 'Status:');
@@ -116,7 +117,6 @@ define('TABLE_HEADING_TRACKING_ID', 'Tracking ID');
 define('TABLE_HEADING_CARRIER_NAME', 'Carrier');
 define('ENTRY_ADD_TRACK', 'Add Tracking ID');
 define('IMAGE_TRACK', 'Add Tracking ID');
-define('SELECT_ORDER_LIST', 'Jump to Order: ');
 define('HEADING_TITLE_ORDER_DETAILS', 'Order # ');
 
 // Absolute's Product Attribute Grid
