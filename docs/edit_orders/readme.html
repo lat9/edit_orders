@@ -87,7 +87,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
 
 <body>
   <h1 id="title">Edit Orders for Zen Cart&reg;</h1>
-  <p>Version 4.3.4.  Copyright &copy; 2015-2018, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
+  <p>Version 4.3.6.  Copyright &copy; 2015-2018, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
   <p>Current Support Thread on the Zen Cart forums: <a href="https://www.zen-cart.com/showthread.php?200407" target="_blank">https://www.zen-cart.com/showthread.php?200407</a></p>
   
   <p><strong>Usage Notes:</strong></p>
@@ -454,10 +454,20 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
+          <li>v4.3.6, 2018-11-25 (lat9)<ul>
+            <li>CHANGE: Additional notifications for external tax-handlers.<li>
+            <li>BUGFIX: Remove doubly-defined constant.</li>
+            <li>BUGFIX: Correct various PHP warnings.</li>
+            <li>The following files were changed:<ol>
+              <li>/YOUR_ADMIN/edit_orders.php</li>
+              <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
+              <li>/YOUR_ADMIN/includes/languages/english/edit_orders.php</li>
+            </ol></li>
+          </ul></li>
           <li>v4.3.5, 2018-10-31 (lat9)<ul>
             <li>BUGFIX: New configuration settings not included on initial install.</li>
             <li>BUGFIX/CHANGE: Ensure that order totals' <em>sort_order</em> is a numeric value.</li>
-              <li>The following files were changed:<ol>
+            <li>The following files were changed:<ol>
               <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
             </ol></li>
