@@ -189,6 +189,12 @@ class editOrders extends base
     {
         global $order;
         
+        $shipping_tax = false;
+        $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX', $order, $shipping_tax);
+        if ($shipping_tax !== false) {
+            $this->eoLog("calculateOrderShippingTax, override returning $shipping_tax.");
+            return $shipping_tax;
+        }
         $shipping_tax = 0;
         
         $shipping_module = $order->info['shipping_module_code'];
@@ -393,6 +399,13 @@ class editOrders extends base
     //
     public function removeTaxFromShippingCost(&$order, $module)
     {
+        //-Notifier to allow external tax-handler override.  The observer must set the order's current 'shipping_tax' to 0.
+        $shipping_tax_processed = false;
+        $this->notify('NOTIFY_EO_REMOVE_SHIPPING_TAX', array(), $order, $shipping_tax_processed);
+        if ($shipping_tax_processed === true) {
+            $this->eoLog("removeTaxFromShippingCost override, shipping_cost ({$order->info['shipping_cost']}), order tax ({$order->info['tax']})", 'tax');
+            return;
+        }
         if (DISPLAY_PRICE_WITH_TAX == 'true' && isset($GLOBALS[$module]) && isset($GLOBALS[$module]->tax_class) && $GLOBALS[$module]->tax_class > 0) {
             $tax_class = $GLOBALS[$module]->tax_class;
             $tax_basis = isset($GLOBALS[$module]->tax_basis) ? $GLOBALS[$module]->tax_basis : STORE_SHIPPING_TAX_BASIS;
