@@ -611,6 +611,7 @@ if (zen_not_null($action)) {
                 'Final Tax (total): ' . $order->info['tax'] . PHP_EOL .
                 'Final Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups'])
             );
+            $zco_notifier->notify('EDIT_ORDERS_ORDER_UPDATED', $order);
 
             zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit', 'NONSSL'));
             break;
@@ -626,6 +627,7 @@ if (zen_not_null($action)) {
                 PHP_EOL . PHP_EOL
             );
             if ($step == 5) {
+                $zco_notifier->notify('EDIT_ORDERS_START_ADD_PRODUCT', $oID, $order);
 
                 // Get Order Info
                 $order = $eo->getOrderInfo();
@@ -681,6 +683,7 @@ if (zen_not_null($action)) {
                     'Final Tax (total): ' . $order->info['tax'] . PHP_EOL .
                     'Final Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups']) . PHP_EOL
                 );
+                $zco_notifier->notify('EDIT_ORDERS_PRODUCT_ADDED', $order);
                 zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit'));
             }
             break;
@@ -1015,19 +1018,31 @@ if ($action == 'edit' && $order_exists) {
                             <tr>
                                 <td colspan="2"><?php echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?></td>
                             </tr>
+<?php
+        if (isset($order->info['account_name'])) {
+?>
                             <tr>
                                 <td class="main"><?php echo ENTRY_ACCOUNT_NAME; ?></td>
                                 <td class="main"><?php echo zen_html_quotes($order->info['account_name']); ?></td>
                             </tr>
+<?php
+        }
+        if (isset($order->info['account_number'])) {
+?>
                             <tr>
                                 <td class="main"><?php echo ENTRY_ACCOUNT_NUMBER; ?></td>
                                 <td class="main"><?php echo zen_html_quotes($order->info['account_number']); ?></td>
                             </tr>
+<?php
+        }
+        if (isset($order->info['po_number'])) {
+?>
                             <tr>
-                                <td class="main"><?php echo ENTRY_PURCHASE_ORDER_NUMBER; ?></td>
+                                <td class="main"><strong><?php echo ENTRY_PURCHASE_ORDER_NUMBER; ?></strong></td>
                                 <td class="main"><?php echo zen_html_quotes($order->info['po_number']); ?></td>
                             </tr>
 <?php
+        }
     }
 ?>
                         </table></td>
