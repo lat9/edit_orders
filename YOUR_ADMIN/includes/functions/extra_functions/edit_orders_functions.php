@@ -137,6 +137,23 @@ if(!function_exists('zen_get_tax_description')) {
     function zen_get_tax_description($class_id, $country_id = -1, $zone_id = -1) {
         global $db;
         
+//- (NOTE: Mimics the storefront notification is in-core starting with zc156)
+        // -----
+        // Give an observer the chance to override this function's return.
+        //
+        $tax_description = '';
+        $GLOBALS['zco_notifier']->notify(
+            'NOTIFY_ZEN_GET_TAX_DESCRIPTION_OVERRIDE',
+            array(
+                'class_id' => $class_id,
+                'country_id' => $country_id,
+                'zone_id' => $zone_id
+            ),
+            $tax_description
+        );
+        if ($tax_description != '') {
+            return $tax_description;
+        }
         if ( ($country_id == -1) && ($zone_id == -1) ) {
           if (isset($_SESSION['customer_id'])) {
             $country_id = $_SESSION['customer_country_id'];
@@ -1331,20 +1348,13 @@ function eo_update_database_order_totals($oID)
             $totals_codes[] = $order_totals[$i]['code'];
         }
         for ($i=0, $n=count($order->totals); $i<$n; $i++) {
-            if (!in_array($order->totals[$i]['title'], $totals_titles) || !in_array($order->totals[$i]['code'], $totals_codes)) {
-                // -----
-                // If the to-be-removed order-total is the tax (ot_tax), make sure that the tax value in the
-                // base order's record is set to 0.
-                //
-                if ($order->totals[$i]['code'] == 'ot_tax') {
-                    $order->info['tax'] = 0;
-                }
+            if (!in_array($order->totals[$i]['title'], $totals_titles) || !in_array($order->totals[$i]['class'], $totals_codes)) {
                 $and_clause = (!in_array($order->totals[$i]['title'], $totals_titles)) ? ("title = '" . zen_db_input($order->totals[$i]['title']) . "'") : '';
-                if (!in_array($order->totals[$i]['code'], $totals_codes)) {
+                if (!in_array($order->totals[$i]['class'], $totals_codes)) {
                     if ($and_clause != '') {
                         $and_clause = "$and_clause OR ";
                     }
-                    $and_clause .= ("`class` = '" . $order->totals[$i]['code'] . "'");
+                    $and_clause .= ("`class` = '" . $order->totals[$i]['class'] . "'");
                 }
                 $eo->eoLog("Removing order-total, and-clause: $and_clause");
                 $db->Execute("DELETE FROM " . TABLE_ORDERS_TOTAL . " WHERE orders_id = $oID AND ($and_clause) LIMIT 1");
