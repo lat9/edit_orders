@@ -310,6 +310,11 @@ if (zen_not_null($action)) {
                 'Order Tax (total): ' . $order->info['tax'] . PHP_EOL .
                 'Order Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups'])
             );
+            // -----
+            // Give an observer the opportunity to make modifications to the updated products (or totals) in
+            // the update request.
+            //
+            $zco_notifier->notify('EDIT_ORDERS_PRE_UPDATE_PRODUCTS', $oID);
 
             // Handle updating products and attributes as needed
             if (isset($_POST['update_products'])) {
