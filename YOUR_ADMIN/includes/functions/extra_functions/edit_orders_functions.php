@@ -1381,6 +1381,17 @@ function eo_update_database_order_totals($oID)
 function eo_update_database_order_total($oID, $order_total) {
     global $db, $eo;
     $updated = false;
+    
+    // -----
+    // The 'ot_shipping' total's 'process' method appends a trailing ':' to the shipping method's
+    // title on each call, resulting in an ever-growing number of ':'s at the end of that title.
+    //
+    // If the to-be-updated total is 'ot_shipping', strip all trailing colons and then add a single
+    // one.
+    //
+    if ($order_total['code'] == 'ot_shipping') {
+        $order_total['title'] = rtrim($order_total['title'], ':') . ':';
+    }
 
     $sql_data_array = array(
         'title' => $order_total['title'],
