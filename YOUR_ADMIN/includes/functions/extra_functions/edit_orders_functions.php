@@ -1341,15 +1341,22 @@ function eo_update_database_order_totals($oID)
         }
 
         // -----
-        // Account for order totals that were present, but have been removed.
+        // Account for order totals that were present, but have been removed.  Special processing
+        // needed for the 'ot_shipping' total, since there might be multiple colons (:) tacked to
+        // the end of the name.
         //
         for ($i=0, $totals_titles = $totals_codes = array(); $i < $n; $i++) {
-            $totals_titles[] = $order_totals[$i]['title'];
-            $totals_codes[] = $order_totals[$i]['code'];
+            $code = $order_totals[$i]['code'];
+            $totals_titles[] = ($code == 'ot_shipping') ? rtrim($order_totals[$i]['title'], ':') : $order_totals[$i]['title'];
+            $totals_codes[] = $code;
         }
         for ($i=0, $n=count($order->totals); $i<$n; $i++) {
-            if (!in_array($order->totals[$i]['title'], $totals_titles) || !in_array($order->totals[$i]['class'], $totals_codes)) {
-                $and_clause = (!in_array($order->totals[$i]['title'], $totals_titles)) ? ("title = '" . zen_db_input($order->totals[$i]['title']) . "'") : '';
+            $title = $order_totals[$i]['title'];
+            if ($order->totals[$i]['class'] == 'ot_shipping') {
+                $title = rtrim($title, ':');
+            }
+            if (!in_array($title, $totals_titles) || !in_array($order->totals[$i]['class'], $totals_codes)) {
+                $and_clause = (!in_array($title, $totals_titles)) ? ("title = '" . zen_db_input($title) . "'") : '';
                 if (!in_array($order->totals[$i]['class'], $totals_codes)) {
                     if ($and_clause != '') {
                         $and_clause = "$and_clause OR ";
