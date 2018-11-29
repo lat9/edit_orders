@@ -1351,7 +1351,7 @@ function eo_update_database_order_totals($oID)
             $totals_codes[] = $code;
         }
         for ($i=0, $n=count($order->totals); $i<$n; $i++) {
-            $title = $order_totals[$i]['title'];
+            $title = $order->totals[$i]['title'];
             if ($order->totals[$i]['class'] == 'ot_shipping') {
                 $title = rtrim($title, ':');
             }
