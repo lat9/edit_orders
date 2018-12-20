@@ -159,9 +159,20 @@ if (zen_not_null($action)) {
             
             // -----
             // Give any listening observer the opportunity to make modifications to the SQL data associated
-            // with the updated order.
+            // with the updated order and/or disallow the update.
             //
-            $zco_notifier->notify('EDIT_ORDERS_PRE_UPDATE_ORDER', $oID, $sql_data_array);
+            // If the observer disallows the update (by setting the 3rd parameter to (bool)false), it's the observer's responsibility 
+            // to issue a message to the current admin to let them know why the update was denied.
+            //
+            // Note that (currently) any updates made to the order will be lost!
+            //
+            $allow_update = true;
+            $zco_notifier->notify('EDIT_ORDERS_PRE_UPDATE_ORDER', $oID, $sql_data_array, $allow_update);
+            if ($allow_update === false) {
+                $eo->eoLog("Update disallowed by observer.");
+                $action = 'edit';
+                break;
+            }
             zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', "orders_id = $oID LIMIT 1");
 
             // BEGIN TY TRACKER 1 - READ FROM POST
@@ -495,10 +506,17 @@ if (zen_not_null($action)) {
                     'Starting Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups'])
                 );
 
+                $default_sort = 0;
                 foreach ($_POST['update_total'] as $order_total) {
+                    $default_sort++;
                     $order_total['value'] = (float)$order_total['value'];
                     $order_total['text'] = $eo->eoFormatCurrencyValue($order_total['value']);
+                    if (isset($GLOBALS[$order_total['code']]) && is_object($GLOBALS[$order_total['code']])) {
                     $order_total['sort_order'] = $GLOBALS[$order_total['code']]->sort_order;
+                        $default_sort = $order_total['sort_order'];
+                    } else {
+                        $order_total['sort_order'] = $default_sort;
+                    }
 
                     // TODO Special processing for some modules
                     if (zen_not_null($order_total['title']) && $order_total['title'] != ':') {
@@ -632,7 +650,7 @@ if (zen_not_null($action)) {
                 PHP_EOL . PHP_EOL
             );
             if ($step == 5) {
-                $zco_notifier->notify('EDIT_ORDERS_START_ADD_PRODUCT', $oID, $order);
+                $zco_notifier->notify('EDIT_ORDERS_START_ADD_PRODUCT', $oID);
 
                 // Get Order Info
                 $order = $eo->getOrderInfo();
