@@ -56,6 +56,11 @@
     }
   }
 
+//-bof-edit_orders-lat9  *** 1 of 8 *** (Pulling in zc156 notification)
+if (!empty($oID) && !empty($action)) {
+  $zco_notifier->notify('NOTIFY_ADMIN_ORDER_PREDISPLAY_HOOK', $oID, $action);
+}
+//-eof-edit_orders-lat9  *** 1 of 8 ***
   if (zen_not_null($action) && $order_exists == true) {
     switch ($action) {
       case 'edit':
@@ -319,6 +324,11 @@
         zen_record_admin_activity('Order ' . $oID . ' void processed. See order comments for details.', 'info');
         zen_redirect(zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit', 'NONSSL'));
         break;
+//-bof-edit_orders-lat9  *** 2 of 8 *** (Pull in zc156 notification)
+      default:
+        $zco_notifier->notify('NOTIFY_ADMIN_ORDERS_DEFAULT_ACTION', $oID, $order);
+        break;
+//-eof-edit_orders-lat9  *** 2 of 8 ***
     }
   }
 ?>
@@ -583,7 +593,20 @@ function couponpopupWindow(url) {
 <?php
     }
 ?>
+<?php
+//-bof-edit_orders-lat9  *** 3 of 8 *** (Pull in zc156 notification)
+/*
         </table></td>
+*/
+?>
+        </table>
+<?php
+    $zco_notifier->notify('NOTIFY_ADMIN_ORDERS_PAYMENTDATA_COLUMN2', $oID, $order);
+?>
+        </td>
+<?php
+//-eof-edit_orders-lat9  *** 3 of 8 ***
+?>
       </tr>
 <?php
       if (is_object($module) && method_exists($module, 'admin_notification')) {
@@ -748,7 +771,7 @@ function couponpopupWindow(url) {
       </form></tr>
       <tr>
 <?php
-//-bof-edit_orders-lat9  *** 1 of 3 *** (based on the ZC 1.6.0 version of the file) 
+//-bof-edit_orders-lat9  *** 4 of 8 *** (based on the zc156 version of the file) 
         // -----
         // Enable the addition of extra buttons when editing the order.
         //
@@ -757,7 +780,7 @@ function couponpopupWindow(url) {
 ?>
         <td colspan="2" align="right" class="noprint"><?php echo '<a href="' . zen_href_link(FILENAME_ORDERS_INVOICE, 'oID=' . $_GET['oID']) . '" target="_blank">' . zen_image_button('button_invoice.gif', IMAGE_ORDERS_INVOICE) . '</a> <a href="' . zen_href_link(FILENAME_ORDERS_PACKINGSLIP, 'oID=' . $_GET['oID']) . '" target="_blank">' . zen_image_button('button_packingslip.gif', IMAGE_ORDERS_PACKINGSLIP) . '</a> <a href="' . zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('action'))) . '">' . zen_image_button('button_orders.gif', IMAGE_ORDERS) . '</a>' . $extra_buttons; ?></td>
 <?php
-//-eof-edit_orders-lat9  *** 1 of 3 ***
+//-eof-edit_orders-lat9  *** 4 of 8 ***
 ?>
       </tr>
 <?php
@@ -779,8 +802,17 @@ function couponpopupWindow(url) {
 ?>
       <tr>
         <td><table border="0" width="100%" cellspacing="0" cellpadding="0">
+<?php
+//-bof-edit_orders-lat9  *** 5 of 8 *** (Pull in zc156 notification)
+        // Additional notification, allowing admin-observers to include additional legend icons
+        $extra_legends = '';
+        $zco_notifier->notify('NOTIFY_ADMIN_ORDERS_MENU_LEGEND', array(), $extra_legends);
+?>
           <tr>
-            <td class="smallText"><?php echo TEXT_LEGEND . ' ' . zen_image(DIR_WS_IMAGES . 'icon_status_red.gif', TEXT_BILLING_SHIPPING_MISMATCH, 10, 10) . ' ' . TEXT_BILLING_SHIPPING_MISMATCH; ?>
+            <td class="smallText"><?php echo TEXT_LEGEND . ' ' . zen_image(DIR_WS_IMAGES . 'icon_status_red.gif', TEXT_BILLING_SHIPPING_MISMATCH, 10, 10) . ' ' . TEXT_BILLING_SHIPPING_MISMATCH . $extra_legends; ?>
+<?php
+//-eof-edit_orders-lat9  *** 5 of 8 ***
+?>
           </td>
           <tr>
             <td valign="top"><table border="0" width="100%" cellspacing="0" cellpadding="2">
@@ -820,6 +852,33 @@ function couponpopupWindow(url) {
                 <td class="dataTableHeadingContent" align="center"><?php echo TABLE_HEADING_DATE_PURCHASED; ?></td>
                 <td class="dataTableHeadingContent" align="right"><?php echo TABLE_HEADING_STATUS; ?></td>
                 <td class="dataTableHeadingContent" align="center"><?php echo TABLE_HEADING_CUSTOMER_COMMENTS; ?></td>
+<?php
+//-bof-edit_orders-lat9  *** 6 of 8 *** (Pull in zc156 notification)
+  // -----
+  // A watching observer can provide an associative array in the form:
+  //
+  // $extra_headings = array(
+  //     array(
+  //       'align' => $alignment,    // One of 'center', 'right', or 'left' (optional)
+  //       'text' => $value
+  //     ),
+  // );
+  //
+  // Observer note:  Be sure to check that the $p2/$extra_headings value is specifically (bool)false before initializing, since
+  // multiple observers might be injecting content!
+  //
+  $extra_headings = false;
+  $zco_notifier->notify('NOTIFY_ADMIN_ORDERS_LIST_EXTRA_COLUMN_HEADING', array(), $extra_headings);
+  if (is_array($extra_headings)) {
+      foreach ($extra_headings as $heading_info) {
+          $align = (isset($heading_info['align'])) ? (' align="' . $heading_info['align'] . '"') : '';
+?>
+                <td class="dataTableHeadingContent"<?php echo $align; ?>><?php echo $heading_info['text']; ?></td>
+<?php
+      }
+  }
+//-eof-edit_orders-lat9  *** 6 of 8 ***  
+?>
                 <td class="dataTableHeadingContent noprint" align="right"><?php echo TABLE_HEADING_ACTION; ?>&nbsp;</td>
               </tr>
 
@@ -923,10 +982,10 @@ if (($_GET['page'] == '' or $_GET['page'] <= 1) and $_GET['oID'] != '') {
       if ((strtoupper($orders->fields['delivery_street_address']) != strtoupper($orders->fields['billing_street_address']) and trim($orders->fields['delivery_street_address']) != '')) {
         $show_difference = zen_image(DIR_WS_IMAGES . 'icon_status_red.gif', TEXT_BILLING_SHIPPING_MISMATCH, 10, 10) . '&nbsp;';
       }
-//-bof-edit_orders-lat9  *** 2 of 3 *** (Pull in notifier added in Zen Cart 1.6.0)
+//-bof-edit_orders-lat9  *** 7 of 8 *** (Pull in notifier added in zc156)
       $extra_action_icons = '';
       $zco_notifier->notify('NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE', array (), $orders->fields, $show_difference, $extra_action_icons);
-//-eof-edit_orders-lat9  *** 2 of 3 ***
+//-eof-edit_orders-lat9  *** 7 of 8 ***
       $show_payment_type = $orders->fields['payment_module_code'] . '<br />' . $orders->fields['shipping_module_code'];
 ?>
                 <td class="dataTableContent" align="right"><?php echo $show_difference . $orders->fields['orders_id']; ?></td>
@@ -937,11 +996,34 @@ if (($_GET['page'] == '' or $_GET['page'] <= 1) and $_GET['oID'] != '') {
                 <td class="dataTableContent" align="right"><?php echo ($orders->fields['orders_status_name'] != '' ? $orders->fields['orders_status_name'] : TEXT_INVALID_ORDER_STATUS); ?></td>
                 <td class="dataTableContent" align="center"><?php echo (zen_get_orders_comments($orders->fields['orders_id']) == '' ? '' : zen_image(DIR_WS_IMAGES . 'icon_yellow_on.gif', TEXT_COMMENTS_YES, 16, 16)); ?></td>
 <?php
-//-bof-edit_orders-lat9  *** 3 of 3 *** (Add content based on previous notification)
+//-bof-edit_orders-lat9  *** 8 of 8 *** (Add content based on previous notification + new zc156 notification)
+  // -----
+  // A watching observer can provide an associative array in the form:
+  //
+  // $extra_data = array(
+  //     array(
+  //       'align' => $alignment,    // One of 'center', 'right', or 'left' (optional)
+  //       'text' => $value
+  //     ),
+  // );
+  //
+  // Observer note:  Be sure to check that the $p3/$extra_data value is specifically (bool)false before initializing, since
+  // multiple observers might be injecting content!
+  //
+  $extra_data = false;
+  $zco_notifier->notify('NOTIFY_ADMIN_ORDERS_LIST_EXTRA_COLUMN_DATA', (isset($oInfo) ? $oInfo : array()), $orders->fields, $extra_data);
+  if (is_array($extra_data)) {
+      foreach ($extra_data as $data_info) {
+          $align = (isset($data_info['align'])) ? (' align="' . $data_info['align'] . '"') : '';
+?>
+                <td class="dataTableContent"<?php echo $align; ?>><?php echo $data_info['text']; ?></td>
+<?php
+      }
+  }
 ?>
                 <td class="dataTableContent noprint" align="right"><?php echo '<a href="' . zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('oID', 'action')) . 'oID=' . $orders->fields['orders_id'] . '&action=edit') . '">' . zen_image(DIR_WS_IMAGES . 'icon_edit.gif', ICON_EDIT) . '</a>' . $extra_action_icons; ?><?php if (isset($oInfo) && is_object($oInfo) && ($orders->fields['orders_id'] == $oInfo->orders_id)) { echo zen_image(DIR_WS_IMAGES . 'icon_arrow_right.gif', ''); } else { echo '<a href="' . zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('oID')) . 'oID=' . $orders->fields['orders_id']) . '">' . zen_image(DIR_WS_IMAGES . 'icon_info.gif', IMAGE_ICON_INFO) . '</a>'; } ?>&nbsp;</td>
 <?php
-//-eof-edit_orders-lat9  *** 3 of 3 ***
+//-eof-edit_orders-lat9  *** 8 of 8 ***
 ?>
               </tr>
 <?php
