@@ -455,6 +455,13 @@ class editOrders extends base
     }
     
     // -----
+    // Format an array for output to the debug log.
+    //
+    public function eoFormatArray($a)
+    {
+        return str_replace(array('},{', '","'), array("},\n{", '",\n"'), json_encode($a));
+    }
+    // -----
     // This class function mimics the zen_get_products_stock function, present in /includes/functions/functions_lookups.php.
     //
     public function getProductsStock($products_id)

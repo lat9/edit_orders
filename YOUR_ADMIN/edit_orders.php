@@ -319,7 +319,7 @@ if (zen_not_null($action)) {
                 PHP_EOL . 'Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
                 $eo->eoFormatOrderTotalsForLog($order) .
                 'Order Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                'Order Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups'])
+                'Order Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
             );
             // -----
             // Give an observer the opportunity to make modifications to the updated products (or totals) in
@@ -343,8 +343,8 @@ if (zen_not_null($action)) {
                 $_POST['update_products'] = zen_db_prepare_input($_POST['update_products']);
 
                 $eo->eoLog (
-                    PHP_EOL . 'Requested Products:' . PHP_EOL . var_export($_POST['update_products'], true) . PHP_EOL .
-                    'Products in Original Order: ' . PHP_EOL . var_export($order->products, true)
+                    PHP_EOL . 'Requested Products:' . PHP_EOL . $eo->eoFormatArray($_POST['update_products']) . PHP_EOL .
+                    'Products in Original Order: ' . PHP_EOL . $eo->eoFormatArray($order->products)
                 );
 
                 foreach ($_POST['update_products'] as $orders_products_id => $product_update) {
@@ -363,7 +363,7 @@ if (zen_not_null($action)) {
 
                     $eo->eoLog (
                         PHP_EOL . 'Order Product ID: ' . $orders_products_id . ' Row ID: ' . $rowID . PHP_EOL .
-                        'Product in Request: ' . PHP_EOL . json_encode($product_update)
+                        'Product in Request: ' . PHP_EOL . $eo->eoFormatArray($product_update)
                     );
      
 
@@ -373,11 +373,11 @@ if (zen_not_null($action)) {
                         $old_product = $order->products[$rowID];
 
                         $eo->eoLog (
-                            PHP_EOL . 'Old Product:' . PHP_EOL . json_encode($old_product) . PHP_EOL .
+                            PHP_EOL . 'Old Product:' . PHP_EOL . $eo->eoFormatArray($old_product) . PHP_EOL .
                             'Old Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
                             $eo->eoFormatOrderTotalsForLog($order, 'Old Order Totals: ') .
                             'Old Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                            'Old Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups'])
+                            'Old Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
                         );
                         // Remove the product from the order
                         eo_remove_product_from_order($oID, $orders_products_id);
@@ -389,7 +389,7 @@ if (zen_not_null($action)) {
                             PHP_EOL . 'Removed Product Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
                             $eo->eoFormatOrderTotalsForLog($order, 'Removed Product Order Totals: ') . 
                             'Removed Product Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                            'Removed Product Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups'])
+                            'Removed Product Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
                         );
                         if ($product_update['qty'] > 0) {
 
@@ -446,11 +446,11 @@ if (zen_not_null($action)) {
 
                             $eo->eoLog (
                                 PHP_EOL . $price_calc_method . PHP_EOL .
-                                'Added Product:' . PHP_EOL . json_encode($new_product) . PHP_EOL .
+                                'Added Product:' . PHP_EOL . $eo->eoFormatArray($new_product) . PHP_EOL .
                                 'Added Product Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
                                  $eo->eoFormatOrderTotalsForLog($order, 'Added Product Order Totals:') .
                                 'Added Product Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                                'Added Product Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups'])
+                                'Added Product Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
                             );
                         }
 
@@ -486,10 +486,10 @@ if (zen_not_null($action)) {
                     }
                 }
                 $eo->eoLog (
-                    PHP_EOL . 'Updated Products in Order:' . PHP_EOL . var_export($order->products, true) . PHP_EOL .
+                    PHP_EOL . 'Updated Products in Order:' . PHP_EOL . $eo->eoFormatArray($order->products) . PHP_EOL .
                     $eo->eoFormatOrderTotalsForLog($order, 'Updated Products Order Totals:') .
                     'Updated Products Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                    'Updated Products Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups']) . PHP_EOL
+                    'Updated Products Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups']) . PHP_EOL
                 );
             }
 
@@ -500,10 +500,10 @@ if (zen_not_null($action)) {
                     PHP_EOL . '= Processing Requested Updates to Order Totals' .
                     PHP_EOL . '============================================================' .
                     PHP_EOL . PHP_EOL .
-                    'Requested Order Totals:' . PHP_EOL . var_export($_POST['update_total'], true) . PHP_EOL .
+                    'Requested Order Totals:' . PHP_EOL . $eo->eoFormatArray($_POST['update_total']) . PHP_EOL .
                      $eo->eoFormatOrderTotalsForLog($order, 'Starting Order Totals:') .
                     'Starting Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                    'Starting Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups'])
+                    'Starting Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
                 );
 
                 $default_sort = 0;
@@ -610,7 +610,7 @@ if (zen_not_null($action)) {
                 $eo->eoLog (
                     $eo->eoFormatOrderTotalsForLog($order) . PHP_EOL .
                     'Updated Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                    'Updated Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups'])
+                    'Updated Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
                 );
 
                 // Unset some session variables after updating the order totals
@@ -632,7 +632,7 @@ if (zen_not_null($action)) {
                 'Final Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
                  $eo->eoFormatOrderTotalsForLog($order, 'Final Totals:') . 
                 'Final Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                'Final Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups'])
+                'Final Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
             );
             $zco_notifier->notify('EDIT_ORDERS_ORDER_UPDATED', $order);
 
@@ -672,7 +672,7 @@ if (zen_not_null($action)) {
                 );
 
                 // Add the product to the order
-                $eo->eoLog(PHP_EOL . 'Product Being Added:' . PHP_EOL . json_encode($new_product) . PHP_EOL);
+                $eo->eoLog(PHP_EOL . 'Product Being Added:' . PHP_EOL . $eo->eoFormatArray($new_product) . PHP_EOL);
                 eo_add_product_to_order($oID, $new_product);
 
                 // Update Subtotal and Pricing
@@ -701,10 +701,10 @@ if (zen_not_null($action)) {
                 eo_update_database_order_totals($oID);
 
                 $eo->eoLog(
-                    PHP_EOL . 'Final Products in Order:' . PHP_EOL . var_export($order->products, true) . PHP_EOL .
+                    PHP_EOL . 'Final Products in Order:' . PHP_EOL . $eo->eoFormatArray($order->products) . PHP_EOL .
                     $eo->eoFormatOrderTotalsForLog($order, 'Final Order Totals:') .
                     'Final Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                    'Final Tax Groups:' . PHP_EOL . json_encode($order->info['tax_groups']) . PHP_EOL
+                    'Final Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups']) . PHP_EOL
                 );
                 $zco_notifier->notify('EDIT_ORDERS_PRODUCT_ADDED', $order);
                 zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit'));
@@ -1114,7 +1114,7 @@ if ($action == 'edit' && $order_exists) {
             PHP_EOL . '= Creating display of Order Product #' . $orders_products_id .
             PHP_EOL . '============================================================' .
             PHP_EOL . 'Product Details:' .
-            PHP_EOL . json_encode($order->products[$i]) . PHP_EOL
+            PHP_EOL . $eo->eoFormatArray($order->products[$i]) . PHP_EOL
         ); 
 ?>
                             <tr class="dataTableRow">
@@ -1135,8 +1135,8 @@ if ($action == 'edit' && $order_exists) {
 
                 $eo->eoLog (
                     PHP_EOL . 'Options ID #' . $optionID[$j] . PHP_EOL .
-                    'Product Attribute: ' . PHP_EOL . json_encode($orders_products_attributes_id) . PHP_EOL .
-                    'Options Info:' . PHP_EOL . json_encode($optionInfo)
+                    'Product Attribute: ' . PHP_EOL . $eo->eoFormatArray($orders_products_attributes_id) . PHP_EOL .
+                    'Options Info:' . PHP_EOL . $eo->eoFormatArray($optionInfo)
                 );
 
                 switch($optionInfo['type']) {
