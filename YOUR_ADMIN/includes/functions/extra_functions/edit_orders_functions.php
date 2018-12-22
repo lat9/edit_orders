@@ -250,6 +250,25 @@ if(!function_exists('zen_get_tax_rate_from_desc')) {
 if(!function_exists('zen_get_multiple_tax_rates')) {
     function zen_get_multiple_tax_rates($class_id, $country_id, $zone_id, $tax_description=array()) {
         global $db;
+//-NOTE: This notification mimics the in-core, storefront, version starting with zc156)
+        // -----
+        // Give an observer the chance to override this function's return.
+        //
+        $rates_array = '';
+        $GLOBALS['zco_notifier']->notify(
+            'NOTIFY_ZEN_GET_MULTIPLE_TAX_RATES_OVERRIDE',
+            array(
+                'class_id' => $class_id,
+                'country_id' => $country_id,
+                'zone_id' => $zone_id,
+                'tax_description' => $tax_description
+            ),
+            $rates_array
+        );
+        if (is_array($rates_array)) {
+            return $rates_array;
+        }
+        $rates_array = array();
 
         if ( ($country_id == -1) && ($zone_id == -1) ) {
             if (isset($_SESSION['customer_id'])) {
