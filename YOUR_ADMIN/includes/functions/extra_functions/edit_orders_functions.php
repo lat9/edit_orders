@@ -1312,7 +1312,7 @@ function eo_update_database_order_totals($oID)
         // tax from the current order in preparation for its recalculation.
         //
         foreach ($order->totals as $current_total) {
-            if (in_array($current_total['class'], array('ot_subtotal', 'ot_tax', 'ot_shipping', 'ot_total'))) {
+            if (in_array($current_total['class'], array('ot_subtotal', 'ot_tax', 'ot_shipping', 'ot_total', 'ot_misc_cost'))) {
                 continue;
             }
             $current_total_tax = $eo->eoGetOrderTotalTax($oID, $current_total['class']);
@@ -1331,7 +1331,7 @@ function eo_update_database_order_totals($oID)
 
         // Process the order totals
         $order_totals = $GLOBALS['order_total_modules']->process();
-        $eo->eoLog('eo_update_database_order_totals, after process: order_total: ' . $order->info['total'] . ', order_tax: ' . $order->info['tax'] . PHP_EOL . json_encode($order_totals) . PHP_EOL . json_encode($order->totals), 'tax');
+        $eo->eoLog('eo_update_database_order_totals, after process: order_total: ' . $order->info['total'] . ', order_tax: ' . $order->info['tax'] . PHP_EOL . $eo->eoFormatArray($order_totals) . PHP_EOL . $eo->eoFormatArray($order->totals), 'tax');
         
         $GLOBALS['zco_notifier']->notify('EO_UPDATE_DATABASE_ORDER_TOTALS_MAIN', $oID);
         // Update the order totals in the database
@@ -1414,7 +1414,7 @@ function eo_update_database_order_total($oID, $order_total) {
         '\' AND `orders_id`=' . (int)$oID . $and_clause
     );
     
-    $eo->eoLog ("eo_update_database_order_total: and_clause: ($and_clause), found (" . (int)$found->EOF . "), " . var_export($order_total, true), 'tax');
+    $eo->eoLog ("eo_update_database_order_total: and_clause: ($and_clause), found (" . (int)$found->EOF . "), " . $eo->eoFormatArray($order_total), 'tax');
     if (!$found->EOF) {
         if (zen_not_null($order_total['title']) && $order_total['title'] != ':') {
             zen_db_perform(
