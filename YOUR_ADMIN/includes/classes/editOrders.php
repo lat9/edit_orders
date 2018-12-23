@@ -189,12 +189,15 @@ class editOrders extends base
     {
         global $order;
         
+//-bof-20181120-lat9-GitHub#9:  Add notifier to enable TaxJar "intercept".
         $shipping_tax = false;
         $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX', $order, $shipping_tax);
         if ($shipping_tax !== false) {
             $this->eoLog("calculateOrderShippingTax, override returning $shipping_tax.");
             return $shipping_tax;
         }
+//-eof-20181120-lat9
+
         $shipping_tax = 0;
         
         $shipping_module = $order->info['shipping_module_code'];
@@ -399,13 +402,15 @@ class editOrders extends base
     //
     public function removeTaxFromShippingCost(&$order, $module)
     {
-        //-Notifier to allow external tax-handler override.  The observer must set the order's current 'shipping_tax' to 0.
+//-bof-20181124-lat9-GitHub#11: Notifier to allow TaxJar override.  The observer must set the order's current 'shipping_tax' to 0.
         $shipping_tax_processed = false;
         $this->notify('NOTIFY_EO_REMOVE_SHIPPING_TAX', array(), $order, $shipping_tax_processed);
         if ($shipping_tax_processed === true) {
             $this->eoLog("removeTaxFromShippingCost override, shipping_cost ({$order->info['shipping_cost']}), order tax ({$order->info['tax']})", 'tax');
             return;
         }
+//-eof-20181124-lat9
+
         if (DISPLAY_PRICE_WITH_TAX == 'true' && isset($GLOBALS[$module]) && isset($GLOBALS[$module]->tax_class) && $GLOBALS[$module]->tax_class > 0) {
             $tax_class = $GLOBALS[$module]->tax_class;
             $tax_basis = isset($GLOBALS[$module]->tax_basis) ? $GLOBALS[$module]->tax_basis : STORE_SHIPPING_TAX_BASIS;
@@ -459,8 +464,9 @@ class editOrders extends base
     //
     public function eoFormatArray($a)
     {
-        return str_replace(array('},{', '","'), array("},\n{", '",\n"'), json_encode($a));
+        return str_replace(array('},{', '","'), array('},' . PHP_EOL . '{', '",' . PHP_EOL . '"'), json_encode($a));
     }
+    
     // -----
     // This class function mimics the zen_get_products_stock function, present in /includes/functions/functions_lookups.php.
     //
