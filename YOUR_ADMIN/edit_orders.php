@@ -83,6 +83,7 @@ $action = (isset($_GET['action']) ? $_GET['action'] : 'edit');
 
 if (zen_not_null($action)) {
     $eo->eoLog(PHP_EOL . date('Y-m-d H:i:s') . ", Edit Orders entered (". EO_VERSION . ") action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
+    $zco_notifier->notify('EDIT_ORDERS_START_ACTION_PROCESSING');
 
     switch ($action) {
         // Update Order
@@ -1083,7 +1084,10 @@ if ($action == 'edit' && $order_exists) {
     } else {
         $payment_calc_choice = PRODUCT_PRICES_CALC_AUTO;
     }
-    echo zen_image_submit('button_update.gif', IMAGE_UPDATE, 'name="update_button"') . "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice"; 
+
+    $additional_inputs = '';
+    $zco_notifier->notify('EDIT_ORDERS_FORM_ADDITIONAL_INPUTS', $order, $additional_inputs);
+    echo zen_image_submit('button_update.gif', IMAGE_UPDATE, 'name="update_button"') . "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice$additional_inputs";
 //-eof-20180323-lat9
 ?>
                         </td>
