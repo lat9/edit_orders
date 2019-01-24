@@ -337,8 +337,11 @@ if (zen_not_null($action)) {
                 // applied to start afresh.
                 //
                 if (isset($_POST['reset_totals'])) {
-                    $order->info['tax'] = $order->info['shipping_tax'] = $order->info['shipping_cost'] = $order->info['total'] = 0;
+                    $order->info['tax'] = $order->info['shipping_tax'] = $order->info['shipping_cost'] = $order->info['total'] = $order->info['subtotal'] = 0;
                     $order->totals = array();
+                    foreach ($order->info['tax_groups'] as $key => $value) {
+                        $order->info['tax_groups'][$key] = 0;
+                    }
                 }
                 
                 $_POST['update_products'] = zen_db_prepare_input($_POST['update_products']);
@@ -383,8 +386,10 @@ if (zen_not_null($action)) {
                         // Remove the product from the order
                         eo_remove_product_from_order($oID, $orders_products_id);
 
-                        // Update Subtotal and Pricing
-                        eo_update_order_subtotal($oID, $old_product, false);
+                        // Update Subtotal and Pricing, only if not resetting totals.
+                        if (empty($_POST['reset_totals'])) {
+                            eo_update_order_subtotal($oID, $old_product, false);
+                        }
 
                         $eo->eoLog (
                             PHP_EOL . 'Removed Product Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
@@ -1278,12 +1283,19 @@ if ($action == 'edit' && $order_exists) {
             }
             unset($optionID, $optionInfo);
         } 
+        if (DISPLAY_PRICE_WITH_TAX == 'true') {
+            $final_price = $order->products[$i]['final_price'];
+            $onetime_charges = $order->products[$i]['onetime_charges'];
+        } else {
+            $final_price = $eo->eoRoundCurrencyValue($order->products[$i]['final_price']);
+            $onetime_charges = $eo->eoRoundCurrencyValue($order->products[$i]['onetime_charges']);
+        }
 ?>
                                 </td>
                                 <td class="dataTableContent" valign="top"><input name="update_products[<?php echo $orders_products_id; ?>][model]" size="55" value="<?php echo $order->products[$i]['model']; ?>" /></td>
                                 <td class="dataTableContent" align="right" valign="top"><input class="amount" name="update_products[<?php echo $orders_products_id; ?>][tax]" size="3" value="<?php echo zen_display_tax_value($order->products[$i]['tax']); ?>" />&nbsp;%</td>
-                                <td class="dataTableContent" align="right" valign="top"><input class="amount" name="update_products[<?php echo $orders_products_id; ?>][final_price]" size="5" value="<?php echo number_format($order->products[$i]['final_price'], 2, '.', ''); ?>" /></td>
-                                <td class="dataTableContent" align="right" valign="top"><?php echo $currencies->format($order->products[$i]['final_price'] * $order->products[$i]['qty'] + $order->products[$i]['onetime_charges'], true, $order->info['currency'], $order->info['currency_value']); ?></td>
+                                <td class="dataTableContent" align="right" valign="top"><input class="amount" name="update_products[<?php echo $orders_products_id; ?>][final_price]" size="5" value="<?php echo $final_price; ?>" /></td>
+                                <td class="dataTableContent" align="right" valign="top"><?php echo $currencies->format($final_price * $order->products[$i]['qty'] + $onetime_charges, true, $order->info['currency'], $order->info['currency_value']); ?></td>
                             </tr>
 <?php
     } 
@@ -1306,6 +1318,9 @@ if ($action == 'edit' && $order_exists) {
         $order_total_info = eo_get_order_total_by_order((int)$oID, $total['class']);
         $details = array_shift ($order_total_info);
         switch($total['class']) {
+            case 'ot_purchaseorder':
+                break;
+
             // Automatically generated fields, those should never be included
             case 'ot_subtotal':
             case 'ot_total':

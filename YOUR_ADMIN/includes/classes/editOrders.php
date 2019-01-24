@@ -1,7 +1,7 @@
 <?php
 // -----
 // Part of the Edit Orders plugin (v4.1.6 and later) by lat9 (lat9@vinosdefrutastropicales.com).
-// Copyright (C) 2016-2018, Vinos de Frutas Tropicales
+// Copyright (C) 2016-2019, Vinos de Frutas Tropicales
 //
 if (!defined('EO_DEBUG_TAXES_ONLY')) define('EO_DEBUG_TAXES_ONLY', 'false');  //-Either 'true' or 'false'
 class editOrders extends base
@@ -189,14 +189,12 @@ class editOrders extends base
     {
         global $order;
         
-//-bof-20181120-lat9-GitHub#9:  Add notifier to enable TaxJar "intercept".
         $shipping_tax = false;
         $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX', $order, $shipping_tax);
         if ($shipping_tax !== false) {
             $this->eoLog("calculateOrderShippingTax, override returning $shipping_tax.");
             return $shipping_tax;
         }
-//-eof-20181120-lat9
 
         $shipping_tax = 0;
         
@@ -224,13 +222,12 @@ class editOrders extends base
     {
         global $order;
 
-        $shown_price = $this->eoRoundCurrencyValue($product['final_price'] * $product['qty']);
-        $onetime_charges = $this->eoRoundCurrencyValue($product['onetime_charges']);
-        if (DISPLAY_PRICE_WITH_TAX == 'true') {
-            $shown_price += $this->eoRoundCurrencyValue(zen_calculate_tax($shown_price, $product['tax']));
-            $onetime_charges += $this->eoRoundCurrencyValue(zen_calculate_tax($product['onetime_charges'], $product['tax']));
-        }
-        $shown_price += $onetime_charges;
+        $products_tax = $product['tax'];
+        $product_final_price = $product['final_price'];
+        $product_onetime = $product['onetime_charges'];
+        $product_qty = $product['qty'];
+        $shown_price = $this->eoRoundCurrencyValue(zen_add_tax($product_final_price, $products_tax)) * $product_qty;
+        $shown_price += $this->eoRoundCurrencyValue(zen_add_tax($product_onetime, $products_tax));
 
         $query = false;
         if (isset($product['tax_description'])) {
@@ -254,11 +251,12 @@ class editOrders extends base
         $totalTaxAdd = 0;
         if (zen_not_null($products_tax_description)) {
             $taxAdd = 0;
-            // Done this way to ensure we calculate
+
             if (DISPLAY_PRICE_WITH_TAX == 'true') {
-                $taxAdd = $shown_price - ($shown_price / (($product['tax'] < 10) ? "1.0" . str_replace('.', '', $product['tax']) : "1." . str_replace('.', '', $product['tax'])));
+                $taxAdd = $this->eoRoundCurrencyValue($shown_price / (100 + $products_tax) * $products_tax);
             } else {
-                $taxAdd = zen_calculate_tax($shown_price, $product['tax']);
+                $taxAdd = $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue($product_final_price, $decimals) * $product_qty, $products_tax));
+                $taxAdd += $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue($product_onetime, $decimals), $products_tax));
             }
             $taxAdd = $this->eoRoundCurrencyValue($taxAdd);
             if (isset($order->info['tax_groups'][$products_tax_description])) {
@@ -402,14 +400,12 @@ class editOrders extends base
     //
     public function removeTaxFromShippingCost(&$order, $module)
     {
-//-bof-20181124-lat9-GitHub#11: Notifier to allow TaxJar override.  The observer must set the order's current 'shipping_tax' to 0.
         $shipping_tax_processed = false;
         $this->notify('NOTIFY_EO_REMOVE_SHIPPING_TAX', array(), $order, $shipping_tax_processed);
         if ($shipping_tax_processed === true) {
             $this->eoLog("removeTaxFromShippingCost override, shipping_cost ({$order->info['shipping_cost']}), order tax ({$order->info['tax']})", 'tax');
             return;
         }
-//-eof-20181124-lat9
 
         if (DISPLAY_PRICE_WITH_TAX == 'true' && isset($GLOBALS[$module]) && isset($GLOBALS[$module]->tax_class) && $GLOBALS[$module]->tax_class > 0) {
             $tax_class = $GLOBALS[$module]->tax_class;

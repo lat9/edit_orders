@@ -1045,20 +1045,23 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
             'AND `class`=\'ot_subtotal\''
         );
         if (!$query->EOF) {
-            $order->info['subtotal'] = $eo->eoRoundCurrencyValue($query->fields['value']);
+            $order->info['subtotal'] = $query->fields['value'];
         }
     }
     
     $eo->eoLog ("eo_update_order_subtotal ($add), taxes on entry. " . $eo->eoFormatTaxInfoForLog(true), 'tax');
 
     // Determine the product price
-    $shown_price = $eo->eoRoundCurrencyValue($product['final_price'] * $product['qty']);
-    $onetime_charges = $eo->eoRoundCurrencyValue($product['onetime_charges']);
+    $final_price = $product['final_price'];
+    $products_tax = $product['tax'];
+    $qty = $product['qty'];
+    $onetime_charges = $product['onetime_charges'];
+    $shown_price = $eo->eoRoundCurrencyValue(zen_add_tax($final_price, $products_tax)) * $qty;
+    $shown_price += $eo->eoRoundCurrencyValue(zen_add_tax($onetime_charges, $products_tax));
     if(DISPLAY_PRICE_WITH_TAX == 'true') {
         $shown_price += $eo->eoRoundCurrencyValue(zen_calculate_tax($shown_price, $product['tax']));
         $onetime_charges += $eo->eoRoundCurrencyValue(zen_calculate_tax($onetime_charges, $product['tax']));
     }
-    $shown_price += $onetime_charges;
 
     $starting_totals = array (
         'subtotal' => $order->info['subtotal'],
@@ -1069,14 +1072,14 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
     // Update the order information
     if ($add) {
         $order->info['subtotal'] += $shown_price;
-        $order->info['tax'] += $eo->eoRoundCurrencyValue($eo->getProductTaxes($product, $shown_price, $add));
+        $order->info['tax'] += $eo->getProductTaxes($product, $shown_price, $add);
     } else {
         $order->info['subtotal'] -= $shown_price;
-        $order->info['tax'] -= $eo->eoRoundCurrencyValue($eo->getProductTaxes($product, $shown_price, $add));
+        $order->info['tax'] -= $eo->getProductTaxes($product, $shown_price, $add);
     }
     unset($shown_price);
     
-    $order->info['shipping_cost'] = $eo->eoRoundCurrencyValue($order->info['shipping_cost']);
+    $order->info['shipping_cost'] = $order->info['shipping_cost'];
 
     // Update the final total to include tax if not already tax-inc
     if (DISPLAY_PRICE_WITH_TAX == 'true') {
@@ -1534,7 +1537,7 @@ function eo_get_available_order_totals_class_values($oID)
     $order_totals = new order_total();
 
     foreach ($module_list as $class) {
-        if ($class == 'ot_group_pricing' || $class == 'ot_cod_fee' || $class == 'ot_tax' || $class == 'ot_loworderfee') {
+        if ($class == 'ot_group_pricing' || $class == 'ot_cod_fee' || $class == 'ot_tax' || $class == 'ot_loworderfee' || $class == 'ot_purchaseorder') {
             continue;
         }
         $retval[] = array(
@@ -1662,6 +1665,11 @@ function eo_checks_and_warnings() {
         zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit'));
     }
     unset($reload);
+
+    // -----
+    // Issue a notification, allowing other add-ons to add any warnings they might have.
+    //
+    $GLOBALS['zco_notifier']->notify('EDIT_ORDERS_CHECKS_AND_WARNINGS');
 
     // Warn user about subtotal calculations
     if (DISPLAY_PRICE_WITH_TAX_ADMIN !== DISPLAY_PRICE_WITH_TAX) {
