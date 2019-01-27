@@ -1074,8 +1074,6 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
         $order->info['tax'] -= $eo->getProductTaxes($product, $shown_price, $add);
     }
     unset($shown_price);
-    
-    $order->info['shipping_cost'] = $order->info['shipping_cost'];
 
     // Update the final total to include tax if not already tax-inc
     if (DISPLAY_PRICE_WITH_TAX == 'true') {
@@ -1662,6 +1660,16 @@ function eo_checks_and_warnings() {
     }
     unset($reload);
 
+    // -----
+    // Check to be sure that the admin's zen_add_tax function has been updated to remove
+    // the unwanted pre-rounding that affects EO's calculations, denying
+    // the usage of Edit Orders until the issue is resolved.
+    //
+    $value = zen_add_tax(5.1111, 0);
+    if ($value != 5.1111) {
+        $messageStack->add_session(ERROR_ZEN_ADD_TAX_ROUNDING, 'error');
+        zen_redirect(zen_href_link(FILENAME_ORDERS, (isset($_GET['oID'])) ? ('action=edit&amp;oID=' . (int)$_GET['oID']) : ''));
+    }
     // -----
     // Issue a notification, allowing other add-ons to add any warnings they might have.
     //

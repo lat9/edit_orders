@@ -22,6 +22,8 @@ define('TABLE_HEADING_PRODUCTS', 'Products');
 define('TABLE_HEADING_TAX', 'Tax');
 define('TABLE_HEADING_TOTAL', 'Total');
 define('TABLE_HEADING_UNIT_PRICE', 'Unit Price');
+define('TABLE_HEADING_UNIT_PRICE_NET', 'Unit Price (Net)');
+define('TABLE_HEADING_UNIT_PRICE_GROSS', 'Unit Price (Gross)');
 define('TABLE_HEADING_TOTAL_PRICE', 'Total Price');
 define('TABLE_HEADING_CUSTOMER_NOTIFIED', 'Customer Notified');
 define('TABLE_HEADING_DATE_ADDED', 'Date Added');
@@ -77,6 +79,8 @@ define('WARNING_ORDER_QTY_OVER_MAX', 'Warning: The quantity requested exceeded t
 define('WARNING_ORDER_COUPON_BAD', 'Warning: The coupon code was not found in the database. Note: the title / text of a coupon is usually formatted like &quot;Discount Coupon : coupon_code :&quot;. ');
 define('WARNING_INSUFFICIENT_PRODUCT_STOCK', 'Insufficient stock for <em>%1$s</em>, requested %2$s with %3$s available.');
 
+define('ERROR_ZEN_ADD_TAX_ROUNDING', "The store's <code>zen_add_tax</code> function must be updated to enable <em>Edit Orders</em>' use.");
+
 define ('ERROR_ZC155_NO_SANITIZER', 'You must install the Zen Cart 1.5.5 <em>AdminRequestSanitizer</em> class before you can use Edit Orders on this site.');
 // Product & Attribute Display
 define('TEXT_ATTRIBUTES_ONE_TIME_CHARGE', 'One Time Charges: &nbsp;&nbsp;');
@@ -127,3 +131,4 @@ define('RESET_TOTALS', 'Reset totals prior to update? ');
 define('PAYMENT_CALC_MANUAL', 'Product prices, entered manually? ');
 define('PRODUCT_PRICES_CALC_AUTO', ' <b>Note:</b> Pricing for products will be <em>automatically</em> calculated.');
 define('PRODUCT_PRICES_CALC_MANUAL', ' <b>Note:</b> Pricing for products will use the value(s) that you enter.');
+define('EO_TAX_PERCENT', '%');

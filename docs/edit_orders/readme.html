@@ -87,7 +87,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
 
 <body>
   <h1 id="title">Edit Orders for Zen Cart&reg;</h1>
-  <p>Version 4.3.6.  Copyright &copy; 2015-2018, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
+  <p>Version 4.3.6.  Copyright &copy; 2015-2019, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
   <p>Current Support Thread on the Zen Cart forums: <a href="https://www.zen-cart.com/showthread.php?200407" target="_blank">https://www.zen-cart.com/showthread.php?200407</a></p>
   
   <p><strong>Usage Notes:</strong></p>
@@ -454,13 +454,16 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.3.6, 2018-12-22 (lat9)<ul>
+          <li>v4.3.6, 2019-01-27 (lat9)<ul>
             <li>CHANGE: Additional notifications for external tax-handlers.<li>
             <li>BUGFIX: Remove doubly-defined constant.</li>
             <li>BUGFIX: Correct various PHP warnings.</li>
             <li>BUGFIX: Remove multiple trailing colons (':') from the shipping-method's title on an order-update.</li>
             <li>BUGFIX: Correct 'ot_misc_cost' taxable issues.</li>
             <li>CHANGE: Update array-formatting for eo-logs.</li>
+            <li>BUGFIX: Correct rounding errors.</li>
+            <li>CHANGE: Move tax-rate percentage symbol to language file.</li>
+            <li>CHANGE: Provide net/gross jQuery calculations for stores that display prices with tax.</li>
             <li>The following files were changed:<ol>
               <li>/includes/languages/english/modules/order_total/ot_misc_cost.php</li>
               <li>/includes/modules/order_total/ot_misc_cost.php</li>

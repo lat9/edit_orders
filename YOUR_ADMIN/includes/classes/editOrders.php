@@ -163,7 +163,7 @@ class editOrders extends base
 
                 // Load the shipping class into the globals
                 require_once DIR_FS_CATALOG . DIR_WS_CLASSES . 'shipping.php';
-                $shipping_modules = new shipping($_SESSION['shipping']);
+                $shipping_modules = new shipping();
                 
                 // -----
                 // Determine whether the order's shipping-method is taxed and
@@ -190,32 +190,33 @@ class editOrders extends base
         global $order;
         
         $shipping_tax = false;
-        $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX', $order, $shipping_tax);
-        if ($shipping_tax !== false) {
-            $this->eoLog("calculateOrderShippingTax, override returning $shipping_tax.");
+        $shipping_tax_rate = false;
+        $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX', $order, $shipping_tax, $shipping_tax_rate);
+        if ($shipping_tax !== false && $shipping_tax_rate !== false) {
+            $this->eoLog("calculateOrderShippingTax, override returning $shipping_tax, rate = $shipping_tax_rate.");
+            $this->shipping_tax_rate = $shipping_tax_rate;
             return $shipping_tax;
         }
 
         $shipping_tax = 0;
-        
+        $tax_rate = 0;
         $shipping_module = $order->info['shipping_module_code'];
-        $shipping_tax_class_name = 'MODULE_SHIPPING_' . strtoupper($shipping_module) . '_TAX_CLASS';
-        $shipping_tax_basis_name = 'MODULE_SHIPPING_' . strtoupper($shipping_module) . '_TAX_BASIS';
-
-        $shipping_tax_class = (defined($shipping_tax_class_name)) ? constant($shipping_tax_class_name) : null;
-        $shipping_tax_basis = (defined($shipping_tax_basis_name)) ? constant($shipping_tax_basis_name) : null;
-        if ($shipping_tax_class === null || $shipping_tax_basis === null) {
-            $this->eoLog("calculateOrderShippingTax, $shipping_module does not provide tax-information.");
-        } else {
+               
+        if (!empty($GLOBALS[$shipping_module]) && is_object($GLOBALS[$shipping_module]) && !empty($GLOBALS[$shipping_module]->tax_class)) {
             $tax_location = zen_get_tax_locations();
-            $tax_rate = zen_get_tax_rate($shipping_tax_class, $tax_location['country_id'], $tax_location['zone_id']);
+            $tax_rate = zen_get_tax_rate($GLOBALS[$shipping_module]->tax_class, $tax_location['country_id'], $tax_location['zone_id']);
             if ($tax_rate != 0) {
                 $shipping_tax = $this->eoRoundCurrencyValue(zen_calculate_tax($order->info['shipping_cost'], $tax_rate));
             }
         }
+        $this->shipping_tax_rate = $tax_rate;
         
-        $this->eoLog("calculateOrderShippingTax returning $shipping_tax.");
+        $this->eoLog("calculateOrderShippingTax returning $shipping_tax, rate = $tax_rate.");
         return $shipping_tax;
+    }
+    public function eoGetShippingTaxRate()
+    {
+        return (isset($this->shipping_tax_rate)) ? $this->shipping_tax_rate : 0;
     }
     
     public function getProductTaxes($product, $shown_price = -1, $add = true)

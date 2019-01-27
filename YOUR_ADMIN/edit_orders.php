@@ -752,19 +752,26 @@ if ($action == 'edit' && isset($_GET['oID'])) {
 <link rel="stylesheet" type="text/css" href="includes/stylesheet.css">
 <link rel="stylesheet" type="text/css" href="includes/edit_orders.css">
 <link rel="stylesheet" type="text/css" href="includes/cssjsmenuhover.css" media="all" id="hoverJS">
+<?php
+$zc_version = PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR;
+if ($zc_version < '1.5.5') {
+?>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+<?php
+}
+?>
 <script type="text/javascript" src="includes/menu.js"></script>
 <script type="text/javascript" src="includes/general.js"></script>
 <script type="text/javascript">
   <!--
-  function init()
-  {
+function init()
+{
     cssjsmenu('navbar');
-    if (document.getElementById)
-    {
-      var kill = document.getElementById('hoverJS');
-      kill.disabled = true;
+    if (document.getElementById) {
+        var kill = document.getElementById('hoverJS');
+        kill.disabled = true;
     }
-  }
+}
   // -->
 </script>
 </head>
@@ -1107,11 +1114,25 @@ if ($action == 'edit' && $order_exists) {
                     <tr>
                         <td><table border="0" width="100%" cellspacing="0" cellpadding="2">
                             <tr class="dataTableHeadingRow">
-                                <td class="dataTableHeadingContent" colspan="2" width="35%"><?php echo TABLE_HEADING_PRODUCTS; ?></td>
-                                <td class="dataTableHeadingContent" width="35%"><?php echo TABLE_HEADING_PRODUCTS_MODEL; ?></td>
-                                <td class="dataTableHeadingContent" align="right" width="10%"><?php echo TABLE_HEADING_TAX; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-                                <td class="dataTableHeadingContent" align="right" width="10%"><?php echo TABLE_HEADING_UNIT_PRICE; ?></td>
-                                <td class="dataTableHeadingContent" align="right" width="10%"><?php echo TABLE_HEADING_TOTAL_PRICE; ?></td>
+                                <td class="dataTableHeadingContent" colspan="2"><?php echo TABLE_HEADING_PRODUCTS; ?></td>
+                                <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_PRODUCTS_MODEL; ?></td>
+                                <td class="dataTableHeadingContent" align="right"><?php echo TABLE_HEADING_TAX; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+<?php
+    // -----
+    // Starting with v4.3.6, show both the net and gross unit prices when the store is configured to display prices with tax.
+    //
+    if (DISPLAY_PRICE_WITH_TAX == 'true') {
+?>
+                                <td class="dataTableHeadingContent" align="right"><?php echo TABLE_HEADING_UNIT_PRICE_NET; ?></td>
+                                <td class="dataTableHeadingContent" align="right"><?php echo TABLE_HEADING_UNIT_PRICE_GROSS; ?></td>
+<?php
+    } else {
+?>
+                                <td class="dataTableHeadingContent" align="right"><?php echo TABLE_HEADING_UNIT_PRICE; ?></td>
+<?php
+    }
+?>
+                                <td class="dataTableHeadingContent" align="right"><?php echo TABLE_HEADING_TOTAL_PRICE; ?></td>
                             </tr>
 <!-- Begin Products Listings Block -->
 <?php
@@ -1290,11 +1311,23 @@ if ($action == 'edit' && $order_exists) {
             $final_price = $eo->eoRoundCurrencyValue($order->products[$i]['final_price']);
             $onetime_charges = $eo->eoRoundCurrencyValue($order->products[$i]['onetime_charges']);
         }
+        $data_index = " data-opi=\"$orders_products_id\"";
 ?>
                                 </td>
                                 <td class="dataTableContent" valign="top"><input name="update_products[<?php echo $orders_products_id; ?>][model]" size="55" value="<?php echo $order->products[$i]['model']; ?>" /></td>
-                                <td class="dataTableContent" align="right" valign="top"><input class="amount" name="update_products[<?php echo $orders_products_id; ?>][tax]" size="3" value="<?php echo zen_display_tax_value($order->products[$i]['tax']); ?>" />&nbsp;%</td>
-                                <td class="dataTableContent" align="right" valign="top"><input class="amount" name="update_products[<?php echo $orders_products_id; ?>][final_price]" size="5" value="<?php echo $final_price; ?>" /></td>
+                                <td class="dataTableContent" align="right" valign="top"><input class="amount p-t" name="update_products[<?php echo $orders_products_id; ?>][tax]" size="3" value="<?php echo zen_display_tax_value($order->products[$i]['tax']); ?>"<?php echo $data_index; ?> />&nbsp;<?php echo EO_TAX_PERCENT; ?></td>
+                                <td class="dataTableContent" align="right" valign="top"><input class="amount p-n" name="update_products[<?php echo $orders_products_id; ?>][final_price]" size="5" value="<?php echo $final_price; ?>"<?php echo $data_index; ?> /></td>
+<?php
+        // -----
+        // Starting with EO v4.3.6, both the net and gross prices are displayed when the store displays prices with tax.
+        //
+        if (DISPLAY_PRICE_WITH_TAX == 'true') {
+            $gross_price = zen_add_tax($final_price, $order->products[$i]['tax']);
+?>
+                                <td class="dataTableContent" align="right" valign="top"><input class="amount p-g" name="update_products[<?php echo $orders_products_id; ?>][gross]" size="5" value="<?php echo $gross_price; ?>"<?php echo $data_index; ?> /></td>
+<?php
+        }
+?>
                                 <td class="dataTableContent" align="right" valign="top"><?php echo $currencies->format($final_price * $order->products[$i]['qty'] + $onetime_charges, true, $order->info['currency'], $order->info['currency_value']); ?></td>
                             </tr>
 <?php
@@ -1304,17 +1337,26 @@ if ($action == 'edit' && $order_exists) {
 
 <!-- Begin Order Total Block -->
                             <tr>
-                                <td align="right" colspan="6"><table border="0" cellspacing="0" cellpadding="2" width="100%">
-                                    <tr>
-                                        <td valign="top"><br /><?php echo '<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . 'oID=' . $oID . '&amp;action=add_prdct') . '">' . zen_image_button('button_add_product.gif', TEXT_ADD_NEW_PRODUCT) . '</a>'; ?></td>
-                                        <td align="right"><table border="0" cellspacing="0" cellpadding="2">
 <?php
+    $eo_href_link = zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$oID&amp;action=add_prdct");
+    $eo_add_product_button = zen_image_button('button_add_product.gif', TEXT_ADD_NEW_PRODUCT);
+    $eo_add_button_link = '<a href="' . $eo_href_link . '">' . $eo_add_product_button . '</a>';
+
+    $columns = ((DISPLAY_PRICE_WITH_TAX == 'true') ? 7 : 6) - 2;;
+
     // Iterate over the order totals.
-    for ($i=0, $index=0, $n=count($order->totals); $i<$n; $i++, $index++) { 
+    for ($i = 0, $index = 0, $n = count($order->totals); $i < $n; $i++, $index++) {
+        $update_total = "update_total[$index]";
+        $update_total_code = $update_total . '[code]';
+        $update_total_title = $update_total . '[title]';
+        $update_total_value = $update_total . '[value]';
 ?>
-                                            <tr>
+                            <tr>
+                                <td class="dataTableContent" colspan="2"><?php echo ($i == 0) ? $eo_add_button_link : '&nbsp;'; ?></td>
 <?php
         $total = $order->totals[$i];
+        $trimmed_title = strip_tags(trim($total['title']));
+        
         $order_total_info = eo_get_order_total_by_order((int)$oID, $total['class']);
         $details = array_shift ($order_total_info);
         switch($total['class']) {
@@ -1327,9 +1369,9 @@ if ($action == 'edit' && $order_exists) {
             case 'ot_tax':
             case 'ot_local_sales_taxes': 
 ?>
-                                                <td align="right">&nbsp;</td>
-                                                <td class="main" align="right"><strong><?php echo $total['title']; ?></strong></td>
-                                                <td class="main" align="right"><strong><?php echo $total['text']; ?></strong></td>
+                                <td colspan="<?php echo $columns - 2; ?>">&nbsp;</td>
+                                <td class="main" align="right"><strong><?php echo $total['title']; ?></strong></td>
+                                <td class="main" align="right"><strong><?php echo $total['text']; ?></strong></td>
 <?php
                 $index--;
                 break;
@@ -1339,9 +1381,9 @@ if ($action == 'edit' && $order_exists) {
             case 'ot_cod_fee':
             case 'ot_loworderfee': 
 ?>
-                                                <td align="right"><?php echo zen_draw_hidden_field('update_total[' . $index . '][code]', $total['class']); ?></td>
-                                                <td align="right" class="main"><?php echo strip_tags($total['title']) . zen_draw_hidden_field('update_total[' . $index . '][title]', strip_tags($total['title'])); ?></td>
-                                                <td align="right" class="main"><?php echo $total['text'] . zen_draw_hidden_field('update_total[' . $index . '][value]', $details['value']); ?></td>
+                                <td colspan="<?php echo $columns - 2; ?>"><?php echo zen_draw_hidden_field($update_total_code, $total['class']); ?></td>
+                                <td align="right" class="main"><?php echo strip_tags($total['title']) . zen_draw_hidden_field($update_total_title, $trimmed_title); ?></td>
+                                <td align="right" class="main"><?php echo $total['text'] . zen_draw_hidden_field($update_total_value, $details['value']); ?></td>
 <?php
                 break;
 
@@ -1349,67 +1391,76 @@ if ($action == 'edit' && $order_exists) {
             // for order total modules which handle the value based upon another condition
             case 'ot_coupon': 
 ?>
-                                                <td align="right"><?php echo zen_draw_hidden_field('update_total[' . $index . '][code]', $total['class']); ?></td>
-                                                <td align="right" class="smallText"><?php echo zen_draw_input_field('update_total[' . $index . '][title]', strip_tags(trim($total['title'])), 'class="amount" size="' . strlen(strip_tags(trim($total['title']))) . '"'); ?></td>
-                                                <td align="right" class="main"><?php echo $total['text'] . zen_draw_hidden_field('update_total[' . $index . '][value]', $details['value']); ?></td>
+                                <td colspan="<?php echo $columns - 2; ?>"><?php echo zen_draw_hidden_field($update_total_code, $total['class']); ?></td>
+                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount" size="' . strlen($trimmed_title) . '"'); ?></td>
+                                <td align="right" class="main"><?php echo $total['text'] . zen_draw_hidden_field($update_total_value, $details['value']); ?></td>
 <?php
                 break;
 
-            case 'ot_shipping': 
+            case 'ot_shipping':
+                $shipping_tax_rate = $eo->eoGetShippingTaxRate();
 ?>
-                                                <td align="right"><?php echo zen_draw_hidden_field('update_total[' . $index . '][code]', $total['class']) . zen_draw_pull_down_menu('update_total[' . $index . '][shipping_module]', eo_get_available_shipping_modules(), $order->info['shipping_module_code']); ?></td>
-                                                <td align="right" class="smallText"><?php echo zen_draw_input_field('update_total[' . $index . '][title]', strip_tags(trim($total['title'])), 'class="amount" size="' . strlen(strip_tags(trim($total['title']))) . '"'); ?></td>
-                                                <td align="right" class="smallText"><?php echo zen_draw_input_field('update_total[' . $index . '][value]', $details['value'], 'class="amount" size="6"'); ?></td>
+                                <td align="right"><?php echo zen_draw_hidden_field($update_total_code, $total['class']) . zen_draw_pull_down_menu($update_total . '[shipping_module]', eo_get_available_shipping_modules(), $order->info['shipping_module_code']) . '&nbsp;&nbsp;' . zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount" size="' . strlen($trimmed_title) . '"'); ?></td>
+                                
+                                <td align="right"><?php echo zen_draw_input_field('shipping_tax', $shipping_tax_rate, 'class="amount" size="3" id="s-t"'); ?>&nbsp;<?php echo EO_TAX_PERCENT; ?></td>
+<?php
+                if (DISPLAY_PRICE_WITH_TAX) {
+                    $shipping_net = $details['value'] / (1 + ($shipping_tax_rate / 100));
+?>
+                                <td align="right"><?php echo zen_draw_input_field($update_total_value, $shipping_net, 'class="amount" size="6" id="s-n"'); ?></td>
+<?php
+                    $update_total_value = 'shipping_gross';
+                }
+?>
+                                <td>&nbsp;</td>
+                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" size="6" id="s-g"'); ?></td>
 <?php
                 break;
 
             case 'ot_gv':
             case 'ot_voucher': 
 ?>
-                                                <td align="right"><?php echo zen_draw_hidden_field('update_total[' . $index . '][code]', $total['class']); ?></td>
-                                                <td align="right" class="smallText"><?php echo zen_draw_input_field('update_total[' . $index . '][title]', strip_tags(trim($total['title'])), 'class="amount" size="' . strlen(strip_tags(trim($total['title']))) . '"'); ?></td>
-                                                <td align="right" class="smallText">
+                                <td colspan="<?php echo $columns - 2; ?>"><?php echo zen_draw_hidden_field($update_total_code, $total['class']); ?></td>
+                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount" size="' . strlen($trimmed_title) . '"'); ?></td>
+                                <td align="right" class="smallText">
 <?php                 
                 if ($details['value'] > 0) {
                     $details['value'] *= -1;
                 }
-                echo '<input class="amount" size="6" name="update_total[' . $index . '][value]" value="' . $details['value'], '" />'; 
+                echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" size="6"');
 ?>
-                                                </td>
+                                </td>
 <?php
                 break;
 
             default: 
 ?>
-                                                <td align="right"><?php echo zen_draw_hidden_field('update_total[' . $index . '][code]', $total['class']); ?></td>
-                                                <td align="right" class="smallText"><?php echo zen_draw_input_field('update_total[' . $index . '][title]', strip_tags(trim($total['title'])), 'class="amount" size="' . strlen(strip_tags(trim($total['title']))) . '"'); ?></td>
-                                                <td align="right" class="smallText"><?php echo zen_draw_input_field('update_total[' . $index . '][value]', $details['value'], 'class="amount" size="6"'); ?></td>
+                                <td colspan="<?php echo $columns - 2; ?>"><?php echo zen_draw_hidden_field($update_total_code, $total['class']); ?></td>
+                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount" size="' . strlen($trimmed_title) . '"'); ?></td>
+                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" size="6"'); ?></td>
 <?php
                 break;
         } 
 ?>
-                                            </tr>
+                            </tr>
 <?php
     }
     
     if (count(eo_get_available_order_totals_class_values($oID)) > 0) { 
 ?>
-                                            <tr>
-                                                <td align="right" class="smallText"><?php echo TEXT_ADD_ORDER_TOTAL . zen_draw_pull_down_menu('update_total[' . $index . '][code]', eo_get_available_order_totals_class_values($oID), '', 'id="update_total_code"'); ?></td>
-                                                <td align="right" class="smallText"><?php echo zen_draw_input_field('update_total[' . $index . '][title]', '', 'class="amount" style="width: 100%"'); ?></td>
-                                                <td align="right" class="smallText"><?php echo zen_draw_input_field('update_total[' . $index . '][value]', '', 'class="amount" size="6"'); ?></td>
-                                            </tr>
-                                            <tr>
-                                                <td align="left" colspan="3" class="smallText" id="update_total_shipping" style="display: none"><?php echo TEXT_CHOOSE_SHIPPING_MODULE . zen_draw_pull_down_menu('update_total[' . $index . '][shipping_module]', eo_get_available_shipping_modules()); ?></td>
-                                            </tr>
+                            <tr>
+                                <td colspan="2">&nbsp;</td>
+                                <td colspan="<?php echo $columns - 2; ?>" align="right" class="smallText"><?php echo TEXT_ADD_ORDER_TOTAL . zen_draw_pull_down_menu($update_total_code, eo_get_available_order_totals_class_values($oID), '', 'id="update_total_code"'); ?></td>
+                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_title, '', 'class="amount" style="width: 100%"'); ?></td>
+                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_value, '', 'class="amount" size="6"'); ?></td>
+                            </tr>
+                            <tr>
+                                <td align="left" colspan="<?php echo $columns + 2; ?>" class="smallText" id="update_total_shipping" style="display: none"><?php echo TEXT_CHOOSE_SHIPPING_MODULE . zen_draw_pull_down_menu('update_total[' . $index . '][shipping_module]', eo_get_available_shipping_modules()); ?></td>
+                            </tr>
 <?php
     }
     unset($i, $index, $n, $total, $details); 
 ?>
-                                        </table></td>
-                                    </tr>
-                                </table></td>
-                            </tr>
 <!-- End Order Total Block -->
 
                         </table></td>
@@ -1928,7 +1979,89 @@ if ($action == "add_prdct") {
     // -->
 </script>
 <!-- body_eof //-->
+<?php
+if (DISPLAY_PRICE_WITH_TAX == 'true') {
+?>
+<script>
+$(document).ready(function() {
+    $('.p-n, .p-t').on('keyup', function(e) {
+        var opi = $(this).attr('data-opi');
+        updateProductGross(opi);
+    });
+    
+    $('.p-g').on('keyup', function(e) {
+        var opi = $(this).attr('data-opi');
+        updateProductNet(opi);
+    });
 
+    function doRound(x, places) 
+    {
+        return Math.round(x * Math.pow(10, places)) / Math.pow(10, places);
+    }
+
+    function getProductTaxRate(opi) 
+    {
+        return parseInt($('input[name="update_products['+opi+'][tax]"]').val());
+    }
+
+    function updateProductGross(opi) 
+    {
+        var taxRate = getProductTaxRate(opi);
+        var gross = $('input[name="update_products['+opi+'][final_price]"]').val();
+
+        if (taxRate > 0) {
+            gross = gross * ((taxRate / 100) + 1);
+        }
+        $('input[name="update_products['+opi+'][gross]"]').val(doRound(gross, 4));
+    }
+
+    function updateProductNet(opi) 
+    {
+        var taxRate = getProductTaxRate(opi);
+        var net = $('input[name="update_products['+opi+'][gross]"]').val();
+
+        if (taxRate > 0) {
+            net = net / ((taxRate / 100) + 1);
+        }
+        $('input[name="update_products['+opi+'][final_price]"]').val(doRound(net, 4));
+    }
+    
+    $('#s-t, #s-n').on('keyup', function(e) {
+        updateShippingGross();
+    });
+    $('#s-g').on('keyup', function(e) {
+        updateShippingNet();
+    });
+    
+    function getShippingTaxRate()
+    {
+        return parseInt($('#s-t').val());
+    }
+    
+    function updateShippingGross()
+    {
+        var taxRate = getShippingTaxRate();
+        var gross = $('#s-n').val();
+        if (taxRate > 0) {
+            gross = gross * ((taxRate / 100) + 1);
+        }
+        $('#s-g').val(doRound(gross, 4));
+    }
+    
+    function updateShippingNet()
+    {
+        var taxRate = getShippingTaxRate();
+        var net = $('#s-g').val();
+        if (taxRate > 0) {
+            net = net / ((taxRate / 100) + 1);
+        }
+        $('#s-n').val(doRound(net, 4));
+    }
+});
+</script>
+<?php
+}
+?>
 <!-- footer //-->
 <?php 
 require DIR_WS_INCLUDES . 'footer.php'; 
