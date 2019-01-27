@@ -556,7 +556,7 @@ if (zen_not_null($action)) {
                             case 'ot_coupon':
                                 // Default to using the title from the module
                                 $coupon = rtrim($order_total['title'], ': ');
-                                $order_total['title'] = $GLOBALS[$order_total['code']]->title;
+                                $order_total['title'] = (isset($GLOBALS['ot_coupon'])) ? $GLOBALS['ot_coupon']->title : '';
 
                                 // Look for correctly formatted title
                                 preg_match('/([^:]+):([^:]+)/', $coupon, $matches);
@@ -1398,13 +1398,13 @@ if ($action == 'edit' && $order_exists) {
                 break;
 
             case 'ot_shipping':
-                $shipping_tax_rate = $eo->eoGetShippingTaxRate();
+                $shipping_tax_rate = $eo->eoGetShippingTaxRate($order);
 ?>
                                 <td align="right"><?php echo zen_draw_hidden_field($update_total_code, $total['class']) . zen_draw_pull_down_menu($update_total . '[shipping_module]', eo_get_available_shipping_modules(), $order->info['shipping_module_code']) . '&nbsp;&nbsp;' . zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount" size="' . strlen($trimmed_title) . '"'); ?></td>
                                 
                                 <td align="right"><?php echo zen_draw_input_field('shipping_tax', $shipping_tax_rate, 'class="amount" size="3" id="s-t"'); ?>&nbsp;<?php echo EO_TAX_PERCENT; ?></td>
 <?php
-                if (DISPLAY_PRICE_WITH_TAX) {
+                if (DISPLAY_PRICE_WITH_TAX == 'true') {
                     $shipping_net = $details['value'] / (1 + ($shipping_tax_rate / 100));
 ?>
                                 <td align="right"><?php echo zen_draw_input_field($update_total_value, $shipping_net, 'class="amount" size="6" id="s-n"'); ?></td>

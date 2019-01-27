@@ -214,9 +214,24 @@ class editOrders extends base
         $this->eoLog("calculateOrderShippingTax returning $shipping_tax, rate = $tax_rate.");
         return $shipping_tax;
     }
-    public function eoGetShippingTaxRate()
+    
+    public function eoGetShippingTaxRate($order)
     {
-        return (isset($this->shipping_tax_rate)) ? $this->shipping_tax_rate : 0;
+        $shipping_tax_rate = false;
+        $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX_RATE', $order, $shipping_tax_rate);
+        if ($shipping_tax_rate !== false) {
+            return $shipping_tax_rate;
+        }
+        
+        $tax_rate = 0;
+        $shipping_module = $order->info['shipping_module_code'];
+        if (isset($this->shipping_tax_rate)) {
+            $tax_rate = $this->shipping_tax_rate;
+        } elseif (!empty($GLOBALS[$shipping_module]) && is_object($GLOBALS[$shipping_module]) && !empty($GLOBALS[$shipping_module]->tax_class)) {
+            $tax_location = zen_get_tax_locations();
+            $tax_rate = zen_get_tax_rate($GLOBALS[$shipping_module]->tax_class, $tax_location['country_id'], $tax_location['zone_id']);
+        }
+        return $tax_rate;
     }
     
     public function getProductTaxes($product, $shown_price = -1, $add = true)
@@ -256,8 +271,8 @@ class editOrders extends base
             if (DISPLAY_PRICE_WITH_TAX == 'true') {
                 $taxAdd = $this->eoRoundCurrencyValue($shown_price / (100 + $products_tax) * $products_tax);
             } else {
-                $taxAdd = $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue($product_final_price, $decimals) * $product_qty, $products_tax));
-                $taxAdd += $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue($product_onetime, $decimals), $products_tax));
+                $taxAdd = $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue($product_final_price) * $product_qty, $products_tax));
+                $taxAdd += $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue($product_onetime), $products_tax));
             }
             $taxAdd = $this->eoRoundCurrencyValue($taxAdd);
             if (isset($order->info['tax_groups'][$products_tax_description])) {
