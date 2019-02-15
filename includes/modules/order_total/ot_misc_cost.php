@@ -72,7 +72,7 @@ class ot_misc_cost
         if (IS_ADMIN_FLAG === true) {
             for ($i = 0, $n = count($order->totals); $i < $n; $i++) {
                 if ($order->totals[$i]['class'] == 'ot_misc_cost') {
-                    $value = (float)$order->totals[$i]['value'];
+                    $value = (is_numeric($order->totals[$i]['value'])) ? $order->totals[$i]['value'] : 0;
                     if ($value != 0) {
                         if (MODULE_ORDER_TOTAL_MISC_COST_CHANGE_TITLE == 'false') {
                             $order->totals[$i]['title'] = $this->title;
@@ -85,7 +85,7 @@ class ot_misc_cost
                         
                         if ($this->tax_class_id != 0) {
                             $tax_rate = zen_get_tax_rate($this->tax_class_id);
-                            $misc_tax = zen_calculate_tax($value, $tax_rate);
+                            $misc_tax = $GLOBALS['currencies']->value(zen_calculate_tax($value, $tax_rate), false, $order->info['currency'], $order->info['currency_value']);
                             $order->info['total'] += $misc_tax;
                             $order->info['tax'] += $misc_tax;
                             
