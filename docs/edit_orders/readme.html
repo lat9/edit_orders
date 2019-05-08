@@ -17,6 +17,7 @@ h2 { font-size: 16px; }
 h2, h3 { border: 1px solid #666; background-color: #eee; }
 h1+h3 { border: none; background-color: inherit; }
 h5 { border-bottom: 1px dashed #666; padding-bottom: 5px; }
+pre { font-size: 10pt; line-height: 1em; overflow: scroll; }
 code.no-pad, pre.no-pad { padding: 0; margin: 0; }
 .tableHead { background-color: #eee; }
 ol li, ol li p { margin-left: 0; }
@@ -26,7 +27,7 @@ table, td, th { border: 1px solid black; border-collapse: collapse; }
 td, th { padding: 5px; }
 th { text-align: left; }
 span.title { font-style: italic; font-weight: bold; color: #006666; }
-.corefile, .red { color: red; }
+.corefile, .red, .edit { color: red; }
 .bold-red { color: red; font-weight: bold; }
 .template { color: green; }
 .added { color: blue; }
@@ -87,7 +88,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
 
 <body>
   <h1 id="title">Edit Orders for Zen Cart&reg;</h1>
-  <p>Version 4.3.6.  Copyright &copy; 2015-2019, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
+  <p>Version 4.4.0.  Copyright &copy; 2015-2019, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
   <p>Current Support Thread on the Zen Cart forums: <a href="https://www.zen-cart.com/showthread.php?200407" target="_blank">https://www.zen-cart.com/showthread.php?200407</a></p>
   
   <p><strong>Usage Notes:</strong></p>
@@ -128,13 +129,18 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <div class="tab-container" id="inner-container1">
           
           <p>This section identifies the processes you'll use to initially install <em>Edit Orders</em>, upgrade or uninstall <em>EO</em> entirely.</p>
-          <p><strong>Note:</strong> Before you install <em>EO</em> v4.2.0, you'll need a working copy of Zen Cart 1.5.5a or later.</p>
+          <p><strong>Notes:</strong></p>
+          <ol>
+            <li>Before you install <em>EO</em> v4.2.0, you'll need a working copy of Zen Cart 1.5.5a or later.</li>
+            <li><em>EO</em>, v4.4.0 and later, requires that the base Zen Cart function <code>zen_add_tax</code> (present in /YOUR_ADMIN/includes/functions/general.php) <b>not</b> pre-round its return value.  Refer to <a href="#zat" class="side-link">this</a> tab for more information.</li>
+          </ol>
           
           <ul class="etabs">
             <li class="tab"><a href="#initial">Initial Installation</a></li>
             <li class="tab"><a href="#uninstall">Uninstalling</a></li>
             <li class="tab"><a href="#upgrade">Upgrading from EO v4.1.x</a></li>
             <li class="tab"><a href="#notifiers">Required Notifiers</a></li>
+            <li class="tab"><a href="#zat">Changes to <code>zen_add_tax</code></a></li>
           </ul>
 
           <div class="panel-container">
@@ -277,6 +283,46 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                   <td><span class="added">Added</span>, issued during an order's detailed view when creating the bottom button-group.  This notifier is based on the like-named one in the Zen Cart 1.5.6+ repository.</td>
                 </tr>
               </table>
+            </div>
+            
+            <div id="zat">
+              <noscript><h3>Changes to <code>zen_add_tax</code></h3></noscript>
+              <p>The base Zen Cart admin version of the <code>zen_add_tax</code> function, present in <code>/YOUR_ADMIN/includes/functions/general.php</code>, currently pre-rounds its returned result &hellip; unlike the storefront version.  Starting with <em>EO</em> v4.4.0, this condition must be corrected before you can use <b>Edit Orders</b>; you'll see the following message displayed in your admin's header if the condition exists.</p>
+              <img src="zen_add_tax_msg.jpg" alt="EO Message" /><br class="clearBoth" />
+              <p>To correct the issue, you'll need to edit that function, changing:</p>
+              <pre>
+/**
+ * Add tax to a products price
+ */
+  function zen_add_tax($price, $tax) {
+    global $currencies;
+
+    if (DISPLAY_PRICE_WITH_TAX_ADMIN == 'true') {
+      return zen_round($price, $currencies->currencies[DEFAULT_CURRENCY]['decimal_places']) + zen_calculate_tax($price, $tax);
+    } else {
+      return zen_round($price, $currencies->currencies[DEFAULT_CURRENCY]['decimal_places']);
+    }
+  }
+              </pre>
+              <p>&hellip; to &hellip;</p>
+              <pre>
+/**
+ * Add tax to a products price
+ */
+  function zen_add_tax($price, $tax) {
+    global $currencies;
+
+    if (DISPLAY_PRICE_WITH_TAX_ADMIN == 'true') {
+<span class="edit">//-bof-edit_orders-lat9: Don't pre-round values, aligning with storefront
+//</span>      return zen_round($price, $currencies->currencies[DEFAULT_CURRENCY]['decimal_places']) + zen_calculate_tax($price, $tax);
+<span class="edit">      return $price + zen_calculate_tax($price, $tax);</span>
+    } else {
+<span class="edit">//</span>      return zen_round($price, $currencies->currencies[DEFAULT_CURRENCY]['decimal_places']);
+      <span class="edit">return $price;</span>
+    }
+<span class="edit">//-eof-edit_orders-lat9</span>
+  }
+              </pre>
             </div>
             
           </div>
@@ -454,7 +500,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.3.6, 2019-01-27 (lat9)<ul>
+          <li>v4.4.0, 2019-05-xx (lat9)<ul>
             <li>CHANGE: Additional notifications for external tax-handlers.<li>
             <li>BUGFIX: Remove doubly-defined constant.</li>
             <li>BUGFIX: Correct various PHP warnings.</li>
@@ -464,14 +510,17 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>BUGFIX: Correct rounding errors.</li>
             <li>CHANGE: Move tax-rate percentage symbol to language file.</li>
             <li>CHANGE: Provide net/gross jQuery calculations for stores that display prices with tax.</li>
+            <li>CHANGE: Provide styled buttons/icons for Zen Cart 1.5.6 and later.</li>
             <li>The following files were changed:<ol>
               <li>/includes/languages/english/modules/order_total/ot_misc_cost.php</li>
               <li>/includes/modules/order_total/ot_misc_cost.php</li>
               <li>/YOUR_ADMIN/edit_orders.php</li>
               <li>/YOUR_ADMIN/includes/classes/editOrders.php</li>
+              <li>/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php</li>
               <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
               <li>/YOUR_ADMIN/includes/languages/english/edit_orders.php</li>
+              <li>/YOUR_ADMIN/includes/languages/english/extra_definitions/edit_orders.php</li>
             </ol></li>
           </ul></li>
           <li>v4.3.5, 2018-10-31 (lat9)<ul>

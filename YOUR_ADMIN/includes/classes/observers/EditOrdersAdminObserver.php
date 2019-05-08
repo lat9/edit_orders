@@ -1,7 +1,7 @@
 <?php
 // -----
 // Admin-level observer class, adds "Edit Orders" buttons and links to Customers->Orders processing.
-// Copyright (C) 2017-2018, Vinos de Frutas Tropicales.
+// Copyright (C) 2017-2019, Vinos de Frutas Tropicales.
 //
 if (!defined('IS_ADMIN_FLAG') || IS_ADMIN_FLAG !== true) {
     die('Illegal Access');
@@ -11,6 +11,7 @@ class EditOrdersAdminObserver extends base
 {
     public function __construct() 
     {
+        $this->isPre156ZenCart = (PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR < '1.5.6');
         $this->attach(
             $this, 
             array(
@@ -64,7 +65,8 @@ class EditOrdersAdminObserver extends base
             //         linking to this order's EO processing.
             //
             case 'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE':
-                $p4 .= $this->createEditOrdersLink($p2['orders_id'], zen_image(DIR_WS_IMAGES . 'icon_details.gif', EO_ICON_DETAILS));
+                $zc156_icon = '<i class="fa fa-pencil fa-lg" title="' . EO_ICON_DETAILS . '"></i>';
+                $p4 .= $this->createEditOrdersLink($p2['orders_id'], zen_image(DIR_WS_IMAGES . EO_BUTTON_ICON_DETAILS, EO_ICON_DETAILS), $zc156_icon);
                 break;
       
             // -----
@@ -76,7 +78,7 @@ class EditOrdersAdminObserver extends base
             // $p3 ... A reference to the $extra_buttons string, which is updated to include that edit button.
             //
             case 'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS':
-                $p3 .= '&nbsp;' . $this->createEditOrdersLink($p1, zen_image_button('button_edit.gif', IMAGE_EDIT));
+                $p3 .= '&nbsp;' . $this->createEditOrdersLink($p1, zen_image_button(EO_IMAGE_BUTTON_EDIT, IMAGE_EDIT), IMAGE_EDIT);
                 break;
                 
             default:
@@ -88,20 +90,27 @@ class EditOrdersAdminObserver extends base
     {
         $updated_button_list = str_replace(
             array(
-                'button_edit.gif',
+                EO_IMAGE_BUTTON_EDIT,
                 IMAGE_EDIT,
             ),
             array(
-                'button_details.gif',
+                EO_IMAGE_BUTTON_DETAILS,
                 IMAGE_DETAILS
             ),
             $button_list
         );
-        return $updated_button_list . '&nbsp;' . $this->createEditOrdersLink($orders_id, zen_image_button('button_edit.gif', IMAGE_EDIT));
+        return $updated_button_list . '&nbsp;' . $this->createEditOrdersLink($orders_id, zen_image_button(EO_IMAGE_BUTTON_EDIT, IMAGE_EDIT), IMAGE_EDIT);
     }
-    
-    protected function createEditOrdersLink($orders_id, $link_text)
+
+    protected function createEditOrdersLink($orders_id, $link_button, $link_text)
     {
-        return '<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$orders_id&action=edit", 'NONSSL') . "\">$link_text</a>";
+        if ($this->isPre156ZenCart) {
+            $anchor_text = $link_button;
+            $link_parms = '';
+        } else {
+            $anchor_text = $link_text;
+            $link_parms = ' class="btn btn-primary" role="button"';
+        }
+        return '&nbsp;<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$orders_id&action=edit", 'NONSSL') . "\"$link_parms>$anchor_text</a>";
     }
 }
