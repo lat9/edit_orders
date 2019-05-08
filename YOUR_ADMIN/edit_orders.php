@@ -1504,7 +1504,7 @@ if ($action == 'edit' && $order_exists) {
         } else {
 ?>
                     <tr>
-                        <td class="smallText colspan="4"><?php echo TEXT_NO_ORDER_HISTORY; ?></td>
+                        <td class="smallText" colspan="4"><?php echo TEXT_NO_ORDER_HISTORY; ?></td>
                     </tr>
 <?php
         }
