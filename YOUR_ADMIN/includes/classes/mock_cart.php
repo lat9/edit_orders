@@ -398,7 +398,7 @@ class mockCart extends base
                        LIMIT 1"
                 );
 
-                if (!$attribute_weight->EOF) {
+                if (!$attribute_weight_info->EOF) {
                     // adjusted count for free shipping
                     if ($product['product_is_always_free_shipping'] != 1) {
                         $new_attributes_weight = $attribute_weight_info->fields['products_attributes_weight'];
