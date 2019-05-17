@@ -69,8 +69,7 @@ class EditOrdersAdminObserver extends base
             //         linking to this order's EO processing.
             //
             case 'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE':
-                $zc156_icon = '<i class="fa fa-pencil fa-lg" title="' . EO_ICON_DETAILS . '"></i>';
-                $p4 .= $this->createEditOrdersLink($p2['orders_id'], zen_image(DIR_WS_IMAGES . EO_BUTTON_ICON_DETAILS, EO_ICON_DETAILS), $zc156_icon);
+                $p4 .= $this->createEditOrdersLink($p2['orders_id'], zen_image(DIR_WS_IMAGES . EO_BUTTON_ICON_DETAILS, EO_ICON_DETAILS), EO_ZC156_FA_ICON, false);
                 break;
       
             // -----
@@ -126,14 +125,16 @@ class EditOrdersAdminObserver extends base
         return $updated_button_list . '&nbsp;' . $this->createEditOrdersLink($orders_id, zen_image_button(EO_IMAGE_BUTTON_EDIT, IMAGE_EDIT), IMAGE_EDIT);
     }
 
-    protected function createEditOrdersLink($orders_id, $link_button, $link_text)
+    protected function createEditOrdersLink($orders_id, $link_button, $link_text, $include_zc156_parms = true)
     {
+        $link_parms = '';
         if ($this->isPre156ZenCart) {
             $anchor_text = $link_button;
-            $link_parms = '';
         } else {
             $anchor_text = $link_text;
-            $link_parms = ' class="btn btn-primary" role="button"';
+            if ($include_zc156_parms) {
+                $link_parms = ' class="btn btn-primary" role="button"';
+            }
         }
         return '&nbsp;<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$orders_id&action=edit", 'NONSSL') . "\"$link_parms>$anchor_text</a>";
     }
