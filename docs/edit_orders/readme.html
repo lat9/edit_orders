@@ -8,7 +8,8 @@
 <link href="http://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
 <style type="text/css">
 <!--
-a, a:active, a:visited { color: #006666; text-decoration: none; }
+a, a:active, a:visited { color: #006666; text-decoration: underline; }
+.tab a, .tab a:active, .tab a:visited { text-decoration: none; }
 a:hover { color:#00CC99; text-decoration: underline; }
 body, p, h1, h2, h3, h4, h5, h6, li, td, dd, img, dt, dl, table { font-family: Roboto, verdana, avantgarde, tahoma, arial, sans-serif; font-size: 12pt; color: black; padding: 0px; margin: 10px 20px; line-height: 1.75em; }
 h1, h2, h3, h4 { font-weight: bold; padding: 5px; }
@@ -131,7 +132,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
           <p>This section identifies the processes you'll use to initially install <em>Edit Orders</em>, upgrade or uninstall <em>EO</em> entirely.</p>
           <p><strong>Notes:</strong></p>
           <ol>
-            <li>Before you install <em>EO</em> v4.2.0, you'll need a working copy of Zen Cart 1.5.5a or later.</li>
+            <li>Before you install <em>EO</em> v4.2.0 (or later), you'll need a working copy of Zen Cart 1.5.5a or later.</li>
             <li><em>EO</em>, v4.4.0 and later, requires that the base Zen Cart function <code>zen_add_tax</code> (present in /YOUR_ADMIN/includes/functions/general.php) <b>not</b> pre-round its return value.  Refer to <a href="#zat" class="side-link">this</a> tab for more information.</li>
           </ol>
           
@@ -147,17 +148,16 @@ div.totals-desc h4 { border-top: 1px solid #666; }
 
             <div id="initial">
               <noscript><h3>Initial Installation</h3></noscript>
-              <p>There are <span class="corefile">core-file overwrites</span> required by this plugin; you should <strong>always</strong> backup your cart's database and files prior to making any changes. Unzip the plugin's package file and then:</p>
+              <p>If your store uses a version of Zen Cart <em>prior to</em> 1.5.6, there are <span class="corefile">core-file overwrites</span> required by this plugin; you should <strong>always</strong> backup your cart's database and files prior to making any changes. Unzip the plugin's package file and then:</p>
               <ol type="A">
-                <li>Rename the YOUR_ADMIN folder to match your custom admin folder's name.</li>
-                <li>Merge any pre-existing <span class="corefile">core-file</span> changes with the changes required by <em>Edit Orders</em>:<ol>
+                <li>Rename the YOUR_ADMIN sub-directory to match your custom admin sub-directory's name.</li>
+                <li>If your store uses a version of Zen Cart <em>prior to</em> 1.5.6, you'll need to merge any pre-existing <span class="corefile">core-file</span> changes with the changes required by <em>Edit Orders</em>.  Each of these files is located in the <code>zc155</code> of <em>EO</em>'s distribution, providing the in-core zc156 notifications required:<ol>
                   <li><span class="corefile">/includes/classes/order.php</span> <span class="smaller">(2 marked change-sections)</span></li>
                   <li><span class="corefile">/YOUR_ADMIN/orders.php</span> <span class="smaller">(3 marked change-sections)</span></li>
-                </ol></li>
+                </ol>After you've merged your pre-existing changes into the files, copy them to your store's file-system (renaming the <code>YOUR_ADMIN</code> sub-directory to match your store's admin-directory name).</li>
                 <li>Sign into your Zen Cart's admin panel.</li>
-                <li>Copy the plugin's files to your store's folder structure:<ol>
+                <li>Copy the plugin's files to your store's directory structure:<ol>
                   <li>/includes/auto_loaders/config.vinos_common.php</li>
-                  <li><span class="corefile">/includes/classes/order.php</span></li>
                   <li>/includes/classes/VinosAutoload.php <span class="smaller">(Added in v4.2.0)</span></li>
                   <li>/includes/classes/vinos/common/NotiferCheck.php <span class="smaller">(Added in v4.2.0)</span></li>
                   <li>/includes/init_includes/init_vinos_autoload.php <span class="smaller">(Added in v4.2.0)</span></li>
@@ -166,7 +166,6 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                   <li>/includes/modules/order_total/ot_onetime_discount.php</li>
                   <li>/includes/modules/order_total/ot_misc_cost.php</li>
                   <li>/YOUR_ADMIN/edit_orders.php</li>
-                  <li><span class="corefile">/YOUR_ADMIN/orders.php</span> <span class="smaller">(Zen Cart 1.5.5d version, with additional notifiers)</span></li>
                   <li>/YOUR_ADMIN/images/icon_billing.png</li>
                   <li>/YOUR_ADMIN/images/icon_comment_add.png</li>
                   <li>/YOUR_ADMIN/images/icon_customers.png</li>
