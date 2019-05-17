@@ -178,9 +178,11 @@ class editOrders extends base
             require_once DIR_FS_CATALOG . DIR_WS_CLASSES . 'shipping.php';
             $shipping_modules = new shipping();
             
-            $this->shipping_tax_rate = $this->calculateOrderShippingTax();
-            $this->eoLog("getOrderInfo, setting shipping tax rate to $shipping_tax_rate for order #$oID");
-            
+            // -----
+            // Call the protected method to calculate the order's shipping tax value; a side-effect
+            // of this call is the initialization of the class-variable shipping_tax_rate.
+            //
+            $order->info['shipping_tax'] = $this->calculateOrderShippingTax();
             $GLOBALS['db']->Execute(
                 "UPDATE " . TABLE_ORDERS . "
                     SET shipping_tax_rate = {$this->shipping_tax_rate}
@@ -267,7 +269,7 @@ class editOrders extends base
         $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX_RATE', $order, $shipping_tax_rate);
         if ($shipping_tax_rate !== false) {
             $this->eoLog("eoGetShippingTaxRate, override returning rate = $shipping_tax_rate.");
-            return $shipping_tax_rate;
+            return (empty($shipping_tax_rate)) ? 0 : $shipping_tax_rate;
         }
         
         $tax_rate = 0;
@@ -278,7 +280,7 @@ class editOrders extends base
             $tax_location = zen_get_tax_locations();
             $tax_rate = zen_get_tax_rate($GLOBALS[$shipping_module]->tax_class, $tax_location['country_id'], $tax_location['zone_id']);
         }
-        return $tax_rate;
+        return (empty($tax_rate)) ? 0 : $tax_rate;
     }
     
     public function getProductTaxes($product, $shown_price = -1, $add = true)
