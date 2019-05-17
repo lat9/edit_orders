@@ -10,7 +10,7 @@ define('EO_BUTTON_ICON_DETAILS', 'icon_details.gif');
 define('EO_IMAGE_BUTTON_EDIT', 'button_edit.gif');
 define('EO_IMAGE_BUTTON_DETAILS', 'button_details.gif');
 
-define('EO_ZC156_FA_ICON', '<div class="fa-stack fa-lg edit"><i class="fa fa-circle fa-stack-2x base"></i><i class="fa fa-pencil fa-stack-1x overlay" aria-hidden="true" title="Edit this Order"></i></div>');
+define('EO_ZC156_FA_ICON', '<div class="fa-stack fa-lg edit"><i class="fa fa-circle fa-stack-2x base"></i><i class="fa fa-wrench fa-stack-1x overlay" aria-hidden="true" title="Edit this Order"></i></div>');
 
 define('EO_INIT_MISSING_FILES', 'A file (%1$s) required for <em>Edit Orders</em> operation is missing.');
 define('EO_INIT_MISSING_NOTIFIERS', 'One or more notifiers (%2$s), required for <em>Edit Orders</em> operation, are missing from the file %1$s.');
