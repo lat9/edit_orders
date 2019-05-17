@@ -500,7 +500,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
           <li>v4.4.0, 2019-05-xx (lat9)<ul>
-            <li>CHANGE: Additional notifications for external tax-handlers.<li>
+            <li>CHANGE: Additional notifications for external tax-handlers.</li>
             <li>BUGFIX: Remove doubly-defined constant.</li>
             <li>BUGFIX: Correct various PHP warnings.</li>
             <li>BUGFIX: Remove multiple trailing colons (':') from the shipping-method's title on an order-update.</li>
@@ -524,6 +524,9 @@ div.totals-desc h4 { border-top: 1px solid #666; }
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
               <li>/YOUR_ADMIN/includes/languages/english/edit_orders.php</li>
               <li>/YOUR_ADMIN/includes/languages/english/extra_definitions/edit_orders.php</li>
+            </ol></li>
+            <li>The following changes are made to the database:<ol>
+              <li>Adds the column <code>shipping_tax_rate</code> to the <code>orders</code> table.</li>
             </ol></li>
           </ul></li>
           <li>v4.3.5, 2018-10-31 (lat9)<ul>
