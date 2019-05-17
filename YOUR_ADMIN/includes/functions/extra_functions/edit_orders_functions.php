@@ -516,6 +516,19 @@ if (!function_exists ('zen_product_in_parent_category')) {
   }
 }
 
+// -----
+// Provide a fall-back for PHP versions prior to 7.3.0 for the array_key_first function.
+//
+if (!function_exists('array_key_first')) {
+    function array_key_first(array $arr) 
+    {
+        foreach ($arr as $key => $unused) {
+            return $key;
+        }
+        return NULL;
+    }
+}
+
 // Start Edit Orders configuration functions
 function eo_debug_action_level_list($level) 
 {
@@ -967,6 +980,10 @@ function eo_add_product_to_order($order_id, $product)
     if (isset($product['attributes']) && is_array($product['attributes'])) {
         $attributes_exist = '1';
         foreach ($product['attributes'] as $current_attribute) {
+            // -----
+            // For TEXT type attributes, the 'value_id' isn't set ... default to 0.
+            //
+            $value_id = (isset($current_attribute['value_id'])) ? ((int)$current_attribute['value_id']) : 0;
             if (DOWNLOAD_ENABLED == 'true') {
                 $attributes_values = $db->Execute(
                     "SELECT popt.products_options_name, poval.products_options_values_name,
@@ -990,7 +1007,7 @@ function eo_add_product_to_order($order_id, $product)
                                 ON pa.products_attributes_id = pad.products_attributes_id
                       WHERE pa.products_id = $products_id
                         AND pa.options_id = " . (int)$current_attribute['option_id'] . "
-                        AND pa.options_values_id = " . (int)$current_attribute['value_id'] . "
+                        AND pa.options_values_id = $value_id
                       LIMIT 1"
                 );
             } else {
@@ -1013,7 +1030,7 @@ function eo_add_product_to_order($order_id, $product)
                                AND poval.language_id = " . (int)$_SESSION['languages_id'] . "
                       WHERE pa.products_id = $products_id
                         AND pa.options_id = " . (int)$current_attribute['option_id'] . "
-                        AND pa.options_values_id = " . (int)$current_attribute['value_id'] . "
+                        AND pa.options_values_id = $value_id
                       LIMIT 1"
                 );
             }
@@ -1043,7 +1060,7 @@ function eo_add_product_to_order($order_id, $product)
                 'attributes_price_letters' => $attributes_values->fields['attributes_price_letters'],
                 'attributes_price_letters_free' => $attributes_values->fields['attributes_price_letters_free'],
                 'products_options_id' => (int)$current_attribute['option_id'],
-                'products_options_values_id' => (int)$current_attribute['value_id'],
+                'products_options_values_id' => $value_id,
                 'products_prid' => $product['id']
             );
             zen_db_perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);

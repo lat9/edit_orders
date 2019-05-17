@@ -540,7 +540,7 @@ switch ($action) {
                             $order->info['shipping_cost'] = $order_total['value'];
                             $order->info['shipping_method'] = $order_total['title'];
                             $order->info['shipping_module_code'] = $order_total['shipping_module'];
-                            $GLOBALS['eo']->eoRecordPostedShippingTaxRate($_POST['shipping_tax']);
+                            $GLOBALS['eo']->eoRecordPostedShippingTaxRate(empty($_POST['shipping_tax']) ? 0 : $_POST['shipping_tax']);
                             break;
                         case 'ot_tax':
                             if (count($order->products) == 0) {
@@ -1219,7 +1219,7 @@ if ($action == 'edit') {
                         foreach ($optionInfo['options'] as $attributeId => $attributeValue) {
                             $option_html_id = "opid-$orders_products_id-oid-$option_id-$attributeId";
                             echo zen_draw_checkbox_field(
-                                "update_products[$orders_products_id ][attr][$option_id][value][$attributeId]",
+                                "update_products[$orders_products_id][attr][$option_id][value][$attributeId]",
                                 $attributeId, 
                                 isset($checked[$attributeId]),
                                 null, 
@@ -1230,7 +1230,7 @@ if ($action == 'edit') {
                         break;
                         
                     case PRODUCTS_OPTIONS_TYPE_TEXT:
-                        $text = eo_get_selected_product_attribute_value_by_id($orders_products_attributes_id[0], array_shift(array_keys($optionInfo['options'])));
+                        $text = eo_get_selected_product_attribute_value_by_id($orders_products_attributes_id[0], array_key_first($optionInfo['options']));
                         if ($text === null) {
                             $text = '';
                         }
@@ -1249,7 +1249,7 @@ if ($action == 'edit') {
                         break;
                         
                     case PRODUCTS_OPTIONS_TYPE_FILE:
-                        $optionValue = eo_get_selected_product_attribute_value_by_id($orders_products_attributes_id[0], array_shift(array_keys($optionInfo['options'])));
+                        $optionValue = eo_get_selected_product_attribute_value_by_id($orders_products_attributes_id[0], array_key_first($optionInfo['options']));
                         echo "<span class=\"attribsFile\">$option_name: " . (!empty($optionValue) ? $optionValue : TEXT_ATTRIBUTES_UPLOAD_NONE) . '</span><br />';
                         if (!empty($optionValue)) {
                             echo zen_draw_hidden_field("update_products[$orders_products_id][attr][$option_id][value]", $optionValue);
@@ -1324,7 +1324,7 @@ if ($action == 'edit') {
         $trimmed_title = strip_tags(trim($total['title']));
         
         $order_total_info = eo_get_order_total_by_order((int)$oID, $total['class']);
-        $details = array_shift ($order_total_info);
+        $details = array_shift($order_total_info);
         switch($total['class']) {
             case 'ot_purchaseorder':
                 break;
