@@ -517,9 +517,8 @@ if (!function_exists ('zen_product_in_parent_category')) {
 }
 
 // Start Edit Orders configuration functions
-function eo_debug_action_level_list($level) {
-    global $template;
-
+function eo_debug_action_level_list($level) 
+{
     $levels = array(
         array('id' => '0', 'text' => 'Off'),
         array('id' => '1', 'text' => 'On'),
@@ -540,50 +539,64 @@ function eo_debug_action_level_list($level) {
  * @param mixed $country the id, name, or iso code for the country.
  * @return NULL|array the country if one is found, otherwise NULL
  */
-function eo_get_country($country) {
+function eo_get_country($country) 
+{
     global $db;
 
-    $query = 'SELECT `countries_id` AS `id`, `countries_name` AS `name`, ' .
-            '`countries_iso_code_2` AS `iso_code_2`, `countries_iso_code_3` AS `iso_code_3` ' .
-            'FROM `' . TABLE_COUNTRIES . '` ';
+    $query = 
+        "SELECT `countries_id` AS `id`, `countries_name` AS `name`, `countries_iso_code_2` AS `iso_code_2`, `countries_iso_code_3` AS `iso_code_3`
+           FROM " . TABLE_COUNTRIES . " ";
 
     // Handle null and an array being passed to this method
-    if($country === null) return null;
-    if(is_array($country)) {
-        if(array_key_exists('id', $country)) $country = $country['id'];
-        else if(array_key_exists('iso_code', $country)) $country = $country['iso_code'];
-        else if(array_key_exists('iso_code_2', $country)) $country = $country['iso_code_2'];
-        else if(array_key_exists('iso_code_3', $country)) $country = $country['iso_code_3'];
-        else if(array_key_exists('name', $country)) $country = $country['name'];
-        else if(count($country) == 1) $country = array_shift($country);
-        else return null;
+    if ($country === null) {
+        return null;
+    }
+    if (is_array($country)) {
+        if (isset($country['id'])) {
+            $country = $country['id'];
+        } elseif (isset($country['iso_code'])) {
+            $country = $country['iso_code'];
+        } elseif (isset($country['iso_code_2'])) {
+            $country = $country['iso_code_2'];
+        } elseif (isset($country['iso_code_3'])) {
+            $country = $country['iso_code_3'];
+        } elseif (isset($country['name'])) {
+            $country = $country['name'];
+        } elseif (count($country) == 1) {
+            $country = array_shift($country);
+        } else {
+            return null;
+        }
     }
 
     // Determine where clause by passed variable type
-    if(is_numeric($country)) $query .= 'WHERE `countries_id`=\'' . (int)$country . '\'';
-    else if(strlen($country) == 2) $query .= 'WHERE `countries_iso_code_2`= \'' . $db->prepare_input($country) . '\'';
-    else if(strlen($country) == 3) $query .= 'WHERE `countries_iso_code_3`=\'' . $db->prepare_input($country) . '\'';
-    else $query .= 'WHERE `countries_name`=\'' . $db->prepare_input($country) . '\'';
+    if (is_numeric($country)) {
+        $query .= "WHERE `countries_id` = " . (int)$country;
+    } elseif (strlen($country) == 2) {
+        $query .= "WHERE `countries_iso_code_2` = '" . $db->prepare_input($country) . "'";
+    } elseif (strlen($country) == 3) {
+        $query .= "WHERE `countries_iso_code_3` = '" . $db->prepare_input($country) . "'";
+    } else {
+        $query .= "WHERE `countries_name` = '" . $db->prepare_input($country) . "'";
+    }
 
     $product = $db->Execute($query, false, true, 43200);
-
-    if($product->EOF) return null;
-    $retval = $product->fields;
-    unset($query, $product);
-    return $retval;
+    return ($product->EOF) ? null : $product->fields;
 }
-function eo_get_product_attributes_options($products_id, $readonly = false) {
+function eo_get_product_attributes_options($products_id, $readonly = false) 
+{
     global $db;
 
-    include_once(DIR_WS_CLASSES . 'attributes.php');
+    include_once DIR_WS_CLASSES . 'attributes.php';
     $attributes = new attributes();
     $attributes = $attributes->get_attributes_options($products_id, $readonly);
 
     // Rearrange these by option id instead of attribute id
     $retval = array();
-    foreach($attributes as $attr_id => $info) {
-        if(!array_key_exists($info['id'], $retval)) {
-            $retval[$info['id']] = array(
+    foreach ($attributes as $attr_id => $info) {
+        $id = $info['id'];
+        if (!isset($retval[$id])) {
+            $retval[$id] = array(
                 'options' => array(),
                 'name' => $info['name'],
                 'type' => $info['type'],
@@ -592,13 +605,14 @@ function eo_get_product_attributes_options($products_id, $readonly = false) {
                 'rows' => $info['rows']
             );
         }
-        $retval[$info['id']]['options'][$attr_id] = $info['value'];
+        $retval[$id]['options'][$attr_id] = $info['value'];
     }
     unset($attributes);
     return $retval;
 }
 
-function eo_get_new_product($product_id, $product_qty, $product_tax, $product_options = array(), $use_specials = true) {
+function eo_get_new_product($product_id, $product_qty, $product_tax, $product_options = array(), $use_specials = true) 
+{
     global $db;
 
     $product_id = (int)$product_id;
@@ -611,20 +625,19 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
     );
 
     $query = $db->Execute(
-        'SELECT `p`.`products_id`, `p`.`master_categories_id`, `p`.`products_status`, ' .
-            '`pd`.`products_name`, `p`.`products_model`, `p`.`products_image`, `p`.`products_price`, ' .
-            '`p`.`products_weight`, `p`.`products_tax_class_id`, `p`.`manufacturers_id`, ' .
-            '`p`.`products_quantity_order_min`, `p`.`products_quantity_order_units`, ' .
-            '`p`.`products_quantity_order_max`, `p`.`product_is_free`, `p`.`products_virtual`, ' .
-            '`p`.`products_discount_type`, `p`.`products_discount_type_from`, ' .
-            '`p`.`products_priced_by_attribute`, `p`.`product_is_always_free_shipping` ' .
-        'FROM `' . TABLE_PRODUCTS . '` AS `p`, `' . TABLE_PRODUCTS_DESCRIPTION . '` AS `pd` ' .
-        'WHERE `p`.`products_id`=\'' . (int)$product_id . '\' ' .
-            'AND `pd`.`products_id`=`p`.`products_id` ' .
-            'AND `pd`.`language_id`=\'' . (int)$_SESSION['languages_id'] . '\''
+        "SELECT p.products_id, p.master_categories_id, p.products_status, pd.products_name, p.products_model, p.products_image, p.products_price,
+                p.products_weight, p.products_tax_class_id, p.manufacturers_id, p.products_quantity_order_min, p.products_quantity_order_units,
+                p.products_quantity_order_max, p.product_is_free, p.products_virtual, p.products_discount_type, p.products_discount_type_from,
+                p.products_priced_by_attribute, p.product_is_always_free_shipping 
+           FROM " . TABLE_PRODUCTS . " p
+                INNER JOIN " . TABLE_PRODUCTS_DESCRIPTION . " pd
+                    ON pd.products_id = p.products_id
+                   AND pd.language_id = " . (int)$_SESSION['languages_id'] . "
+          WHERE p.products_id = " . (int)$product_id . "
+          LIMIT 1"
     );
 
-    if(!$query->EOF) {
+    if (!$query->EOF) {
         // Handle common fields
         $retval = array_merge($retval, array(
             'name' => $query->fields['products_name'],
@@ -642,28 +655,27 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
 
         // Handle pricing
         $special_price = zen_get_products_special_price($product_id);
-        if($use_specials && $special_price && $retval['products_priced_by_attribute'] == 0) {
+        if ($use_specials && $special_price && $retval['products_priced_by_attribute'] == 0) {
             $retval['price'] = $special_price;
         } else {
             $special_price = 0;
         }
 
-        if(zen_get_products_price_is_free($product_id)) {
+        if (zen_get_products_price_is_free($product_id)) {
             // no charge
             $retval['price'] = 0;
         }
         // adjust price for discounts when priced by attribute
-        if($retval['products_priced_by_attribute'] == '1' && zen_has_product_attributes($product_id, 'false')) {
+        if ($retval['products_priced_by_attribute'] == '1' && zen_has_product_attributes($product_id, 'false')) {
             // reset for priced by attributes
-            if($special_price) {
+            if ($special_price) {
                 $retval['price'] = $special_price;
-            }
-            else {
+            } else {
                 $retval['price'] = $query->fields['products_price'];
                 // START MARKUP
-                if(isset($GLOBALS['priceMarkup'])) {
+                if (isset($GLOBALS['priceMarkup'])) {
                     $retval['price'] = $GLOBALS['priceMarkup']->calculatePrice(
-                        $product_id,
+                        $product_id, 
                         $query->fields['manufacturers_id'],
                         $query->fields['master_categories_id'],
                         $retval['price']
@@ -671,14 +683,13 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
                 }
                 // END MARKUP
             }
-        }
-        else {
+        } else {
             // discount qty pricing
             if ($retval['products_discount_type'] != '0') {
                 $retval['price'] = zen_get_products_discount_price_qty($product_id, $retval['qty']);
             }
             // START MARKUP
-            if(isset($GLOBALS['priceMarkup'])) {
+            if (isset($GLOBALS['priceMarkup'])) {
                 $retval['price'] = $GLOBALS['priceMarkup']->calculatePrice(
                     $product_id,
                     $query->fields['manufacturers_id'],
@@ -695,107 +706,116 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
     }
 
     // Handle attributes
-    if(is_array($product_options) && count($product_options > 0))
-    {
+    if (is_array($product_options) && count($product_options > 0)) {
         $retval['attributes'] = array();
 
-        include_once(DIR_WS_CLASSES . 'attributes.php');
+        include_once DIR_WS_CLASSES . 'attributes.php';
         $attributes = new attributes();
 
-        foreach($product_options as $option_id => $details) {
+        foreach ($product_options as $option_id => $details) {
             $attr = array();
-            switch($details['type']) {
+            $add_attribute = true;
+            switch ($details['type']) {
                 case PRODUCTS_OPTIONS_TYPE_TEXT:
                 case PRODUCTS_OPTIONS_TYPE_FILE:
                     $attr['option_id'] = $option_id;
                     $attr['value'] = $details['value'];
-                    if($attr['value'] == '') continue 2;
+                    if ($attr['value'] == '') {
+                        $add_attribute = false;
+                        break;
+                    }
 
                     // There should only be one text per name.....
                     $get_attr_id = $attributes->get_attributes_by_option($product_id, $option_id);
-                    if(count($get_attr_id) == 1) $details['value'] = $get_attr_id[0]['products_attributes_id'];
+                    if (count($get_attr_id) == 1) {
+                        $details['value'] = $get_attr_id[0]['products_attributes_id'];
+                    }
                     unset($get_attr_id);
                     break;
+                    
                 case PRODUCTS_OPTIONS_TYPE_CHECKBOX:
-                    if(!array_key_exists('value', $details)) continue 2;
+                    if (!isset($details['value'])) {
+                        $add_attribute = false;
+                        break;
+                    }
                     $tmp_id = array_shift($details['value']);
-                    foreach($details['value'] as $attribute_id) {
+                    foreach ($details['value'] as $attribute_id) {
                         // We only get here if more than one checkbox per
                         // option was selected.
                         $tmp = $attributes->get_attribute_by_id($attribute_id, 'order');
                         $retval['attributes'][] = $tmp;
 
                         // Handle pricing
-                        $prices = eo_get_product_attribute_prices(
-                            $attribute_id, $tmp['value'], $product_qty
-                        );
+                        $prices = eo_get_product_attribute_prices($attribute_id, $tmp['value'], $product_qty);
                         unset($tmp);
-                        if(!$query->EOF) {
+                        if (!$query->EOF) {
                             $retval['onetime_charges'] += $prices['onetime_charges'];
                             $retval['final_price'] += $prices['price'];
                         }
                     }
                     $details['value'] = $tmp_id;
                     $attr = $attributes->get_attribute_by_id($details['value'], 'order');
-                    unset($attribute_id); unset($attribute_value); unset($tmp_id);
+                    unset($attribute_id, $attribute_value, $tmp_id);
                     break;
+                    
                 default:
                     $attr = $attributes->get_attribute_by_id($details['value'], 'order');
+                    break;
             }
-            $retval['attributes'][] = $attr;
-
-            if(!$query->EOF) {
-                // Handle pricing
-                $prices = eo_get_product_attribute_prices(
-                    $details['value'], $attr['value'], $product_qty
-                );
-                $retval['onetime_charges'] += $prices['onetime_charges'];
-                $retval['final_price'] += $prices['price'];
+            
+            if ($add_attribute) {
+                $retval['attributes'][] = $attr;
+                $GLOBALS['eo']->eoLog('eo_get_new_product, adding attribute: ' . json_encode($details) . ', ' . json_encode($attr));
+                if (!$query->EOF) {
+                    // Handle pricing
+                    $prices = eo_get_product_attribute_prices($details['value'], $attr['value'], $product_qty);
+                    $retval['onetime_charges'] += $prices['onetime_charges'];
+                    $retval['final_price'] += $prices['price'];
+                }
             }
         }
         unset($query, $attr, $prices, $option_id, $details);
     }
-
     return $retval;
 }
 
-function eo_get_product_attribute_prices($attr_id, $attr_value = '', $qty = 1) {
+function eo_get_product_attribute_prices($attr_id, $attr_value = '', $qty = 1) 
+{
     global $db;
 
     $retval = array(
         'onetime_charges' => 0,
         'price' => 0
     );
-
-    $attribute_price = $db->Execute(
-        'SELECT * ' .
-        'FROM `' . TABLE_PRODUCTS_ATTRIBUTES . '` ' .
-        'WHERE `products_attributes_id`=\'' . (int)$attr_id . '\''
-    );
-
     $attr_id = (int)$attr_id;
+    $attribute_price = $db->Execute(
+        "SELECT *
+           FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
+          WHERE products_attributes_id = $attr_id
+          LIMIT 1"
+    );
+    if ($attribute_price->EOF) {
+        return $retval;
+    }
+    
     $qty = (float)$qty;
-    $product_id = (int)$attribute_price->fields['products_id'];
+    $product_id = $attribute_price->fields['products_id'];
 
     // Only check when attributes is not free or the product is not free
-    if($attribute_price->fields['product_attribute_is_free'] != '1' || !zen_get_products_price_is_free($product_id)) {
-
+    if ($attribute_price->fields['product_attribute_is_free'] != 1 || !zen_get_products_price_is_free($product_id)) {
         // Handle based upon discount enabled
-        if($attribute_price->fields['attributes_discounted'] == '1') {
+        if ($attribute_price->fields['attributes_discounted'] == 1) {
             // Calculate proper discount for attributes
-
             $added_charge = zen_get_discount_calc($product_id, $attr_id, $attribute_price->fields['options_values_price'], $qty);
-        }
-        else {
+        } else {
             $added_charge = $attribute_price->fields['options_values_price'];
         }
 
         // Handle negative price prefix
         // Other price prefixes ("+" and "") should add so no special processing
-        if($attribute_price->fields['price_prefix'] == '-') {
+        if ($attribute_price->fields['price_prefix'] == '-') {
             $added_charge = -1 * $added_charge;
         }
-
         $retval['price'] += $added_charge;
 
         //////////////////////////////////////////////////
@@ -829,7 +849,7 @@ function eo_get_product_attribute_prices($attr_id, $attr_value = '', $qty = 1) {
 
         // attributes_price_onetime
         if ($attribute_price->fields['attributes_price_onetime'] > 0) {
-            $retval['onetime_charges'] = (float) $attribute_price->fields['attributes_price_onetime'];
+            $retval['onetime_charges'] = $attribute_price->fields['attributes_price_onetime'];
         }
         // attributes_price_factor_onetime
         $added_charge = 0;
@@ -849,11 +869,11 @@ function eo_get_product_attribute_prices($attr_id, $attr_value = '', $qty = 1) {
         }
         ////////////////////////////////////////////////
     }
-
     return $retval;
 }
 
-function eo_add_product_to_order($order_id, $product) {
+function eo_add_product_to_order($order_id, $product) 
+{
     global $db, $order, $zco_notifier;
     
     // -----
@@ -871,59 +891,61 @@ function eo_add_product_to_order($order_id, $product) {
 
     // Handle product stock
     $doStockDecrement = true;
-    $zco_notifier->notify ('EDIT_ORDERS_ADD_PRODUCT_STOCK_DECREMENT', array ( 'order_id' => $order_id, 'product' => $product ), $doStockDecrement);
+    $zco_notifier->notify('EDIT_ORDERS_ADD_PRODUCT_STOCK_DECREMENT', array('order_id' => $order_id, 'product' => $product), $doStockDecrement);
+    $products_id = (int)zen_get_prid($product['id']);
     if (STOCK_LIMITED == 'true' && $doStockDecrement) {
         if (DOWNLOAD_ENABLED == 'true') {
-            $stock_query_raw = "select p.products_quantity, pad.products_attributes_filename, p.product_is_always_free_shipping
-            from " . TABLE_PRODUCTS . " p
-            left join " . TABLE_PRODUCTS_ATTRIBUTES . " pa
-            on p.products_id=pa.products_id
-            left join " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
-            on pa.products_attributes_id=pad.products_attributes_id
-            WHERE p.products_id = '" . zen_get_prid($product['id']) . "'";
+            $stock_query_raw = 
+                "SELECT p.products_quantity, pad.products_attributes_filename, p.product_is_always_free_shipping
+                   FROM " . TABLE_PRODUCTS . " p
+                        LEFT JOIN " . TABLE_PRODUCTS_ATTRIBUTES . " pa
+                            ON p.products_id = pa.products_id
+                        LEFT JOIN " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
+                            ON pa.products_attributes_id=pad.products_attributes_id
+                  WHERE p.products_id = $products_id";
 
             // Will work with only one option for downloadable products
             // otherwise, we have to build the query dynamically with a loop
             if (isset($product['attributes']) && is_array($product['attributes'])) {
                 $products_attributes = $product['attributes'];
-                $stock_query_raw .= " AND pa.options_id = '" . $product['attributes'][0]['option_id'] . "' AND pa.options_values_id = '" . $product['attributes'][0]['value_id'] . "'";
+                $stock_query_raw .= " AND pa.options_id = " . (int)$product['attributes'][0]['option_id'] . " AND pa.options_values_id = " . (int)$product['attributes'][0]['value_id'];
             }
             $stock_values = $db->Execute($stock_query_raw);
         } else {
-            $stock_values = $db->Execute("select * from " . TABLE_PRODUCTS . " where products_id = '" . zen_get_prid($product['id']) . "'");
+            $stock_values = $db->Execute("SELECT * FROM " . TABLE_PRODUCTS . " WHERE products_id = $products_id LIMIT 1");
         }
 
-        if ($stock_values->RecordCount() > 0) {
+        if (!$stock_values->EOF) {
             // do not decrement quantities if products_attributes_filename exists
-            if ((DOWNLOAD_ENABLED != 'true') || $stock_values->fields['product_is_always_free_shipping'] == 2 || (!$stock_values->fields['products_attributes_filename']) ) {
+            if (DOWNLOAD_ENABLED != 'true' || $stock_values->fields['product_is_always_free_shipping'] == 2 || !empty($stock_values->fields['products_attributes_filename'])) {
                 $stock_left = $stock_values->fields['products_quantity'] - $product['qty'];
                 $product['stock_reduce'] = $product['qty'];
             } else {
                 $stock_left = $stock_values->fields['products_quantity'];
             }
 
-            $db->Execute("update " . TABLE_PRODUCTS . " set products_quantity = '" . $stock_left . "' where products_id = '" . zen_get_prid($product['id']) . "'");
+            $db->Execute("UPDATE " . TABLE_PRODUCTS . " SET products_quantity = " . $stock_left . " WHERE products_id = $products_id LIMIT 1");
             if ($stock_left <= 0) {
                 // only set status to off when not displaying sold out
                 if (SHOW_PRODUCTS_SOLD_OUT == '0') {
-                    $db->Execute("update " . TABLE_PRODUCTS . " set products_status = 0 where products_id = '" . zen_get_prid($product['id']) . "'");
+                    $db->Execute("UPDATE " . TABLE_PRODUCTS . " SET products_status = 0 WHERE products_id = $products_id LIMIT 1");
                 }
             }
 
             // for low stock email
-            if ( $stock_left <= STOCK_REORDER_LEVEL ) {
+            if ($stock_left <= STOCK_REORDER_LEVEL) {
                 // WebMakers.com Added: add to low stock email
-                $order->email_low_stock .=  'ID# ' . zen_get_prid($product['id']) . "\t\t" . $product['model'] . "\t\t" . $product['name'] . "\t\t" . ' Qty Left: ' . $stock_left . "\n";
+                $order->email_low_stock .=  "ID# $products_id\t\t" . $product['model'] . "\t\t" . $product['name'] . "\t\t" . ' Qty Left: ' . $stock_left . "\n";
             }
         }
     }
 
     // Update products_ordered (for bestsellers list)
-    $db->Execute("update " . TABLE_PRODUCTS . " set products_ordered = products_ordered + " . sprintf('%f', $product['qty']) . " where products_id = '" . zen_get_prid($product['id']) . "'");
+    $db->Execute("UPDATE " . TABLE_PRODUCTS . " SET products_ordered = products_ordered + " . sprintf('%f', $product['qty']) . " WHERE products_id = $products_id LIMIT 1");
 
     $sql_data_array = array(
         'orders_id' => (int)$order_id,
-        'products_id' => zen_get_prid($product['id']),
+        'products_id' => $products_id,
         'products_model' => $product['model'],
         'products_name' => $product['name'],
         'products_price' => $product['price'],
@@ -942,45 +964,58 @@ function eo_add_product_to_order($order_id, $product) {
 
     //------ bof: insert customer-chosen options to order--------
     $attributes_exist = '0';
-    if (isset($product['attributes'])) {
+    if (isset($product['attributes']) && is_array($product['attributes'])) {
         $attributes_exist = '1';
-        for ($j=0, $n2=sizeof($product['attributes']); $j<$n2; $j++) {
+        foreach ($product['attributes'] as $current_attribute) {
             if (DOWNLOAD_ENABLED == 'true') {
-                $attributes_query = "select popt.products_options_name, poval.products_options_values_name,
-                pa.options_values_price, pa.price_prefix,
-                pa.product_attribute_is_free, pa.products_attributes_weight, pa.products_attributes_weight_prefix,
-                pa.attributes_discounted, pa.attributes_price_base_included, pa.attributes_price_onetime,
-                pa.attributes_price_factor, pa.attributes_price_factor_offset,
-                pa.attributes_price_factor_onetime, pa.attributes_price_factor_onetime_offset,
-                pa.attributes_qty_prices, pa.attributes_qty_prices_onetime,
-                pa.attributes_price_words, pa.attributes_price_words_free,
-                pa.attributes_price_letters, pa.attributes_price_letters_free,
-                pad.products_attributes_maxdays, pad.products_attributes_maxcount, pad.products_attributes_filename
-                from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " .
-                TABLE_PRODUCTS_ATTRIBUTES . " pa
-                left join " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
-                on pa.products_attributes_id=pad.products_attributes_id
-                where pa.products_id = '" . zen_db_input($product['id']) . "'
-                and pa.options_id = '" . $product['attributes'][$j]['option_id'] . "'
-                and pa.options_id = popt.products_options_id
-                and pa.options_values_id = '" . $product['attributes'][$j]['value_id'] . "'
-                and pa.options_values_id = poval.products_options_values_id
-                and popt.language_id = '" . $_SESSION['languages_id'] . "'
-                and poval.language_id = '" . $_SESSION['languages_id'] . "'";
-
-                $attributes_values = $db->Execute($attributes_query);
+                $attributes_values = $db->Execute(
+                    "SELECT popt.products_options_name, poval.products_options_values_name,
+                            pa.options_values_price, pa.price_prefix,
+                            pa.product_attribute_is_free, pa.products_attributes_weight, pa.products_attributes_weight_prefix,
+                            pa.attributes_discounted, pa.attributes_price_base_included, pa.attributes_price_onetime,
+                            pa.attributes_price_factor, pa.attributes_price_factor_offset,
+                            pa.attributes_price_factor_onetime, pa.attributes_price_factor_onetime_offset,
+                            pa.attributes_qty_prices, pa.attributes_qty_prices_onetime,
+                            pa.attributes_price_words, pa.attributes_price_words_free,
+                            pa.attributes_price_letters, pa.attributes_price_letters_free,
+                            pad.products_attributes_maxdays, pad.products_attributes_maxcount, pad.products_attributes_filename
+                       FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
+                            INNER JOIN " . TABLE_PRODUCTS_OPTIONS . " popt
+                                ON popt.products_options_id = pa.options_id
+                               AND popt.language_id = " . (int)$_SESSION['languages_id'] . "
+                            INNER JOIN " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval
+                                ON poval.products_options_values_id = pa.options_values_id
+                               AND poval.language_id = " . (int)$_SESSION['languages_id'] . "
+                            LEFT JOIN " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
+                                ON pa.products_attributes_id = pad.products_attributes_id
+                      WHERE pa.products_id = $products_id
+                        AND pa.options_id = " . (int)$current_attribute['option_id'] . "
+                        AND pa.options_values_id = " . (int)$current_attribute['value_id'] . "
+                      LIMIT 1"
+                );
             } else {
-                $attributes_values = $db->Execute("select popt.products_options_name, poval.products_options_values_name,
-                        pa.options_values_price, pa.price_prefix,
-                        pa.product_attribute_is_free, pa.products_attributes_weight, pa.products_attributes_weight_prefix,
-                        pa.attributes_discounted, pa.attributes_price_base_included, pa.attributes_price_onetime,
-                        pa.attributes_price_factor, pa.attributes_price_factor_offset,
-                        pa.attributes_price_factor_onetime, pa.attributes_price_factor_onetime_offset,
-                        pa.attributes_qty_prices, pa.attributes_qty_prices_onetime,
-                        pa.attributes_price_words, pa.attributes_price_words_free,
-                        pa.attributes_price_letters, pa.attributes_price_letters_free
-                        from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa
-                        where pa.products_id = '" . $product['id'] . "' and pa.options_id = '" . (int)$product['attributes'][$j]['option_id'] . "' and pa.options_id = popt.products_options_id and pa.options_values_id = '" . (int)$product['attributes'][$j]['value_id'] . "' and pa.options_values_id = poval.products_options_values_id and popt.language_id = '" . $_SESSION['languages_id'] . "' and poval.language_id = '" . $_SESSION['languages_id'] . "'");
+                $attributes_values = $db->Execute(
+                    "SELECT popt.products_options_name, poval.products_options_values_name,
+                            pa.options_values_price, pa.price_prefix,
+                            pa.product_attribute_is_free, pa.products_attributes_weight, pa.products_attributes_weight_prefix,
+                            pa.attributes_discounted, pa.attributes_price_base_included, pa.attributes_price_onetime,
+                            pa.attributes_price_factor, pa.attributes_price_factor_offset,
+                            pa.attributes_price_factor_onetime, pa.attributes_price_factor_onetime_offset,
+                            pa.attributes_qty_prices, pa.attributes_qty_prices_onetime,
+                            pa.attributes_price_words, pa.attributes_price_words_free,
+                            pa.attributes_price_letters, pa.attributes_price_letters_free
+                       FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
+                            INNER JOIN " . TABLE_PRODUCTS_OPTIONS . " popt
+                                ON popt.products_options_id = pa.options_id
+                               AND popt.language_id = " . (int)$_SESSION['languages_id'] . "
+                            INNER JOIN " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval
+                                ON poval.products_options_values_id = pa.options_values_id
+                               AND poval.language_id = " . (int)$_SESSION['languages_id'] . "
+                      WHERE pa.products_id = $products_id
+                        AND pa.options_id = " . (int)$current_attribute['option_id'] . "
+                        AND pa.options_values_id = " . (int)$current_attribute['value_id'] . "
+                      LIMIT 1"
+                );
             }
 
             //clr 030714 update insert query.  changing to use values form $order->products for products_options_values.
@@ -988,7 +1023,7 @@ function eo_add_product_to_order($order_id, $product) {
                 'orders_id' => (int)$order_id,
                 'orders_products_id' => (int)$order_products_id,
                 'products_options' => $attributes_values->fields['products_options_name'],
-                'products_options_values' => $product['attributes'][$j]['value'],
+                'products_options_values' => $current_attribute['value'],
                 'options_values_price' => $attributes_values->fields['options_values_price'],
                 'price_prefix' => $attributes_values->fields['price_prefix'],
                 'product_attribute_is_free' => $attributes_values->fields['product_attribute_is_free'],
@@ -1007,13 +1042,13 @@ function eo_add_product_to_order($order_id, $product) {
                 'attributes_price_words_free' => $attributes_values->fields['attributes_price_words_free'],
                 'attributes_price_letters' => $attributes_values->fields['attributes_price_letters'],
                 'attributes_price_letters_free' => $attributes_values->fields['attributes_price_letters_free'],
-                'products_options_id' => (int)$product['attributes'][$j]['option_id'],
-                'products_options_values_id' => (int)$product['attributes'][$j]['value_id'],
+                'products_options_id' => (int)$current_attribute['option_id'],
+                'products_options_values_id' => (int)$current_attribute['value_id'],
                 'products_prid' => $product['id']
             );
             zen_db_perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);
 
-            if ((DOWNLOAD_ENABLED == 'true') && isset($attributes_values->fields['products_attributes_filename']) && zen_not_null($attributes_values->fields['products_attributes_filename'])) {
+            if (DOWNLOAD_ENABLED == 'true' && isset($attributes_values->fields['products_attributes_filename']) && !empty($attributes_values->fields['products_attributes_filename'])) {
                 $sql_data_array = array(
                     'orders_id' => (int)$order_id,
                     'orders_products_id' => (int)$order_products_id,
@@ -1022,34 +1057,36 @@ function eo_add_product_to_order($order_id, $product) {
                     'download_count' => $attributes_values->fields['products_attributes_maxcount'],
                     'products_prid' => $product['id']
                 );
-
                 zen_db_perform(TABLE_ORDERS_PRODUCTS_DOWNLOAD, $sql_data_array);
             }
         }
     }
 
     $order->products[] = $product;
-    $zco_notifier->notify ('EDIT_ORDERS_ADD_PRODUCT', array ( 'order_id' => (int)$order_id, 'orders_products_id' => $order_products_id, 'product' => $product ));
+    $zco_notifier->notify('EDIT_ORDERS_ADD_PRODUCT', array('order_id' => (int)$order_id, 'orders_products_id' => $order_products_id, 'product' => $product));
 
     return $product;
 }
 
-function eo_update_order_subtotal($order_id, $product, $add = true) {
+function eo_update_order_subtotal($order_id, $product, $add = true) 
+{
     global $db, $order, $eo;
 
     // Retrieve running subtotal
-    if (!isset ($order->info['subtotal'])) {
-        $query = $db->Execute (
-            'SELECT `value` FROM `' . TABLE_ORDERS_TOTAL . '` ' .
-            'WHERE `orders_id`=\'' . (int)$order_id . '\' ' .
-            'AND `class`=\'ot_subtotal\''
+    if (!isset($order->info['subtotal'])) {
+        $query = $db->Execute(
+            "SELECT `value` 
+               FROM " . TABLE_ORDERS_TOTAL . "
+              WHERE orders_id = " . (int)$order_id . "
+                AND `class` = 'ot_subtotal'
+              LIMIT 1"
         );
         if (!$query->EOF) {
             $order->info['subtotal'] = $query->fields['value'];
         }
     }
     
-    $eo->eoLog ("eo_update_order_subtotal ($add), taxes on entry. " . $eo->eoFormatTaxInfoForLog(true), 'tax');
+    $eo->eoLog("eo_update_order_subtotal ($add), taxes on entry. " . $eo->eoFormatTaxInfoForLog(true), 'tax');
 
     // Determine the product price
     $final_price = $product['final_price'];
@@ -1098,47 +1135,51 @@ function eo_update_order_subtotal($order_id, $product, $add = true) {
                 $order->totals[$index]['text'] = $eo->eoFormatCurrencyValue($order->totals[$index]['value']);
                 break;
             default:
+                break;
         }
     }
     unset($index, $total);
-    $eo->eoLog ('eo_update_order_subtotal, taxes on exit. ' . $eo->eoFormatTaxInfoForLog(), 'tax');
-
+    $eo->eoLog('eo_update_order_subtotal, taxes on exit. ' . $eo->eoFormatTaxInfoForLog(), 'tax');
 }
 
-function eo_remove_product_from_order($order_id, $orders_products_id) {
+function eo_remove_product_from_order($order_id, $orders_products_id) 
+{
     global $db, $order, $zco_notifier;
 
+    $order_id = (int)$order_id;
     // First grab the order <==> product mappings
-    $orders_products_id_mapping = eo_get_orders_products_id_mappings((int)$order_id);
+    $orders_products_id_mapping = eo_get_orders_products_id_mappings($order_id);
 
     // Handle product stock
     $doStockDecrement = true;
-    $zco_notifier->notify ('EDIT_ORDERS_REMOVE_PRODUCT_STOCK_DECREMENT', array ( 'order_id' => $order_id, 'orders_products_id' => $orders_products_id ), $doStockDecrement);
+    $zco_notifier->notify('EDIT_ORDERS_REMOVE_PRODUCT_STOCK_DECREMENT', array('order_id' => $order_id, 'orders_products_id' => $orders_products_id), $doStockDecrement);
     if (STOCK_LIMITED == 'true' && $doStockDecrement) {
         $query = $db->Execute(
-            'SELECT `products_id`, `products_quantity` ' .
-            'FROM `' . TABLE_ORDERS_PRODUCTS . '` ' .
-            'WHERE `orders_id`=\'' . (int)$order_id . '\' ' .
-                'AND `orders_products_id`=\'' . (int)$orders_products_id . '\''
+            "SELECT products_id, products_quantity
+               FROM " . TABLE_ORDERS_PRODUCTS . "
+              WHERE orders_id = $order_id
+                AND orders_products_id = " . (int)$orders_products_id
         );
 
         while (!$query->EOF) {
             if (DOWNLOAD_ENABLED == 'true') {
                 $check = $db->Execute(
-                    'SELECT `p`.`products_quantity`, `p`.`products_ordered`, `pad`.`products_attributes_filename`, `p`.`product_is_always_free_shipping` ' .
-                    'FROM `' . TABLE_PRODUCTS . '` AS `p` ' .
-                    'LEFT JOIN `' . TABLE_PRODUCTS_ATTRIBUTES . '` AS `pa` ON `p`.`products_id`=`pa`.`products_id` ' .
-                    'LEFT JOIN `' . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . '` AS `pad` ON `pa`.`products_attributes_id`=`pad`.`products_attributes_id` ' .
-                    'WHERE `p`.`products_id` = \'' . (int)$query->fields['products_id'] . '\''
+                    "SELECT p.products_quantity, p.products_ordered, pad.products_attributes_filename, p.product_is_always_free_shipping
+                       FROM " . TABLE_PRODUCTS . " AS p 
+                            LEFT JOIN " . TABLE_PRODUCTS_ATTRIBUTES . " AS pa 
+                                ON p.products_id = pa.products_id
+                            LEFT JOIN " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " AS pad 
+                                ON pa.products_attributes_id = pad.products_attributes_id
+                      WHERE p.products_id = {$query->fields['products_id']}"
                 );
-            }
-            else {
+            } else {
                 $check = $db->Execute(
-                    'SELECT `p`.`products_quantity`, `p`.`products_ordered` FROM `' . TABLE_PRODUCTS . '` AS `p` ' .
-                     'WHERE `p`.`products_id` = \'' . (int)$query->fields['products_id'] . '\''
+                    "SELECT p.products_quantity, p.products_ordered 
+                       FROM " . TABLE_PRODUCTS . " AS p
+                      WHERE p.products_id = {$query->fields['products_id']}"
                 );
             }
-            if (!$check->EOF && (DOWNLOAD_ENABLED != 'true' || $check->fields['product_is_always_free_shipping'] == 2 || !$check->fields['products_attributes_filename'] )) {
+            if (!$check->EOF && (DOWNLOAD_ENABLED != 'true' || $check->fields['product_is_always_free_shipping'] == 2 || !empty($check->fields['products_attributes_filename']))) {
                 $sql_data_array = array(
                     'products_quantity' => $check->fields['products_quantity'] + $query->fields['products_quantity'],
                     'products_ordered' => $check->fields['products_ordered'] - $query->fields['products_quantity']
@@ -1152,30 +1193,25 @@ function eo_remove_product_from_order($order_id, $orders_products_id) {
                         $sql_data_array['products_status'] = 1;
                     }
                 }
-
-                zen_db_perform(TABLE_PRODUCTS, $sql_data_array, 'update', 'products_id = \'' . (int)$query->fields['products_id'] . '\'');
+                zen_db_perform(TABLE_PRODUCTS, $sql_data_array, 'update', 'products_id = ' . (int)$query->fields['products_id']);
             }
-
             $query->MoveNext();
         }
         unset($check, $query, $sql_data_array);
     }
     
-    $zco_notifier->notify ('EDIT_ORDERS_REMOVE_PRODUCT', array ( 'order_id' => (int)$order_id, 'orders_products_id' => (int)$orders_products_id ));
+    $zco_notifier->notify('EDIT_ORDERS_REMOVE_PRODUCT', array('order_id' => (int)$order_id, 'orders_products_id' => (int)$orders_products_id));
 
     // Remove the product from the order in the database
-    $remove_query = 'DELETE FROM `%1$s` ' .
-        'WHERE `orders_id`=\'' . (int)$order_id . '\' ' .
-        'AND `orders_products_id`=\'' . (int)$orders_products_id . '\'';
-
+    $remove_query = 'DELETE FROM `%1$s` WHERE orders_id = ' . (int)$order_id . ' AND orders_products_id = ' . (int)$orders_products_id;
     $db->Execute(sprintf($remove_query, TABLE_ORDERS_PRODUCTS));
     $db->Execute(sprintf($remove_query, TABLE_ORDERS_PRODUCTS_ATTRIBUTES));
     $db->Execute(sprintf($remove_query, TABLE_ORDERS_PRODUCTS_DOWNLOAD));
     unset($remove_query);
 
     // Handle the internal products array
-    for($i=0; $i<sizeof($order->products); $i++) {
-        if($orders_products_id == $orders_products_id_mapping[$i]) {
+    for ($i = 0, $n = count($order->products); $i < $n; $i++) {
+        if ($orders_products_id == $orders_products_id_mapping[$i]) {
             // Remove from the product from the array
             unset($order->products[$i]);
             // rekey the array (so for loops work)
@@ -1185,19 +1221,21 @@ function eo_remove_product_from_order($order_id, $orders_products_id) {
     }
 }
 
-function eo_get_order_total_by_order($order_id, $class = null) {
+function eo_get_order_total_by_order($order_id, $class = null) 
+{
     global $db, $eo;
 
-    // Retreive the raw value
+    // Retrieve the raw value
+    $and_clause = ($class !== null) ? " AND `class` = '$class'" : '';
     $ot = $db->Execute(
-        'SELECT `title`, `text`, `value`, `class`, `sort_order` ' .
-        'FROM `' . TABLE_ORDERS_TOTAL . '` ' .
-        'WHERE `orders_id`=\'' . (int)$order_id . '\'' .
-        ($class !== null ? ' AND `class`=\'' . $class . '\' ORDER BY `sort_order`' : '')
+        "SELECT *
+           FROM " . TABLE_ORDERS_TOTAL . "
+          WHERE orders_id = " . (int)$order_id . "$and_clause
+          ORDER BY sort_order ASC"
     );
 
     $retval = array();
-    while(!$ot->EOF) {
+    while (!$ot->EOF) {
         $retval[$ot->fields['class']] = array(
             'title' => $ot->fields['title'],
             'text' => $ot->fields['text'],
@@ -1209,99 +1247,108 @@ function eo_get_order_total_by_order($order_id, $class = null) {
     return $retval;
 }
 
-function eo_get_orders_products_id_mappings($order_id) {
+function eo_get_orders_products_id_mappings($order_id) 
+{
     global $db;
     $orders_products_ids = $db->Execute(
-        'SELECT `orders_products_id` ' .
-        'FROM `' . TABLE_ORDERS_PRODUCTS . '` ' .
-        'WHERE `orders_id`=\'' . (int)$order_id . '\' ' .
-        'ORDER BY `orders_products_id`'
+        "SELECT `orders_products_id`
+           FROM " . TABLE_ORDERS_PRODUCTS . "
+          WHERE `orders_id` = " . (int)$order_id . "
+          ORDER BY `orders_products_id` ASC"
     );
 
     $retval = array();
-    while(!$orders_products_ids->EOF) {
+    while (!$orders_products_ids->EOF) {
         $retval[] = $orders_products_ids->fields['orders_products_id'];
         $orders_products_ids->moveNext();
     }
     return $retval;
 }
 
-function eo_get_orders_products_attributes_id_mappings($order_id, $order_product_id) {
+function eo_get_orders_products_attributes_id_mappings($order_id, $order_product_id) 
+{
     global $db;
     $orders_products_ids = $db->Execute(
-        'SELECT `orders_products_attributes_id` ' .
-        'FROM `' . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . '` ' .
-        'WHERE `orders_id`=\'' . (int)$order_id . '\' ' .
-        'AND `orders_products_id`=\'' . (int)$order_product_id . '\''
+        "SELECT `orders_products_attributes_id` 
+           FROM " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . "
+          WHERE `orders_id` = " . (int)$order_id . "
+            AND `orders_products_id` = " . (int)$order_product_id . "
+          ORDER BY orders_products_attributes_id ASC"
     );
 
     $retval = array();
-    while(!$orders_products_ids->EOF) {
+    while (!$orders_products_ids->EOF) {
         $retval[] = $orders_products_ids->fields['orders_products_attributes_id'];
         $orders_products_ids->moveNext();
     }
     return $retval;
 }
 
-function eo_get_orders_products_options_id_mappings($order_id, $order_product_id) {
+function eo_get_orders_products_options_id_mappings($order_id, $order_product_id) 
+{
     global $db;
     $orders_products_ids = $db->Execute(
-        'SELECT `products_options_id`, `orders_products_attributes_id` ' .
-        'FROM `' . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . '` ' .
-        'WHERE `orders_id`=\'' . (int)$order_id . '\' ' .
-        'AND `orders_products_id`=\'' . (int)$order_product_id . '\''
+        "SELECT `products_options_id`, `orders_products_attributes_id` 
+           FROM " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . "
+          WHERE `orders_id` = " . (int)$order_id . "
+            AND `orders_products_id` = " . (int)$order_product_id
     );
 
     $retval = array();
-    while(!$orders_products_ids->EOF) {
-        if(!array_key_exists($orders_products_ids->fields['products_options_id'], $retval)) {
-            $retval[$orders_products_ids->fields['products_options_id']] = array();
+    while (!$orders_products_ids->EOF) {
+        $options_id = $orders_products_ids->fields['products_options_id'];
+        if (!isset($retval[$options_id])) {
+            $retval[$options_id] = array();
         }
-        $retval[$orders_products_ids->fields['products_options_id']][] = $orders_products_ids->fields['orders_products_attributes_id'];
+        $retval[$options_id][] = $orders_products_ids->fields['orders_products_attributes_id'];
         $orders_products_ids->moveNext();
     }
     return $retval;
 }
 
-function eo_is_selected_product_attribute_id($orders_products_attributes_id, $attribute_id) {
+function eo_is_selected_product_attribute_id($orders_products_attributes_id, $attribute_id) 
+{
     global $db;
 
     $attributes = new attributes();
     $attributes = $attributes->get_attribute_by_id($attribute_id);
 
     $query = $db->Execute(
-        'SELECT COUNT(`orders_products_attributes_id`) AS `count` ' .
-        'FROM `' . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . '` AS `opa` ' .
-        'LEFT JOIN `' . TABLE_ORDERS_PRODUCTS . '` AS `op` ON `op`.`orders_products_id`=`opa`.`orders_products_id` ' .
-        'WHERE `orders_products_attributes_id`=\'' . (int)$orders_products_attributes_id . '\' ' .
-        'AND `op`.`products_id`=\'' . $attributes['products_id'] . '\' ' .
-        'AND `opa`.`products_options_id`=\'' . $attributes['options_id'] . '\' ' .
-        'AND `opa`.`products_options_values_id`=\'' . $attributes['options_values_id'] . '\''
+        "SELECT COUNT(`orders_products_attributes_id`) AS `count`
+           FROM " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . " AS opa
+                LEFT JOIN " . TABLE_ORDERS_PRODUCTS . " AS op 
+                    ON op.orders_products_id = opa.orders_products_id 
+          WHERE opa.orders_products_attributes_id = " . (int)$orders_products_attributes_id . "
+            AND op.products_id = " . (int)$attributes['products_id'] . "
+            AND opa.products_options_id = " . (int)$attributes['options_id'] . "
+            AND opa.products_options_values_id = " . (int)$attributes['options_values_id']
     );
     unset($attributes);
 
     return (!$query->EOF && $query->fields['count'] == 1);
 }
 
-function eo_get_selected_product_attribute_value_by_id($orders_products_attributes_id, $attribute_id) {
+function eo_get_selected_product_attribute_value_by_id($orders_products_attributes_id, $attribute_id) 
+{
     global $db;
 
     $attributes = new attributes();
     $attributes = $attributes->get_attribute_by_id($attribute_id);
 
     $query = $db->Execute(
-        'SELECT `products_options_values` ' .
-        'FROM `' . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . '` AS `opa` ' .
-        'LEFT JOIN `' . TABLE_ORDERS_PRODUCTS . '` AS `op` ON `op`.`orders_products_id`=`opa`.`orders_products_id` ' .
-        'WHERE `orders_products_attributes_id`=\'' . (int)$orders_products_attributes_id . '\' ' .
-        'AND `op`.`products_id`=\'' . $attributes['products_id'] . '\' ' .
-        'AND `opa`.`products_options_id`=\'' . $attributes['options_id'] . '\' ' .
-        'AND `opa`.`products_options_values_id`=\'' . $attributes['options_values_id'] . '\''
+        "SELECT products_options_values
+           FROM " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . " AS opa
+                LEFT JOIN " . TABLE_ORDERS_PRODUCTS . " AS op
+                    ON op.products_id = " . (int)$attributes['products_id'] . "
+                   AND op.orders_products_id = opa.orders_products_id
+          WHERE opa.orders_products_attributes_id = " . (int)$orders_products_attributes_id . "
+            AND opa.products_options_id = " . (int)$attributes['options_id'] . "
+            AND opa.products_options_values_id = " . (int)$attributes['options_values_id'] . "
+          LIMIT 1"
     );
     unset($attributes);
 
-    if($query->EOF) return null;
-    return $query->fields['products_options_values'];
+    return ($query->EOF) ? null : $query->fields['products_options_values'];
 }
 
 function eo_update_database_order_totals($oID) 
@@ -1309,7 +1356,7 @@ function eo_update_database_order_totals($oID)
     global $db, $order, $eo;
 
     // Load required modules for order totals if enabled
-    if (defined('MODULE_ORDER_TOTAL_INSTALLED') && zen_not_null(MODULE_ORDER_TOTAL_INSTALLED)) {
+    if (defined('MODULE_ORDER_TOTAL_INSTALLED') && !empty(MODULE_ORDER_TOTAL_INSTALLED)) {
         $eo->eoLog(PHP_EOL . 'eo_update_database_order_totals, taxes/totals on entry. ' . $eo->eoFormatTaxInfoForLog(true), 'tax');
         
         $eo->tax_updated = false;
@@ -1343,11 +1390,11 @@ function eo_update_database_order_totals($oID)
             $order->info['total'] = $order->info['subtotal'] + $order->info['tax'] + $order->info['shipping_cost'];
         }
         
-        $eo->eoLog('eo_update_database_order_totals, after adjustments: order_total: ' . $order->info['total'] . ', order_tax: ' . $order->info['tax'], 'tax');
+        $eo->eoLog('eo_update_database_order_totals, after adjustments: ' . $eo->eoFormatArray($order->info), 'tax');
 
         // Process the order totals
         $order_totals = $GLOBALS['order_total_modules']->process();
-        $eo->eoLog('eo_update_database_order_totals, after process: order_total: ' . $order->info['total'] . ', order_tax: ' . $order->info['tax'] . PHP_EOL . $eo->eoFormatArray($order_totals) . PHP_EOL . $eo->eoFormatArray($order->totals), 'tax');
+        $eo->eoLog('eo_update_database_order_totals, after process: ' . $eo->eoFormatArray($order->info) . PHP_EOL . $eo->eoFormatArray($order_totals) . PHP_EOL . $eo->eoFormatArray($order->totals), 'tax');
         
         $GLOBALS['zco_notifier']->notify('EO_UPDATE_DATABASE_ORDER_TOTALS_MAIN', $oID);
         // Update the order totals in the database
@@ -1396,7 +1443,6 @@ function eo_update_database_order_totals($oID)
         if (STORE_TAX_DISPLAY_STATUS == '0' && $order->info['tax'] == 0) {
             $db->Execute("DELETE FROM " . TABLE_ORDERS_TOTAL . " WHERE orders_id = $oID AND `class` = 'ot_tax'");
         }
-        
         $eo->eoLog('eo_update_database_order_totals, taxes on exit. ' . $eo->eoFormatTaxInfoForLog(), 'tax');
     }
 }
@@ -1404,6 +1450,8 @@ function eo_update_database_order_totals($oID)
 function eo_update_database_order_total($oID, $order_total) {
     global $db, $eo;
     $updated = false;
+    
+    $oID = (int)$oID;
     
     // -----
     // The 'ot_shipping' total's 'process' method appends a trailing ':' to the shipping method's
@@ -1425,26 +1473,25 @@ function eo_update_database_order_total($oID, $order_total) {
     // Update the Order Totals in the Database, recognizing that there might be multiple records for the product's tax
     $and_clause = ($order_total['code'] == 'ot_tax' && SHOW_SPLIT_TAX_CHECKOUT == 'true') ? (" AND `title` = '" . $order_total['title'] . "'") : '';
     $found = $db->Execute(
-        'SELECT `orders_id` FROM `' . TABLE_ORDERS_TOTAL . '` ' .
-        'WHERE `class`=\'' . $order_total['code'] .
-        '\' AND `orders_id`=' . (int)$oID . $and_clause
+        "SELECT orders_id 
+           FROM " . TABLE_ORDERS_TOTAL . "
+          WHERE `class` = '" . $order_total['code'] . "'
+            AND `orders_id` = $oID$and_clause"
     );
     
-    $eo->eoLog ("eo_update_database_order_total: and_clause: ($and_clause), found (" . (int)$found->EOF . "), " . $eo->eoFormatArray($order_total), 'tax');
+    $eo->eoLog("eo_update_database_order_total: and_clause: ($and_clause), found (" . (int)$found->EOF . "), " . $eo->eoFormatArray($order_total), 'tax');
     if (!$found->EOF) {
-        if (zen_not_null($order_total['title']) && $order_total['title'] != ':') {
-            zen_db_perform(
-                TABLE_ORDERS_TOTAL, $sql_data_array, 'update',
-                "class='" . $order_total['code'] . "' AND orders_id=" . (int)$oID . $and_clause
-            );
+        if (!empty($order_total['title']) && $order_total['title'] != ':') {
+            zen_db_perform(TABLE_ORDERS_TOTAL, $sql_data_array, 'update', "class='" . $order_total['code'] . "' AND orders_id=$oID$and_clause");
         } else {
             $db->Execute(
-                'DELETE FROM `' . TABLE_ORDERS_TOTAL . '` ' .
-                "WHERE `class`= '" . $order_total['code'] . "' AND orders_id = " . (int)$oID . $and_clause
+                "DELETE FROM " . TABLE_ORDERS_TOTAL . "
+                  WHERE `class`= '" . $order_total['code'] . "' 
+                    AND orders_id = $oID$and_clause"
             );
         }
         $updated = true;
-    } elseif (zen_not_null($order_total['title']) && $order_total['title'] != ':') {
+    } elseif (!empty($order_total['title']) && $order_total['title'] != ':') {
         $sql_data_array['orders_id'] = (int)$oID;
         $sql_data_array['class'] = $order_total['code'];
 
@@ -1474,34 +1521,30 @@ function eo_update_database_order_total($oID, $order_total) {
                 $tax_value = 'order_tax + ' . $tax_value;
             }
             $eo->tax_updated = true;
-            $db->Execute ("UPDATE " . TABLE_ORDERS . " SET order_tax = $tax_value WHERE orders_id = " . (int)$oID . " LIMIT 1");
+            $db->Execute("UPDATE " . TABLE_ORDERS . " SET order_tax = $tax_value WHERE orders_id = $oID LIMIT 1");
 //-eof-20160407-lat9
             break;
         case 'ot_total':
-            zen_db_perform(
-                TABLE_ORDERS, array('order_total' => $sql_data_array['value']), 'update',
-                'orders_id = \'' . (int)$oID . '\''
-            );
+            zen_db_perform(TABLE_ORDERS, array('order_total' => $sql_data_array['value']), 'update', "orders_id = $oID LIMIT 1");
             break;
         case 'ot_shipping':
-            if (substr ($order_total['title'], -1) == ':') {
+            if (substr($order_total['title'], -1) == ':') {
                 $order_total['title'] = substr($order_total['title'], 0, -1);
             }
             $sql_data_array = array(
-                'shipping_method' => $order_total['title']
+                'shipping_method' => $order_total['title'],
+                'shipping_tax_rate' => $GLOBALS['eo']->eoGetShippingTaxRate($GLOBALS['order']),
             );
-            if (array_key_exists('shipping_module', $order_total)) {
+            if (isset($order_total['shipping_module'])) {
                 $sql_data_array['shipping_module_code'] = $order_total['shipping_module'];
             }
 
-            zen_db_perform(
-                TABLE_ORDERS, $sql_data_array, 'update', 'orders_id = \'' . (int)$oID . '\''
-            );
+            zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', "orders_id = $oID LIMIT 1");
             break;
         default:
             break;
     }
-    unset ($sql_data_array);
+    unset($sql_data_array);
 
     return $updated;
 }
@@ -1515,7 +1558,7 @@ function eo_get_available_order_totals_class_values($oID)
     $module_list = explode(';', (str_replace('.php', '', MODULE_ORDER_TOTAL_INSTALLED)));
     $order_totals = eo_get_order_total_by_order($oID);
     if ($order_totals !== null) {
-        foreach($order_totals as $class => $total) {
+        foreach ($order_totals as $class => $total) {
             if ($class == 'ot_local_sales_taxes') {
                 continue;
             }
@@ -1524,6 +1567,14 @@ function eo_get_available_order_totals_class_values($oID)
                 unset($module_list[$key]);
             }
         }
+    }
+    
+    // -----
+    // If it's not already created, initialize the order's shipping tax value for use
+    // by the ot_shipping order-total.
+    //
+    if (!isset($order->info['shipping_tax'])) {
+        $order->info['shipping_tax'] = 0;
     }
 
     // Load the order total classes
@@ -1540,15 +1591,14 @@ function eo_get_available_order_totals_class_values($oID)
             'sort_order' => (int)$GLOBALS[$class]->sort_order
         );
     }
-
     return $retval;
 }
 
-function eo_get_available_shipping_modules() {
+function eo_get_available_shipping_modules() 
+{
     global $order;
     $retval = array();
     if (defined('MODULE_SHIPPING_INSTALLED') && zen_not_null(MODULE_SHIPPING_INSTALLED)) {
-
         // Load the shopping cart class into the session
         eo_shopping_cart();
 
@@ -1557,7 +1607,7 @@ function eo_get_available_shipping_modules() {
         $shipping_modules = new shipping();
 
         $use_strip_tags = (defined('EO_SHIPPING_DROPDOWN_STRIP_TAGS') && EO_SHIPPING_DROPDOWN_STRIP_TAGS === 'true');
-        for ($i=0, $n=count($shipping_modules->modules); $i<$n; $i++) {
+        for ($i = 0, $n = count($shipping_modules->modules); $i < $n; $i++) {
             $class = substr($shipping_modules->modules[$i], 0, strrpos($shipping_modules->modules[$i], '.'));
             if (isset($GLOBALS[$class])) {
                 $retval[] = array(
@@ -1571,7 +1621,8 @@ function eo_get_available_shipping_modules() {
     return $retval;
 }
 
-function eo_shopping_cart() {
+function eo_shopping_cart() 
+{
     if (!isset($_SESSION['cart'])) {
         if (defined('EO_MOCK_SHOPPING_CART') && EO_MOCK_SHOPPING_CART === 'true') {
             $_SESSION['cart'] = new mockCart();
@@ -1582,7 +1633,8 @@ function eo_shopping_cart() {
     }
 }
 
-function eo_checks_and_warnings() {
+function eo_checks_and_warnings() 
+{
     global $db, $messageStack;
     // -----
     // Check to see if the AdminRequestSanitizer class is present and, if so, that the multi-dimensional method
@@ -1593,72 +1645,22 @@ function eo_checks_and_warnings() {
         zen_redirect(zen_href_link(FILENAME_DEFAULT));
     }
 
-    $result = $db->Execute('SELECT `project_version_major`, `project_version_minor` FROM `' . TABLE_PROJECT_VERSION . '` WHERE `project_version_key`=\'Zen-Cart Database\'');
-    $version = $result->fields['project_version_major'] . '.' . $result->fields['project_version_minor'];
-    unset($result);
-
-    // Core checks first. If reload needed after set reload to true
-    $reload = false;
-    if (!defined('PRODUCTS_OPTIONS_TYPE_SELECT')) {
-        if (version_compare($version, '1.5', '>=')) {
-            $sql_data_array = array(
-                'configuration_title' => 'Product option type Select',
-                'configuration_key' => 'PRODUCTS_OPTIONS_TYPE_SELECT',
-                'configuration_value' => '0',
-                'configuration_description' => 'The number representing the Select type of product option.',
-                'configuration_group_id' => '0',
-                'sort_order' => null,
-                'last_modified' => 'now()',
-                'date_added' => 'now()',
-                'use_function' => null,
-                'set_function' => null
-            );
-            zen_db_perform(TABLE_CONFIGURATION, $sql_data_array);
-            $reload = true;
-        }
-    }
-
-    if (!defined('UPLOAD_PREFIX')) {
-        if (version_compare($version, '1.5', '>=')) {
-            $sql_data_array = array(
-                'configuration_title' => 'Upload prefix',
-                'configuration_key' => 'UPLOAD_PREFIX',
-                'configuration_value' => 'upload_',
-                'configuration_description' => 'Prefix used to differentiate between upload options and other options',
-                'configuration_group_id' => '0',
-                'sort_order' => null,
-                'last_modified' => 'now()',
-                'date_added' => 'now()',
-                'use_function' => null,
-                'set_function' => null
-            );
-            zen_db_perform(TABLE_CONFIGURATION, $sql_data_array);
-            $reload = true;
-        }
-    }
-
-    if (!defined('TEXT_PREFIX')) {
-        if (version_compare($version, '1.5', '>=')) {
-            $sql_data_array = array(
-                'configuration_title' => 'Text prefix',
-                'configuration_key' => 'TEXT_PREFIX',
-                'configuration_value' => 'txt_',
-                'configuration_description' => 'Prefix used to differentiate between text option values and other options',
-                'configuration_group_id' => '0',
-                'sort_order' => null,
-                'last_modified' => 'now()',
-                'date_added' => 'now()',
-                'use_function' => null,
-                'set_function' => null
-            );
-            zen_db_perform(TABLE_CONFIGURATION, $sql_data_array);
-            $reload = true;
-        }
-    }
+    // -----
+    // Ensure that some 'base' hidden configuration elements are present; they've been removed at times
+    // by plugins' uninstall SQL scripts.
+    //
+    $reload = (!defined('PRODUCTS_OPTIONS_TYPE_SELECT') || !defined('UPLOAD_PREFIX') || !defined('TEXT_PREFIX'));
     if ($reload) {
+        $db->Execute(
+            "INSERT IGNORE INTO " . TABLE_CONFIGURATION . "
+                (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, date_added)
+             VALUES
+                ('Product option type Select', 'PRODUCTS_OPTIONS_TYPE_SELECT', '0', 'The number representing the Select type of product option.', '6', now()),
+                ('Upload prefix', 'UPLOAD_PREFIX', 'upload_', 'Prefix used to differentiate between upload options and other options', '6', now()),
+                ('Text prefix', 'TEXT_PREFIX', 'txt_', 'Prefix used to differentiate between text option values and other options', '6', now())"
+        );
         zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit'));
     }
-    unset($reload);
 
     // -----
     // Check to be sure that the admin's zen_add_tax function has been updated to remove
@@ -1670,6 +1672,7 @@ function eo_checks_and_warnings() {
         $messageStack->add_session(ERROR_ZEN_ADD_TAX_ROUNDING, 'error');
         zen_redirect(zen_href_link(FILENAME_ORDERS, (isset($_GET['oID'])) ? ('action=edit&amp;oID=' . (int)$_GET['oID']) : ''));
     }
+    
     // -----
     // Issue a notification, allowing other add-ons to add any warnings they might have.
     //
@@ -1703,5 +1706,12 @@ function eo_checks_and_warnings() {
     // Check for the installation of "Potteryhouse's/mc12345678's Stock By Attributes"
     if (!defined('PRODUCTS_OPTIONS_TYPE_SELECT_SBA')) {
         define('PRODUCTS_OPTIONS_TYPE_SELECT_SBA', '-1');
+    }
+    
+    // -----
+    // Check for the installation of lat9's "Attribute Image Swapper".
+    //
+    if (!defined('PRODUCTS_OPTIONS_TYPE_IMAGE_SWATCH')) {
+        define('PRODUCTS_OPTIONS_TYPE_IMAGE_SWATCH', -1);
     }
 }

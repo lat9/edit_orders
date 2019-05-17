@@ -131,4 +131,4 @@ define('RESET_TOTALS', 'Reset totals prior to update? ');
 define('PAYMENT_CALC_MANUAL', 'Product prices, entered manually? ');
 define('PRODUCT_PRICES_CALC_AUTO', ' <b>Note:</b> Pricing for products will be <em>automatically</em> calculated.');
 define('PRODUCT_PRICES_CALC_MANUAL', ' <b>Note:</b> Pricing for products will use the value(s) that you enter.');
-define('EO_TAX_PERCENT', '%');
+define('EO_SHIPPING_TAX_DESCRIPTION', 'Shipping Tax (%s%%)');

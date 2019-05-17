@@ -18,6 +18,15 @@
 
 require 'includes/application_top.php';
 
+// -----
+// If the to-be-edited order's ID isn't supplied, quietly redirect back to the
+// admin's orders-listing, as this condition "shouldn't happen".
+//
+if (empty($_GET['oID'])) {
+    zen_redirect(zen_href_link(FILENAME_ORDERS));
+}
+$oID = (int)$_GET['oID'];
+
 // Check for commonly broken attribute related items
 eo_checks_and_warnings();
 
@@ -28,9 +37,7 @@ if (!class_exists('currencies')) {
 $currencies = new currencies();
 
 // Use the normal order class instead of the admin one
-include DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
-
-$oID = (int)zen_db_prepare_input($_GET['oID']);
+require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
 
 $step = (isset($_POST['step'])) ? (int)$_POST['step'] : 0;
 if (isset($_POST['add_product_categories_id'])) {
@@ -79,669 +86,667 @@ while (!$orders_status_query->EOF) {
     $orders_status_query->MoveNext();
 }
 
-$action = (isset($_GET['action']) ? $_GET['action'] : 'edit');
+$action = (!empty($_GET['action']) ? $_GET['action'] : 'edit');
+$eo->eoLog(PHP_EOL . date('Y-m-d H:i:s') . ", Edit Orders entered (" . EO_VERSION . ") action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
+$zco_notifier->notify('EDIT_ORDERS_START_ACTION_PROCESSING');
+switch ($action) {
+    // Update Order
+    case 'update_order':
+        $comments = zen_db_prepare_input($_POST['comments']);
+        $status = (int)$_POST['status'];
+        if ($status < 1) {
+            break;
+        }
 
-if (zen_not_null($action)) {
-    $eo->eoLog(PHP_EOL . date('Y-m-d H:i:s') . ", Edit Orders entered (". EO_VERSION . ") action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
-    $zco_notifier->notify('EDIT_ORDERS_START_ACTION_PROCESSING');
+        $order_updated = false;
+        $sql_data_array = array(
+            'customers_name' => $_POST['update_customer_name'],
+            'customers_company' => $_POST['update_customer_company'],
+            'customers_street_address' => $_POST['update_customer_street_address'],
+            'customers_suburb' => $_POST['update_customer_suburb'],
+            'customers_city' => $_POST['update_customer_city'],
+            'customers_state' => $_POST['update_customer_state'],
+            'customers_postcode' => $_POST['update_customer_postcode'],
+            'customers_country' => $_POST['update_customer_country'],
+            'customers_telephone' => $_POST['update_customer_telephone'],
+            'customers_email_address' => $_POST['update_customer_email_address'],
+            'last_modified' => 'now()',
 
-    switch ($action) {
-        // Update Order
-        case 'update_order':
-            $comments = zen_db_prepare_input($_POST['comments']);
-            $status = (int)zen_db_prepare_input($_POST['status']);
-            if ($status < 1) break;
+            'billing_name' => $_POST['update_billing_name'],
+            'billing_company' => $_POST['update_billing_company'],
+            'billing_street_address' => $_POST['update_billing_street_address'],
+            'billing_suburb' => $_POST['update_billing_suburb'],
+            'billing_city' => $_POST['update_billing_city'],
+            'billing_state' => $_POST['update_billing_state'],
+            'billing_postcode' => $_POST['update_billing_postcode'],
+            'billing_country' => $_POST['update_billing_country'],
 
-            $order_updated = false;
-            $sql_data_array = array(
-                'customers_name' => $_POST['update_customer_name'],
-                'customers_company' => $_POST['update_customer_company'],
-                'customers_street_address' => $_POST['update_customer_street_address'],
-                'customers_suburb' => $_POST['update_customer_suburb'],
-                'customers_city' => $_POST['update_customer_city'],
-                'customers_state' => $_POST['update_customer_state'],
-                'customers_postcode' => $_POST['update_customer_postcode'],
-                'customers_country' => $_POST['update_customer_country'],
-                'customers_telephone' => $_POST['update_customer_telephone'],
-                'customers_email_address' => $_POST['update_customer_email_address'],
-                'last_modified' => 'now()',
+            'delivery_name' => $_POST['update_delivery_name'],
+            'delivery_company' => $_POST['update_delivery_company'],
+            'delivery_street_address' => $_POST['update_delivery_street_address'],
+            'delivery_suburb' => $_POST['update_delivery_suburb'],
+            'delivery_city' => $_POST['update_delivery_city'],
+            'delivery_state' => $_POST['update_delivery_state'],
+            'delivery_postcode' => $_POST['update_delivery_postcode'],
+            'delivery_country' => $_POST['update_delivery_country'],
+            'payment_method' => $_POST['update_info_payment_method'],
+            'cc_type' => (isset($_POST['update_info_cc_type'])) ? $_POST['update_info_cc_type'] : '',
+            'cc_owner' => (isset($_POST['update_info_cc_owner'])) ? $_POST['update_info_cc_owner'] : '',
+            'cc_expires' => (isset($_POST['update_info_cc_expires'])) ? $_POST['update_info_cc_expires'] : '',
+            'order_tax' => 0
+        );
 
-                'billing_name' => $_POST['update_billing_name'],
-                'billing_company' => $_POST['update_billing_company'],
-                'billing_street_address' => $_POST['update_billing_street_address'],
-                'billing_suburb' => $_POST['update_billing_suburb'],
-                'billing_city' => $_POST['update_billing_city'],
-                'billing_state' => $_POST['update_billing_state'],
-                'billing_postcode' => $_POST['update_billing_postcode'],
-                'billing_country' => $_POST['update_billing_country'],
+        // If the country was passed as an id, change it to the country name for
+        // storing in the database. This is done in case a country is removed in
+        // the future, so the country name is still associated with the order.
+        if (is_numeric($sql_data_array['customers_country'])) {
+            $sql_data_array['customers_country'] = zen_get_country_name((int)$sql_data_array['customers_country']);
+        }
+        if (is_numeric($sql_data_array['billing_country'])) {
+            $sql_data_array['billing_country'] = zen_get_country_name((int)$sql_data_array['billing_country']);
+        }
+        if (is_numeric($sql_data_array['delivery_country'])) {
+            $sql_data_array['delivery_country'] = zen_get_country_name((int)$sql_data_array['delivery_country']);
+        }
 
-                'delivery_name' => $_POST['update_delivery_name'],
-                'delivery_company' => $_POST['update_delivery_company'],
-                'delivery_street_address' => $_POST['update_delivery_street_address'],
-                'delivery_suburb' => $_POST['update_delivery_suburb'],
-                'delivery_city' => $_POST['update_delivery_city'],
-                'delivery_state' => $_POST['update_delivery_state'],
-                'delivery_postcode' => $_POST['update_delivery_postcode'],
-                'delivery_country' => $_POST['update_delivery_country'],
-                'payment_method' => $_POST['update_info_payment_method'],
-                'cc_type' => (isset($_POST['update_info_cc_type'])) ? $_POST['update_info_cc_type'] : '',
-                'cc_owner' => (isset($_POST['update_info_cc_owner'])) ? $_POST['update_info_cc_owner'] : '',
-                'cc_expires' => (isset($_POST['update_info_cc_expires'])) ? $_POST['update_info_cc_expires'] : '',
-                'order_tax' => 0
-            );
+        // For PA-DSS Compliance, we no longer store the Credit Card number in
+        // the database. While inconvenient, this saves us in the event of an audit.
+        if (isset($_POST['update_info_cc_number'])) {
+            $update_info_cc_number = zen_db_prepare_input($_POST['update_info_cc_number']);
 
-            // If the country was passed as an id, change it to the country name for
-            // storing in the database. This is done in case a country is removed in
-            // the future, so the country name is still associated with the order.
-            if (is_numeric($sql_data_array['customers_country'])) {
-                $sql_data_array['customers_country'] = zen_get_country_name((int)$sql_data_array['customers_country']);
+            // If the number is not already obfuscated, we use the same method
+            // as the authorize.net module to obfuscate the entered CC number
+            if (is_numeric($update_info_cc_number)) {
+                $update_info_cc_number = str_pad(substr($_POST['update_info_cc_number'], -4), strlen($_POST['update_info_cc_number']), "X", STR_PAD_LEFT);
             }
-            if (is_numeric($sql_data_array['billing_country'])) {
-                $sql_data_array['billing_country'] = zen_get_country_name((int)$sql_data_array['billing_country']);
-            }
-            if (is_numeric($sql_data_array['delivery_country'])) {
-                $sql_data_array['delivery_country'] = zen_get_country_name((int)$sql_data_array['delivery_country']);
-            }
 
-            // For PA-DSS Compliance, we no longer store the Credit Card number in
-            // the database. While inconvenient, this saves us in the event of an audit.
-            if (isset($_POST['update_info_cc_number'])) {
-                $update_info_cc_number = zen_db_prepare_input($_POST['update_info_cc_number']);
+            $sql_data_array['cc_number'] = $update_info_cc_number;
+            unset($_POST['update_info_cc_number']);
+        }
+        
+        // -----
+        // Give any listening observer the opportunity to make modifications to the SQL data associated
+        // with the updated order and/or disallow the update.
+        //
+        // If the observer disallows the update (by setting the 3rd parameter to (bool)false), it's the observer's responsibility 
+        // to issue a message to the current admin to let them know why the update was denied.
+        //
+        // Note that (currently) any updates made to the order will be lost!
+        //
+        $allow_update = true;
+        $zco_notifier->notify('EDIT_ORDERS_PRE_UPDATE_ORDER', $oID, $sql_data_array, $allow_update);
+        if ($allow_update === false) {
+            $eo->eoLog("Update disallowed by observer.");
+            $action = 'edit';
+            break;
+        }
+        zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', "orders_id = $oID LIMIT 1");
 
-                // If the number is not already obscufated, we use the same method
-                // as the authorize.net module to obscufate the entered CC number
-                if (is_numeric($update_info_cc_number)) {
-                    $update_info_cc_number = str_pad(substr($_POST['update_info_cc_number'], -4), strlen($_POST['update_info_cc_number']), "X", STR_PAD_LEFT);
+        // BEGIN TY TRACKER 1 - READ FROM POST
+        $track_id = array();
+        if (defined('TY_TRACKER') && TY_TRACKER == 'True') {
+            $track_id = zen_db_prepare_input($_POST['track_id']);
+            $ty_changed = false;
+            foreach ($track_id as $id => $track) {
+                $carrier_constant = "CARRIER_STATUS_$id";
+                if (defined($carrier_constant) && constant($carrier_constant) == 'True' && !empty($track)) {
+                    $ty_changed = true;
                 }
-
-                $sql_data_array['cc_number'] = $update_info_cc_number;
-                unset($_POST['update_info_cc_number']);
             }
-            
-            // -----
-            // Give any listening observer the opportunity to make modifications to the SQL data associated
-            // with the updated order and/or disallow the update.
-            //
-            // If the observer disallows the update (by setting the 3rd parameter to (bool)false), it's the observer's responsibility 
-            // to issue a message to the current admin to let them know why the update was denied.
-            //
-            // Note that (currently) any updates made to the order will be lost!
-            //
-            $allow_update = true;
-            $zco_notifier->notify('EDIT_ORDERS_PRE_UPDATE_ORDER', $oID, $sql_data_array, $allow_update);
-            if ($allow_update === false) {
-                $eo->eoLog("Update disallowed by observer.");
-                $action = 'edit';
-                break;
+            if (!$ty_changed) {
+                $track_id = array();
             }
-            zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', "orders_id = $oID LIMIT 1");
+        }
+        // END TY TRACKER 1 - READ FROM POST
+        $check_status = $db->Execute(
+            "SELECT customers_name, customers_email_address, orders_status, date_purchased 
+               FROM " . TABLE_ORDERS . "
+              WHERE orders_id = $oID
+              LIMIT 1"
+        );
 
-            // BEGIN TY TRACKER 1 - READ FROM POST
-            $track_id = array();
-            if (defined('TY_TRACKER') && TY_TRACKER == 'True') {
-                $track_id = zen_db_prepare_input($_POST['track_id']);
-                $ty_changed = false;
-                foreach ($track_id as $id => $track) {
-                    $carrier_constant = "CARRIER_STATUS_$id";
-                    if (defined($carrier_constant) && constant($carrier_constant) == 'True' && zen_not_null($track)) {
-                        $ty_changed = true;
+        // Begin - Update Status History & Email Customer if Necessary
+        if ($check_status->fields['orders_status'] != $status || !empty($track_id) || !empty($comments)) {
+            $customer_notified = '0';
+            if (isset($_POST['notify']) && $_POST['notify'] == '1') {
+                $notify_comments = '';
+                if (isset($_POST['notify_comments']) && ($_POST['notify_comments'] == 'on')) {
+                    if (!empty($comments)) {
+                        $notify_comments = EMAIL_TEXT_COMMENTS_UPDATE . $comments . PHP_EOL . PHP_EOL;
                     }
-                }
-                if (!$ty_changed) {
-                    $track_id = array();
-                }
-            }
-            // END TY TRACKER 1 - READ FROM POST
-            $check_status = $db->Execute(
-                "SELECT customers_name, customers_email_address, orders_status, date_purchased 
-                   FROM " . TABLE_ORDERS . "
-                  WHERE orders_id = $oID
-                  LIMIT 1"
-            );
-
-            // Begin - Update Status History & Email Customer if Necessary
-            if ($check_status->fields['orders_status'] != $status || zen_not_null($track_id) || zen_not_null($comments)) {
-                $customer_notified = '0';
-                if (isset($_POST['notify']) && $_POST['notify'] == '1') {
-                    $notify_comments = '';
-                    if (isset($_POST['notify_comments']) && ($_POST['notify_comments'] == 'on')) {
-                        if (zen_not_null($comments)) {
-                            $notify_comments = EMAIL_TEXT_COMMENTS_UPDATE . $comments . PHP_EOL . PHP_EOL;
-                        }
-                        // BEGIN TY TRACKER 2 - EMAIL TRACKING INFORMATION
-                        if (zen_not_null($track_id)) {
-                            $notify_comments = EMAIL_TEXT_COMMENTS_TRACKING_UPDATE . PHP_EOL . PHP_EOL;
-                            $comment = EMAIL_TEXT_COMMENTS_TRACKING_UPDATE;
-                        }
-                        foreach ($track_id as $id => $track) {
-                            if (zen_not_null($track) && constant('CARRIER_STATUS_' . $id) == 'True') {
-                                $notify_comments .= "Your " . constant('CARRIER_NAME_' . $id) . " Tracking ID is " . $track . " \n<br /><a href=" . constant('CARRIER_LINK_' . $id) . $track . ">Click here</a> to track your package. \n<br />If the above link does not work, copy the following URL address and paste it into your Web browser. \n<br />" . constant('CARRIER_LINK_' . $id) . $track . "\n\n<br /><br />It may take up to 24 hours for the tracking information to appear on the website." . "\n<br />";
-                            }
-                        }
-                        unset($id, $track);
-                        // END TY TRACKER 32 - EMAIL TRACKING INFORMATION
+                    // BEGIN TY TRACKER 2 - EMAIL TRACKING INFORMATION
+                    if (!empty($track_id)) {
+                        $notify_comments = EMAIL_TEXT_COMMENTS_TRACKING_UPDATE . PHP_EOL . PHP_EOL;
+                        $comment = EMAIL_TEXT_COMMENTS_TRACKING_UPDATE;
                     }
-                    //send emails
-                    $account_history_info_link = zen_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL');
-                    $date_purchased = zen_date_long($check_status->fields['date_purchased']);
-                    $order_status_label = sprintf(EMAIL_TEXT_STATUS_LABEL, $orders_status_array[$status]);
-                    $message =
-                        STORE_NAME . ' ' . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . PHP_EOL . PHP_EOL .
-                        EMAIL_TEXT_INVOICE_URL . ' ' . $account_history_info_link . PHP_EOL . PHP_EOL .
-                        EMAIL_TEXT_DATE_ORDERED . ' ' . $date_purchased . PHP_EOL . PHP_EOL .
-                        strip_tags($notify_comments) .
-                        EMAIL_TEXT_STATUS_UPDATED . $order_status_label .
-                        EMAIL_TEXT_STATUS_PLEASE_REPLY;
+                    foreach ($track_id as $id => $track) {
+                        if (!empty($track) && constant('CARRIER_STATUS_' . $id) == 'True') {
+                            $notify_comments .= "Your " . constant('CARRIER_NAME_' . $id) . " Tracking ID is " . $track . " \n<br /><a href=" . constant('CARRIER_LINK_' . $id) . $track . ">Click here</a> to track your package. \n<br />If the above link does not work, copy the following URL address and paste it into your Web browser. \n<br />" . constant('CARRIER_LINK_' . $id) . $track . "\n\n<br /><br />It may take up to 24 hours for the tracking information to appear on the website." . "\n<br />";
+                        }
+                    }
+                    unset($id, $track);
+                    // END TY TRACKER 32 - EMAIL TRACKING INFORMATION
+                }
+                //send emails
+                $account_history_info_link = zen_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL');
+                $date_purchased = zen_date_long($check_status->fields['date_purchased']);
+                $order_status_label = sprintf(EMAIL_TEXT_STATUS_LABEL, $orders_status_array[$status]);
+                $message =
+                    STORE_NAME . ' ' . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . PHP_EOL . PHP_EOL .
+                    EMAIL_TEXT_INVOICE_URL . ' ' . $account_history_info_link . PHP_EOL . PHP_EOL .
+                    EMAIL_TEXT_DATE_ORDERED . ' ' . $date_purchased . PHP_EOL . PHP_EOL .
+                    strip_tags($notify_comments) .
+                    EMAIL_TEXT_STATUS_UPDATED . $order_status_label .
+                    EMAIL_TEXT_STATUS_PLEASE_REPLY;
 
-                    $html_msg['EMAIL_CUSTOMERS_NAME'] = $check_status->fields['customers_name'];
-                    $html_msg['EMAIL_TEXT_ORDER_NUMBER'] = EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID;
-                    $html_msg['EMAIL_TEXT_INVOICE_URL']  = '<a href="' . $account_history_info_link .'">' . str_replace(':', '', EMAIL_TEXT_INVOICE_URL) . '</a>';
-                    $html_msg['EMAIL_TEXT_DATE_ORDERED'] = EMAIL_TEXT_DATE_ORDERED . ' ' . $date_purchased;
-                    $html_msg['EMAIL_TEXT_STATUS_COMMENTS'] = nl2br($notify_comments);
-                    $html_msg['EMAIL_TEXT_STATUS_UPDATED'] = str_replace("\n", '', EMAIL_TEXT_STATUS_UPDATED);
-                    $html_msg['EMAIL_TEXT_STATUS_LABEL'] = str_replace("\n", '', $order_status_label);
-                    $html_msg['EMAIL_TEXT_NEW_STATUS'] = $orders_status_array[$status];
-                    $html_msg['EMAIL_TEXT_STATUS_PLEASE_REPLY'] = str_replace("\n",'', EMAIL_TEXT_STATUS_PLEASE_REPLY);
-                    $html_msg['EMAIL_PAYPAL_TRANSID'] = '';
+                $html_msg['EMAIL_CUSTOMERS_NAME'] = $check_status->fields['customers_name'];
+                $html_msg['EMAIL_TEXT_ORDER_NUMBER'] = EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID;
+                $html_msg['EMAIL_TEXT_INVOICE_URL']  = '<a href="' . $account_history_info_link .'">' . str_replace(':', '', EMAIL_TEXT_INVOICE_URL) . '</a>';
+                $html_msg['EMAIL_TEXT_DATE_ORDERED'] = EMAIL_TEXT_DATE_ORDERED . ' ' . $date_purchased;
+                $html_msg['EMAIL_TEXT_STATUS_COMMENTS'] = nl2br($notify_comments);
+                $html_msg['EMAIL_TEXT_STATUS_UPDATED'] = str_replace("\n", '', EMAIL_TEXT_STATUS_UPDATED);
+                $html_msg['EMAIL_TEXT_STATUS_LABEL'] = str_replace("\n", '', $order_status_label);
+                $html_msg['EMAIL_TEXT_NEW_STATUS'] = $orders_status_array[$status];
+                $html_msg['EMAIL_TEXT_STATUS_PLEASE_REPLY'] = str_replace("\n",'', EMAIL_TEXT_STATUS_PLEASE_REPLY);
+                $html_msg['EMAIL_PAYPAL_TRANSID'] = '';
 
+                zen_mail(
+                    $check_status->fields['customers_name'], 
+                    $check_status->fields['customers_email_address'], 
+                    EMAIL_TEXT_SUBJECT . ' #' . $oID, 
+                    $message, 
+                    STORE_NAME, 
+                    EMAIL_FROM, 
+                    $html_msg, 
+                    'order_status'
+                );
+                $customer_notified = '1';
+
+                // PayPal Trans ID, if any
+                $sql = 
+                    "SELECT txn_id, parent_txn_id 
+                       FROM " . TABLE_PAYPAL . " 
+                      WHERE order_id = :orderID 
+                   ORDER BY last_modified DESC, date_added DESC, parent_txn_id DESC, paypal_ipn_id DESC ";
+                $sql = $db->bindVars($sql, ':orderID', $oID, 'integer');
+                $result = $db->Execute($sql);
+                if (!$result->EOF) {
+                    $message .= PHP_EOL . PHP_EOL . ' PayPal Trans ID: ' . $result->fields['txn_id'];
+                    $html_msg['EMAIL_PAYPAL_TRANSID'] = $result->fields['txn_id'];
+                }
+
+                //send extra emails
+                if (SEND_EXTRA_ORDERS_STATUS_ADMIN_EMAILS_TO_STATUS == '1' and SEND_EXTRA_ORDERS_STATUS_ADMIN_EMAILS_TO != '') {
                     zen_mail(
-                        $check_status->fields['customers_name'], 
-                        $check_status->fields['customers_email_address'], 
-                        EMAIL_TEXT_SUBJECT . ' #' . $oID, 
+                        '', 
+                        SEND_EXTRA_ORDERS_STATUS_ADMIN_EMAILS_TO, 
+                        SEND_EXTRA_ORDERS_STATUS_ADMIN_EMAILS_TO_SUBJECT . ' ' . EMAIL_TEXT_SUBJECT . ' #' . $oID, 
                         $message, 
                         STORE_NAME, 
                         EMAIL_FROM, 
                         $html_msg, 
-                        'order_status'
+                        'order_status_extra'
                     );
-                    $customer_notified = '1';
-
-                    // PayPal Trans ID, if any
-                    $sql = 
-                        "SELECT txn_id, parent_txn_id 
-                           FROM " . TABLE_PAYPAL . " 
-                          WHERE order_id = :orderID 
-                       ORDER BY last_modified DESC, date_added DESC, parent_txn_id DESC, paypal_ipn_id DESC ";
-                    $sql = $db->bindVars($sql, ':orderID', $oID, 'integer');
-                    $result = $db->Execute($sql);
-                    if (!$result->EOF) {
-                        $message .= PHP_EOL . PHP_EOL . ' PayPal Trans ID: ' . $result->fields['txn_id'];
-                        $html_msg['EMAIL_PAYPAL_TRANSID'] = $result->fields['txn_id'];
-                    }
-
-                    //send extra emails
-                    if (SEND_EXTRA_ORDERS_STATUS_ADMIN_EMAILS_TO_STATUS == '1' and SEND_EXTRA_ORDERS_STATUS_ADMIN_EMAILS_TO != '') {
-                        zen_mail(
-                            '', 
-                            SEND_EXTRA_ORDERS_STATUS_ADMIN_EMAILS_TO, 
-                            SEND_EXTRA_ORDERS_STATUS_ADMIN_EMAILS_TO_SUBJECT . ' ' . EMAIL_TEXT_SUBJECT . ' #' . $oID, 
-                            $message, 
-                            STORE_NAME, 
-                            EMAIL_FROM, 
-                            $html_msg, 
-                            'order_status_extra'
-                        );
-                    }
-                } elseif (isset($_POST['notify']) && $_POST['notify'] == '-1') {
-                    // hide comment
-                    $customer_notified = '-1';
                 }
-    //-bof-20160330-lat9-Don't over-prepare input (results in \n\n instead of two line-feeds).
-                $sql_data_array = array(
-                    'orders_id' => (int)$oID,
-                    'orders_status_id' => $status,
-                    'date_added' => 'now()',
-                    'customer_notified' => $customer_notified,
-                    'comments' => $comments,
-                );
-    //-eof-20160330-lat9
-                // BEGIN TY TRACKER 3 - INCLUDE DATABASE FIELDS IN STATUS UPDATE
-                foreach ($track_id as $id => $track) {
-                    $sql_data_array['track_id' . $id] = zen_db_input($track);
-                }
-                unset($id, $track);
-                // END TY TRACKER 3 - INCLUDE DATABASE FIELDS IN STATUS UPDATE
-                zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-
-                $sql_data_array = array(
-                    'orders_status' => zen_db_input($status),
-                    'last_modified' => 'now()'
-                );
-                zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', "orders_id=$oID LIMIT 1");
-                unset($sql_data_array);
-                $order_updated = true;
+            } elseif (isset($_POST['notify']) && $_POST['notify'] == '-1') {
+                // hide comment
+                $customer_notified = -1;
             }
-            // End - Update Status History & Email Customer if Necessary
 
-            // Load the order details.
-            $order = $eo->getOrderInfo();
+            $sql_data_array = array(
+                'orders_id' => (int)$oID,
+                'orders_status_id' => $status,
+                'date_added' => 'now()',
+                'customer_notified' => $customer_notified,
+                'comments' => $comments,
+            );
+
+            // BEGIN TY TRACKER 3 - INCLUDE DATABASE FIELDS IN STATUS UPDATE
+            foreach ($track_id as $id => $track) {
+                $sql_data_array['track_id' . $id] = zen_db_input($track);
+            }
+            unset($id, $track);
+            // END TY TRACKER 3 - INCLUDE DATABASE FIELDS IN STATUS UPDATE
+            zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+
+            $sql_data_array = array(
+                'orders_status' => zen_db_input($status),
+                'last_modified' => 'now()'
+            );
+            zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', "orders_id=$oID LIMIT 1");
+            unset($sql_data_array);
+            $order_updated = true;
+        }
+        // End - Update Status History & Email Customer if Necessary
+
+        // -----
+        // Load the order's current details (noting that any address-related updates were performed
+        // by previous processing.
+        //
+        $order = $eo->getOrderInfo();
+        $eo->eoLog (
+            PHP_EOL . 'Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
+            $eo->eoFormatOrderTotalsForLog($order) .
+            'Order Tax (total): ' . $order->info['tax'] . PHP_EOL .
+            'Order Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
+        );
+        
+        // -----
+        // Give an observer the opportunity to make modifications to the updated products (or totals) in
+        // the update request.
+        //
+        $zco_notifier->notify('EDIT_ORDERS_PRE_UPDATE_PRODUCTS', $oID);
+        
+        // Handle updating products and attributes as needed
+        if (isset($_POST['update_products'])) {
+            // -----
+            // Sometimes, EO needs a reset to its order-totals processing, especially in the presence
+            // of order-totals that make tax-related changes (like group_pricing).  If the admin has ticked the "Reset" box,
+            // clear out all the tax and total-related values and also reset the order-totals currently 
+            // applied to start afresh.
+            //
+            if (isset($_POST['reset_totals'])) {
+                $order->info['tax'] = $order->info['shipping_tax'] = $order->info['shipping_cost'] = $order->info['total'] = $order->info['subtotal'] = 0;
+                $order->totals = array();
+                foreach ($order->info['tax_groups'] as $key => $value) {
+                    $order->info['tax_groups'][$key] = 0;
+                }
+            }
+            
+            $_POST['update_products'] = zen_db_prepare_input($_POST['update_products']);
 
             $eo->eoLog (
-                PHP_EOL . 'Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
-                $eo->eoFormatOrderTotalsForLog($order) .
-                'Order Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                'Order Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
+                PHP_EOL . 'Requested Products:' . PHP_EOL . $eo->eoFormatArray($_POST['update_products']) . PHP_EOL .
+                'Products in Original Order: ' . PHP_EOL . $eo->eoFormatArray($order->products)
             );
-            // -----
-            // Give an observer the opportunity to make modifications to the updated products (or totals) in
-            // the update request.
-            //
-            $zco_notifier->notify('EDIT_ORDERS_PRE_UPDATE_PRODUCTS', $oID);
 
-            // Handle updating products and attributes as needed
-            if (isset($_POST['update_products'])) {
-                // -----
-                // Sometimes, EO needs a reset to its order-totals processing, especially in the presence
-                // of order-totals that make tax-related changes (like group_pricing).  If the admin has ticked the "Reset" box,
-                // clear out all the tax and total-related values and also reset the order-totals currently 
-                // applied to start afresh.
-                //
-                if (isset($_POST['reset_totals'])) {
-                    $order->info['tax'] = $order->info['shipping_tax'] = $order->info['shipping_cost'] = $order->info['total'] = $order->info['subtotal'] = 0;
-                    $order->totals = array();
-                    foreach ($order->info['tax_groups'] as $key => $value) {
-                        $order->info['tax_groups'][$key] = 0;
+            foreach ($_POST['update_products'] as $orders_products_id => $product_update) {
+                $product_update['qty'] = (float)$product_update['qty'];
+                $product_update['name'] = $product_update['name'];
+
+                $rowID = -1;
+                $orders_products_id_mapping = eo_get_orders_products_id_mappings((int)$oID);
+                for ($i = 0, $n = count($orders_products_id_mapping); $i < $n; $i++) {
+                    if ($orders_products_id == $orders_products_id_mapping[$i]) {
+                        $rowID = $i;
+                        break;
                     }
                 }
-                
-                $_POST['update_products'] = zen_db_prepare_input($_POST['update_products']);
+                unset($orders_products_id_mapping, $i, $n);
 
                 $eo->eoLog (
-                    PHP_EOL . 'Requested Products:' . PHP_EOL . $eo->eoFormatArray($_POST['update_products']) . PHP_EOL .
-                    'Products in Original Order: ' . PHP_EOL . $eo->eoFormatArray($order->products)
+                    PHP_EOL . 'Order Product ID: ' . $orders_products_id . ' Row ID: ' . $rowID . PHP_EOL .
+                    'Product in Request: ' . PHP_EOL . $eo->eoFormatArray($product_update)
                 );
+ 
 
-                foreach ($_POST['update_products'] as $orders_products_id => $product_update) {
-                    $product_update['qty'] = (float)$product_update['qty'];
-                    $product_update['name'] = $product_update['name'];
-
-                    $rowID = -1;
-                    $orders_products_id_mapping = eo_get_orders_products_id_mappings((int)$oID);
-                    for ($i=0; $i<sizeof($orders_products_id_mapping); $i++) {
-                        if ($orders_products_id == $orders_products_id_mapping[$i]) {
-                            $rowID = $i;
-                            break;
-                        }
-                    }
-                    unset($orders_products_id_mapping, $i);
+                // Only update if there is an existing item in the order
+                if ($rowID >= 0) {
+                    // Grab the old product + attributes
+                    $old_product = $order->products[$rowID];
 
                     $eo->eoLog (
-                        PHP_EOL . 'Order Product ID: ' . $orders_products_id . ' Row ID: ' . $rowID . PHP_EOL .
-                        'Product in Request: ' . PHP_EOL . $eo->eoFormatArray($product_update)
+                        PHP_EOL . 'Old Product:' . PHP_EOL . $eo->eoFormatArray($old_product) . PHP_EOL .
+                        'Old Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
+                        $eo->eoFormatOrderTotalsForLog($order, 'Old Order Totals: ') .
+                        'Old Tax (total): ' . $order->info['tax'] . PHP_EOL .
+                        'Old Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
                     );
-     
+                    // Remove the product from the order
+                    eo_remove_product_from_order($oID, $orders_products_id);
 
-                    // Only update if there is an existing item in the order
-                    if ($rowID >= 0) {
-                        // Grab the old product + attributes
-                        $old_product = $order->products[$rowID];
+                    // Update Subtotal and Pricing, only if not resetting totals.
+                    if (empty($_POST['reset_totals'])) {
+                        eo_update_order_subtotal($oID, $old_product, false);
+                    }
 
-                        $eo->eoLog (
-                            PHP_EOL . 'Old Product:' . PHP_EOL . $eo->eoFormatArray($old_product) . PHP_EOL .
-                            'Old Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
-                            $eo->eoFormatOrderTotalsForLog($order, 'Old Order Totals: ') .
-                            'Old Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                            'Old Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
+                    $eo->eoLog (
+                        PHP_EOL . 'Removed Product Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
+                        $eo->eoFormatOrderTotalsForLog($order, 'Removed Product Order Totals: ') . 
+                        'Removed Product Tax (total): ' . $order->info['tax'] . PHP_EOL .
+                        'Removed Product Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
+                    );
+                    if ($product_update['qty'] > 0) {
+
+                        // Retrieve the information for the new product
+                        $attrs = (isset($product_update['attr'])) ? $product_update['attr'] : '';
+                        unset($product_update['attr']);
+                        $new_product = eo_get_new_product(
+                            $old_product['id'],
+                            $product_update['qty'],
+                            $product_update['tax'],
+                            $attrs,
+                            false
                         );
-                        // Remove the product from the order
-                        eo_remove_product_from_order($oID, $orders_products_id);
-
-                        // Update Subtotal and Pricing, only if not resetting totals.
-                        if (empty($_POST['reset_totals'])) {
-                            eo_update_order_subtotal($oID, $old_product, false);
-                        }
-
-                        $eo->eoLog (
-                            PHP_EOL . 'Removed Product Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
-                            $eo->eoFormatOrderTotalsForLog($order, 'Removed Product Order Totals: ') . 
-                            'Removed Product Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                            'Removed Product Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
-                        );
-                        if ($product_update['qty'] > 0) {
-
-                            // Retrieve the information for the new product
-                            $attrs = (isset($product_update['attr'])) ? $product_update['attr'] : '';
-                            unset($product_update['attr']);
-                            $new_product = eo_get_new_product(
-                                $old_product['id'],
-                                $product_update['qty'],
-                                $product_update['tax'],
-                                $attrs,
-                                false
-                            );
-                            unset($attrs);
-                            
-                            // Handle the case where the product was deleted
-                            // from the store. This should probably never be done.
-                            // Removing the product will cause issues with links
-                            // on invoices (order history) and will not allow the
-                            // price(s) or tax(es) to be recalculated by Zen Cart.
-                            if (!isset($new_product['price'])) {
-                                $new_product['price'] = $old_product['price'];
-                                $new_product['tax'] = $old_product['tax'];
-                                if ($new_product['tax'] > 0) {
-                                    // Should match what is set by eo_get_product_taxes()
-                                    // When no description is present in the database but
-                                    // a tax rate exists on a product.
-                                    $new_product['tax_description'] = TEXT_UNKNOWN_TAX_RATE . ' (' . zen_display_tax_value($new_product['tax']) . '%)';
-                                }
-
-                                $new_product['products_discount_type'] = $old_product['products_discount_type'];
-                                $new_product['products_discount_type_from'] = $old_product['products_discount_type_from'];
-                                $new_product['products_priced_by_attribute'] = $old_product['products_priced_by_attribute'];
-                                $new_product['product_is_free'] = $old_product['product_is_free'];
+                        unset($attrs);
+                        
+                        // Handle the case where the product was deleted
+                        // from the store. This should probably never be done.
+                        // Removing the product will cause issues with links
+                        // on invoices (order history) and will not allow the
+                        // price(s) or tax(es) to be recalculated by Zen Cart.
+                        if (!isset($new_product['price'])) {
+                            $new_product['price'] = $old_product['price'];
+                            $new_product['tax'] = $old_product['tax'];
+                            if ($new_product['tax'] > 0) {
+                                // Should match what is set by eo_get_product_taxes()
+                                // When no description is present in the database but
+                                // a tax rate exists on a product.
+                                $new_product['tax_description'] = TEXT_UNKNOWN_TAX_RATE . ' (' . zen_display_tax_value($new_product['tax']) . '%)';
                             }
 
-                            // -----
-                            // Depending on the product-price calculation method, either the values entered
-                            // or the pricing just calculated "rule".
-                            //
-                            if (EO_PRODUCT_PRICE_CALC_METHOD == 'Auto' || (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose' && !isset($_POST['payment_calc_manual']))) {
-                                $price_calc_method = 'Pricing was automatically calculated.';
-                                $new_product = array_merge($product_update, $new_product);
-                            } else {
-                                $price_calc_method = 'Pricing, as entered, was used.';
-                                $new_product = array_merge($new_product, $product_update);
-                            }
-
-                            // Add the product to the order
-                            eo_add_product_to_order($oID, $new_product);
-
-                            // Update Subtotal and Pricing
-                            eo_update_order_subtotal($oID, $new_product);
-
-                            $eo->eoLog (
-                                PHP_EOL . $price_calc_method . PHP_EOL .
-                                'Added Product:' . PHP_EOL . $eo->eoFormatArray($new_product) . PHP_EOL .
-                                'Added Product Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
-                                 $eo->eoFormatOrderTotalsForLog($order, 'Added Product Order Totals:') .
-                                'Added Product Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                                'Added Product Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
-                            );
+                            $new_product['products_discount_type'] = $old_product['products_discount_type'];
+                            $new_product['products_discount_type_from'] = $old_product['products_discount_type_from'];
+                            $new_product['products_priced_by_attribute'] = $old_product['products_priced_by_attribute'];
+                            $new_product['product_is_free'] = $old_product['product_is_free'];
                         }
 
-                        $order_updated = true;
-                    }
-                }
-                // Reset order if updated
-                if ($order_updated) {
-                    // Need to force update the tax field if the tax is zero
-                    // This runs after the shipping tax is added by the above update
-                    $decimals = $currencies->get_decimal_places($_SESSION['currency']);
-                    if (zen_round($order->info['tax'], $decimals) == 0) {
-                        if (!isset($_POST['update_total'])) {
-                            $_POST['update_total'] = array();
+                        // -----
+                        // Depending on the product-price calculation method, either the values entered
+                        // or the pricing just calculated "rule".
+                        //
+                        if (EO_PRODUCT_PRICE_CALC_METHOD == 'Auto' || (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose' && !isset($_POST['payment_calc_manual']))) {
+                            $price_calc_method = 'Pricing was automatically calculated.';
+                            $new_product = array_merge($product_update, $new_product);
+                        } else {
+                            $price_calc_method = 'Pricing, as entered, was used.';
+                            $new_product = array_merge($new_product, $product_update);
                         }
-                        $_POST['update_total'][] = array(
-                            'code' => 'ot_tax',
-                            'title' => '',
-                            'value' => 0,
-                        );
-                    }
-                }
 
-                // -----
-                // Fix-up the order's product-based taxes by summing all values present in the order's
-                // tax-groups prior to running the order-totals.  Any addition for shipping will be added
-                // later.
-                //
-                if (isset($order->info['tax_groups']) && is_array($order->info['tax_groups'])) {
-                    $order->info['tax'] = 0;
-                    foreach ($order->info['tax_groups'] as $tax_class => $tax_value) {
-                        $order->info['tax'] += $tax_value;
-                    }
-                }
-                $eo->eoLog (
-                    PHP_EOL . 'Updated Products in Order:' . PHP_EOL . $eo->eoFormatArray($order->products) . PHP_EOL .
-                    $eo->eoFormatOrderTotalsForLog($order, 'Updated Products Order Totals:') .
-                    'Updated Products Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                    'Updated Products Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups']) . PHP_EOL
-                );
-            }
+                        // Add the product to the order
+                        eo_add_product_to_order($oID, $new_product);
 
-            // Update order totals (or delete if no title / value)
-            if (isset($_POST['update_total'])) {
-                $eo->eoLog (
-                    PHP_EOL . '============================================================' .
-                    PHP_EOL . '= Processing Requested Updates to Order Totals' .
-                    PHP_EOL . '============================================================' .
-                    PHP_EOL . PHP_EOL .
-                    'Requested Order Totals:' . PHP_EOL . $eo->eoFormatArray($_POST['update_total']) . PHP_EOL .
-                     $eo->eoFormatOrderTotalsForLog($order, 'Starting Order Totals:') .
-                    'Starting Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                    'Starting Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
-                );
+                        // Update Subtotal and Pricing
+                        eo_update_order_subtotal($oID, $new_product);
 
-                $default_sort = 0;
-                foreach ($_POST['update_total'] as $order_total) {
-                    $default_sort++;
-                    $order_total['value'] = (float)$order_total['value'];
-                    $order_total['text'] = $eo->eoFormatCurrencyValue($order_total['value']);
-                    if (isset($GLOBALS[$order_total['code']]) && is_object($GLOBALS[$order_total['code']])) {
-                    $order_total['sort_order'] = $GLOBALS[$order_total['code']]->sort_order;
-                        $default_sort = $order_total['sort_order'];
-                    } else {
-                        $order_total['sort_order'] = $default_sort;
-                    }
-
-                    // TODO Special processing for some modules
-                    if (zen_not_null($order_total['title']) && $order_total['title'] != ':') {
-                        switch ($order_total['code']) {
-                            case 'ot_shipping':
-                                $order->info['shipping_cost'] = $order_total['value'];
-                                $order->info['shipping_method'] = $order_total['title'];
-                                $order->info['shipping_module_code'] = $order_total['shipping_module'];
-                                break;
-                            case 'ot_tax':
-                                if (count($order->products) == 0) {
-                                    $order_total['title'] = '';
-                                    $order_total['value'] = 0;
-                                }
-                                $order->info['tax'] = $order_total['value'];
-                                break;
-                            case 'ot_gv':
-                                if ($order_total['value'] < 0) {
-                                    $order_total['value'] = $order_total['value'] * -1;
-                                }
-                                $order_total['text'] = $eo->eoFormatCurrencyValue($order_total['value']);
-                                $_SESSION['cot_gv'] = $order_total['value'];
-                                break;
-                            case 'ot_voucher':
-                                if ($order_total['value'] < 0) {
-                                    $order_total['value'] = $order_total['value'] * -1;
-                                }
-                                $order_total['text'] = $eo->eoFormatCurrencyValue($order_total['value']);
-                                $_SESSION['cot_voucher'] = $order_total['value'];
-                                break;
-                            case 'ot_coupon':
-                                // Default to using the title from the module
-                                $coupon = rtrim($order_total['title'], ': ');
-                                $order_total['title'] = (isset($GLOBALS['ot_coupon'])) ? $GLOBALS['ot_coupon']->title : '';
-
-                                // Look for correctly formatted title
-                                preg_match('/([^:]+):([^:]+)/', $coupon, $matches);
-                                if (count($matches) > 2) {
-                                    $order_total['title'] = trim($matches[1]);
-                                    $coupon = $matches[2];
-                                }
-                                $cc_id = $db->Execute(
-                                    'SELECT coupon_id FROM `' . TABLE_COUPONS . '` ' .
-                                    'WHERE coupon_code=\'' . trim($coupon) . '\''
-                                );
-                                unset($matches, $coupon);
-
-                                if(!$cc_id->EOF) {
-                                    $_SESSION['cc_id'] = $cc_id->fields['coupon_id'];
-                                } else {
-                                    $messageStack->add_session(WARNING_ORDER_COUPON_BAD, 'warning');
-                                    $order_total['title'] = '';
-                                    $order_total['value'] = 0;
-                                }
-                                unset($cc_id);
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-
-                    $found = false;
-                    foreach ($order->totals as $key => $total) {
-                        if ($total['class'] == $order_total['code']) {
-                            // Update the information in the order
-                            $order->totals[$key]['title'] = $order_total['title'];
-                            $order->totals[$key]['value'] = $order_total['value'];
-                            $order->totals[$key]['text'] = $order_total['text'];
-                            $found = true;
-                            break;
-                        }
-                    }
-
-                    if (!$found) {
-                        $order->totals[] = array(
-                            'class' => $order_total['code'],
-                            'title' => $order_total['title'],
-                            'value' => $order_total['value'],
-                            'text' => $order_total['text'],
-                            'sort_order' => $order_total['sort_order']
+                        $eo->eoLog (
+                            PHP_EOL . $price_calc_method . PHP_EOL .
+                            'Added Product:' . PHP_EOL . $eo->eoFormatArray($new_product) . PHP_EOL .
+                            'Added Product Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
+                             $eo->eoFormatOrderTotalsForLog($order, 'Added Product Order Totals:') .
+                            'Added Product Tax (total): ' . $order->info['tax'] . PHP_EOL .
+                            'Added Product Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
                         );
                     }
 
-                    // Always update the database (allows delete)
-                    eo_update_database_order_total($oID, $order_total);
+                    $order_updated = true;
                 }
-
-                // Update the order's order-totals
-                eo_update_database_order_totals($oID);
-
-                $eo->eoLog (
-                    $eo->eoFormatOrderTotalsForLog($order) . PHP_EOL .
-                    'Updated Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                    'Updated Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
-                );
-
-                // Unset some session variables after updating the order totals
-                unset($_SESSION['cot_gv'], $_SESSION['cot_voucher'], $_SESSION['cc_id']);
-                $order_updated = true;
             }
-
+            // Reset order if updated
             if ($order_updated) {
-                $messageStack->add_session(SUCCESS_ORDER_UPDATED, 'success');
-            } else {
-                $messageStack->add_session(WARNING_ORDER_NOT_UPDATED, 'warning');
+                // Need to force update the tax field if the tax is zero
+                // This runs after the shipping tax is added by the above update
+                $decimals = $currencies->get_decimal_places($_SESSION['currency']);
+                if (zen_round($order->info['tax'], $decimals) == 0) {
+                    if (!isset($_POST['update_total'])) {
+                        $_POST['update_total'] = array();
+                    }
+                    $_POST['update_total'][] = array(
+                        'code' => 'ot_tax',
+                        'title' => '',
+                        'value' => 0,
+                    );
+                }
             }
 
+            // -----
+            // Fix-up the order's product-based taxes by summing all values present in the order's
+            // tax-groups prior to running the order-totals.  Any addition for shipping will be added
+            // later.
+            //
+            if (isset($order->info['tax_groups']) && is_array($order->info['tax_groups'])) {
+                $order->info['tax'] = 0;
+                foreach ($order->info['tax_groups'] as $tax_class => $tax_value) {
+                    $order->info['tax'] += $tax_value;
+                }
+            }
+            $eo->eoLog (
+                PHP_EOL . 'Updated Products in Order:' . PHP_EOL . $eo->eoFormatArray($order->products) . PHP_EOL .
+                $eo->eoFormatOrderTotalsForLog($order, 'Updated Products Order Totals:') .
+                'Updated Products Tax (total): ' . $order->info['tax'] . PHP_EOL .
+                'Updated Products Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups']) . PHP_EOL
+            );
+        }
+
+        // Update order totals (or delete if no title / value)
+        if (isset($_POST['update_total'])) {
             $eo->eoLog (
                 PHP_EOL . '============================================================' .
-                PHP_EOL . '= Done Processing Requested Updates to the Order' .
+                PHP_EOL . '= Processing Requested Updates to Order Totals' .
                 PHP_EOL . '============================================================' .
                 PHP_EOL . PHP_EOL .
-                'Final Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
-                 $eo->eoFormatOrderTotalsForLog($order, 'Final Totals:') . 
-                'Final Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                'Final Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
+                'Requested Order Totals:' . PHP_EOL . $eo->eoFormatArray($_POST['update_total']) . PHP_EOL .
+                 $eo->eoFormatOrderTotalsForLog($order, 'Starting Order Totals:') .
+                'Starting Tax (total): ' . $order->info['tax'] . PHP_EOL .
+                'Starting Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
             );
-            $zco_notifier->notify('EDIT_ORDERS_ORDER_UPDATED', $order);
 
-            zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit', 'NONSSL'));
-            break;
-
-        case 'add_prdct':
-            if (!zen_not_null($step)) {
-                $step = 1;
-            }
-            $eo->eoLog(
-                PHP_EOL . '============================================================' .
-                PHP_EOL . '= Adding a new product to the order (step ' . $step . ')' .
-                PHP_EOL . '============================================================' .
-                PHP_EOL . PHP_EOL
-            );
-            if ($step == 5) {
-                $zco_notifier->notify('EDIT_ORDERS_START_ADD_PRODUCT', $oID);
-
-                // Get Order Info
-                $order = $eo->getOrderInfo();
-
-                // Check qty field
-                $add_max = zen_get_products_quantity_order_max($add_product_products_id);
-                if ($add_product_quantity > $add_max && $add_max != 0) {
-                    $add_product_quantity = $add_max;
-                    $messageStack->add_session(WARNING_ORDER_QTY_OVER_MAX, 'warning');
+            $default_sort = 0;
+            foreach ($_POST['update_total'] as $order_total) {
+                $default_sort++;
+                $order_total['value'] = (float)$order_total['value'];
+                $order_total['text'] = $eo->eoFormatCurrencyValue($order_total['value']);
+                if (isset($GLOBALS[$order_total['code']]) && is_object($GLOBALS[$order_total['code']])) {
+                    $order_total['sort_order'] = $GLOBALS[$order_total['code']]->sort_order;
+                    $default_sort = $order_total['sort_order'];
+                } else {
+                    $order_total['sort_order'] = $default_sort;
                 }
 
-                // Retrieve the information for the new product
-                $new_product = eo_get_new_product(
-                    $add_product_products_id,
-                    $add_product_quantity,
-                    false,
-                    zen_db_prepare_input($_POST['id']),
-                    isset($_POST['applyspecialstoprice'])
-                );
+                // TODO Special processing for some modules
+                if (zen_not_null($order_total['title']) && $order_total['title'] != ':') {
+                    switch ($order_total['code']) {
+                        case 'ot_shipping':
+                            $order->info['shipping_cost'] = $order_total['value'];
+                            $order->info['shipping_method'] = $order_total['title'];
+                            $order->info['shipping_module_code'] = $order_total['shipping_module'];
+                            $GLOBALS['eo']->eoRecordPostedShippingTaxRate($_POST['shipping_tax']);
+                            break;
+                        case 'ot_tax':
+                            if (count($order->products) == 0) {
+                                $order_total['title'] = '';
+                                $order_total['value'] = 0;
+                            }
+                            $order->info['tax'] = $order_total['value'];
+                            break;
+                        case 'ot_gv':
+                            if ($order_total['value'] < 0) {
+                                $order_total['value'] = $order_total['value'] * -1;
+                            }
+                            $order_total['text'] = $eo->eoFormatCurrencyValue($order_total['value']);
+                            $_SESSION['cot_gv'] = $order_total['value'];
+                            break;
+                        case 'ot_voucher':
+                            if ($order_total['value'] < 0) {
+                                $order_total['value'] = $order_total['value'] * -1;
+                            }
+                            $order_total['text'] = $eo->eoFormatCurrencyValue($order_total['value']);
+                            $_SESSION['cot_voucher'] = $order_total['value'];
+                            break;
+                        case 'ot_coupon':
+                            // Default to using the title from the module
+                            $coupon = rtrim($order_total['title'], ': ');
+                            $order_total['title'] = (isset($GLOBALS['ot_coupon'])) ? $GLOBALS['ot_coupon']->title : '';
 
-                // Add the product to the order
-                $eo->eoLog(PHP_EOL . 'Product Being Added:' . PHP_EOL . $eo->eoFormatArray($new_product) . PHP_EOL);
-                eo_add_product_to_order($oID, $new_product);
+                            // Look for correctly formatted title
+                            preg_match('/([^:]+):([^:]+)/', $coupon, $matches);
+                            if (count($matches) > 2) {
+                                $order_total['title'] = trim($matches[1]);
+                                $coupon = $matches[2];
+                            }
+                            $cc_id = $db->Execute(
+                                'SELECT coupon_id FROM `' . TABLE_COUPONS . '` ' .
+                                'WHERE coupon_code=\'' . trim($coupon) . '\''
+                            );
+                            unset($matches, $coupon);
 
-                // Update Subtotal and Pricing
-                eo_update_order_subtotal($oID, $new_product);
+                            if(!$cc_id->EOF) {
+                                $_SESSION['cc_id'] = $cc_id->fields['coupon_id'];
+                            } else {
+                                $messageStack->add_session(WARNING_ORDER_COUPON_BAD, 'warning');
+                                $order_total['title'] = '';
+                                $order_total['value'] = 0;
+                            }
+                            unset($cc_id);
+                            break;
+                        default:
+                            break;
+                    }
+                }
 
-                // Save the changes
-                eo_update_database_order_totals($oID);
-                $order = $eo->getOrderInfo();
-
-                // Remove the low order and/or cod fees (will automatically repopulate if needed)
+                $found = false;
                 foreach ($order->totals as $key => $total) {
-                    if ($total['class'] == 'ot_loworderfee' || $total['class'] == 'ot_cod_fee') {
+                    if ($total['class'] == $order_total['code']) {
                         // Update the information in the order
-                        $total['title'] = '';
-                        $total['value'] = 0;
-                        $total['code'] = $total['class'];
-
-                        eo_update_database_order_total($oID, $total);
-                        unset($order->totals[$key]);
+                        $order->totals[$key]['title'] = $order_total['title'];
+                        $order->totals[$key]['value'] = $order_total['value'];
+                        $order->totals[$key]['text'] = $order_total['text'];
+                        $found = true;
                         break;
                     }
                 }
 
-                // Requires $GLOBALS['order'] to be reset and populated
-                $order = $eo->getOrderInfo();
-                eo_update_database_order_totals($oID);
+                if (!$found) {
+                    $order->totals[] = array(
+                        'class' => $order_total['code'],
+                        'title' => $order_total['title'],
+                        'value' => $order_total['value'],
+                        'text' => $order_total['text'],
+                        'sort_order' => $order_total['sort_order']
+                    );
+                }
 
-                $eo->eoLog(
-                    PHP_EOL . 'Final Products in Order:' . PHP_EOL . $eo->eoFormatArray($order->products) . PHP_EOL .
-                    $eo->eoFormatOrderTotalsForLog($order, 'Final Order Totals:') .
-                    'Final Tax (total): ' . $order->info['tax'] . PHP_EOL .
-                    'Final Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups']) . PHP_EOL
-                );
-                $zco_notifier->notify('EDIT_ORDERS_PRODUCT_ADDED', $order);
-                zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit'));
+                // Always update the database (allows delete)
+                eo_update_database_order_total($oID, $order_total);
             }
-            break;
-            
-        default:
-            break; 
-    }
-}
 
-$order_exists = false;
-if ($action == 'edit' && isset($_GET['oID'])) {
-    $orders_query = $db->Execute(
-        "SELECT orders_id FROM " . TABLE_ORDERS . " 
-          WHERE orders_id = $oID
-          LIMIT 1"
-    );
-    $order_exists = true;
-    if ($orders_query->EOF) {
-      $order_exists = false;
-      $messageStack->add(sprintf(ERROR_ORDER_DOES_NOT_EXIST, $oID), 'error');
-    } else {
-        $order = $eo->getOrderInfo();
-        if (!$eo->eoOrderIsVirtual($order) &&
-               ( !is_array($order->customer['country']) || !array_key_exists('id', $order->customer['country']) ||
-                 !is_array($order->billing['country']) || !array_key_exists('id', $order->billing['country']) ||
-                 !is_array($order->delivery['country']) || !array_key_exists('id', $order->delivery['country']) )) {
-            $messageStack->add(WARNING_ADDRESS_COUNTRY_NOT_FOUND, 'warning');
+            // Update the order's order-totals
+            eo_update_database_order_totals($oID);
+
+            $eo->eoLog (
+                $eo->eoFormatOrderTotalsForLog($order) . PHP_EOL .
+                'Updated Tax (total): ' . $order->info['tax'] . PHP_EOL .
+                'Updated Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
+            );
+
+            // Unset some session variables after updating the order totals
+            unset($_SESSION['cot_gv'], $_SESSION['cot_voucher'], $_SESSION['cc_id']);
+            $order_updated = true;
         }
-    }
+
+        if ($order_updated) {
+            $messageStack->add_session(SUCCESS_ORDER_UPDATED, 'success');
+        } else {
+            $messageStack->add_session(WARNING_ORDER_NOT_UPDATED, 'warning');
+        }
+
+        $eo->eoLog (
+            PHP_EOL . '============================================================' .
+            PHP_EOL . '= Done Processing Requested Updates to the Order' .
+            PHP_EOL . '============================================================' .
+            PHP_EOL . PHP_EOL .
+            'Final Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
+             $eo->eoFormatOrderTotalsForLog($order, 'Final Totals:') . 
+            'Final Tax (total): ' . $order->info['tax'] . PHP_EOL .
+            'Final Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
+        );
+        $zco_notifier->notify('EDIT_ORDERS_ORDER_UPDATED', $order);
+
+        zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit', 'NONSSL'));
+        break;
+
+    case 'add_prdct':
+        if (!zen_not_null($step)) {
+            $step = 1;
+        }
+        $eo->eoLog(
+            PHP_EOL . '============================================================' .
+            PHP_EOL . '= Adding a new product to the order (step ' . $step . ')' .
+            PHP_EOL . '============================================================' .
+            PHP_EOL . PHP_EOL
+        );
+        if ($step == 5) {
+            $zco_notifier->notify('EDIT_ORDERS_START_ADD_PRODUCT', $oID);
+
+            // Get Order Info
+            $order = $eo->getOrderInfo();
+
+            // Check qty field
+            $add_max = zen_get_products_quantity_order_max($add_product_products_id);
+            if ($add_product_quantity > $add_max && $add_max != 0) {
+                $add_product_quantity = $add_max;
+                $messageStack->add_session(WARNING_ORDER_QTY_OVER_MAX, 'warning');
+            }
+
+            // Retrieve the information for the new product
+            $new_product = eo_get_new_product(
+                $add_product_products_id,
+                $add_product_quantity,
+                false,
+                zen_db_prepare_input($_POST['id']),
+                isset($_POST['applyspecialstoprice'])
+            );
+
+            // Add the product to the order
+            $eo->eoLog(PHP_EOL . 'Product Being Added:' . PHP_EOL . $eo->eoFormatArray($new_product) . PHP_EOL);
+            eo_add_product_to_order($oID, $new_product);
+
+            // Update Subtotal and Pricing
+            eo_update_order_subtotal($oID, $new_product);
+
+            // Save the changes
+            eo_update_database_order_totals($oID);
+            $order = $eo->getOrderInfo();
+
+            // Remove the low order and/or cod fees (will automatically repopulate if needed)
+            foreach ($order->totals as $key => $total) {
+                if ($total['class'] == 'ot_loworderfee' || $total['class'] == 'ot_cod_fee') {
+                    // Update the information in the order
+                    $total['title'] = '';
+                    $total['value'] = 0;
+                    $total['code'] = $total['class'];
+
+                    eo_update_database_order_total($oID, $total);
+                    unset($order->totals[$key]);
+                    break;
+                }
+            }
+
+            // Requires $GLOBALS['order'] to be reset and populated
+            $order = $eo->getOrderInfo();
+            eo_update_database_order_totals($oID);
+
+            $eo->eoLog(
+                PHP_EOL . 'Final Products in Order:' . PHP_EOL . $eo->eoFormatArray($order->products) . PHP_EOL .
+                $eo->eoFormatOrderTotalsForLog($order, 'Final Order Totals:') .
+                'Final Tax (total): ' . $order->info['tax'] . PHP_EOL .
+                'Final Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups']) . PHP_EOL
+            );
+            $zco_notifier->notify('EDIT_ORDERS_PRODUCT_ADDED', $order);
+            zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit'));
+        }
+        break;
+        
+    default:
+        $action = 'edit';
+        $orders_query = $db->Execute(
+            "SELECT orders_id FROM " . TABLE_ORDERS . " 
+              WHERE orders_id = $oID
+              LIMIT 1"
+        );
+        if ($orders_query->EOF) {
+            $messageStack->add_session(sprintf(ERROR_ORDER_DOES_NOT_EXIST, $oID), 'error');
+            zen_redirect(zen_href_link(FILENAME_ORDERS));
+        } else {
+            $order = $eo->getOrderInfo();
+            if (!$eo->eoOrderIsVirtual($order) &&
+                   ( !is_array($order->customer['country']) || !isset($order->customer['country']['id']) ||
+                     !is_array($order->billing['country']) || !isset($order->billing['country']['id']) ||
+                     !is_array($order->delivery['country']) || !isset($order->delivery['country']['id']) )) {
+                $messageStack->add(WARNING_ADDRESS_COUNTRY_NOT_FOUND, 'warning');
+            }
+        }
+        break; 
 }
 ?>
 <!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -752,14 +757,6 @@ if ($action == 'edit' && isset($_GET['oID'])) {
 <link rel="stylesheet" type="text/css" href="includes/stylesheet.css">
 <link rel="stylesheet" type="text/css" href="includes/edit_orders.css">
 <link rel="stylesheet" type="text/css" href="includes/cssjsmenuhover.css" media="all" id="hoverJS">
-<?php
-$zc_version = PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR;
-if ($zc_version < '1.5.5') {
-?>
-<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
-<?php
-}
-?>
 <script type="text/javascript" src="includes/menu.js"></script>
 <script type="text/javascript" src="includes/general.js"></script>
 <script type="text/javascript">
@@ -784,7 +781,7 @@ function init()
 </div>
 <!-- header_eof //-->
 <?php
-if ($action == 'edit' && $order_exists) {
+if ($action == 'edit') {
     if ($order->info['payment_module_code']) {
         if (file_exists(DIR_FS_CATALOG_MODULES . 'payment/' . $order->info['payment_module_code'] . '.php')) {
             require DIR_FS_CATALOG_MODULES . 'payment/' . $order->info['payment_module_code'] . '.php';
@@ -1119,7 +1116,7 @@ if ($action == 'edit' && $order_exists) {
                                 <td class="dataTableHeadingContent" align="right"><?php echo TABLE_HEADING_TAX; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
 <?php
     // -----
-    // Starting with v4.3.6, show both the net and gross unit prices when the store is configured to display prices with tax.
+    // Starting with v4.4.0, show both the net and gross unit prices when the store is configured to display prices with tax.
     //
     if (DISPLAY_PRICE_WITH_TAX == 'true') {
 ?>
@@ -1137,7 +1134,7 @@ if ($action == 'edit' && $order_exists) {
 <!-- Begin Products Listings Block -->
 <?php
     $orders_products_id_mapping = eo_get_orders_products_id_mappings((int)$oID);
-    for ($i=0; $i<sizeof($order->products); $i++) {
+    for ($i = 0, $i2 = count($order->products); $i < $i2; $i++) {
         $orders_products_id = $orders_products_id_mapping[$i];
         $eo->eoLog (
             PHP_EOL . '============================================================' .
@@ -1159,24 +1156,28 @@ if ($action == 'edit' && $order_exists) {
             $selected_attributes_id_mapping = eo_get_orders_products_options_id_mappings($oID, $orders_products_id);
             $attrs = eo_get_product_attributes_options($order->products[$i]['id']);
             $optionID = array_keys($attrs);
-            for ($j=0; $j<sizeof($attrs); $j++) {
-                $optionInfo = $attrs[$optionID[$j]];
-                $orders_products_attributes_id = $selected_attributes_id_mapping[$optionID[$j]];
+            for ($j = 0, $j2 = count($attrs); $j < $j2; $j++) {
+                $option_id = $optionID[$j];
+                $optionInfo = $attrs[$option_id];
+                $orders_products_attributes_id = $selected_attributes_id_mapping[$option_id];
+                
+                $option_type = $optionInfo['type'];
+                $option_type_hidden_field = zen_draw_hidden_field("update_products[$orders_products_id][attr][$option_id][type]", $option_type);
+                $option_name = $optionInfo['name'];
 
                 $eo->eoLog (
-                    PHP_EOL . 'Options ID #' . $optionID[$j] . PHP_EOL .
+                    PHP_EOL . 'Options ID #' . $option_id . PHP_EOL .
                     'Product Attribute: ' . PHP_EOL . $eo->eoFormatArray($orders_products_attributes_id) . PHP_EOL .
                     'Options Info:' . PHP_EOL . $eo->eoFormatArray($optionInfo)
                 );
 
-                switch($optionInfo['type']) {
+                switch ($option_type) {
                     case PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID:
                     case PRODUCTS_OPTIONS_TYPE_RADIO:
                     case PRODUCTS_OPTIONS_TYPE_SELECT:
                     case PRODUCTS_OPTIONS_TYPE_SELECT_SBA:
-                        echo '<label class="attribsSelect" for="opid-' .
-                            $orders_products_id . '-oid-' . $optionID[$j] .
-                            '">' . $optionInfo['name'] . '</label>';
+                    case PRODUCTS_OPTIONS_TYPE_IMAGE_SWATCH:
+                        echo "<label class=\"attribsSelect\" for=\"opid-$orders_products_id-oid-$option_id\">$option_name</label>";
                         $products_options_array = array();
                         $selected_attribute = null;
                         foreach ($optionInfo['options'] as $attributeId => $attributeValue) {
@@ -1193,16 +1194,12 @@ if ($action == 'edit' && $order_exists) {
                         }
 
                         echo zen_draw_pull_down_menu(
-                            'update_products[' . $orders_products_id . '][attr][' .
-                            $optionID[$j] . '][value]', $products_options_array,
-                            $selected_attribute, 'id="opid-' . $orders_products_id .
-                            '-oid-' . $optionID[$j] . '"'
+                            "update_products[$orders_products_id][attr][$option_id][value]", 
+                            $products_options_array,
+                            $selected_attribute, 
+                            "id=\"opid-$orders_products_id-oid-$option_id\""
                         ) . "<br />\n";
-                        echo zen_draw_hidden_field(
-                            'update_products[' . $orders_products_id . '][attr][' .
-                            $optionID[$j] . '][type]', $optionInfo['type']
-                        );
-                        unset($products_options_array, $selected_attribute, $attributeId, $attributeValue);
+                        echo $option_type_hidden_field;
                         break;
                         
                     case PRODUCTS_OPTIONS_TYPE_CHECKBOX:
@@ -1210,7 +1207,7 @@ if ($action == 'edit' && $order_exists) {
                         // This also handles correctly forwarding $id_map.
                         $checked = array();
                         foreach ($optionInfo['options'] as $attributeId => $attributeValue) {
-                            for ($k=0;$k<sizeof($orders_products_attributes_id);$k++) {
+                            for ($k = 0, $k2 = count($orders_products_attributes_id); $k < $k2; $k++) {
                                 if (eo_is_selected_product_attribute_id($orders_products_attributes_id[$k], $attributeId)) {
                                     $checked[$attributeId] = $orders_products_attributes_id[$k];
                                 }
@@ -1218,24 +1215,18 @@ if ($action == 'edit' && $order_exists) {
                         }
 
                         // Now display the options
-                        echo '<div class="attribsCheckboxGroup"><div class="attribsCheckboxName">' . $optionInfo['name'] . '</div>';
-                        foreach($optionInfo['options'] as $attributeId => $attributeValue) {
+                        echo '<div class="attribsCheckboxGroup"><div class="attribsCheckboxName">' . $option_name . '</div>';
+                        foreach ($optionInfo['options'] as $attributeId => $attributeValue) {
+                            $option_html_id = "opid-$orders_products_id-oid-$option_id-$attributeId";
                             echo zen_draw_checkbox_field(
-                                'update_products[' . $orders_products_id . '][attr][' .
-                                $optionID[$j] . '][value][' . $attributeId . ']',
-                                $attributeId, array_key_exists($attributeId, $checked),
-                                null, 'id="opid-' . $orders_products_id . '-oid-' .
-                                $optionID[$j] .    '-' . $attributeId . '"'
-                            ) . '<label class="attribsCheckbox" for="opid-' .
-                                $orders_products_id . '-oid-' .
-                                $optionID[$j] .    '-' . $attributeId . '">' .
-                            $attributeValue . '</label><br />' . "\n";
+                                "update_products[$orders_products_id ][attr][$option_id][value][$attributeId]",
+                                $attributeId, 
+                                isset($checked[$attributeId]),
+                                null, 
+                                "id=\"$option_html_id\""
+                            ) . "<label class=\"attribsCheckbox\" for=\"$option_html_id\">$attributeValue</label><br />" . PHP_EOL;
                         }
-                        echo zen_draw_hidden_field(
-                            'update_products[' . $orders_products_id . '][attr][' .
-                            $optionID[$j] . '][type]', $optionInfo['type']
-                        ) . '</div>';
-                        unset($checked, $attributeId, $attributeValue);
+                        echo $option_type_hidden_field . '</div>';
                         break;
                         
                     case PRODUCTS_OPTIONS_TYPE_TEXT:
@@ -1244,47 +1235,26 @@ if ($action == 'edit' && $order_exists) {
                             $text = '';
                         }
                         $text = zen_html_quotes($text);
-                        echo '<label class="attribsInput" for="opid-' .
-                            $orders_products_id . '-oid-' . $optionID[$j] .
-                            '">' . $optionInfo['name'] . '</label>';
+                        $option_html_id = "opid-$orders_products_id-oid-$option_id";
+                        $option_input_name = "update_products[$orders_products_id][attr][$option_id][value]";
+                        $option_rows = $optionInfo['rows'];
+                        $option_cols = $optionInfo['size'];
+                        echo "<label class=\"attribsInput\" for=\"$option_html_id\">$option_name</label>";
                         if ($optionInfo['rows'] > 1 ) {
-                            echo '<textarea class="attribsTextarea" name="update_products[' .
-                                $orders_products_id . '][attr][' . $optionID[$j] .
-                                '][value]" rows="' . $optionInfo['rows'] .
-                                '" cols="' . $optionInfo['size'] . '" id="opid-' .
-                                $orders_products_id . '-oid-' . $optionID[$j] .
-                                '" >' . $text . '</textarea>' . "\n";
+                            echo "<textarea class=\"attribsTextarea\" name=\"$option_input_name\" rows=\"$option_rows\" cols=\"$option_cols\" id=\"$option_html_id\">$text</textarea>" . PHP_EOL;
                         } else {
-                            echo '<input type="text" name="update_products[' .
-                                $orders_products_id . '][attr][' . $optionID[$j] .
-                                '][value]" size="' . $optionInfo['size'] . '" maxlength="' .
-                                $optionInfo['size'] . '" value="' . $text .
-                                '" id="opid-' . $orders_products_id . '-oid-' .
-                                $optionID[$j] .    '" /><br />' . "\n";
+                            echo "<input type=\"text\" name=\"$option_input_name\" size=\"$option_cols\" maxlength=\"$option_cols\" value=\"$text\" id=\"$option_html_id\" /><br />" . PHP_EOL;
                         }
-                        echo zen_draw_hidden_field(
-                            'update_products[' . $orders_products_id . '][attr][' .
-                            $optionID[$j] . '][type]', $optionInfo['type']
-                        );
-                        unset($text);
+                        echo $option_type_hidden_field;
                         break;
                         
                     case PRODUCTS_OPTIONS_TYPE_FILE:
-                        $value = eo_get_selected_product_attribute_value_by_id($orders_products_attributes_id[0], array_shift(array_keys($optionInfo['options'])));
-                        echo '<span class="attribsFile">' . $optionInfo['name'] .
-                            ': ' . (zen_not_null($value) ? $value : TEXT_ATTRIBUTES_UPLOAD_NONE) .
-                            '</span><br />';
-                        if (zen_not_null($value)) {
-                            echo zen_draw_hidden_field(
-                                'update_products[' . $orders_products_id . '][attr][' .
-                                $optionID[$j] . '][value]', $value
-                            );
-                            echo zen_draw_hidden_field(
-                                'update_products[' . $orders_products_id . '][attr][' .
-                                $optionID[$j] . '][type]', $optionInfo['type']
-                            );
+                        $optionValue = eo_get_selected_product_attribute_value_by_id($orders_products_attributes_id[0], array_shift(array_keys($optionInfo['options'])));
+                        echo "<span class=\"attribsFile\">$option_name: " . (!empty($optionValue) ? $optionValue : TEXT_ATTRIBUTES_UPLOAD_NONE) . '</span><br />';
+                        if (!empty($optionValue)) {
+                            echo zen_draw_hidden_field("update_products[$orders_products_id][attr][$option_id][value]", $optionValue);
+                            echo $option_type_hidden_field;
                         }
-                        unset($value);
                         break;
                         
                     case PRODUCTS_OPTIONS_TYPE_READONLY:
@@ -1294,15 +1264,11 @@ if ($action == 'edit' && $order_exists) {
                             $orders_products_id . '][attr][' . $optionID[$j] . '][value]" value="' .
                             $optionValue . '" /><span class="attribsRO">' .
                             $optionInfo['name'] . ': ' . $optionValue . '</span><br />';
-                        echo zen_draw_hidden_field(
-                            'update_products[' . $orders_products_id . '][attr][' .
-                            $optionID[$j] . '][type]', $optionInfo['type']
-                        );
-                        unset($optionValue);
+                        echo $option_type_hidden_field;
                         break;
                 }
             }
-            unset($optionID, $optionInfo);
+            unset($optionID, $optionInfo, $products_options_array, $selected_attribute, $attributeId, $attributeValue, $optionValue, $text, $checked);
         } 
         if (DISPLAY_PRICE_WITH_TAX == 'true') {
             $final_price = $order->products[$i]['final_price'];
@@ -1315,7 +1281,7 @@ if ($action == 'edit' && $order_exists) {
 ?>
                                 </td>
                                 <td class="dataTableContent" valign="top"><input name="update_products[<?php echo $orders_products_id; ?>][model]" size="55" value="<?php echo $order->products[$i]['model']; ?>" /></td>
-                                <td class="dataTableContent" align="right" valign="top"><input class="amount p-t" name="update_products[<?php echo $orders_products_id; ?>][tax]" size="3" value="<?php echo zen_display_tax_value($order->products[$i]['tax']); ?>"<?php echo $data_index; ?> />&nbsp;<?php echo EO_TAX_PERCENT; ?></td>
+                                <td class="dataTableContent" align="right" valign="top"><input class="amount p-t" name="update_products[<?php echo $orders_products_id; ?>][tax]" size="3" value="<?php echo zen_display_tax_value($order->products[$i]['tax']); ?>"<?php echo $data_index; ?> />&nbsp;%</td>
                                 <td class="dataTableContent" align="right" valign="top"><input class="amount p-n" name="update_products[<?php echo $orders_products_id; ?>][final_price]" size="5" value="<?php echo $final_price; ?>"<?php echo $data_index; ?> /></td>
 <?php
         // -----
@@ -1402,7 +1368,7 @@ if ($action == 'edit' && $order_exists) {
 ?>
                                 <td align="right"><?php echo zen_draw_hidden_field($update_total_code, $total['class']) . zen_draw_pull_down_menu($update_total . '[shipping_module]', eo_get_available_shipping_modules(), $order->info['shipping_module_code']) . '&nbsp;&nbsp;' . zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount" size="' . strlen($trimmed_title) . '"'); ?></td>
                                 
-                                <td align="right"><?php echo zen_draw_input_field('shipping_tax', $shipping_tax_rate, 'class="amount" size="3" id="s-t"'); ?>&nbsp;<?php echo EO_TAX_PERCENT; ?></td>
+                                <td align="right"><?php echo zen_draw_input_field('shipping_tax', $shipping_tax_rate, 'class="amount" size="3" id="s-t"'); ?>&nbsp;%</td>
 <?php
                 if (DISPLAY_PRICE_WITH_TAX == 'true') {
                     $shipping_net = $details['value'] / (1 + ($shipping_tax_rate / 100));
@@ -1570,7 +1536,7 @@ if ($action == 'edit' && $order_exists) {
         } else {
 ?>
                     <tr>
-                        <td class="smallText colspan="4"><?php echo TEXT_NO_ORDER_HISTORY; ?></td>
+                        <td class="smallText" colspan="4"><?php echo TEXT_NO_ORDER_HISTORY; ?></td>
                     </tr>
 <?php
         }
@@ -1903,7 +1869,7 @@ if ($action == "add_prdct") {
             echo zen_draw_hidden_field('add_product_categories_id', $add_product_categories_id) .
                 zen_draw_hidden_field('add_product_products_id', $add_product_products_id) .
                 zen_draw_hidden_field('search', $_POST['search']) .
-		zen_draw_hidden_field('step', '4');
+                zen_draw_hidden_field('step', '4');
 ?>
                 </td>
             </tr>

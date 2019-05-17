@@ -15,15 +15,19 @@ class EditOrdersAdminObserver extends base
         $this->attach(
             $this, 
             array(
+                /* From /admin/orders.php */
                 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS', 
                 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END',
                 'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS',
                 'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE',    //-This is the zc156+ version of the above notification.
+                
+                /* From /includes/modules/order_total/ot_shipping.php */
+                'NOTIFY_OT_SHIPPING_TAX_CALCS',
             )
         );
     }
   
-    public function update(&$class, $eventID, $p1, &$p2, &$p3, &$p4) 
+    public function update(&$class, $eventID, $p1, &$p2, &$p3, &$p4, &$p5) 
     {
         switch ($eventID) {
             // -----
@@ -79,6 +83,26 @@ class EditOrdersAdminObserver extends base
             //
             case 'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS':
                 $p3 .= '&nbsp;' . $this->createEditOrdersLink($p1, zen_image_button(EO_IMAGE_BUTTON_EDIT, IMAGE_EDIT), IMAGE_EDIT);
+                break;
+                
+            // -----
+            // Issued during the order-totals' construction by the ot_shipping module, giving observers the chance
+            // to override the shipping tax-related calculations.
+            //
+            // NOTE: The auto-loader has positioned the load of this class at 999, hopefully as the last watching observer
+            // to load.  That allows this processing to 'assume' that it should provide that value if no other watcher
+            // has intervened.
+            //
+            // $p1 ... n/a
+            // $p2 ... A reference to the boolean flag that identifies whether/not the tax has been previously handled.
+            // $p3 ... A reference to the module's $shipping_tax value.
+            // $p4 ... A reference to the module's $shipping_tax_description string.
+            //
+            case 'NOTIFY_OT_SHIPPING_TAX_CALCS':
+                if (basename($GLOBALS['PHP_SELF'], '.php') == FILENAME_EDIT_ORDERS && $p2 === false) {
+                    $GLOBALS['eo']->eoUpdateOrderShippingTax($p3, $p4);
+                    $p2 = true;
+                }
                 break;
                 
             default:

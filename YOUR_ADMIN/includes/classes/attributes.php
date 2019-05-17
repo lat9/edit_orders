@@ -12,17 +12,17 @@ if (!defined('IS_ADMIN_FLAG')) {
  * @author Andrew Ballanger
  * @package classes
  */
-class attributes extends base {
-    protected $options_order_by;
-    protected $options_values_order_by;
+class attributes extends base 
+{
+    protected $options_order_by,
+              $options_values_order_by;
     
     /**
      * Constructs an Attributes class for accessing product attributes, options,
      * and values.
      */
-    public function __construct() {
-        $this->cache_time = 43200; // 12 hours (43200 seconds)
-        
+    public function __construct() 
+    {
         // -----
         // Preset the "ORDER BY" clause for the products' options.
         //
@@ -51,10 +51,12 @@ class attributes extends base {
      *        product to the cart, defaults to false.
      * @return array
      */
-    public function get_attributes_options($zf_product_id, $readonly = false) {
+    public function get_attributes_options($zf_product_id, $readonly = false) 
+    {
         global $db;
         $query = 
-            "SELECT pa.products_attributes_id, pa.options_id AS `id`, po.products_options_name AS `name`, po.products_options_type AS `type`, po.products_options_size AS `size`, po.products_options_rows AS `rows`, po.products_options_length AS `length`, pov.products_options_values_name as `value`
+            "SELECT pa.products_attributes_id, pa.options_id AS `id`, po.products_options_name AS `name`, po.products_options_type AS `type`, 
+                    po.products_options_size AS `size`, po.products_options_rows AS `rows`, po.products_options_length AS `length`, pov.products_options_values_name as `value`
                FROM " . TABLE_PRODUCTS_ATTRIBUTES . " AS pa
                     LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " AS po
                         ON pa.options_id = po.products_options_id
@@ -71,11 +73,7 @@ class attributes extends base {
 
         $query .= ' ORDER BY ' . $this->options_order_by . ', ' . $this->options_values_order_by;
 
-        if ($this->cache_time == 0) {
-            $queryResult = $db->Execute($query);
-        } else {
-            $queryResult = $db->Execute($query, false, true, $this->cache_time);
-        }
+        $queryResult = $db->Execute($query);
 
         $retval = array();
         while (!$queryResult->EOF) {
@@ -93,7 +91,8 @@ class attributes extends base {
      * @param int|string $zf_option_id the specified option id.
      * @return array
      */
-    public function get_attributes_by_option($zf_product_id, $zf_option_id) {
+    public function get_attributes_by_option($zf_product_id, $zf_option_id) 
+    {
         global $db;
         $query = 
             "SELECT pa.*, po.products_options_name, pov.products_options_values_name, po.products_options_type
@@ -108,11 +107,7 @@ class attributes extends base {
                 AND pa.options_id = " . (int)$zf_option_id . "
            ORDER BY " . $this->options_values_order_by;
 
-        if ($this->cache_time == 0) {
-            $queryResult = $db->Execute($query);
-        } else {
-            $queryResult = $db->Execute($query, false, true, $this->cache_time);
-        }
+        $queryResult = $db->Execute($query);
 
         $retval = array();
         while (!$queryResult->EOF) {
@@ -133,10 +128,11 @@ class attributes extends base {
      * @param string $key_format the specified key format for the array
      * @return array
      */
-    public function get_attribute_by_id($zf_attribute_id, $key_format = 'database') {
+    public function get_attribute_by_id($zf_attribute_id, $key_format = 'database') 
+    {
         global $db;
         $query = 
-            "SELECT pa.*, po.products_options_name, pov.products_options_values_name, po.products_options_type
+            "SELECT pa.*, po.products_options_name, pov.products_options_values_name AS value, po.products_options_type
                FROM " . TABLE_PRODUCTS_ATTRIBUTES . " AS pa
                     LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " AS po
                         ON pa.options_id = po.products_options_id
@@ -146,12 +142,7 @@ class attributes extends base {
                 AND pov.language_id = " . (int)$_SESSION['languages_id'] . "
                 AND pov.language_id = po.language_id
               LIMIT 1";
-
-        if ($this->cache_time == 0) {
-            $queryResult = $db->Execute($query);
-        } else {
-            $queryResult = $db->Execute($query, false, true, $this->cache_time);
-        }
+        $queryResult = $db->Execute($query);
 
         $retval = array();
         if (!$queryResult->EOF) {
@@ -159,10 +150,12 @@ class attributes extends base {
                 $retval = array(
                     'option_id' => $queryResult->fields['options_id'],
                     'value_id' => $queryResult->fields['options_values_id'],
-                    'value' => $queryResult->fields['products_options_values_name'],
+                    'value' => $queryResult->fields['value'],
                 );
             } else {
                 $retval = zen_db_prepare_input($queryResult->fields);
+                $retval['option_id'] = $queryResult->fields['options_id'];
+                $retval['value_id'] = $queryResult->fields['options_values_id'];
             }
         }
         return $retval;
