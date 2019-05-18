@@ -526,7 +526,30 @@ class editOrders extends base
             $stock_quantity = ($check->EOF) ? 0 : $check->fields['products_quantity'];
         }
         return $stock_quantity;
-    } 
+    }
+    
+    // -----
+    // This method, called during a product addition, records the coupon-id associated
+    // with the order into the session, so that the coupon is processed during that
+    // addition.
+    //
+    public function eoSetCouponForOrder($oID)
+    {
+        unset($_SESSION['cc_id']);
+        $oID = (int)$oID;
+        
+        $check = $GLOBALS['db']->Execute(
+            "SELECT c.coupon_id
+               FROM " . TABLE_ORDERS . " o
+                    INNER JOIN " . TABLE_COUPONS . " c
+                        ON o.coupon_code = c.coupon_code
+              WHERE o.orders_id = $oID
+              LIMIT 1"
+        );
+        if (!$check->EOF) {
+            $_SESSION['cc_id'] = $check->fields['coupon_id'];
+        }
+    }
     
     // -----
     // This method creates a hidden record in the order's status history.

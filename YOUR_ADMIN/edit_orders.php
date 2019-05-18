@@ -595,19 +595,26 @@ switch ($action) {
                                 $coupon = $matches[2];
                             }
                             $cc_id = $db->Execute(
-                                'SELECT coupon_id FROM `' . TABLE_COUPONS . '` ' .
-                                'WHERE coupon_code=\'' . trim($coupon) . '\''
+                                "SELECT coupon_id 
+                                   FROM ". TABLE_COUPONS . "
+                                  WHERE coupon_code = '" . trim($coupon) . "'
+                                  LIMIT 1"
                             );
-                            unset($matches, $coupon);
 
-                            if(!$cc_id->EOF) {
+                            if (!$cc_id->EOF) {
                                 $_SESSION['cc_id'] = $cc_id->fields['coupon_id'];
                             } else {
+                                $coupon = '';
                                 $messageStack->add_session(WARNING_ORDER_COUPON_BAD, 'warning');
                                 $order_total['title'] = '';
                                 $order_total['value'] = 0;
                             }
-                            unset($cc_id);
+                            $db->Execute(
+                                "UPDATE " . TABLE_ORDERS . "
+                                    SET coupon_code = '$coupon'
+                                  WHERE orders_id = $oID
+                                  LIMIT 1"
+                            );
                             break;
                         default:
                             break;
@@ -699,11 +706,12 @@ switch ($action) {
             }
 
             // Retrieve the information for the new product
+            $attributes = (isset($_POST['id'])) ? zen_db_prepare_input($_POST['id']) ? array();
             $new_product = eo_get_new_product(
                 $add_product_products_id,
                 $add_product_quantity,
                 false,
-                zen_db_prepare_input($_POST['id']),
+                $attributes,
                 isset($_POST['applyspecialstoprice'])
             );
 
@@ -714,6 +722,12 @@ switch ($action) {
             // Update Subtotal and Pricing
             eo_update_order_subtotal($oID, $new_product);
 
+            // -----
+            // Record any previously-recorded coupon for the order into the session, for
+            // use by the ot_coupon's calculations.
+            //
+            $eo->eoSetCouponForOrder($oID);
+            
             // Save the changes
             eo_update_database_order_totals($oID);
             $order = $eo->getOrderInfo();
@@ -735,6 +749,8 @@ switch ($action) {
             // Requires $GLOBALS['order'] to be reset and populated
             $order = $eo->getOrderInfo();
             eo_update_database_order_totals($oID);
+            
+            unset($_SESSION['cc_id']);
 
             $eo->eoLog(
                 PHP_EOL . 'Final Products in Order:' . PHP_EOL . $eo->eoFormatArray($order->products) . PHP_EOL .
