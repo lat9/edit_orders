@@ -706,7 +706,7 @@ switch ($action) {
             }
 
             // Retrieve the information for the new product
-            $attributes = (isset($_POST['id'])) ? zen_db_prepare_input($_POST['id']) ? array();
+            $attributes = (isset($_POST['id'])) ? zen_db_prepare_input($_POST['id']) : array();
             $new_product = eo_get_new_product(
                 $add_product_products_id,
                 $add_product_quantity,
