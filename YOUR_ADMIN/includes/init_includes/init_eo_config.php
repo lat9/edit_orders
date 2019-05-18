@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.4.0-beta2');
+define('EO_CURRENT_VERSION', '4.4.0-beta3');
 
 // -----
 // Only update configuration when an admin is logged in.
@@ -151,7 +151,14 @@ if (EO_VERSION != EO_CURRENT_VERSION) {
                     "ALTER TABLE " . TABLE_ORDERS . "
                        ADD shipping_tax_rate decimal(15,4) default NULL"
                 );
-            }                                   //-Fall-through for additional checks
+            }
+            
+            $db->Execute(
+                "DELETE FROM " . TABLE_CONFIGURATION . "
+                  WHERE configuration_key = 'EO_MOCK_SHOPPING_CART'
+                  LIMIT 1"
+            );
+                                                //-Fall-through for additional checks
 
         default:
             break;

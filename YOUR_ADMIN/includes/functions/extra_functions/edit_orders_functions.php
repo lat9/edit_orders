@@ -1641,12 +1641,7 @@ function eo_get_available_shipping_modules()
 function eo_shopping_cart() 
 {
     if (!isset($_SESSION['cart'])) {
-        if (defined('EO_MOCK_SHOPPING_CART') && EO_MOCK_SHOPPING_CART === 'true') {
-            $_SESSION['cart'] = new mockCart();
-        } else {
-            require_once DIR_FS_CATALOG . DIR_WS_CLASSES . 'shopping_cart.php';
-            $_SESSION['cart'] = new shoppingCart();
-        }
+        $_SESSION['cart'] = new mockCart();
     }
 }
 
