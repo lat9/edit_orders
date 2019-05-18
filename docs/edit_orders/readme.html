@@ -511,6 +511,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>CHANGE: Provide styled buttons/icons for Zen Cart 1.5.6 and later.</li>
             <li>CHANGE: Enable integration with <a href="https://vinosdefrutastropicales.com/index.php?main_page=product_info&cPath=2_7&products_id=49" target="_blank">Attribute Image Swapper</a>.</li>
             <li>CHANGE: All <em>EO</em> cart-related actions are now provided by its &quot;mock&quot; cart class.</li>
+            <li>CHANGE: Enable automatic pricing calculations, either with or without specials' pricing.</li>
             <li>The following files were changed:<ol>
               <li>/includes/languages/english/modules/order_total/ot_misc_cost.php</li>
               <li>/includes/modules/order_total/ot_misc_cost.php</li>
@@ -527,7 +528,8 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             </ol></li>
             <li>The following changes are made to the database:<ol>
               <li>Adds the column <code>shipping_tax_rate</code> to the <code>orders</code> table.</li>
-              <li>Removes the configuration setting 'EO_MOCK_SHOPPING_CART'.</li>
+              <li>Removes the configuration setting 'Use a mock shopping cart?'.</li>
+              <li>Updates the 'Product Price Calculations' configuration settings, enabling an additional calculation method.</li>
             </ol></li>
           </ul></li>
           <li>v4.3.5, 2018-10-31 (lat9)<ul>

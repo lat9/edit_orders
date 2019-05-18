@@ -128,7 +128,19 @@ define('WARNING_ATTRIBUTE_OPTION_GRID', 'Warning: Absolute\'s Product Attribute 
 
 // Other elements
 define('RESET_TOTALS', 'Reset totals prior to update? ');
-define('PAYMENT_CALC_MANUAL', 'Product prices, entered manually? ');
-define('PRODUCT_PRICES_CALC_AUTO', ' <b>Note:</b> Pricing for products will be <em>automatically</em> calculated.');
+define('PAYMENT_CALC_METHOD', 'Choose product-pricing method:');
+    define('PAYMENT_CALC_MANUAL', 'As entered');
+    define('PAYMENT_CALC_AUTO', 'Automatically, without specials pricing');
+    define('PAYMENT_CALC_AUTOSPECIALS', 'Automatically, using specials pricing');
+define('PRODUCT_PRICES_CALC_AUTO', ' <b>Note:</b> Pricing for products will be <em>automatically</em> calculated <em>without</em> &quot;specials&quot; pricing.');
+define('PRODUCT_PRICES_CALC_AUTOSPECIALS', ' <b>Note:</b> Pricing for products will be <em>automatically</em> calculated, using &quot;specials&quot; pricing.');
 define('PRODUCT_PRICES_CALC_MANUAL', ' <b>Note:</b> Pricing for products will use the value(s) that you enter.');
+
+define('EO_MESSAGE_PRICING_AUTO', 'Pricing was automatically calculated, without specials pricing.');
+define('EO_MESSAGE_PRICING_AUTOSPECIALS', 'Pricing was automatically, using specials pricing.');
+define('EO_MESSAGE_PRICING_MANUAL', 'Pricing was supplied manually.');
+define('EO_MESSAGE_ORDER_UPDATED', 'The order was updated via "Edit Orders". ');
+define('EO_MESSAGE_PRODUCT_ADDED', 'Added %1$s x "%2$s" to the order');   //-%1$s: The product quantity, %2$s: The product name
+define('EO_MESSAGE_ATTRIBS_ADDED', ', with options (%s)');
+
 define('EO_SHIPPING_TAX_DESCRIPTION', 'Shipping Tax (%s%%)');

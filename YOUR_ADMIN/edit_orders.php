@@ -352,7 +352,7 @@ switch ($action) {
                     $order->info['tax_groups'][$key] = 0;
                 }
             }
-            
+
             $_POST['update_products'] = zen_db_prepare_input($_POST['update_products']);
 
             $eo->eoLog (
@@ -416,7 +416,7 @@ switch ($action) {
                             $product_update['qty'],
                             $product_update['tax'],
                             $attrs,
-                            false
+                            (EO_PRODUCT_PRICE_CALC_METHOD == 'AutoSpecials' || (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose' && $_POST['payment_calc_method'] == 1))
                         );
                         unset($attrs);
                         
@@ -445,12 +445,23 @@ switch ($action) {
                         // Depending on the product-price calculation method, either the values entered
                         // or the pricing just calculated "rule".
                         //
-                        if (EO_PRODUCT_PRICE_CALC_METHOD == 'Auto' || (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose' && !isset($_POST['payment_calc_manual']))) {
-                            $price_calc_method = 'Pricing was automatically calculated.';
+                        if (EO_PRODUCT_PRICE_CALC_METHOD == 'Auto' || EO_PRODUCT_PRICE_CALC_METHOD == 'AutoSpecials' || (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose' && $_POST['payment_calc_method'] != 3)) {
+                            $price_calc_method = EO_MESSAGE_PRICING_AUTO;
+                            if (EO_PRODUCT_PRICE_CALC_METHOD == 'AutoSpecials' || (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose' && $_POST['payment_calc_method'] == 1)) {
+                                $price_calc_method = EO_MESSAGE_PRICING_AUTOSPECIALS;
+                            }
                             $new_product = array_merge($product_update, $new_product);
                         } else {
-                            $price_calc_method = 'Pricing, as entered, was used.';
+                            $price_calc_method = EO_MESSAGE_PRICING_MANUAL;
                             $new_product = array_merge($new_product, $product_update);
+                        }
+                        
+                        // -----
+                        // If the admin has an option to "Choose" the pricing calculation method, save the
+                        // current selection in the session so that it's maintained during their processing.
+                        //
+                        if (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose') {
+                            $_SESSION['eo_price_calculations'] = $_POST['payment_calc_method'];
                         }
 
                         // Add the product to the order
@@ -468,14 +479,23 @@ switch ($action) {
                             'Added Product Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
                         );
                     }
-
                     $order_updated = true;
                 }
             }
-            // Reset order if updated
+            
+            // -----
+            // If the order's been updated ...
+            //
             if ($order_updated) {
-                // Need to force update the tax field if the tax is zero
+                // -----
+                // Add an orders-status-history record, identifying that an update was performed.
+                //
+                $eo->eoRecordStatusHistory($oID, EO_MESSAGE_ORDER_UPDATED . $price_calc_method);
+                
+                // -----
+                // Need to force update the tax field if the tax is zero.
                 // This runs after the shipping tax is added by the above update
+                //
                 $decimals = $currencies->get_decimal_places($_SESSION['currency']);
                 if (zen_round($order->info['tax'], $decimals) == 0) {
                     if (!isset($_POST['update_total'])) {
@@ -723,6 +743,17 @@ switch ($action) {
                 'Final Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups']) . PHP_EOL
             );
             $zco_notifier->notify('EDIT_ORDERS_PRODUCT_ADDED', $order);
+            
+            $comments = sprintf(EO_MESSAGE_PRODUCT_ADDED, (string)$new_product['qty'], $new_product['name']);
+            if (isset($new_product['attributes'])) {
+                $attribs_added = '';
+                foreach ($new_product['attributes'] as $current_attribute) {
+                    $attribs_added .= zen_get_option_name_language($current_attribute['option_id'], $_SESSION['languages_id']) . ': ' . $current_attribute['value'] . ', ';
+                }
+                $attribs_added = substr($attribs_added, 0, -2);  //-Strip trailing ', '
+                $comments .= sprintf(EO_MESSAGE_ATTRIBS_ADDED, $attribs_added);
+            }
+            $eo->eoRecordStatusHistory($oID, $comments);
             zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit'));
         }
         break;
@@ -1087,11 +1118,38 @@ if ($action == 'edit') {
     $reset_totals_block = '<b>' . RESET_TOTALS . '</b>' . zen_draw_checkbox_field('reset_totals', '', (EO_TOTAL_RESET_DEFAULT == 'on'));
     $payment_calc_choice = '';
     if (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose') {
-        $payment_calc_choice = '<b>' . PAYMENT_CALC_MANUAL . '</b>' . zen_draw_checkbox_field('payment_calc_manual', '', (EO_PRODUCT_PRICE_CALC_DEFAULT == 'Manual'));
-    } elseif (EO_PRODUCT_PRICE_CALC_METHOD == 'Manual') {
-        $payment_calc_choice = PRODUCT_PRICES_CALC_MANUAL;
+        $choices = array(
+            array('id' => 1, 'text' => PAYMENT_CALC_AUTOSPECIALS),
+            array('id' => 2, 'text' => PAYMENT_CALC_AUTO),
+            array('id' => 3, 'text' => PAYMENT_CALC_MANUAL)
+        );
+        switch (EO_PRODUCT_PRICE_CALC_DEFAULT) {
+            case 'AutoSpecials':
+                $default = 1;
+                break;
+            case 'Auto':
+                $default = 2;
+                break;
+            default:
+                $default = 3;
+                break;
+        }
+        if (isset($_SESSION['eo_price_calculations']) && $_SESSION['eo_price_calculations'] >= 1 && $_SESSION['eo_price_calculations'] <= 3) {
+            $default = $_SESSION['eo_price_calculations'];
+        }
+        $payment_calc_choice = '<b>' . PAYMENT_CALC_METHOD . '</b> ' . zen_draw_pull_down_menu('payment_calc_method', $choices, $default);
     } else {
-        $payment_calc_choice = PRODUCT_PRICES_CALC_AUTO;
+        switch (EO_PRODUCT_PRICE_CALC_METHOD) {
+            case 'AutoSpecials':
+                $payment_calc_choice = PRODUCT_PRICES_CALC_AUTOSPECIALS;
+                break;
+            case 'Auto':
+                $payment_calc_choice = PRODUCT_PRICES_CALC_AUTO;
+                break;
+            default:
+                $payment_calc_choice = PRODUCT_PRICES_CALC_MANUAL;
+                break;
+        }
     }
 
     $additional_inputs = '';
