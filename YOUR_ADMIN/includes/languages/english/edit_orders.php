@@ -22,6 +22,8 @@ define('TABLE_HEADING_PRODUCTS', 'Products');
 define('TABLE_HEADING_TAX', 'Tax');
 define('TABLE_HEADING_TOTAL', 'Total');
 define('TABLE_HEADING_UNIT_PRICE', 'Unit Price');
+define('TABLE_HEADING_UNIT_PRICE_NET', 'Unit Price (Net)');
+define('TABLE_HEADING_UNIT_PRICE_GROSS', 'Unit Price (Gross)');
 define('TABLE_HEADING_TOTAL_PRICE', 'Total Price');
 define('TABLE_HEADING_CUSTOMER_NOTIFIED', 'Customer Notified');
 define('TABLE_HEADING_DATE_ADDED', 'Date Added');
@@ -77,6 +79,8 @@ define('WARNING_ORDER_QTY_OVER_MAX', 'Warning: The quantity requested exceeded t
 define('WARNING_ORDER_COUPON_BAD', 'Warning: The coupon code was not found in the database. Note: the title / text of a coupon is usually formatted like &quot;Discount Coupon : coupon_code :&quot;. ');
 define('WARNING_INSUFFICIENT_PRODUCT_STOCK', 'Insufficient stock for <em>%1$s</em>, requested %2$s with %3$s available.');
 
+define('ERROR_ZEN_ADD_TAX_ROUNDING', "The store's <code>zen_add_tax</code> function must be updated to enable <em>Edit Orders</em>' use.");
+
 define ('ERROR_ZC155_NO_SANITIZER', 'You must install the Zen Cart 1.5.5 <em>AdminRequestSanitizer</em> class before you can use Edit Orders on this site.');
 // Product & Attribute Display
 define('TEXT_ATTRIBUTES_ONE_TIME_CHARGE', 'One Time Charges: &nbsp;&nbsp;');
@@ -124,6 +128,19 @@ define('WARNING_ATTRIBUTE_OPTION_GRID', 'Warning: Absolute\'s Product Attribute 
 
 // Other elements
 define('RESET_TOTALS', 'Reset totals prior to update? ');
-define('PAYMENT_CALC_MANUAL', 'Product prices, entered manually? ');
-define('PRODUCT_PRICES_CALC_AUTO', ' <b>Note:</b> Pricing for products will be <em>automatically</em> calculated.');
+define('PAYMENT_CALC_METHOD', 'Choose product-pricing method:');
+    define('PAYMENT_CALC_MANUAL', 'As entered');
+    define('PAYMENT_CALC_AUTO', 'Automatically, without specials pricing');
+    define('PAYMENT_CALC_AUTOSPECIALS', 'Automatically, using specials pricing');
+define('PRODUCT_PRICES_CALC_AUTO', ' <b>Note:</b> Pricing for products will be <em>automatically</em> calculated <em>without</em> &quot;specials&quot; pricing.');
+define('PRODUCT_PRICES_CALC_AUTOSPECIALS', ' <b>Note:</b> Pricing for products will be <em>automatically</em> calculated, using &quot;specials&quot; pricing.');
 define('PRODUCT_PRICES_CALC_MANUAL', ' <b>Note:</b> Pricing for products will use the value(s) that you enter.');
+
+define('EO_MESSAGE_PRICING_AUTO', 'Pricing was automatically calculated, without specials pricing.');
+define('EO_MESSAGE_PRICING_AUTOSPECIALS', 'Pricing was automatically, using specials pricing.');
+define('EO_MESSAGE_PRICING_MANUAL', 'Pricing was supplied manually.');
+define('EO_MESSAGE_ORDER_UPDATED', 'The order was updated via "Edit Orders". ');
+define('EO_MESSAGE_PRODUCT_ADDED', 'Added %1$s x "%2$s" to the order');   //-%1$s: The product quantity, %2$s: The product name
+define('EO_MESSAGE_ATTRIBS_ADDED', ', with options (%s)');
+
+define('EO_SHIPPING_TAX_DESCRIPTION', 'Shipping Tax (%s%%)');

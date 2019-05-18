@@ -1,7 +1,7 @@
 <?php
 // -----
 // Part of the Edit Orders plugin (v4.1.6 and later) by lat9 (lat9@vinosdefrutastropicales.com).
-// Copyright (C) 2016-2018, Vinos de Frutas Tropicales
+// Copyright (C) 2016-2019, Vinos de Frutas Tropicales
 //
 if (!defined('EO_DEBUG_TAXES_ONLY')) define('EO_DEBUG_TAXES_ONLY', 'false');  //-Either 'true' or 'false'
 class editOrders extends base
@@ -55,7 +55,7 @@ class editOrders extends base
             }
         }
     }
-    
+
     public function getOrderInfo()
     {
         // -----
@@ -66,7 +66,7 @@ class editOrders extends base
         $oID = $this->orders_id;
 
         // -----
-        // Retrieve the formatted order.
+        // Retrieve the formatted order, via the storefront order.php class.
         //
         $order = new order($oID);
         $this->eoLog('getOrderInfo, on entry:' .  $this->eoFormatTaxInfoForLog(true), 'tax');
@@ -136,12 +136,11 @@ class editOrders extends base
         $_SESSION['payment'] = $order->info['payment_module_code'];
         
         // -----
-        // Later versions of Zen Cart's zen_get_tax_rate (on the admin-side anyway) now expect the customer's countries_id and
-        // zone_id to be in globally-available variables while earlier versions expect the values to be in session variables.
-        //
-        // Handle shipping costs (module will automatically handle tax)
+        // Determine the order's current shipping cost, retrieved from the value present in the
+        // shipping order-total's value.
         //
         if (!isset($order->info['shipping_cost'])) {
+            $order->info['shipping_cost'] = 0;
             $query = $GLOBALS['db']->Execute(
                 "SELECT `value` 
                    FROM " . TABLE_ORDERS_TOTAL . "
@@ -151,27 +150,47 @@ class editOrders extends base
             );
             if (!$query->EOF) {
                 $order->info['shipping_cost'] = $this->eoRoundCurrencyValue($query->fields['value']);
-
                 $_SESSION['shipping'] = array(
                     'title' => $order->info['shipping_method'],
                     'id' => $order->info['shipping_module_code'] . '_',
                     'cost' => $order->info['shipping_cost']
                 );
-
-                // Load the shopping cart class into the session
-                eo_shopping_cart();
-
-                // Load the shipping class into the globals
-                require_once DIR_FS_CATALOG . DIR_WS_CLASSES . 'shipping.php';
-                $shipping_modules = new shipping($_SESSION['shipping']);
-                
-                // -----
-                // Determine whether the order's shipping-method is taxed and
-                // initialize the order's 'shipping_tax' value.
-                //
-                $order->info['shipping_tax'] = $this->calculateOrderShippingTax();
             }
         }
+        
+        // -----
+        // Now, determine the tax associated with that shipping cost and initialize
+        // the shipping tax rate in the database, if not already set.
+        //
+        $tax_rate = $GLOBALS['db']->Execute(
+            "SELECT shipping_tax_rate
+               FROM " . TABLE_ORDERS . "
+              WHERE orders_id = $oID
+              LIMIT 1"
+        );
+        if ($tax_rate->fields['shipping_tax_rate'] !== null) {
+            $this->shipping_tax_rate = $tax_rate->fields['shipping_tax_rate'];
+        } else {
+            // Load the shopping cart class into the session
+            eo_shopping_cart();
+
+            // Load the shipping class into the globals
+            require_once DIR_FS_CATALOG . DIR_WS_CLASSES . 'shipping.php';
+            $shipping_modules = new shipping();
+            
+            // -----
+            // Call the protected method to calculate the order's shipping tax value; a side-effect
+            // of this call is the initialization of the class-variable shipping_tax_rate.
+            //
+            $order->info['shipping_tax'] = $this->calculateOrderShippingTax();
+            $GLOBALS['db']->Execute(
+                "UPDATE " . TABLE_ORDERS . "
+                    SET shipping_tax_rate = {$this->shipping_tax_rate}
+                  WHERE orders_id = $oID
+                  LIMIT 1"
+            );
+        }
+        $order->info['shipping_tax_rate'] = $this->shipping_tax_rate;
         
         // -----
         // Determine which portion (if any) of the shipping-cost is associated with the shipping tax, removing that
@@ -181,56 +200,99 @@ class editOrders extends base
         $shipping_module = $order->info['shipping_module_code'];
         $this->removeTaxFromShippingCost($order, $shipping_module);
         
-        $this->eoLog('getOrderInfo, on exit:' . PHP_EOL . json_encode($GLOBALS[$shipping_module]) . $this->eoFormatTaxInfoForLog(), 'tax');
+        $shipping_module_info = (isset($GLOBALS[$shipping_module])) ? json_encode($GLOBALS[$shipping_module]) : "$shipping_module (no object!)";
+        $this->eoLog('getOrderInfo, on exit:' . PHP_EOL . $shipping_module_info . $this->eoFormatTaxInfoForLog(), 'tax');
         return $order;
     }
-    
+
+    // -----
+    // Determine the tax-rate and associated tax for the order's shipping, giving a watching
+    // observer the opportunity to override the calculations.
+    //
     protected function calculateOrderShippingTax()
     {
         global $order;
         
-//-bof-20181120-lat9-GitHub#9:  Add notifier to enable TaxJar "intercept".
         $shipping_tax = false;
-        $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX', $order, $shipping_tax);
-        if ($shipping_tax !== false) {
-            $this->eoLog("calculateOrderShippingTax, override returning $shipping_tax.");
+        $shipping_tax_rate = false;
+        $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX', $order, $shipping_tax, $shipping_tax_rate);
+        if ($shipping_tax !== false && $shipping_tax_rate !== false) {
+            $this->eoLog("calculateOrderShippingTax, override returning $shipping_tax, rate = $shipping_tax_rate.");
+            $this->shipping_tax_rate = $shipping_tax_rate;
             return $shipping_tax;
         }
-//-eof-20181120-lat9
 
         $shipping_tax = 0;
-        
+        $tax_rate = 0;
         $shipping_module = $order->info['shipping_module_code'];
-        $shipping_tax_class_name = 'MODULE_SHIPPING_' . strtoupper($shipping_module) . '_TAX_CLASS';
-        $shipping_tax_basis_name = 'MODULE_SHIPPING_' . strtoupper($shipping_module) . '_TAX_BASIS';
 
-        $shipping_tax_class = (defined($shipping_tax_class_name)) ? constant($shipping_tax_class_name) : null;
-        $shipping_tax_basis = (defined($shipping_tax_basis_name)) ? constant($shipping_tax_basis_name) : null;
-        if ($shipping_tax_class === null || $shipping_tax_basis === null) {
-            $this->eoLog("calculateOrderShippingTax, $shipping_module does not provide tax-information.");
-        } else {
+        if (!empty($GLOBALS[$shipping_module]) && is_object($GLOBALS[$shipping_module]) && !empty($GLOBALS[$shipping_module]->tax_class)) {
             $tax_location = zen_get_tax_locations();
-            $tax_rate = zen_get_tax_rate($shipping_tax_class, $tax_location['country_id'], $tax_location['zone_id']);
+            $tax_rate = zen_get_tax_rate($GLOBALS[$shipping_module]->tax_class, $tax_location['country_id'], $tax_location['zone_id']);
             if ($tax_rate != 0) {
                 $shipping_tax = $this->eoRoundCurrencyValue(zen_calculate_tax($order->info['shipping_cost'], $tax_rate));
             }
         }
+        $this->shipping_tax_rate = $tax_rate;
         
-        $this->eoLog("calculateOrderShippingTax returning $shipping_tax.");
+        $this->eoLog("calculateOrderShippingTax returning $shipping_tax, rate = $tax_rate.");
         return $shipping_tax;
+    }
+    
+    // -----
+    // Invoked by EO's admin observer-class to override the tax to be applied to any
+    // shipping cost, as offered by the ot_shipping module's processing.
+    //
+    public function eoUpdateOrderShippingTax(&$shipping_tax_rate, &$shipping_tax_description)
+    {
+        $shipping_tax_rate = (isset($this->shipping_tax_rate)) ? $this->shipping_tax_rate : 0;
+        $shipping_tax_description = sprintf(EO_SHIPPING_TAX_DESCRIPTION, (string)$shipping_tax_rate);
+        
+        if (isset($GLOBALS['order']) && is_object($GLOBALS['order'])) {
+            if (!isset($GLOBALS['order']->info['tax_groups'][$shipping_tax_description])) {
+                $GLOBALS['order']->info['tax_groups'][$shipping_tax_description] = 0;
+            }
+            if (!isset($GLOBALS['order']->info['shipping_tax'])) {
+                $GLOBALS['order']->info['shipping_tax'] = 0;
+            }
+        }
+    }
+    
+    public function eoRecordPostedShippingTaxRate($shipping_tax_rate)
+    {
+        $this->shipping_tax_rate = $shipping_tax_rate;
+    }
+    
+    public function eoGetShippingTaxRate($order)
+    {
+        $shipping_tax_rate = false;
+        $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX_RATE', $order, $shipping_tax_rate);
+        if ($shipping_tax_rate !== false) {
+            $this->eoLog("eoGetShippingTaxRate, override returning rate = $shipping_tax_rate.");
+            return (empty($shipping_tax_rate)) ? 0 : $shipping_tax_rate;
+        }
+        
+        $tax_rate = 0;
+        $shipping_module = $order->info['shipping_module_code'];
+        if (isset($this->shipping_tax_rate)) {
+            $tax_rate = $this->shipping_tax_rate;
+        } elseif (!empty($GLOBALS[$shipping_module]) && is_object($GLOBALS[$shipping_module]) && !empty($GLOBALS[$shipping_module]->tax_class)) {
+            $tax_location = zen_get_tax_locations();
+            $tax_rate = zen_get_tax_rate($GLOBALS[$shipping_module]->tax_class, $tax_location['country_id'], $tax_location['zone_id']);
+        }
+        return (empty($tax_rate)) ? 0 : $tax_rate;
     }
     
     public function getProductTaxes($product, $shown_price = -1, $add = true)
     {
         global $order;
 
-        $shown_price = $this->eoRoundCurrencyValue($product['final_price'] * $product['qty']);
-        $onetime_charges = $this->eoRoundCurrencyValue($product['onetime_charges']);
-        if (DISPLAY_PRICE_WITH_TAX == 'true') {
-            $shown_price += $this->eoRoundCurrencyValue(zen_calculate_tax($shown_price, $product['tax']));
-            $onetime_charges += $this->eoRoundCurrencyValue(zen_calculate_tax($product['onetime_charges'], $product['tax']));
-        }
-        $shown_price += $onetime_charges;
+        $products_tax = $product['tax'];
+        $product_final_price = $product['final_price'];
+        $product_onetime = $product['onetime_charges'];
+        $product_qty = $product['qty'];
+        $shown_price = $this->eoRoundCurrencyValue(zen_add_tax($product_final_price, $products_tax)) * $product_qty;
+        $shown_price += $this->eoRoundCurrencyValue(zen_add_tax($product_onetime, $products_tax));
 
         $query = false;
         if (isset($product['tax_description'])) {
@@ -252,13 +314,14 @@ class editOrders extends base
         $this->eoLog(PHP_EOL . "getProductTaxes($products_tax_description)\n" . (($query === false) ? 'false' : (($query->EOF) ? 'EOF' : json_encode($query->fields))) . json_encode($product));
         
         $totalTaxAdd = 0;
-        if (zen_not_null($products_tax_description)) {
+        if (!empty($products_tax_description)) {
             $taxAdd = 0;
-            // Done this way to ensure we calculate
+
             if (DISPLAY_PRICE_WITH_TAX == 'true') {
-                $taxAdd = $shown_price - ($shown_price / (($product['tax'] < 10) ? "1.0" . str_replace('.', '', $product['tax']) : "1." . str_replace('.', '', $product['tax'])));
+                $taxAdd = $this->eoRoundCurrencyValue($shown_price / (100 + $products_tax) * $products_tax);
             } else {
-                $taxAdd = zen_calculate_tax($shown_price, $product['tax']);
+                $taxAdd = $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue($product_final_price) * $product_qty, $products_tax));
+                $taxAdd += $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue($product_onetime), $products_tax));
             }
             $taxAdd = $this->eoRoundCurrencyValue($taxAdd);
             if (isset($order->info['tax_groups'][$products_tax_description])) {
@@ -293,6 +356,7 @@ class editOrders extends base
             $log_info .= "\t" .
                 'Subtotal: ' . ((isset($order->info['subtotal'])) ? $order->info['subtotal'] : '(not set)') . ', ' .
                 'Shipping: ' . ((isset($order->info['shipping_cost'])) ? $order->info['shipping_cost'] : '(not set)') . ', ' .
+                'Shipping Tax-Rate: ' . ((isset($this->shipping_tax_rate)) ? $this->shipping_tax_rate : ' (not set)') . ', ' .
                 'Shipping Tax: ' . ((isset($order->info['shipping_tax'])) ? $order->info['shipping_tax'] : '(not set)') . ', ' .
                 'Tax: ' . $order->info['tax'] . ', ' .
                 'Total: ' . $order->info['total'] . ', ' .
@@ -402,50 +466,23 @@ class editOrders extends base
     //
     public function removeTaxFromShippingCost(&$order, $module)
     {
-//-bof-20181124-lat9-GitHub#11: Notifier to allow TaxJar override.  The observer must set the order's current 'shipping_tax' to 0.
         $shipping_tax_processed = false;
         $this->notify('NOTIFY_EO_REMOVE_SHIPPING_TAX', array(), $order, $shipping_tax_processed);
         if ($shipping_tax_processed === true) {
             $this->eoLog("removeTaxFromShippingCost override, shipping_cost ({$order->info['shipping_cost']}), order tax ({$order->info['tax']})", 'tax');
             return;
         }
-//-eof-20181124-lat9
 
         if (DISPLAY_PRICE_WITH_TAX == 'true' && isset($GLOBALS[$module]) && isset($GLOBALS[$module]->tax_class) && $GLOBALS[$module]->tax_class > 0) {
-            $tax_class = $GLOBALS[$module]->tax_class;
-            $tax_basis = isset($GLOBALS[$module]->tax_basis) ? $GLOBALS[$module]->tax_basis : STORE_SHIPPING_TAX_BASIS;
-            
-            $country_id = false;
-            switch ($tax_basis) {
-                case 'Billing':
-                    $country_id = $order->billing['country']['id'];
-                    $zone_id = $order->billing['zone_id'];
-                    break;
-                case 'Shipping':
-                    $country_id = $order->delivery['country']['id'];
-                    $zone_id = $order->delivery['zone_id'];
-                    break;
-                default:
-                    if (STORE_ZONE == $order->billing['zone_id']) {
-                        $country_id = $order->billing['country']['id'];
-                        $zone_id = $order->billing['zone_id'];
-                    } elseif (STORE_ZONE == $order->delivery['zone_id']) {
-                        $country_id = $order->delivery['country']['id'];
-                        $zone_id = $order->delivery['zone_id'];
-                    }
-                    break;
-            }
-            if ($country_id !== false) {
-                $tax_rate = 1 + (zen_get_tax_rate($tax_class, $country_id, $zone_id) / 100);
-                $shipping_cost = $order->info['shipping_cost'];
-                $shipping_cost_ex = $this->eoRoundCurrencyValue($order->info['shipping_cost'] / $tax_rate);
-                $shipping_tax = $this->eoRoundCurrencyValue($shipping_cost - $shipping_cost_ex);
-                $order->info['shipping_cost'] = $shipping_cost - $shipping_tax;
-                $order->info['tax'] -= $shipping_tax;
-                $order->info['shipping_tax'] = 0;
-             
-                $this->eoLog("removeTaxFromShippingCost(order, $module), $tax_class, $tax_basis, $tax_rate, $shipping_cost, $shipping_cost_ex, $shipping_tax", 'tax');
-            }
+            $tax_rate = 1 + $this->shipping_tax_rate / 100;
+            $shipping_cost = $order->info['shipping_cost'];
+            $shipping_cost_ex = $this->eoRoundCurrencyValue($order->info['shipping_cost'] / $tax_rate);
+            $shipping_tax = $this->eoRoundCurrencyValue($shipping_cost - $shipping_cost_ex);
+            $order->info['shipping_cost'] = $shipping_cost - $shipping_tax;
+            $order->info['tax'] -= $shipping_tax;
+            $order->info['shipping_tax'] = 0;
+         
+            $this->eoLog("removeTaxFromShippingCost(order, $module), $tax_class, $tax_basis, $tax_rate, $shipping_cost, $shipping_cost_ex, $shipping_tax", 'tax');
         }
     }
     
@@ -489,5 +526,53 @@ class editOrders extends base
             $stock_quantity = ($check->EOF) ? 0 : $check->fields['products_quantity'];
         }
         return $stock_quantity;
-    } 
+    }
+    
+    // -----
+    // This method, called during a product addition, records the coupon-id associated
+    // with the order into the session, so that the coupon is processed during that
+    // addition.
+    //
+    public function eoSetCouponForOrder($oID)
+    {
+        unset($_SESSION['cc_id']);
+        $oID = (int)$oID;
+        
+        $check = $GLOBALS['db']->Execute(
+            "SELECT c.coupon_id
+               FROM " . TABLE_ORDERS . " o
+                    INNER JOIN " . TABLE_COUPONS . " c
+                        ON o.coupon_code = c.coupon_code
+              WHERE o.orders_id = $oID
+              LIMIT 1"
+        );
+        if (!$check->EOF) {
+            $_SESSION['cc_id'] = $check->fields['coupon_id'];
+        }
+    }
+    
+    // -----
+    // This method creates a hidden record in the order's status history.
+    //
+    public function eoRecordStatusHistory($oID, $message)
+    {
+        if (function_exists('zen_update_orders_history')) {
+            zen_update_orders_history($oID, $message);
+        } else {
+            $check_status = $db->Execute(
+                "SELECT orders_status
+                   FROM " . TABLE_ORDERS . "
+                  WHERE orders_id = $oID
+                  LIMIT 1"
+            );
+            $osh_sql = array(
+                'orders_id' => $oID,
+                'orders_status_id' => $check_status->fields['orders_status'],
+                'date_added' => 'now()',
+                'customer_notified' => -1,
+                'comment' => $message
+            );
+            zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $osh_sql);
+        }
+    }
 }
