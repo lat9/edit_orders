@@ -527,4 +527,29 @@ class editOrders extends base
         }
         return $stock_quantity;
     } 
+    
+    // -----
+    // This method creates a hidden record in the order's status history.
+    //
+    public function eoRecordStatusHistory($oID, $message)
+    {
+        if (function_exists('zen_update_orders_history')) {
+            zen_update_orders_history($oID, $message);
+        } else {
+            $check_status = $db->Execute(
+                "SELECT orders_status
+                   FROM " . TABLE_ORDERS . "
+                  WHERE orders_id = $oID
+                  LIMIT 1"
+            );
+            $osh_sql = array(
+                'orders_id' => $oID,
+                'orders_status_id' => $check_status->fields['orders_status'],
+                'date_added' => 'now()',
+                'customer_notified' => -1,
+                'comment' => $message
+            );
+            zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $osh_sql);
+        }
+    }
 }
