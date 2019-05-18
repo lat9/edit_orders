@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.4.0-beta3');
+define('EO_CURRENT_VERSION', '4.4.0-beta4');
 
 // -----
 // Only update configuration when an admin is logged in.
@@ -156,6 +156,20 @@ if (EO_VERSION != EO_CURRENT_VERSION) {
             $db->Execute(
                 "DELETE FROM " . TABLE_CONFIGURATION . "
                   WHERE configuration_key = 'EO_MOCK_SHOPPING_CART'
+                  LIMIT 1"
+            );
+            
+            $db->Execute(
+                "UPDATE " . TABLE_CONFIGURATION . "
+                    SET configuration_description = 'Choose the <em>method</em> that &quot;EO&quot; uses to calculate product prices when an order is updated, one of:<ol><li><b>Auto</b>: Each product-price is re-calculated &mdash; <em>without</em> using any &quot;specials&quot; pricing.  If your products have attributes, this enables changes to a product\'s attributes to automatically update the associated product-price.</li><li><b>AutoSpecials</b>: Each product-price is re-calculated, as above, but using any &quot;specials&quot; pricing.</li><li><b>Manual</b>: Each product-price is based on the <b><i>admin-entered price</i></b> for the product.</li><li><b>Choose</b>: The product-price calculation method varies on an order-by-order basis, via the &quot;tick&quot; of a checkbox.  The default method used (<em>Auto</em> vs. <em>Manual</em> is defined by the <em>Product Price Calculation &mdash; Default</em> setting.</li></ol>',
+                        set_function = 'zen_cfg_select_option(array(\'Auto\', \'AutoSpecials\', \'Manual\', \'Choose\'),'
+                  WHERE configuration_key = 'EO_PRODUCT_PRICE_CALC_METHOD'
+                  LIMIT 1"
+            );
+            $db->Execute(
+                "UPDATE " . TABLE_CONFIGURATION . "
+                    SET set_function = 'zen_cfg_select_option(array(\'Auto\', \'AutoSpecials\', \'Manual\'),'
+                  WHERE configuration_key = 'EO_PRODUCT_PRICE_CALC_DEFAULT'
                   LIMIT 1"
             );
                                                 //-Fall-through for additional checks
