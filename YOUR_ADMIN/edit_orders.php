@@ -2157,6 +2157,30 @@ $(document).ready(function() {
 </script>
 <?php
 }
+
+// -----
+// Give a watching observer the opportunity to identify additional .js files, present
+// in the /admin/includes/javascript sub-directory, for inclusion in EO's display
+// processing.
+//
+// The observer sets the $addl_js_files value passed to be a comma-separated list
+// of file names to be included.
+//
+$addl_js_files = '';
+$zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_JS', '', $addl_js_files);
+if (!empty($addl_js_files)) {
+    $js_files = explode(',', str_replace(' ', '', (string)$addl_js_files));
+    foreach ($js_files as $js_filename) {
+        if (!preg_match('/^[a-zA-Z]+[a-zA-Z0-9\.\-_]*$/', $js_filename)) {
+            $eo->eoLog("Additional javascript file ($js_filename) not included, due to filename character mismatch.");
+        } else {
+            $js_file = DIR_WS_INCLUDES . 'javascript' . DIRECTORY_SEPARATOR . "$js_filename.js";
+?>
+<script type="text/javascript" src="<?php echo $js_file; ?>"></script>
+<?php
+        }
+    }
+}
 ?>
 <!-- footer //-->
 <?php 
