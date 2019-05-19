@@ -559,7 +559,7 @@ class editOrders extends base
         if (function_exists('zen_update_orders_history')) {
             zen_update_orders_history($oID, $message);
         } else {
-            $check_status = $db->Execute(
+            $check_status = $GLOBALS['db']->Execute(
                 "SELECT orders_status
                    FROM " . TABLE_ORDERS . "
                   WHERE orders_id = $oID
@@ -570,7 +570,7 @@ class editOrders extends base
                 'orders_status_id' => $check_status->fields['orders_status'],
                 'date_added' => 'now()',
                 'customer_notified' => -1,
-                'comment' => $message
+                'comments' => $message
             );
             zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $osh_sql);
         }
