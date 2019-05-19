@@ -137,7 +137,7 @@ define('PRODUCT_PRICES_CALC_AUTOSPECIALS', ' <b>Note:</b> Pricing for products w
 define('PRODUCT_PRICES_CALC_MANUAL', ' <b>Note:</b> Pricing for products will use the value(s) that you enter.');
 
 define('EO_MESSAGE_PRICING_AUTO', 'Pricing was automatically calculated, without specials pricing.');
-define('EO_MESSAGE_PRICING_AUTOSPECIALS', 'Pricing was automatically, using specials pricing.');
+define('EO_MESSAGE_PRICING_AUTOSPECIALS', 'Pricing was automatically calculated, using specials pricing.');
 define('EO_MESSAGE_PRICING_MANUAL', 'Pricing was supplied manually.');
 define('EO_MESSAGE_ORDER_UPDATED', 'The order was updated via "Edit Orders". ');
 define('EO_MESSAGE_PRODUCT_ADDED', 'Added %1$s x "%2$s" to the order');   //-%1$s: The product quantity, %2$s: The product name
