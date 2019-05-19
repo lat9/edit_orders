@@ -1547,10 +1547,16 @@ if ($action == 'edit') {
           </tr>
 <?php
 // TY TRACKER 5 BEGIN, INCLUDE DATABASE FIELDS ------------------------------
-    $orders_history = $db->Execute("select orders_status_id, date_added, customer_notified, track_id1, track_id2, track_id3, track_id4, track_id5, comments
-                                    from " . TABLE_ORDERS_STATUS_HISTORY . "
-                                    where orders_id = '" . zen_db_input($oID) . "'
-                                    order by date_added");
+    // -----
+    // Gather the order's status-history records, sorting based on the configuration setting added in v4.4.0.
+    //
+    $osh_order_by = (EO_STATUS_HISTORY_DISPLAY_ORDER == 'Desc') ? "date_added DESC, orders_status_history_id DESC" : "date_added ASC, orders_status_history_id ASC";
+    $orders_history = $db->Execute(
+        "SELECT *
+           FROM " . TABLE_ORDERS_STATUS_HISTORY . "
+          WHERE orders_id = $oID
+          ORDER BY $osh_order_by"
+    );
 // END TY TRACKER 5 END, INCLUDE DATABASE FIELDS  -----------------------------------------------------------
     if ($orders_history->RecordCount() > 0) {
       while (!$orders_history->EOF) {
@@ -1594,11 +1600,15 @@ if ($action == 'edit') {
                         <td class="dataTableHeadingContent smallText" valign="top" width="44%"><strong><?php echo TABLE_HEADING_COMMENTS; ?></strong></td>
                     </tr>
 <?php
+        // -----
+        // Gather the order's status-history records, sorting based on the configuration setting added in v4.4.0.
+        //
+        $osh_order_by = (EO_STATUS_HISTORY_DISPLAY_ORDER == 'Desc') ? "date_added DESC, orders_status_history_id DESC" : "date_added ASC, orders_status_history_id ASC";
         $orders_history = $db->Execute(
-            "SELECT orders_status_id, date_added, customer_notified, comments
+            "SELECT *
                FROM " . TABLE_ORDERS_STATUS_HISTORY . "
               WHERE orders_id = $oID
-           ORDER BY date_added"
+              ORDER BY $osh_order_by"
         );
         if (!$orders_history->EOF) {
             while (!$orders_history->EOF) {
@@ -1652,7 +1662,9 @@ if ($action == 'edit') {
                     </tr>
 
 <!-- TY TRACKER 7 BEGIN, ENTER TRACKING INFORMATION -->
-<?php if (defined ('TY_TRACKER') && TY_TRACKER == 'True') { ?>
+<?php 
+    if (defined('TY_TRACKER') && TY_TRACKER == 'True') { 
+?>
     <tr>
         <td class="main">
             <table border="0" cellpadding="3" cellspacing="0">
@@ -1678,7 +1690,9 @@ if ($action == 'edit') {
             </table>
         </td>
     </tr>
-<?php } ?>
+<?php 
+    } 
+?>
 <!-- TY TRACKER 7 END, ENTER TRACKING INFORMATION -->
 
                     <tr>
@@ -1692,11 +1706,33 @@ if ($action == 'edit') {
                     <tr>
                         <td class="main"><strong><?php echo ENTRY_STATUS; ?></strong> <?php echo zen_draw_pull_down_menu('status', $orders_statuses, $orders_history->fields['orders_status_id']); ?></td>
                     </tr>
-                    
+<?php
+    // -----
+    // Determine the default setting for the customer notification, based on the configuration
+    // setting added in v4.4.0.
+    //
+    switch (EO_CUSTOMER_NOTIFICATION_DEFAULT) {
+        case 'Hidden':
+            $email_default = false;
+            $noemail_default = false;
+            $hidden_default = true;
+            break;
+        case 'No Email':
+            $email_default = false;
+            $noemail_default = true;
+            $hidden_default = false;
+            break;
+        default:
+            $email_default = true;
+            $noemail_default = false;
+            $hidden_default = false;
+            break;
+    }
+?>
                     <tr>
                         <td><table border="0" cellspacing="0" cellpadding="2">
                             <tr>
-                                <td class="main"><strong><?php echo ENTRY_NOTIFY_CUSTOMER; ?></strong> [<?php echo zen_draw_radio_field('notify', '1', true) . '-' . TEXT_EMAIL . ' ' . zen_draw_radio_field('notify', '0', FALSE) . '-' . TEXT_NOEMAIL . ' ' . zen_draw_radio_field('notify', '-1', FALSE) . '-' . TEXT_HIDE; ?>]&nbsp;&nbsp;&nbsp;</td>
+                                <td class="main"><strong><?php echo ENTRY_NOTIFY_CUSTOMER; ?></strong> [<?php echo zen_draw_radio_field('notify', '1', $email_default) . '-' . TEXT_EMAIL . ' ' . zen_draw_radio_field('notify', '0', $noemail_default) . '-' . TEXT_NOEMAIL . ' ' . zen_draw_radio_field('notify', '-1', $hidden_default) . '-' . TEXT_HIDE; ?>]&nbsp;&nbsp;&nbsp;</td>
                                 <td class="main"><strong><?php echo ENTRY_NOTIFY_COMMENTS; ?></strong> <?php echo zen_draw_checkbox_field('notify_comments', '', true); ?></td>
                             </tr>
                         </table></td>

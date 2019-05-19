@@ -515,6 +515,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>BUGFIX: Apply existing coupon when adding a product to the order.</li>
             <li>BUGFIX: Record a coupon's &quot;coupon_code&quot; in the order when a coupon is added via <em>EO</em>'s processing.</li>
             <li>CHANGE: Additional notification issued for customized, display-only order totals.</li>
+            <li>CHANGE: Add configuration settings to control the display of the status-history and comments section.</li>
             <li>The following files were changed:<ol>
               <li>/includes/languages/english/modules/order_total/ot_misc_cost.php</li>
               <li>/includes/modules/order_total/ot_misc_cost.php</li>
@@ -532,7 +533,8 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>The following changes are made to the database:<ol>
               <li>Adds the column <code>shipping_tax_rate</code> to the <code>orders</code> table.</li>
               <li>Removes the configuration setting 'Use a mock shopping cart?'.</li>
-              <li>Updates the 'Product Price Calculations' configuration settings, enabling an additional calculation method.</li>
+              <li>Updates the <em>Product Price Calculations</em> configuration settings, enabling an additional calculation method.</li>
+              <li>Adds the <em>Status-history Display Order</em> and <em>Status-update: Customer Notification Default</em> configuration settings.</li>
             </ol></li>
           </ul></li>
           <li>v4.3.5, 2018-10-31 (lat9)<ul>

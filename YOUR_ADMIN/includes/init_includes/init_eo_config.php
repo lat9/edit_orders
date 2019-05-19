@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.4.0-beta5');
+define('EO_CURRENT_VERSION', '4.4.0-beta6');
 
 // -----
 // Only update configuration when an admin is logged in.
@@ -171,6 +171,15 @@ if (EO_VERSION != EO_CURRENT_VERSION) {
                     SET set_function = 'zen_cfg_select_option(array(\'Auto\', \'AutoSpecials\', \'Manual\'),'
                   WHERE configuration_key = 'EO_PRODUCT_PRICE_CALC_DEFAULT'
                   LIMIT 1"
+            );
+            
+            $db->Execute(
+                "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
+                    ( configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function ) 
+                 VALUES 
+                    ('Status-history Display Order', 'EO_STATUS_HISTORY_DISPLAY_ORDER', 'Asc', 'Choose the way that <em>Edit Orders</em> displays an order\'s status-history records, either as-recorded (<b>Asc</b>) or most-recent first (<b>Desc</b>).', $cgi, 30, now(), NULL, 'zen_cfg_select_option(array(\'Asc\', \'Desc\'),'),
+                    
+                    ('Status-update: Customer Notification Default', 'EO_CUSTOMER_NOTIFICATION_DEFAULT', 'Email', 'Choose the default used for the radio-buttons that identify whether the customer receives notification when a  comment is added to the order.', $cgi, 40, now(), NULL, 'zen_cfg_select_option(array(\'Email\', \'No Email\', \'Hidden\'),')"
             );
                                                 //-Fall-through for additional checks
 
