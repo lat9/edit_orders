@@ -1645,6 +1645,25 @@ function eo_shopping_cart()
     }
 }
 
+function eo_display_customers_notifications_icon($customer_notified)
+{
+    switch ($customer_notified) {
+        case '1':
+            $status_icon = 'tick.gif';
+            $icon_alt_text = TEXT_YES;
+            break;
+         case '-1':
+            $status_icon = 'locked.gif';
+            $icon_alt_text = TEXT_HIDDEN;
+            break;
+          default:
+            $status_icon = 'unlocked.gif';
+            $icon_alt_text = TEXT_VISIBLE;
+            break;
+    }
+    return zen_image(DIR_WS_ICONS . $status_icon, $icon_alt_text);
+}
+
 function eo_checks_and_warnings() 
 {
     global $db, $messageStack;
