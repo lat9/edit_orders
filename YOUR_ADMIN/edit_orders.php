@@ -1381,8 +1381,26 @@ if ($action == 'edit') {
     $eo_href_link = zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$oID&amp;action=add_prdct");
     $eo_add_product_button = zen_image_button('button_add_product.gif', TEXT_ADD_NEW_PRODUCT);
     $eo_add_button_link = '<a href="' . $eo_href_link . '">' . $eo_add_product_button . '</a>';
-
-    $columns = ((DISPLAY_PRICE_WITH_TAX == 'true') ? 7 : 6) - 2;;
+    
+    // -----
+    // Give a watching observer the chance to identify additional order-totals that should be considered display-only.
+    //
+    // The observer returns a comma-separated string of order-total module names, e.g. 'ot_balance_due, ot_payment_received'
+    // that, if found in the order, should be displayed but not enabled as inputs.
+    //
+    $display_only_totals_list = '';
+    $zco_notifier->notify('EDIT_ORDERS_DISPLAY_ONLY_TOTALS', '', $display_only_totals_list);
+    $display_only_totals = array();
+    if (!empty($display_only_totals_list)) {
+        $eo->eoLog('Display-only totals identified: ' . json_encode($display_only_totals_list));
+        $display_only_totals = explode(',', str_replace(' ', '', (string)$display_only_totals));
+    }
+    
+    // -----
+    // The number of columns displayed in this section depends on whether/not the store displays prices
+    // with tax.  If so, both the net- and gross-prices are displayed; otherwise, simply the net.
+    //
+    $columns = ((DISPLAY_PRICE_WITH_TAX == 'true') ? 7 : 6) - 2;
 
     // Iterate over the order totals.
     for ($i = 0, $index = 0, $n = count($order->totals); $i < $n; $i++, $index++) {
@@ -1399,7 +1417,8 @@ if ($action == 'edit') {
         
         $order_total_info = eo_get_order_total_by_order((int)$oID, $total['class']);
         $details = array_shift($order_total_info);
-        switch($total['class']) {
+        $total_class = (in_array($total['class'], $display_only_totals)) ? 'display-only' : $total['class'];
+        switch ($total_class) {
             case 'ot_purchaseorder':
                 break;
 
@@ -1407,7 +1426,8 @@ if ($action == 'edit') {
             case 'ot_subtotal':
             case 'ot_total':
             case 'ot_tax':
-            case 'ot_local_sales_taxes': 
+            case 'ot_local_sales_taxes':
+            case 'display-only':
 ?>
                                 <td colspan="<?php echo $columns - 2; ?>">&nbsp;</td>
                                 <td class="main" align="right"><strong><?php echo $total['title']; ?></strong></td>
