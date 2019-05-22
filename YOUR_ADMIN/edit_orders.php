@@ -323,7 +323,7 @@ switch ($action) {
         // Load the order's current details (noting that any address-related updates were performed
         // by previous processing.
         //
-        $order = $eo->getOrderInfo();
+        $order = $eo->getOrderInfo($action);
         $eo->eoLog (
             PHP_EOL . 'Order Subtotal: ' . $order->info['subtotal'] . PHP_EOL .
             $eo->eoFormatOrderTotalsForLog($order) .
@@ -557,10 +557,8 @@ switch ($action) {
                 if (zen_not_null($order_total['title']) && $order_total['title'] != ':') {
                     switch ($order_total['code']) {
                         case 'ot_shipping':
-                            $order->info['shipping_cost'] = $order_total['value'];
                             $order->info['shipping_method'] = $order_total['title'];
                             $order->info['shipping_module_code'] = $order_total['shipping_module'];
-                            $GLOBALS['eo']->eoRecordPostedShippingTaxRate(empty($_POST['shipping_tax']) ? 0 : $_POST['shipping_tax']);
                             break;
                         case 'ot_tax':
                             if (count($order->products) == 0) {
@@ -595,7 +593,7 @@ switch ($action) {
                                 $coupon = $matches[2];
                             }
                             $cc_id = $db->Execute(
-                                "SELECT coupon_id 
+                                "SELECT coupon_id, coupon_type
                                    FROM ". TABLE_COUPONS . "
                                   WHERE coupon_code = '" . trim($coupon) . "'
                                   LIMIT 1"
@@ -603,6 +601,7 @@ switch ($action) {
 
                             if (!$cc_id->EOF) {
                                 $_SESSION['cc_id'] = $cc_id->fields['coupon_id'];
+                                $eo->eoRecordCouponType($cc_id->fields['coupon_type']);
                             } else {
                                 $coupon = '';
                                 $messageStack->add_session(WARNING_ORDER_COUPON_BAD, 'warning');
@@ -696,7 +695,7 @@ switch ($action) {
             $zco_notifier->notify('EDIT_ORDERS_START_ADD_PRODUCT', $oID);
 
             // Get Order Info
-            $order = $eo->getOrderInfo();
+            $order = $eo->getOrderInfo($action);
 
             // Check qty field
             $add_max = zen_get_products_quantity_order_max($add_product_products_id);
@@ -727,10 +726,6 @@ switch ($action) {
             // use by the ot_coupon's calculations.
             //
             $eo->eoSetCouponForOrder($oID);
-            
-            // Save the changes
-            eo_update_database_order_totals($oID);
-            $order = $eo->getOrderInfo();
 
             // Remove the low order and/or cod fees (will automatically repopulate if needed)
             foreach ($order->totals as $key => $total) {
@@ -746,8 +741,6 @@ switch ($action) {
                 }
             }
 
-            // Requires $GLOBALS['order'] to be reset and populated
-            $order = $eo->getOrderInfo();
             eo_update_database_order_totals($oID);
             
             unset($_SESSION['cc_id']);
@@ -785,7 +778,7 @@ switch ($action) {
             $messageStack->add_session(sprintf(ERROR_ORDER_DOES_NOT_EXIST, $oID), 'error');
             zen_redirect(zen_href_link(FILENAME_ORDERS));
         } else {
-            $order = $eo->getOrderInfo();
+            $order = $eo->getOrderInfo($action);
             if (!$eo->eoOrderIsVirtual($order) &&
                    ( !is_array($order->customer['country']) || !isset($order->customer['country']['id']) ||
                      !is_array($order->billing['country']) || !isset($order->billing['country']['id']) ||
@@ -1344,6 +1337,10 @@ if ($action == 'edit') {
             }
             unset($optionID, $optionInfo, $products_options_array, $selected_attribute, $attributeId, $attributeValue, $optionValue, $text, $checked);
         } 
+        
+        // -----
+        // Starting with EO v4.4.0, both the net and gross prices are displayed when the store displays prices with tax.
+        //
         if (DISPLAY_PRICE_WITH_TAX == 'true') {
             $final_price = $order->products[$i]['final_price'];
             $onetime_charges = $order->products[$i]['onetime_charges'];
@@ -1358,9 +1355,7 @@ if ($action == 'edit') {
                                 <td class="dataTableContent" align="right" valign="top"><input class="amount p-t" name="update_products[<?php echo $orders_products_id; ?>][tax]" size="3" value="<?php echo zen_display_tax_value($order->products[$i]['tax']); ?>"<?php echo $data_index; ?> />&nbsp;%</td>
                                 <td class="dataTableContent" align="right" valign="top"><input class="amount p-n" name="update_products[<?php echo $orders_products_id; ?>][final_price]" size="5" value="<?php echo $final_price; ?>"<?php echo $data_index; ?> /></td>
 <?php
-        // -----
-        // Starting with EO v4.3.6, both the net and gross prices are displayed when the store displays prices with tax.
-        //
+
         if (DISPLAY_PRICE_WITH_TAX == 'true') {
             $gross_price = zen_add_tax($final_price, $order->products[$i]['tax']);
 ?>
@@ -1462,12 +1457,12 @@ if ($action == 'edit') {
 ?>
                                 <td align="right"><?php echo zen_draw_hidden_field($update_total_code, $total['class']) . zen_draw_pull_down_menu($update_total . '[shipping_module]', eo_get_available_shipping_modules(), $order->info['shipping_module_code']) . '&nbsp;&nbsp;' . zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount" size="' . strlen($trimmed_title) . '"'); ?></td>
                                 
-                                <td align="right"><?php echo zen_draw_input_field('shipping_tax', $shipping_tax_rate, 'class="amount" size="3" id="s-t"'); ?>&nbsp;%</td>
+                                <td align="right"><?php echo zen_draw_input_field('shipping_tax', (string)$shipping_tax_rate, 'class="amount" size="3" id="s-t"'); ?>&nbsp;%</td>
 <?php
                 if (DISPLAY_PRICE_WITH_TAX == 'true') {
                     $shipping_net = $details['value'] / (1 + ($shipping_tax_rate / 100));
 ?>
-                                <td align="right"><?php echo zen_draw_input_field($update_total_value, $shipping_net, 'class="amount" size="6" id="s-n"'); ?></td>
+                                <td align="right"><?php echo zen_draw_input_field($update_total_value, (string)$shipping_net, 'class="amount" size="6" id="s-n"'); ?></td>
 <?php
                     $update_total_value = 'shipping_gross';
                 }
@@ -1561,21 +1556,7 @@ if ($action == 'edit') {
 <?php
         if ($orders_history->RecordCount() > 0) {
             while (!$orders_history->EOF) {
-                switch ($orders_history->fields['customer_notified']) {
-                    case '1':
-                        $status_icon = 'tick.gif';
-                        $icon_alt_text = TEXT_YES;
-                        break;
-                     case '-1':
-                        $status_icon = 'locked.gif';
-                        $icon_alt_text = TEXT_HIDDEN;
-                        break;
-                      default:
-                        $status_icon = 'unlocked.gif';
-                        $icon_alt_text = TEXT_VISIBLE;
-                        break;
-                }
-                $icon_image = zen_image(DIR_WS_ICONS . $status_icon, $icon_alt_text);
+                $icon_image = eo_display_customers_notifications_icon($orders_history->fields['customer_notified']);
 ?>
                             <tr class="dataTableHeadingRow v-top">
                                 <td class="smallText"><?php echo zen_datetime_short($orders_history->fields['date_added']); ?></td>
@@ -1911,31 +1892,12 @@ if ($action == "add_prdct") {
     if ($add_product_categories_id == .5) {
         // Handle initial population of categories
         $categoriesarr = zen_get_category_tree();
-        $catcount = count($categoriesarr);
-        $texttempcat1 = $categoriesarr[0]['text'];
-        $idtempcat1 = $categoriesarr[0]['id'];
-        $catcount++;
-        for ($i=1; $i<$catcount; $i++) {
-            $texttempcat2 = $categoriesarr[$i]['text'];
-            $idtempcat2 = $categoriesarr[$i]['id'];
-            $categoriesarr[$i]['id'] = $idtempcat1;
-            $categoriesarr[$i]['text'] = $texttempcat1;
-            $texttempcat1 = $texttempcat2;
-            $idtempcat1 = $idtempcat2;
-        }
+        array_unshift($categoriesarr, array('id' => 0.5, 'text' => ADDPRODUCT_CHOOSE_CATEGORY));
 
-
-        $categoriesarr[0]['text'] = "Choose Category";
-        $categoriesarr[0]['id'] = .5;
-
-
-        $categoryselectoutput = zen_draw_pull_down_menu('add_product_categories_id', $categoriesarr, $current_category_id, 'onChange="this.form.submit();"');
-        $categoryselectoutput = str_replace('<option value="0" SELECTED>','<option value="0">',$categoryselectoutput);
-        $categoryselectoutput = str_replace('<option value=".5">','<option value=".5" SELECTED>',$categoryselectoutput);
+        $categoryselectoutput = zen_draw_pull_down_menu('add_product_categories_id', $categoriesarr, 0.5, 'onchange="this.form.submit();"');
     } else {
-
         // Add the category selection. Selecting a category will override the search
-        $categoryselectoutput = zen_draw_pull_down_menu('add_product_categories_id', zen_get_category_tree(), $current_category_id, 'onChange="this.form.submit();"');
+        $categoryselectoutput = zen_draw_pull_down_menu('add_product_categories_id', zen_get_category_tree(), $current_category_id, 'onchange="this.form.submit();"');
     }
 ?> 
     <tr>

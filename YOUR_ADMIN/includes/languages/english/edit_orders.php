@@ -106,6 +106,7 @@ define('ADDPRODUCT_TEXT_STEP3', 'Step 3:');
 define('ADDPRODUCT_TEXT_STEP4', 'Step 4:');
 define('ADDPRODUCT_SPECIALS_SALES_PRICE', 'Use Specials/Sales Price');
 define('ADDPRODUCT_TEXT_NO_OPTIONS', 'No selectable options exist');
+define('ADDPRODUCT_CHOOSE_CATEGORY', 'Choose Category');
 
 // Navigation Display
 define('IMAGE_ORDER_DETAILS', 'Display Order Details');
@@ -144,3 +145,4 @@ define('EO_MESSAGE_PRODUCT_ADDED', 'Added %1$s x "%2$s" to the order');   //-%1$
 define('EO_MESSAGE_ATTRIBS_ADDED', ', with options (%s)');
 
 define('EO_SHIPPING_TAX_DESCRIPTION', 'Shipping Tax (%s%%)');
+define('EO_FREE_SHIPPING', 'Free Shipping');

@@ -914,12 +914,12 @@ function eo_add_product_to_order($order_id, $product)
                         LEFT JOIN " . TABLE_PRODUCTS_ATTRIBUTES . " pa
                             ON p.products_id = pa.products_id
                         LEFT JOIN " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
-                            ON pa.products_attributes_id=pad.products_attributes_id
+                            ON pa.products_attributes_id = pad.products_attributes_id
                   WHERE p.products_id = $products_id";
 
             // Will work with only one option for downloadable products
             // otherwise, we have to build the query dynamically with a loop
-            if (isset($product['attributes']) && is_array($product['attributes'])) {
+            if (isset($product['attributes']) && is_array($product['attributes']) && count($product['attributes']) != 0) {
                 $products_attributes = $product['attributes'];
                 $stock_query_raw .= " AND pa.options_id = " . (int)$product['attributes'][0]['option_id'] . " AND pa.options_values_id = " . (int)$product['attributes'][0]['value_id'];
             }

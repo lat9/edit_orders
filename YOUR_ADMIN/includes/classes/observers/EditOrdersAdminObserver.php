@@ -98,8 +98,8 @@ class EditOrdersAdminObserver extends base
             // $p4 ... A reference to the module's $shipping_tax_description string.
             //
             case 'NOTIFY_OT_SHIPPING_TAX_CALCS':
-                if (basename($GLOBALS['PHP_SELF'], '.php') == FILENAME_EDIT_ORDERS && $p2 === false) {
-                    $GLOBALS['eo']->eoUpdateOrderShippingTax($p3, $p4);
+                if (basename($GLOBALS['PHP_SELF'], '.php') == FILENAME_EDIT_ORDERS) {
+                    $GLOBALS['eo']->eoUpdateOrderShippingTax($p2, $p3, $p4);
                     $p2 = true;
                 }
                 break;
