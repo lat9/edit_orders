@@ -281,6 +281,11 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                   <td>NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS</td>
                   <td><span class="added">Added</span>, issued during an order's detailed view when creating the bottom button-group.  This notifier is based on the like-named one in the Zen Cart 1.5.6+ repository.</td>
                 </tr>
+                <tr>
+                  <td>/includes/modules/order_total/ot_shipping.php</td>
+                  <td>NOTIFY_OT_SHIPPING_TAX_CALCS</td>
+                  <td>Issued during an order's &quot;order-totals&quot; processing, allowing the order's shipping tax-rate and tax-description to be overridden.  See <a href="https://github.com/zencart/zencart/commit/d0e663df3558d73475d99dcc2770038221ad70b6#diff-0995b79fef2e5ca29956202233852b76" target="_blank">this</a> Zen Cart commit for zc156 for details.  If your store runs on a zc155 variant, you can safely copy the entire zc156 module for use while you plan your store's zc156 upgrade!</td>
+                </tr>
               </table>
             </div>
             
