@@ -134,6 +134,15 @@ class editOrders extends base
         // Some order-totals (notably ot_cod_fee) rely on the payment-module code being present in the session ...
         //
         $_SESSION['payment'] = $order->info['payment_module_code'];
+ 
+        $this->eoLog('getOrderInfo, on exit:' . PHP_EOL . $this->eoFormatTaxInfoForLog(), 'tax');
+        return $order;
+    }
+    
+    public function eoInitializeShipping($oID, $action)
+    {
+        global $order;
+        $this->eoLog("eoInitializeShipping($oID, $action), on entry: " . $this->eoFormatTaxInfoForLog(), 'tax');
         
         // -----
         // Shipping cost and tax rate initializations are dependent on the current
@@ -155,8 +164,7 @@ class editOrders extends base
                 $this->removeTaxFromShippingCost($order);
                 break;
         }
-        $this->eoLog('getOrderInfo, on exit:' . PHP_EOL . $this->eoFormatTaxInfoForLog(), 'tax');
-        return $order;
+        $this->eoLog("eoInitializeShipping($oID, $action), on exit: " . $this->eoFormatTaxInfoForLog(), 'tax');
     }
     
     protected function initializeShippingCostFromOrder($order)

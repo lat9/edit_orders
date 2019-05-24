@@ -352,6 +352,11 @@ switch ($action) {
                     $order->info['tax_groups'][$key] = 0;
                 }
             }
+            
+            // -----
+            // Initialize the shipping cost, tax-rate and tax-value.
+            //
+            $eo->eoInitializeShipping($oID, $action);
 
             $_POST['update_products'] = zen_db_prepare_input($_POST['update_products']);
 
@@ -696,7 +701,12 @@ switch ($action) {
 
             // Get Order Info
             $order = $eo->getOrderInfo($action);
-
+           
+            // -----
+            // Initialize the shipping cost, tax-rate and tax-value.
+            //
+            $eo->eoInitializeShipping($oID, $action);
+            
             // Check qty field
             $add_max = zen_get_products_quantity_order_max($add_product_products_id);
             if ($add_product_quantity > $add_max && $add_max != 0) {
@@ -779,6 +789,12 @@ switch ($action) {
             zen_redirect(zen_href_link(FILENAME_ORDERS));
         } else {
             $order = $eo->getOrderInfo($action);
+           
+            // -----
+            // Initialize the shipping cost, tax-rate and tax-value.
+            //
+            $eo->eoInitializeShipping($oID, $action);
+            
             if (!$eo->eoOrderIsVirtual($order) &&
                    ( !is_array($order->customer['country']) || !isset($order->customer['country']['id']) ||
                      !is_array($order->billing['country']) || !isset($order->billing['country']['id']) ||
