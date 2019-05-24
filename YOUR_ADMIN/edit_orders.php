@@ -789,17 +789,17 @@ switch ($action) {
         break; 
 }
 ?>
-<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!doctype html>
 <html <?php echo HTML_PARAMS; ?>>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=<?php echo CHARSET; ?>">
+<meta charset="<?php echo CHARSET; ?>">
 <title><?php echo TITLE; ?></title>
 <link rel="stylesheet" type="text/css" href="includes/stylesheet.css">
 <link rel="stylesheet" type="text/css" href="includes/edit_orders.css">
 <link rel="stylesheet" type="text/css" href="includes/cssjsmenuhover.css" media="all" id="hoverJS">
-<script type="text/javascript" src="includes/menu.js"></script>
-<script type="text/javascript" src="includes/general.js"></script>
-<script type="text/javascript">
+<script src="includes/menu.js"></script>
+<script src="includes/general.js"></script>
+<script>
   <!--
 function init()
 {
@@ -816,7 +816,7 @@ function init()
 <!-- header //-->
 <div class="header-area">
 <?php
-    require(DIR_WS_INCLUDES . 'header.php');
+    require DIR_WS_INCLUDES . 'header.php';
 ?>
 </div>
 <!-- header_eof //-->
@@ -862,21 +862,21 @@ if ($action == 'edit') {
 // END - Add Super Orders Order Navigation Functionality
 ?>
 <!-- body //-->
-<table border="0" width="100%" cellspacing="2" cellpadding="2">
+<table class="eo-table">
     <tr>
 <!-- body_text //-->
-        <td width="100%" valign="top"><table border="0" width="100%" cellspacing="0" cellpadding="2">
+        <td class="w100 v-top"><table class="eo-table">
             <tr>
-                <td width="100%"><table border="0" width="100%" cellspacing="0" cellpadding="0">
+                <td class="w100 a-c"><table class="eo-table">
                     <tr>
 <!-- BEGIN - Add Super Orders Order Navigation Functionality -->
                         <td class="pageHeading"> &nbsp; </td>
-                        <td class="pageHeading" align="right"><?php echo zen_draw_separator('pixel_trans.gif', 1, HEADING_IMAGE_HEIGHT); ?></td>
-                        <td class="main" valign="middle"> &nbsp; </td>
-                        <td align="center"><table border="0" cellspacing="3" cellpadding="0">
-                            <tr>
-                                <td class="main" align="center" valign="bottom"><?php echo $prev_button; ?></td>
-                                <td class="smallText" align="center" valign="bottom">
+                        <td class="pageHeading a-r"><?php echo zen_draw_separator('pixel_trans.gif', 1, HEADING_IMAGE_HEIGHT); ?></td>
+                        <td class="main"> &nbsp; </td>
+                        <td class="a-c"><table border="0" cellspacing="3" cellpadding="0">
+                            <tr class="v-bot">
+                                <td class="main a-c"><?php echo $prev_button; ?></td>
+                                <td class="smallText a-c">
 <?php
                                     echo SELECT_ORDER_LIST . '<br />';
                                     echo zen_draw_form('input_oid', FILENAME_ORDERS, '', 'get', '', true);
@@ -885,21 +885,21 @@ if ($action == 'edit') {
                                     echo '</form>';
 ?>
                                 </td>
-                                <td class="main" align="center" valign="bottom"><?php echo $next_button; ?></td>
+                                <td class="main a-c"><?php echo $next_button; ?></td>
                             </tr>
                         </table></td>
 <!-- END - Add Super Orders Order Navigation Functionality -->
-                        <td class="pageHeading" align="right"> &nbsp; </td>
+                        <td class="pageHeading"> &nbsp; </td>
                     </tr>
                 </table></td>
             </tr>
 
             <tr>
-                <td width="100%"><table border="0" width="100%" cellspacing="0" cellpadding="0">
+                <td class="w100"><table class="w100">
                     <tr>
                         <td class="pageHeading"><?php echo HEADING_TITLE; ?> #<?php echo $oID; ?></td>
-                        <td class="pageHeading" align="right"><?php echo zen_draw_separator('pixel_trans.gif', 1, HEADING_IMAGE_HEIGHT); ?></td>
-                        <td class="pageHeading" align="right">
+                        <td class="pageHeading a-r"><?php echo zen_draw_separator('pixel_trans.gif', 1, HEADING_IMAGE_HEIGHT); ?></td>
+                        <td class="pageHeading a-r">
                             <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('action'))); ?>"><?php echo zen_image_button('button_back.gif', IMAGE_BACK); ?></a>
                             <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$oID&amp;action=edit"); ?>"><?php echo zen_image_button('button_details.gif', IMAGE_ORDER_DETAILS); ?></a>
                         </td>
@@ -912,108 +912,123 @@ if ($action == 'edit') {
             <tr>
                 <td><?php echo zen_draw_form('edit_order', FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action','paycc')) . 'action=update_order'); ?><table width="100%" border="0">
                     <tr>
-                        <td><table width="100%" border="0">
+                        <td><table class="w100" id="c-form">
                             <tr>
                                 <td>&nbsp;</td>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER; ?></strong></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER; ?></td>
                                 <td>&nbsp;</td>
-                                <td valign="top"><strong><?php echo ENTRY_BILLING_ADDRESS; ?></strong></td>
+                                <td class="eo-label"><?php echo ENTRY_BILLING_ADDRESS; ?></td>
                                 <td>&nbsp;</td>
-                                <td valign="top"><strong><?php echo ENTRY_SHIPPING_ADDRESS; ?></strong></td>
+                                <td class="eo-label"><?php echo ENTRY_SHIPPING_ADDRESS; ?></td>
                             </tr>
                             <tr>
                                 <td>&nbsp;</td>
-                                <td valign="top"><?php echo zen_image(DIR_WS_IMAGES . 'icon_customers.png', ENTRY_CUSTOMER); ?></td>
+                                <td><?php echo zen_image(DIR_WS_IMAGES . 'icon_customers.png', ENTRY_CUSTOMER); ?></td>
                                 <td>&nbsp;</td>
-                                <td valign="top"><?php echo zen_image(DIR_WS_IMAGES . 'icon_billing.png', ENTRY_BILLING_ADDRESS); ?></td>
+                                <td><?php echo zen_image(DIR_WS_IMAGES . 'icon_billing.png', ENTRY_BILLING_ADDRESS); ?></td>
                                 <td>&nbsp;</td>
-                                <td valign="top"><?php echo zen_image(DIR_WS_IMAGES . 'icon_shipping.png', ENTRY_SHIPPING_ADDRESS); ?></td>
+                                <td><?php echo zen_image(DIR_WS_IMAGES . 'icon_shipping.png', ENTRY_SHIPPING_ADDRESS); ?></td>
                             </tr>
+<?php
+    // -----
+    // Gather the maximum database field-length for each of the address-related fields in the
+    // order, noting that the ASSUMPTION is made that each of the customer/billing/delivery fields
+    // are of equal length!
+    //
+    $max_name_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_name') . '"';
+    $max_company_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_company') . '"';
+    $max_street_address_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_street_address') . '"';
+    $max_suburb_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_suburb') . '"';
+    $max_city_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_city') . '"';
+    $max_state_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_state') . '"';
+    $max_postcode_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_postcode') . '"';
+    $max_country_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_country') . '"';
+?>
 
                             <tr>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_NAME; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_customer_name" size="45" value="<?php echo zen_html_quotes($order->customer['name']); ?>"></td>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_NAME; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_billing_name" size="45" value="<?php echo zen_html_quotes($order->billing['name']); ?>"></td>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_NAME; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_delivery_name" size="45" value="<?php echo zen_html_quotes($order->delivery['name']); ?>"></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_NAME; ?>:&nbsp;</td>
+                                <td><input name="update_customer_name" size="45" value="<?php echo zen_html_quotes($order->customer['name']); ?>" <?php echo $max_name_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_NAME; ?>:&nbsp;</td>
+                                <td><input name="update_billing_name" size="45" value="<?php echo zen_html_quotes($order->billing['name']); ?>" <?php echo $max_name_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_NAME; ?>:&nbsp;</td>
+                                <td><input name="update_delivery_name" size="45" value="<?php echo zen_html_quotes($order->delivery['name']); ?>" <?php echo $max_name_length; ?>></td>
                             </tr>
                             <tr>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_COMPANY; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_customer_company" size="45" value="<?php echo zen_html_quotes($order->customer['company']); ?>"></td>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_COMPANY; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_billing_company" size="45" value="<?php echo zen_html_quotes($order->billing['company']); ?>"></td>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_COMPANY; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_delivery_company" size="45" value="<?php echo zen_html_quotes($order->delivery['company']); ?>"></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_COMPANY; ?>:&nbsp;</td>
+                                <td><input name="update_customer_company" size="45" value="<?php echo zen_html_quotes($order->customer['company']); ?>" <?php echo $max_company_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_COMPANY; ?>:&nbsp;</td>
+                                <td><input name="update_billing_company" size="45" value="<?php echo zen_html_quotes($order->billing['company']); ?>" <?php echo $max_company_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_COMPANY; ?>:&nbsp;</td>
+                                <td><input name="update_delivery_company" size="45" value="<?php echo zen_html_quotes($order->delivery['company']); ?>" <?php echo $max_company_length; ?>></td>
                             </tr>
                             <tr>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_ADDRESS; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_customer_street_address" size="45" value="<?php echo zen_html_quotes($order->customer['street_address']); ?>"></td>
-                                <td valign="top"><strong> <?php echo ENTRY_CUSTOMER_ADDRESS; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_billing_street_address" size="45" value="<?php echo zen_html_quotes($order->billing['street_address']); ?>"></td>
-                                <td valign="top"><strong> <?php echo ENTRY_CUSTOMER_ADDRESS; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_delivery_street_address" size="45" value="<?php echo zen_html_quotes($order->delivery['street_address']); ?>"></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_ADDRESS; ?>:&nbsp;</td>
+                                <td><input name="update_customer_street_address" size="45" value="<?php echo zen_html_quotes($order->customer['street_address']); ?>" <?php echo $max_street_address_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_ADDRESS; ?>:&nbsp;</td>
+                                <td><input name="update_billing_street_address" size="45" value="<?php echo zen_html_quotes($order->billing['street_address']); ?>" <?php echo $max_street_address_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_ADDRESS; ?>:&nbsp;</td>
+                                <td><input name="update_delivery_street_address" size="45" value="<?php echo zen_html_quotes($order->delivery['street_address']); ?>" <?php echo $max_street_address_length; ?>></td>
                             </tr>
                             <tr>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_SUBURB; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_customer_suburb" size="45" value="<?php echo zen_html_quotes($order->customer['suburb']); ?>"></td>
-                                <td valign="top"><strong> <?php echo ENTRY_CUSTOMER_SUBURB; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_billing_suburb" size="45" value="<?php echo zen_html_quotes($order->billing['suburb']); ?>"></td>
-                                <td valign="top"><strong> <?php echo ENTRY_CUSTOMER_SUBURB; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_delivery_suburb" size="45" value="<?php echo zen_html_quotes($order->delivery['suburb']); ?>"></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_SUBURB; ?>:&nbsp;</td>
+                                <td><input name="update_customer_suburb" size="45" value="<?php echo zen_html_quotes($order->customer['suburb']); ?>" <?php echo $max_suburb_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_SUBURB; ?>:&nbsp;</td>
+                                <td><input name="update_billing_suburb" size="45" value="<?php echo zen_html_quotes($order->billing['suburb']); ?>" <?php echo $max_suburb_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_SUBURB; ?>:&nbsp;</td>
+                                <td><input name="update_delivery_suburb" size="45" value="<?php echo zen_html_quotes($order->delivery['suburb']); ?>" <?php echo $max_suburb_length; ?>></td>
                             </tr>
                             <tr>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_CITY; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_customer_city" size="45" value="<?php echo zen_html_quotes($order->customer['city']); ?>"></td>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_CITY; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_billing_city" size="45" value="<?php echo zen_html_quotes($order->billing['city']); ?>"></td>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_CITY; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_delivery_city" size="45" value="<?php echo zen_html_quotes($order->delivery['city']); ?>"></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_CITY; ?>:&nbsp;</td>
+                                <td><input name="update_customer_city" size="45" value="<?php echo zen_html_quotes($order->customer['city']); ?>" <?php echo $max_city_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_CITY; ?>:&nbsp;</td>
+                                <td><input name="update_billing_city" size="45" value="<?php echo zen_html_quotes($order->billing['city']); ?>" <?php echo $max_city_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_CITY; ?>:&nbsp;</td>
+                                <td><input name="update_delivery_city" size="45" value="<?php echo zen_html_quotes($order->delivery['city']); ?>" <?php echo $max_city_length; ?>></td>
                             </tr>
                             <tr>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_STATE; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_customer_state" size="45" value="<?php echo zen_html_quotes($order->customer['state']); ?>"></td>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_STATE; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_billing_state" size="45" value="<?php echo zen_html_quotes($order->billing['state']); ?>"></td>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_STATE; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_delivery_state" size="45" value="<?php echo zen_html_quotes($order->delivery['state']); ?>"></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_STATE; ?>:&nbsp;</td>
+                                <td><input name="update_customer_state" size="45" value="<?php echo zen_html_quotes($order->customer['state']); ?>" <?php echo $max_state_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_STATE; ?>:&nbsp;</td>
+                                <td><input name="update_billing_state" size="45" value="<?php echo zen_html_quotes($order->billing['state']); ?>" <?php echo $max_state_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_STATE; ?>:&nbsp;</td>
+                                <td><input name="update_delivery_state" size="45" value="<?php echo zen_html_quotes($order->delivery['state']); ?>" <?php echo $max_state_length; ?>></td>
                             </tr>
                             <tr>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_POSTCODE; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_customer_postcode" size="45" value="<?php echo zen_html_quotes($order->customer['postcode']); ?>"></td>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_POSTCODE; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_billing_postcode" size="45" value="<?php echo zen_html_quotes($order->billing['postcode']); ?>"></td>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_POSTCODE; ?>:&nbsp;</strong></td>
-                                <td valign="top"><input name="update_delivery_postcode" size="45" value="<?php echo zen_html_quotes($order->delivery['postcode']); ?>"></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_POSTCODE; ?>:&nbsp;</td>
+                                <td><input name="update_customer_postcode" size="45" value="<?php echo zen_html_quotes($order->customer['postcode']); ?>" <?php echo $max_postcode_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_POSTCODE; ?>:&nbsp;</td>
+                                <td><input name="update_billing_postcode" size="45" value="<?php echo zen_html_quotes($order->billing['postcode']); ?>" <?php echo $max_postcode_length; ?>></td>
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_POSTCODE; ?>:&nbsp;</td>
+                                <td><input name="update_delivery_postcode" size="45" value="<?php echo zen_html_quotes($order->delivery['postcode']); ?>" <?php echo $max_postcode_length; ?>></td>
                             </tr>
                             <tr>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_COUNTRY; ?>:&nbsp;</strong></td>
-                                <td valign="top">
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_COUNTRY; ?>:&nbsp;</td>
+                                <td>
 <?php
     if (is_array($order->customer['country']) && isset($order->customer['country']['id'])) {
         echo zen_get_country_list('update_customer_country', $order->customer['country']['id']);
     } else {
-        echo '<input name="update_customer_country" size="45" value="' . zen_html_quotes($order->customer['country']) . '">';
+        echo '<input name="update_customer_country" size="45" value="' . zen_html_quotes($order->customer['country']) . '"' . $max_country_length . '">';
     } 
 ?>
                                 </td>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_COUNTRY; ?>:&nbsp;</strong></td>
-                                <td valign="top">
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_COUNTRY; ?>:&nbsp;</td>
+                                <td>
 <?php
     if (is_array($order->billing['country']) && isset($order->billing['country']['id'])) {
         echo zen_get_country_list('update_billing_country', $order->billing['country']['id']);
     } else {
-        echo '<input name="update_billing_country" size="45" value="' . zen_html_quotes($order->billing['country']) . '">';
+        echo '<input name="update_billing_country" size="45" value="' . zen_html_quotes($order->billing['country']) . '"' . $max_country_length . '">';
     } 
 ?>
                                 </td>
-                                <td valign="top"><strong><?php echo ENTRY_CUSTOMER_COUNTRY; ?>:&nbsp;</strong></td>
-                                <td valign="top">
+                                <td class="eo-label"><?php echo ENTRY_CUSTOMER_COUNTRY; ?>:&nbsp;</td>
+                                <td>
 <?php
     if(is_array($order->delivery['country']) && array_key_exists('id', $order->delivery['country'])) {
         echo zen_get_country_list('update_delivery_country', $order->delivery['country']['id']);
     } else {
-        echo '<input name="update_delivery_country" size="45" value="' . zen_html_quotes($order->delivery['country']) . '">';
+        echo '<input name="update_delivery_country" size="45" value="' . zen_html_quotes($order->delivery['country']) . '"' . $max_country_length . '">';
     } 
 ?>
                                 </td>
@@ -1034,15 +1049,19 @@ if ($action == 'edit') {
                     </tr>
 
 <!-- Begin Phone/Email Block -->
+<?php
+    $max_telephone_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_telephone') . '"';
+    $max_email_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_email_address') . '"';
+?>
                     <tr>
-                        <td><table border="0" cellspacing="0" cellpadding="2">
+                        <td><table class="eo-pad">
                             <tr>
-                                <td class="main"><strong><?php echo ENTRY_TELEPHONE_NUMBER; ?></strong></td>
-                                <td class="main"><input name="update_customer_telephone" size="15" value="<?php echo zen_html_quotes($order->customer['telephone']); ?>"></td>
+                                <td class="main eo-label"><?php echo ENTRY_TELEPHONE_NUMBER; ?></td>
+                                <td class="main"><input name="update_customer_telephone" size="15" value="<?php echo zen_html_quotes($order->customer['telephone']); ?>" <?php echo $max_telephone_length; ?>></td>
                             </tr>
                             <tr>
-                                <td class="main"><strong><?php echo ENTRY_EMAIL_ADDRESS; ?></strong></td>
-                                <td class="main"><input name="update_customer_email_address" size="35" value="<?php echo zen_html_quotes($order->customer['email_address']); ?>"></td>
+                                <td class="main eo-label"><?php echo ENTRY_EMAIL_ADDRESS; ?></td>
+                                <td class="main"><input name="update_customer_email_address" size="35" value="<?php echo zen_html_quotes($order->customer['email_address']); ?>" <?php echo $max_email_length; ?>></td>
                             </tr>
                         </table></td>
                     </tr>
@@ -1053,39 +1072,50 @@ if ($action == 'edit') {
                     </tr>
 
 <!-- Begin Payment Block -->
+<?php
+    $max_payment_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'payment_method') . '"';
+?>
                     <tr>
-                        <td><table border="0" cellspacing="0" cellpadding="2">
+                        <td><table class="eo-pad">
                             <tr>
-                                <td class="main"><strong><?php echo ENTRY_PAYMENT_METHOD; ?></strong></td>
-                                <td class="main"><input name="update_info_payment_method" size="20" value="<?php echo zen_html_quotes($order->info['payment_method']); ?>"><?php echo ($order->info['payment_method'] != 'Credit Card') ? ENTRY_UPDATE_TO_CC : ENTRY_UPDATE_TO_CK; ?></td>
+                                <td class="main eo-label"><?php echo ENTRY_PAYMENT_METHOD; ?></td>
+                                <td class="main"><input name="update_info_payment_method" size="20" value="<?php echo zen_html_quotes($order->info['payment_method']); ?>" <?php echo $max_payment_length; ?>> <?php echo ($order->info['payment_method'] != 'Credit Card') ? ENTRY_UPDATE_TO_CC : ENTRY_UPDATE_TO_CK; ?></td>
                             </tr>
 <?php 
-    if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $order->info['payment_method'] == "Credit Card" || !empty($order->info['cc_number'])) { 
+    if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $order->info['payment_method'] == "Credit Card" || !empty($order->info['cc_number'])) {
+        $max_type_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_type') . '"';
+        $max_owner_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_owner') . '"';
+        $max_number_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_number') . '"';
+        $max_expires_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_expires') . '"';
 ?>
 <!-- Begin Credit Card Info Block -->
                             <tr>
                                 <td colspan="2"><?php echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?></td>
                             </tr>
                             <tr>
-                                <td class="main"><strong><?php echo ENTRY_CREDIT_CARD_TYPE; ?></strong></td>
-                                <td class="main"><input name="update_info_cc_type" size="10" value="<?php echo zen_html_quotes($order->info['cc_type']); ?>"></td>
+                                <td class="main eo-label"><?php echo ENTRY_CREDIT_CARD_TYPE; ?></td>
+                                <td class="main"><input name="update_info_cc_type" size="10" value="<?php echo zen_html_quotes($order->info['cc_type']); ?>" <?php echo $max_type_length; ?>></td>
                             </tr>
                             <tr>
-                                <td class="main"><strong><?php echo ENTRY_CREDIT_CARD_OWNER; ?></strong></td>
-                                <td class="main"><input name="update_info_cc_owner" size="20" value="<?php echo zen_html_quotes($order->info['cc_owner']); ?>"></td>
+                                <td class="main eo-label"><?php echo ENTRY_CREDIT_CARD_OWNER; ?></td>
+                                <td class="main"><input name="update_info_cc_owner" size="20" value="<?php echo zen_html_quotes($order->info['cc_owner']); ?>" <?php echo $max_owner_length; ?>></td>
                             </tr>
                             <tr>
-                                <td class="main"><strong><?php echo ENTRY_CREDIT_CARD_NUMBER; ?></strong></td>
-                                <td class="main"><input name="update_info_cc_number" size="20" value="<?php echo zen_html_quotes($order->info['cc_number']); ?>"></td>
+                                <td class="main eo-label"><?php echo ENTRY_CREDIT_CARD_NUMBER; ?></td>
+                                <td class="main"><input name="update_info_cc_number" size="20" value="<?php echo zen_html_quotes($order->info['cc_number']); ?>" <?php echo $max_number_length; ?>></td>
                             </tr>
                             <tr>
-                                <td class="main"><strong><?php echo ENTRY_CREDIT_CARD_EXPIRES; ?></strong></td>
-                                <td class="main"><input name="update_info_cc_expires" size="4" value="<?php echo zen_html_quotes($order->info['cc_expires']); ?>"></td>
+                                <td class="main eo-label"><?php echo ENTRY_CREDIT_CARD_EXPIRES; ?></td>
+                                <td class="main"><input name="update_info_cc_expires" size="4" value="<?php echo zen_html_quotes($order->info['cc_expires']); ?>" <?php echo $max_expires_length; ?>></td>
                             </tr>
 <!-- End Credit Card Info Block -->
 <?php 
     }
 
+    // -----
+    // NOTE: No maximum lengths provided for these non-standard fields, since there's no way to know what database table
+    // the information is stored in!
+    //
     if (isset($order->info['account_name']) || isset($order->info['account_number']) || isset($order->info['po_number'])) {
 ?>
                             <tr>
@@ -1176,30 +1206,42 @@ if ($action == 'edit') {
 
 <!-- Begin Products Listing Block -->
                     <tr>
-                        <td><table border="0" width="100%" cellspacing="0" cellpadding="2">
+                        <td><table class="eo-table" id="eo-prods">
                             <tr class="dataTableHeadingRow">
-                                <td class="dataTableHeadingContent" colspan="2"><?php echo TABLE_HEADING_PRODUCTS; ?></td>
+                                <td class="dataTableHeadingContent a-c" colspan="3"><?php echo TABLE_HEADING_PRODUCTS; ?></td>
                                 <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_PRODUCTS_MODEL; ?></td>
-                                <td class="dataTableHeadingContent" align="right"><?php echo TABLE_HEADING_TAX; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                                <td class="dataTableHeadingContent a-r"><?php echo TABLE_HEADING_TAX; ?></td>
 <?php
     // -----
     // Starting with v4.4.0, show both the net and gross unit prices when the store is configured to display prices with tax.
     //
     if (DISPLAY_PRICE_WITH_TAX == 'true') {
 ?>
-                                <td class="dataTableHeadingContent" align="right"><?php echo TABLE_HEADING_UNIT_PRICE_NET; ?></td>
-                                <td class="dataTableHeadingContent" align="right"><?php echo TABLE_HEADING_UNIT_PRICE_GROSS; ?></td>
+                                <td class="dataTableHeadingContent a-r"><?php echo TABLE_HEADING_UNIT_PRICE_NET; ?></td>
+                                <td class="dataTableHeadingContent a-r"><?php echo TABLE_HEADING_UNIT_PRICE_GROSS; ?></td>
 <?php
     } else {
 ?>
-                                <td class="dataTableHeadingContent" align="right"><?php echo TABLE_HEADING_UNIT_PRICE; ?></td>
+                                <td class="dataTableHeadingContent a-r"><?php echo TABLE_HEADING_UNIT_PRICE; ?></td>
 <?php
     }
 ?>
-                                <td class="dataTableHeadingContent" align="right"><?php echo TABLE_HEADING_TOTAL_PRICE; ?></td>
+                                <td class="dataTableHeadingContent a-r"><?php echo TABLE_HEADING_TOTAL_PRICE; ?></td>
                             </tr>
 <!-- Begin Products Listings Block -->
 <?php
+    // -----
+    // Initialize (outside of the loop, for performance) the attributes for the various product-related
+    // input fields.
+    //
+    $name_parms = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_name') . '" class="eo-name"';
+    $model_parms = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_model') . '" class="eo-name"';
+    $value_parms = 'type="number" min="0" step="any"';
+    $tax_parms = 'type="number" min="0" max="100" step="any"';
+    
+    // -----
+    // Loop through each of the products in the order.
+    //
     $orders_products_id_mapping = eo_get_orders_products_id_mappings((int)$oID);
     for ($i = 0, $i2 = count($order->products); $i < $i2; $i++) {
         $orders_products_id = $orders_products_id_mapping[$i];
@@ -1211,14 +1253,15 @@ if ($action == 'edit') {
             PHP_EOL . $eo->eoFormatArray($order->products[$i]) . PHP_EOL
         ); 
 ?>
-                            <tr class="dataTableRow">
-                                <td class="dataTableContent" valign="top" align="left"><input name="update_products[<?php echo $orders_products_id; ?>][qty]" size="2" value="<?php echo zen_db_prepare_input($order->products[$i]['qty']); ?>" />&nbsp;&nbsp;&nbsp;&nbsp; X</td>
-                                <td class="dataTableContent" valign="top" align="left"><input name="update_products[<?php echo $orders_products_id; ?>][name]" size="55" value="<?php echo zen_html_quotes($order->products[$i]['name']); ?>" />
+                            <tr class="dataTableRow v-top">
+                                <td class="dataTableContent a-c"><input class="eo-qty" name="update_products[<?php echo $orders_products_id; ?>][qty]" value="<?php echo zen_db_prepare_input($order->products[$i]['qty']); ?>" <?php echo $value_parms; ?> /></td>
+                                <td>&nbsp;X&nbsp;</td>
+                                <td class="dataTableContent"><input name="update_products[<?php echo $orders_products_id; ?>][name]" value="<?php echo zen_html_quotes($order->products[$i]['name']); ?>" <?php echo $name_parms; ?> />
 <?php
         if (isset($order->products[$i]['attributes']) && count($order->products[$i]['attributes']) > 0) { 
 ?>
                                     <br/><nobr><small>&nbsp;<i><?php echo TEXT_ATTRIBUTES_ONE_TIME_CHARGE; ?>
-                                    <input name="update_products[<?php echo $orders_products_id; ?>][onetime_charges]" size="8" value="<?php echo zen_db_prepare_input($order->products[$i]['onetime_charges']); ?>" />&nbsp;&nbsp;&nbsp;&nbsp;</i></small></nobr><br/>
+                                    <input name="update_products[<?php echo $orders_products_id; ?>][onetime_charges]" value="<?php echo zen_db_prepare_input($order->products[$i]['onetime_charges']); ?>" <?php echo $value_parms; ?> />&nbsp;&nbsp;&nbsp;&nbsp;</i></small></nobr><br/>
 <?php
             $selected_attributes_id_mapping = eo_get_orders_products_options_id_mappings($oID, $orders_products_id);
             $attrs = eo_get_product_attributes_options($order->products[$i]['id']);
@@ -1351,19 +1394,19 @@ if ($action == 'edit') {
         $data_index = " data-opi=\"$orders_products_id\"";
 ?>
                                 </td>
-                                <td class="dataTableContent" valign="top"><input name="update_products[<?php echo $orders_products_id; ?>][model]" size="55" value="<?php echo $order->products[$i]['model']; ?>" /></td>
-                                <td class="dataTableContent" align="right" valign="top"><input class="amount p-t" name="update_products[<?php echo $orders_products_id; ?>][tax]" size="3" value="<?php echo zen_display_tax_value($order->products[$i]['tax']); ?>"<?php echo $data_index; ?> />&nbsp;%</td>
-                                <td class="dataTableContent" align="right" valign="top"><input class="amount p-n" name="update_products[<?php echo $orders_products_id; ?>][final_price]" size="5" value="<?php echo $final_price; ?>"<?php echo $data_index; ?> /></td>
+                                <td class="dataTableContent"><input name="update_products[<?php echo $orders_products_id; ?>][model]" value="<?php echo $order->products[$i]['model']; ?>" <?php echo $model_parms; ?> /></td>
+                                <td class="dataTableContent a-r"><input class="amount p-t" name="update_products[<?php echo $orders_products_id; ?>][tax]" value="<?php echo zen_display_tax_value($order->products[$i]['tax']); ?>"<?php echo $data_index . ' ' . $tax_parms; ?> />&nbsp;%</td>
+                                <td class="dataTableContent a-r"><input class="amount p-n" name="update_products[<?php echo $orders_products_id; ?>][final_price]" value="<?php echo $final_price; ?>"<?php echo $data_index . ' ' . $value_parms; ?> /></td>
 <?php
 
         if (DISPLAY_PRICE_WITH_TAX == 'true') {
             $gross_price = zen_add_tax($final_price, $order->products[$i]['tax']);
 ?>
-                                <td class="dataTableContent" align="right" valign="top"><input class="amount p-g" name="update_products[<?php echo $orders_products_id; ?>][gross]" size="5" value="<?php echo $gross_price; ?>"<?php echo $data_index; ?> /></td>
+                                <td class="dataTableContent a-r"><input class="amount p-g" name="update_products[<?php echo $orders_products_id; ?>][gross]" value="<?php echo $gross_price; ?>"<?php echo $data_index . ' ' . $value_parms; ?> /></td>
 <?php
         }
 ?>
-                                <td class="dataTableContent" align="right" valign="top"><?php echo $currencies->format($final_price * $order->products[$i]['qty'] + $onetime_charges, true, $order->info['currency'], $order->info['currency_value']); ?></td>
+                                <td class="dataTableContent a-r"><?php echo $currencies->format($final_price * $order->products[$i]['qty'] + $onetime_charges, true, $order->info['currency'], $order->info['currency_value']); ?></td>
                             </tr>
 <?php
     } 
@@ -1405,7 +1448,7 @@ if ($action == 'edit') {
         $update_total_value = $update_total . '[value]';
 ?>
                             <tr>
-                                <td class="dataTableContent" colspan="2"><?php echo ($i == 0) ? $eo_add_button_link : '&nbsp;'; ?></td>
+                                <td class="dataTableContent" colspan="3"><?php echo ($i == 0) ? $eo_add_button_link : '&nbsp;'; ?></td>
 <?php
         $total = $order->totals[$i];
         $trimmed_title = strip_tags(trim($total['title']));
@@ -1425,8 +1468,8 @@ if ($action == 'edit') {
             case 'display-only':
 ?>
                                 <td colspan="<?php echo $columns - 2; ?>">&nbsp;</td>
-                                <td class="main" align="right"><strong><?php echo $total['title']; ?></strong></td>
-                                <td class="main" align="right"><strong><?php echo $total['text']; ?></strong></td>
+                                <td class="main a-r eo-label"><?php echo $total['title']; ?></td>
+                                <td class="main a-r eo-label"><?php echo $total['text']; ?></td>
 <?php
                 $index--;
                 break;
@@ -1437,8 +1480,8 @@ if ($action == 'edit') {
             case 'ot_loworderfee': 
 ?>
                                 <td colspan="<?php echo $columns - 2; ?>"><?php echo zen_draw_hidden_field($update_total_code, $total['class']); ?></td>
-                                <td align="right" class="main"><?php echo strip_tags($total['title']) . zen_draw_hidden_field($update_total_title, $trimmed_title); ?></td>
-                                <td align="right" class="main"><?php echo $total['text'] . zen_draw_hidden_field($update_total_value, $details['value']); ?></td>
+                                <td class="main a-r"><?php echo strip_tags($total['title']) . zen_draw_hidden_field($update_total_title, $trimmed_title); ?></td>
+                                <td class="main a-r"><?php echo $total['text'] . zen_draw_hidden_field($update_total_value, $details['value']); ?></td>
 <?php
                 break;
 
@@ -1447,28 +1490,29 @@ if ($action == 'edit') {
             case 'ot_coupon': 
 ?>
                                 <td colspan="<?php echo $columns - 2; ?>"><?php echo zen_draw_hidden_field($update_total_code, $total['class']); ?></td>
-                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount" size="' . strlen($trimmed_title) . '"'); ?></td>
-                                <td align="right" class="main"><?php echo $total['text'] . zen_draw_hidden_field($update_total_value, $details['value']); ?></td>
+                                <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount eo-entry"'); ?></td>
+                                <td class="main a-r"><?php echo $total['text'] . zen_draw_hidden_field($update_total_value, $details['value']); ?></td>
 <?php
                 break;
 
             case 'ot_shipping':
                 $shipping_tax_rate = $eo->eoGetShippingTaxRate($order);
+                $shipping_title_max = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'shipping_method') . '"';
 ?>
-                                <td align="right"><?php echo zen_draw_hidden_field($update_total_code, $total['class']) . zen_draw_pull_down_menu($update_total . '[shipping_module]', eo_get_available_shipping_modules(), $order->info['shipping_module_code']) . '&nbsp;&nbsp;' . zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount" size="' . strlen($trimmed_title) . '"'); ?></td>
+                                <td class="a-r"><?php echo zen_draw_hidden_field($update_total_code, $total['class']) . zen_draw_pull_down_menu($update_total . '[shipping_module]', eo_get_available_shipping_modules(), $order->info['shipping_module_code']) . '&nbsp;&nbsp;' . zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount eo-entry" ' . $shipping_title_max); ?></td>
                                 
-                                <td align="right"><?php echo zen_draw_input_field('shipping_tax', (string)$shipping_tax_rate, 'class="amount" size="3" id="s-t"'); ?>&nbsp;%</td>
+                                <td class="a-r"><?php echo zen_draw_input_field('shipping_tax', (string)$shipping_tax_rate, 'class="amount" id="s-t" min="0" max="100" step="any"', true, 'number'); ?>&nbsp;%</td>
 <?php
                 if (DISPLAY_PRICE_WITH_TAX == 'true') {
                     $shipping_net = $details['value'] / (1 + ($shipping_tax_rate / 100));
 ?>
-                                <td align="right"><?php echo zen_draw_input_field($update_total_value, (string)$shipping_net, 'class="amount" size="6" id="s-n"'); ?></td>
+                                <td class="a-r"><?php echo zen_draw_input_field($update_total_value, (string)$shipping_net, 'class="amount" id="s-n" min="0" step="any"', true, 'number'); ?></td>
 <?php
                     $update_total_value = 'shipping_gross';
                 }
 ?>
                                 <td>&nbsp;</td>
-                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" size="6" id="s-g"'); ?></td>
+                                <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" id="s-g" min="0" step="any"', true, 'number'); ?></td>
 <?php
                 break;
 
@@ -1476,13 +1520,13 @@ if ($action == 'edit') {
             case 'ot_voucher': 
 ?>
                                 <td colspan="<?php echo $columns - 2; ?>"><?php echo zen_draw_hidden_field($update_total_code, $total['class']); ?></td>
-                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount" size="' . strlen($trimmed_title) . '"'); ?></td>
-                                <td align="right" class="smallText">
+                                <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount eo-entry"'); ?></td>
+                                <td class="smallText a-r">
 <?php                 
                 if ($details['value'] > 0) {
                     $details['value'] *= -1;
                 }
-                echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" size="6"');
+                echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" step="any"', true, 'number');
 ?>
                                 </td>
 <?php
@@ -1491,8 +1535,8 @@ if ($action == 'edit') {
             default: 
 ?>
                                 <td colspan="<?php echo $columns - 2; ?>"><?php echo zen_draw_hidden_field($update_total_code, $total['class']); ?></td>
-                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount" size="' . strlen($trimmed_title) . '"'); ?></td>
-                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" size="6"'); ?></td>
+                                <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount eo-entry"'); ?></td>
+                                <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount"'); ?></td>
 <?php
                 break;
         } 
@@ -1504,13 +1548,13 @@ if ($action == 'edit') {
     if (count(eo_get_available_order_totals_class_values($oID)) > 0) { 
 ?>
                             <tr>
-                                <td colspan="2">&nbsp;</td>
-                                <td colspan="<?php echo $columns - 2; ?>" align="right" class="smallText"><?php echo TEXT_ADD_ORDER_TOTAL . zen_draw_pull_down_menu($update_total_code, eo_get_available_order_totals_class_values($oID), '', 'id="update_total_code"'); ?></td>
-                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_title, '', 'class="amount" style="width: 100%"'); ?></td>
-                                <td align="right" class="smallText"><?php echo zen_draw_input_field($update_total_value, '', 'class="amount" size="6"'); ?></td>
+                                <td colspan="<?php echo $columns; ?>">&nbsp;</td>
+                                <td class="smallText a-r"><?php echo TEXT_ADD_ORDER_TOTAL . zen_draw_pull_down_menu($update_total_code, eo_get_available_order_totals_class_values($oID), '', 'id="update_total_code"'); ?></td>
+                                <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_title, '', 'class="amount eo-entry"'); ?></td>
+                                <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, '', 'class="amount" step="any"', true, 'number'); ?></td>
                             </tr>
                             <tr>
-                                <td align="left" colspan="<?php echo $columns + 2; ?>" class="smallText" id="update_total_shipping" style="display: none"><?php echo TEXT_CHOOSE_SHIPPING_MODULE . zen_draw_pull_down_menu('update_total[' . $index . '][shipping_module]', eo_get_available_shipping_modules()); ?></td>
+                                <td align="left" colspan="<?php echo $columns + 3; ?>" class="smallText" id="update_total_shipping" style="display: none"><?php echo TEXT_CHOOSE_SHIPPING_MODULE . zen_draw_pull_down_menu('update_total[' . $index . '][shipping_module]', eo_get_available_shipping_modules()); ?></td>
                             </tr>
 <?php
     }
@@ -1762,7 +1806,7 @@ if ($action == 'edit') {
                     </tr>
 
                     <tr>
-                        <td class="main"><br><strong><?php echo TABLE_HEADING_COMMENTS; ?></strong></td>
+                        <td class="main"><br /><strong><?php echo TABLE_HEADING_COMMENTS; ?></strong></td>
                     </tr>
                     
                     <tr>
@@ -1779,13 +1823,13 @@ if ($action == 'edit') {
 ?>
     <tr>
         <td class="main">
-            <table border="0" cellpadding="3" cellspacing="0">
+            <table>
                 <tr>
                     <td class="main"><strong><?php echo zen_image(DIR_WS_IMAGES . 'icon_track_add.png', ENTRY_ADD_TRACK) . '&nbsp;' . ENTRY_ADD_TRACK; ?></strong></td>
                 </tr>
-                <tr valign="top">
-                    <td width="400">
-                        <table border="1" cellpadding="3" cellspacing="0" width="100%">
+                <tr class="v-top">
+                    <td>
+                        <table class="w100">
                             <tr class="dataTableHeadingRow">
                                 <td class="dataTableHeadingContent smallText"><strong><?php echo TABLE_HEADING_CARRIER_NAME; ?></strong></td>
                                 <td class="dataTableHeadingContent smallText"><strong><?php echo TABLE_HEADING_TRACKING_ID; ?></strong></td>
@@ -1842,7 +1886,7 @@ if ($action == 'edit') {
     }
 ?>
                     <tr>
-                        <td><table border="0" cellspacing="0" cellpadding="2">
+                        <td><table>
                             <tr>
                                 <td class="main"><strong><?php echo ENTRY_NOTIFY_CUSTOMER; ?></strong> [<?php echo zen_draw_radio_field('notify', '1', $email_default) . '-' . TEXT_EMAIL . ' ' . zen_draw_radio_field('notify', '0', $noemail_default) . '-' . TEXT_NOEMAIL . ' ' . zen_draw_radio_field('notify', '-1', $hidden_default) . '-' . TEXT_HIDE; ?>]&nbsp;&nbsp;&nbsp;</td>
                                 <td class="main"><strong><?php echo ENTRY_NOTIFY_COMMENTS; ?></strong> <?php echo zen_draw_checkbox_field('notify_comments', '', true); ?></td>
@@ -1864,13 +1908,13 @@ if ($action == 'edit') {
 if ($action == "add_prdct") { 
     $order_parms = zen_get_all_get_params(array('oID', 'action', 'resend')) . "oID=$oID&amp;action=edit";
 ?>
-<table border="0" width="100%" cellspacing="2" cellpadding="2">
+<table class="eo-table">
     <tr>
-        <td width="100%"><table border="0" width="100%" cellspacing="0" cellpadding="0">
+        <td width="100%"><table class="w100">
             <tr>
                 <td class="pageHeading"><?php echo HEADING_TITLE_ADD_PRODUCT; ?> #<?php echo $oID; ?></td>
-                <td class="pageHeading" align="right"><?php echo zen_draw_separator('pixel_trans.gif', 1, HEADING_IMAGE_HEIGHT); ?></td>
-                <td class="pageHeading" align="right">
+                <td class="pageHeading a-r"><?php echo zen_draw_separator('pixel_trans.gif', 1, HEADING_IMAGE_HEIGHT); ?></td>
+                <td class="pageHeading a-r">
                     <a href="<?php echo zen_href_link(FILENAME_EDIT_ORDERS, $order_parms); ?>"><?php echo zen_image_button('button_back.gif', IMAGE_EDIT); ?></a>
                     <a href="<?php echo zen_href_link(FILENAME_ORDERS, $order_parms); ?>"><?php echo zen_image_button('button_details.gif', IMAGE_ORDER_DETAILS); ?></a>
                 </td>
@@ -1902,9 +1946,9 @@ if ($action == "add_prdct") {
 ?> 
     <tr>
         <td><?php echo zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action', 'oID')) . "oID=$oID&amp;action=add_prdct", 'post', '', true); ?><table border="0">
-            <tr class="dataTableRow">
-                <td class="dataTableContent" align="right"><strong><?php echo ADDPRODUCT_TEXT_STEP1; ?></strong></td>
-                <td class="dataTableContent" valign="top">
+            <tr class="dataTableRow v-top">
+                <td class="dataTableContent a-r eo-label"><?php echo ADDPRODUCT_TEXT_STEP1; ?></td>
+                <td class="dataTableContent">
 <?php               
     echo 
         ' ' . $categoryselectoutput . 
@@ -1951,9 +1995,9 @@ if ($action == "add_prdct") {
 ?>
     <tr>
         <td><?php echo zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action', 'oID')) . "oID=$oID&amp;action=add_prdct", 'post', '', true); ?><table border="0">
-            <tr class="dataTableRow">
-                <td class="dataTableContent" align="right"><strong><?php echo ADDPRODUCT_TEXT_STEP2; ?></strong></td>
-                <td class="dataTableContent" valign="top">
+            <tr class="dataTableRow v-top">
+                <td class="dataTableContent a-r eo-label"><?php echo ADDPRODUCT_TEXT_STEP2; ?></td>
+                <td class="dataTableContent">
                     <select name="add_product_products_id" onchange="this.form.submit();">
 <?php
         $ProductOptions = '<option value="0">' .  ADDPRODUCT_TEXT_SELECT_PRODUCT . '</option>' . PHP_EOL;
@@ -1994,8 +2038,8 @@ if ($action == "add_prdct") {
         if (!zen_has_product_attributes($add_product_products_id)) {
             $step = 4;
 ?>
-    <tr class="dataTableRow">
-        <td class="dataTableContent"><strong><?php echo ADDPRODUCT_TEXT_STEP3; ?></strong> <i><?php echo ADDPRODUCT_TEXT_OPTIONS_NOTEXIST; ?></i></td>
+    <tr class="dataTableRow v-top">
+        <td class="dataTableContent eo-label"><?php echo ADDPRODUCT_TEXT_STEP3; ?> <i><?php echo ADDPRODUCT_TEXT_OPTIONS_NOTEXIST; ?></i></td>
     </tr>
 <?php
         } else {
@@ -2003,9 +2047,9 @@ if ($action == "add_prdct") {
 ?>
     <tr>
         <td><?php echo zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action', 'oID')) . "oID=$oID&amp;action=add_prdct", 'post', '', true); ?><table border="0">
-            <tr class="dataTableRow">
-                <td class="dataTableContent" align="right" valign="top"><strong><?php echo ADDPRODUCT_TEXT_STEP3; ?></strong></td>
-                <td class="dataTableContent" valign="top">
+            <tr class="dataTableRow v-top">
+                <td class="dataTableContent a-r eo-label"><?php echo ADDPRODUCT_TEXT_STEP3; ?></td>
+                <td class="dataTableContent">
 <?php
             foreach ($attrs as $optionID => $optionInfo) {
                 $option_name = $optionInfo['name'];
@@ -2038,7 +2082,7 @@ if ($action == "add_prdct") {
                     <div class="attribsCheckboxGroup">
                         <div class="attribsCheckboxName"><?php echo $option_name; ?></div>
 <?php
-                        foreach($optionInfo['options'] as $attributeId => $attributeValue) {
+                        foreach ($optionInfo['options'] as $attributeId => $attributeValue) {
                             $checked = isset($_POST['id'][$optionID]['value'][$attributeId]);
                             echo zen_draw_checkbox_field('id[' . $optionID . '][value][' . $attributeId . ']', $attributeId, $checked, null, 'id="' . $attrib_id . '-' . $attributeId . '"') . '<label class="attribsCheckbox" for="' . $attrib_id . '-' . $attributeId . '">' . $attributeValue . '</label><br />' . PHP_EOL;
                         }
@@ -2086,7 +2130,7 @@ if ($action == "add_prdct") {
             }
 ?>
                 </td>
-                <td class="dataTableContent" align="center" valign="bottom">
+                <td class="dataTableContent a-c">
                     <input type="submit" value="<?php echo ADDPRODUCT_TEXT_OPTIONS_CONFIRM; ?>" />
 <?php
             echo zen_draw_hidden_field('add_product_categories_id', $add_product_categories_id) .
@@ -2112,13 +2156,13 @@ if ($action == "add_prdct") {
 ?>
     <tr>
         <td><?php echo zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action', 'oID')) . "oID=$oID&amp;action=add_prdct", 'post', '', true); ?><table border="0">
-            <tr class="dataTableRow">
-                <td class="dataTableContent" align="right"><strong><?php echo ADDPRODUCT_TEXT_STEP4; ?></strong></td>
-                <td class="dataTableContent" valign="top"><?php echo ADDPRODUCT_TEXT_CONFIRM_QUANTITY . 
-                    zen_draw_input_field('add_product_quantity', 1, 'size="2"') .
+            <tr class="dataTableRow v-top">
+                <td class="dataTableContent a-r eo-label"><?php echo ADDPRODUCT_TEXT_STEP4; ?></td>
+                <td class="dataTableContent"><?php echo ADDPRODUCT_TEXT_CONFIRM_QUANTITY . 
+                    zen_draw_input_field('add_product_quantity', 1, 'class="eo-qty" min="0" step="any"', true, 'number') .
                     '&nbsp;&nbsp;&nbsp;&nbsp;' .
                     zen_draw_checkbox_field('applyspecialstoprice', '1', true) . ADDPRODUCT_SPECIALS_SALES_PRICE; ?></td>
-                 <td class="dataTableContent" align="center">
+                 <td class="dataTableContent a-c">
                     <input type="submit" value="<?php echo ADDPRODUCT_TEXT_CONFIRM_ADDNOW; ?>" />
 <?php
         if (isset($_POST['id'])) {
@@ -2154,7 +2198,7 @@ if ($action == "add_prdct") {
 }
 ?>
 <!-- body_text_eof //-->
-<script type="text/javascript">
+<script>
     <!--
     handleShipping();
     function handleShipping() {
@@ -2269,7 +2313,7 @@ if (!empty($addl_js_files)) {
         } else {
             $js_file = DIR_WS_INCLUDES . 'javascript' . DIRECTORY_SEPARATOR . "$js_filename.js";
 ?>
-<script type="text/javascript" src="<?php echo $js_file; ?>"></script>
+<script src="<?php echo $js_file; ?>"></script>
 <?php
         }
     }

@@ -59,11 +59,22 @@ input.normal_button:active, span.submit_button:active, span.submit_button:active
 }
 input.amount {
     text-align: right;
+    width: 7em;
 }
 
 .v-top { vertical-align: top; }
+.v-bot { vertical-align: bottom; }
 .a-c { text-align: center; }
 .a-l { text-align: left; }
 .a-r { text-align: right; }
+.w100 { width: 100%; }
+.eo-table { width: 100%; padding: 0.3em; }
+#c-table tr { vertical-align: top; }
+.eo-label { font-weight: bold; }
+input.eo-qty { width: 7em; }
+input.eo-name { min-width: 30em; }
+input.eo-entry { min-width: 20em; }
+#eo-prods  tr  td:nth-last-child(2) { min-width: 20em; }
+
 .no-osh { min-width: 50%; text-align: center; }
 #osh .dataTableHeadingContent { font-weight: bold; }
