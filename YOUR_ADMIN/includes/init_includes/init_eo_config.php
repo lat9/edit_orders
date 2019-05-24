@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.4.0-beta8');
+define('EO_CURRENT_VERSION', '4.4.0-beta9');
 
 // -----
 // Only update configuration when an admin is logged in.
@@ -181,6 +181,7 @@ if (EO_VERSION != EO_CURRENT_VERSION) {
                     
                     ('Status-update: Customer Notification Default', 'EO_CUSTOMER_NOTIFICATION_DEFAULT', 'Email', 'Choose the default used for the radio-buttons that identify whether the customer receives notification when a  comment is added to the order.', $cgi, 40, now(), NULL, 'zen_cfg_select_option(array(\'Email\', \'No Email\', \'Hidden\'),')"
             );
+            $check_init_file_missing = '1';
                                                 //-Fall-through for additional checks
 
         default:
@@ -206,7 +207,7 @@ if (EO_VERSION != EO_CURRENT_VERSION) {
 // On initial installation, upgrade from a version prior to 4.3.0 or if the required notifiers'
 // check previously failed, check for the notifiers required by EO.
 //
-if (EO_INIT_FILE_MISSING == '1') {
+if (EO_INIT_FILE_MISSING == '1' || !empty($check_init_file_missing)) {
     $notifier_check = new \Vinos\Common\NotifierCheck(EO_INIT_MISSING_NOTIFIERS, EO_INIT_MISSING_FILES);
     $notifier_check->setList(
         array(
@@ -218,6 +219,13 @@ if (EO_INIT_FILE_MISSING == '1') {
                     'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END',
                     'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS',
                     'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE',
+                ),
+            ),
+            array(
+                'filename' => DIR_FS_CATALOG . 'includes/modules/order_total/ot_shipping.php',
+                'required' => true,
+                'notifiers' => array(
+                    'NOTIFY_OT_SHIPPING_TAX_CALCS',
                 ),
             ),
         )
