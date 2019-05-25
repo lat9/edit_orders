@@ -719,7 +719,7 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
     }
 
     // Handle attributes
-    if (is_array($product_options) && count($product_options > 0)) {
+    if (is_array($product_options) && count($product_options) > 0) {
         $retval['attributes'] = array();
 
         include_once DIR_WS_CLASSES . 'attributes.php';
