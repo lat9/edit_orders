@@ -883,29 +883,14 @@ if ($action == 'edit') {
 <!-- body_text //-->
         <td class="w100 v-top"><table class="eo-table">
             <tr>
-                <td class="w100 a-c"><table class="eo-table">
+                <td class="w100 a-c"><table id="order-select">
                     <tr>
-<!-- BEGIN - Add Super Orders Order Navigation Functionality -->
-                        <td class="pageHeading"> &nbsp; </td>
-                        <td class="pageHeading a-r"><?php echo zen_draw_separator('pixel_trans.gif', 1, HEADING_IMAGE_HEIGHT); ?></td>
-                        <td class="main"> &nbsp; </td>
-                        <td class="a-c"><table border="0" cellspacing="3" cellpadding="0">
-                            <tr class="v-bot">
-                                <td class="main a-c"><?php echo $prev_button; ?></td>
-                                <td class="smallText a-c">
-<?php
-                                    echo SELECT_ORDER_LIST . '<br />';
-                                    echo zen_draw_form('input_oid', FILENAME_ORDERS, '', 'get', '', true);
-                                    echo zen_draw_input_field('oID', '', 'size="6"');
-                                    echo zen_draw_hidden_field('action', 'edit');
-                                    echo '</form>';
-?>
-                                </td>
-                                <td class="main a-c"><?php echo $next_button; ?></td>
-                            </tr>
-                        </table></td>
-<!-- END - Add Super Orders Order Navigation Functionality -->
-                        <td class="pageHeading"> &nbsp; </td>
+                        <td class="main a-r"><?php echo $prev_button; ?></td>
+                        <td class="smallText a-c"><?php echo SELECT_ORDER_LIST; ?><br />
+                            <?php echo zen_draw_form('input_oid', FILENAME_ORDERS, 'action=edit', 'get', '', true) . zen_draw_input_field('oID', '', 'size="6"'); ?>
+                            </form>
+                        </td>
+                        <td class="main a-l"><?php echo $next_button; ?></td>
                     </tr>
                 </table></td>
             </tr>
