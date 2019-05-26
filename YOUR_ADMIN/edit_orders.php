@@ -597,16 +597,16 @@ switch ($action) {
                                 $order_total['title'] = trim($matches[1]);
                                 $coupon = $matches[2];
                             }
+                            $coupon = trim($coupon);
                             $cc_id = $db->Execute(
                                 "SELECT coupon_id, coupon_type
                                    FROM ". TABLE_COUPONS . "
-                                  WHERE coupon_code = '" . trim($coupon) . "'
+                                  WHERE coupon_code = '$coupon'
                                   LIMIT 1"
                             );
 
                             if (!$cc_id->EOF) {
                                 $_SESSION['cc_id'] = $cc_id->fields['coupon_id'];
-                                $eo->eoRecordCouponType($cc_id->fields['coupon_type']);
                             } else {
                                 $coupon = '';
                                 $messageStack->add_session(WARNING_ORDER_COUPON_BAD, 'warning');
@@ -667,6 +667,7 @@ switch ($action) {
 
         if ($order_updated) {
             $messageStack->add_session(SUCCESS_ORDER_UPDATED, 'success');
+            $zco_notifier->notify('EDIT_ORDER_ORDER_UPDATED_SUCCESS', $oID);
         } else {
             $messageStack->add_session(WARNING_ORDER_NOT_UPDATED, 'warning');
         }
@@ -1026,7 +1027,7 @@ if ($action == 'edit') {
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_COUNTRY; ?>:&nbsp;</td>
                                 <td>
 <?php
-    if(is_array($order->delivery['country']) && array_key_exists('id', $order->delivery['country'])) {
+    if (is_array($order->delivery['country']) && isset($order->delivery['country']['id'])) {
         echo zen_get_country_list('update_delivery_country', $order->delivery['country']['id']);
     } else {
         echo '<input name="update_delivery_country" size="45" value="' . zen_html_quotes($order->delivery['country']) . '"' . $max_country_length . '">';
@@ -1053,6 +1054,17 @@ if ($action == 'edit') {
 <?php
     $max_telephone_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_telephone') . '"';
     $max_email_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_email_address') . '"';
+    
+    // -----
+    // Give a watching observer the opportunity to supply additional contact-information for the order.
+    //
+    // The $additional_contact_info (supplied as the notification's 2nd parameter), if supplied, is a
+    // numerically-indexed array of arrays containing each label and associated content, e.g.:
+    //
+    // $additional_contact_info[] = array('label' => LABEL_TEXT, 'content' => $field_content);
+    //
+    $additional_contact_info = array();
+    $zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_CONTACT_INFORMATION', $order, $additional_contact_info);
 ?>
                     <tr>
                         <td><table class="eo-pad">
@@ -1064,6 +1076,20 @@ if ($action == 'edit') {
                                 <td class="main eo-label"><?php echo ENTRY_EMAIL_ADDRESS; ?></td>
                                 <td class="main"><input name="update_customer_email_address" size="35" value="<?php echo zen_html_quotes($order->customer['email_address']); ?>" <?php echo $max_email_length; ?>></td>
                             </tr>
+<?php
+    if (is_array($additional_contact_info) && count($additional_contact_info) != 0) {
+        foreach ($additional_contact_info as $contact_info) {
+            if (!empty($contact_info['label']) && !empty($contact_info['content'])) {
+?>
+                            <tr>
+                                <td class="main eo-label"><?php echo $contact_info['label']; ?></td>
+                                <td class="main"><?php echo $contact_info['content']; ?></td>
+                            </tr>
+<?php
+            }
+        }
+    }
+?>
                         </table></td>
                     </tr>
 <!-- End Phone/Email Block -->
@@ -1555,7 +1581,7 @@ if ($action == 'edit') {
                                 <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, '', 'class="amount" step="any"', true, 'number'); ?></td>
                             </tr>
                             <tr>
-                                <td align="left" colspan="<?php echo $columns + 3; ?>" class="smallText" id="update_total_shipping" style="display: none"><?php echo TEXT_CHOOSE_SHIPPING_MODULE . zen_draw_pull_down_menu('update_total[' . $index . '][shipping_module]', eo_get_available_shipping_modules()); ?></td>
+                                <td colspan="<?php echo $columns + 3; ?>" class="smallText a-l" id="update_total_shipping" style="display: none"><?php echo TEXT_CHOOSE_SHIPPING_MODULE . zen_draw_pull_down_menu('update_total[' . $index . '][shipping_module]', eo_get_available_shipping_modules()); ?></td>
                             </tr>
 <?php
     }
@@ -1680,6 +1706,17 @@ if ($action == 'edit') {
                     'show_function' => 'built-in'
                 ),
             );
+            
+            // -----
+            // If the orders_status_history::updated_by field exists, add the display of that element to the table.
+            //
+            if (isset($orders_history->fields['updated_by'])) {
+                $table_elements['updated_by'] = array(
+                    'title' => TABLE_HEADING_UPDATED_BY,
+                    'align' => 'center',
+                    'show_function' => 'built-in'
+                );
+            }
             $zco_notifier->notify('EDIT_ORDERS_STATUS_DISPLAY_ARRAY_INIT', $oID, $table_elements);
             if (!is_array($table_elements) || count($table_elements) == 0) {
                 trigger_error('Non-array value returned from EDIT_ORDERS_STATUS_DISPLAY_ARRAY_INIT: ' . json_encode($table_elements), E_USER_ERROR);
@@ -1763,6 +1800,9 @@ if ($action == 'edit') {
                                 case 'comments':
                                     $display_value = nl2br(zen_db_output($field_value));
                                     break;
+                                case 'updated_by':
+                                    $display_value = $field_value;
+                                    break;
                                 default:
                                     trigger_error("Unknown field ($field_name) for built-in function display.", E_USER_ERROR);
                                     exit();
@@ -1817,7 +1857,24 @@ if ($action == 'edit') {
                     <tr>
                         <td class="main"><?php echo zen_draw_textarea_field('comments', 'soft', '60', '5'); ?></td>
                     </tr>
-
+<?php
+    // -----
+    // Give an observer the opportunity to add additional content to the status-history form.
+    //
+    // The additional-content array is numerically-indexed and provides the HTML to be included.
+    //
+    $additional_osh_content = array();
+    $zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_OSH_CONTENT', $order, $additional_osh_content);
+    if (is_array($additional_osh_content) && count($additional_osh_content) != 0) {
+        foreach ($additional_osh_content as $osh_content) {
+?>
+                    <tr>
+                        <td class="main"><?php echo $osh_content; ?></td>
+                    </tr>
+<?php
+        }
+    }
+?>
 <!-- TY TRACKER 7 BEGIN, ENTER TRACKING INFORMATION -->
 <?php 
     if (defined('TY_TRACKER') && TY_TRACKER == 'True') { 
