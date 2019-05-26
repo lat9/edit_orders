@@ -27,6 +27,7 @@ define('TABLE_HEADING_UNIT_PRICE_GROSS', 'Unit Price (Gross)');
 define('TABLE_HEADING_TOTAL_PRICE', 'Total Price');
 define('TABLE_HEADING_CUSTOMER_NOTIFIED', 'Customer Notified');
 define('TABLE_HEADING_DATE_ADDED', 'Date Added');
+define('TABLE_HEADING_UPDATED_BY', 'Updated By');
 
 // Order Address Entries
 define('ENTRY_CUSTOMER', 'Customer Address:');
