@@ -645,14 +645,4 @@ class editOrders extends base
             zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $osh_sql);
         }
     }
-    
-    // -----
-    // This method stores the 'type' of any coupon that is active for the order,
-    // enabling a fix-up for any shipping tax that should be excluded for
-    // those coupons that include free shipping.
-    //
-    public function eoRecordCouponType($coupon_type)
-    {
-        $this->coupon_type = $coupon_type;
-    }
 }
