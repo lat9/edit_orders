@@ -68,7 +68,7 @@ class ot_onetime_discount
         $this->code = 'ot_onetime_discount';
         $this->title = MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_TITLE;
         $this->description = MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_DESCRIPTION;
-        $this->sort_order = MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_SORT_ORDER;
+        $this->sort_order = (int)(defined('MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_SORT_ORDER')) ? MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_SORT_ORDER : 410;
         $this->output = array();
     }
 
