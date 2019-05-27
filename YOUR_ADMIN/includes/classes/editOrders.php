@@ -13,6 +13,7 @@ class editOrders extends base
         $this->eo_action_level = EO_DEBUG_ACTION_LEVEL;
         $this->orders_id = (int)$orders_id;
         $this->tax_updated = false;
+        $this->product_tax_descriptions = array();
         
         $currency_info = $db->Execute(
             "SELECT currency, currency_value 
@@ -69,7 +70,7 @@ class editOrders extends base
         // Retrieve the formatted order, via the storefront order.php class.
         //
         $order = new order($oID);
-        $this->eoLog('getOrderInfo, on entry:' .  $this->eoFormatTaxInfoForLog(true), 'tax');
+        $this->eoLog("getOrderInfo($action), on entry:" .  $this->eoFormatTaxInfoForLog(true), 'tax');
         
         // -----
         // Add some required customer information for tax calculation.
@@ -135,7 +136,7 @@ class editOrders extends base
         //
         $_SESSION['payment'] = $order->info['payment_module_code'];
  
-        $this->eoLog('getOrderInfo, on exit:' . PHP_EOL . $this->eoFormatTaxInfoForLog(), 'tax');
+        $this->eoLog("getOrderInfo($action), on exit:" . PHP_EOL . $this->eoFormatTaxInfoForLog(), 'tax');
         return $order;
     }
     
@@ -318,9 +319,15 @@ class editOrders extends base
     {
         if ($tax_updated === false) {
             $shipping_tax_rate = (isset($this->shipping_tax_rate)) ? $this->shipping_tax_rate : 0;
-            $shipping_tax_description = sprintf(EO_SHIPPING_TAX_DESCRIPTION, (string)$shipping_tax_rate);
+
+            if (isset($this->product_tax_descriptions[$shipping_tax_rate])) {
+                $shipping_tax_description = $this->product_tax_descriptions[$shipping_tax_rate];
+            } else {
+                $shipping_tax_description = sprintf(EO_SHIPPING_TAX_DESCRIPTION, (string)$shipping_tax_rate);
+            }
         }
         $this->shipping_tax_description = $shipping_tax_description;
+        $this->eoLog("eoUpdateOrderShippingTax($tax_updated, $shipping_tax_rate, $shipping_tax_description): " . json_encode($this->product_tax_descriptions), 'tax');
         
         if (isset($GLOBALS['order']) && is_object($GLOBALS['order'])) {
             if (!isset($GLOBALS['order']->info['tax_groups'][$shipping_tax_description])) {
@@ -337,7 +344,7 @@ class editOrders extends base
         $shipping_tax_rate = false;
         $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX_RATE', $order, $shipping_tax_rate);
         if ($shipping_tax_rate !== false) {
-            $this->eoLog("eoGetShippingTaxRate, override returning rate = $shipping_tax_rate.");
+            $this->eoLog("eoGetShippingTaxRate, override returning rate = $shipping_tax_rate.", 'tax');
             return (empty($shipping_tax_rate)) ? 0 : $shipping_tax_rate;
         }
         
@@ -375,12 +382,19 @@ class editOrders extends base
             );
             if (!$query->EOF) {
                 $products_tax_description = zen_get_tax_description($query->fields['products_tax_class_id']);
-            } elseif (isset($product['tax'])) {
-                $products_tax_description = TEXT_UNKNOWN_TAX_RATE . ' (' . zen_display_tax_value($product['tax']) . '%)';
+            } else {
+                $products_tax_description = TEXT_UNKNOWN_TAX_RATE . ' (' . zen_display_tax_value($products_tax) . '%)';
             }
         }
-
-        $this->eoLog(PHP_EOL . "getProductTaxes($products_tax_description)\n" . (($query === false) ? 'false' : (($query->EOF) ? 'EOF' : json_encode($query->fields))) . json_encode($product));
+        
+        // -----
+        // Save the association of the current product's tax-rate to its description for possible use by the
+        // eoUpdateOrderShippingTax method.  If the order's shipping tax-rate is the same as a product's tax-rate,
+        // the shipping tax value will be added to that product-based tax description.
+        //
+        $this->product_tax_descriptions[$products_tax] = $products_tax_description;
+        
+        $this->eoLog(PHP_EOL . "getProductTaxes($products_tax_description)\n" . (($query === false) ? 'false' : (($query->EOF) ? 'EOF' : json_encode($query->fields))) . json_encode($product), 'tax');
         
         $totalTaxAdd = 0;
         if (!empty($products_tax_description)) {

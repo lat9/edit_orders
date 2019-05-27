@@ -1425,12 +1425,12 @@ function eo_update_database_order_totals($oID)
         // needed for the 'ot_shipping' total, since there might be multiple colons (:) tacked to
         // the end of the name.
         //
-        for ($i=0, $totals_titles = $totals_codes = array(); $i < $n; $i++) {
+        for ($i = 0, $totals_titles = $totals_codes = array(); $i < $n; $i++) {
             $code = $order_totals[$i]['code'];
             $totals_titles[] = ($code == 'ot_shipping') ? rtrim($order_totals[$i]['title'], ':') : $order_totals[$i]['title'];
             $totals_codes[] = $code;
         }
-        for ($i=0, $n=count($order->totals); $i<$n; $i++) {
+        for ($i = 0, $n = count($order->totals); $i < $n; $i++) {
             $title = $order->totals[$i]['title'];
             if ($order->totals[$i]['class'] == 'ot_shipping') {
                 $title = rtrim($title, ':');
@@ -1448,6 +1448,27 @@ function eo_update_database_order_totals($oID)
             }
         }
         unset($order_totals);
+        
+        // -----
+        // It's possible to have a "rogue" ot_tax value recorded, based on tax-processing for a previous
+        // update.  Make sure that any no-longer-valid tax totals, i.e. those that aren't recorded in the
+        // order's tax_groups, are removed.
+        //
+        if (isset($order->info['tax_groups']) && is_array($order->info['tax_groups'])) {
+            $tax_groups = array_keys($order->info['tax_groups']);
+            foreach ($tax_groups as &$tax_group) {
+                $tax_group = $db->prepareInput($tax_group) . ':';
+            }
+            unset($tax_group);
+            $tax_groups = "'" . implode("', '", $tax_groups) . "'";
+            $db->Execute(
+                "DELETE FROM " . TABLE_ORDERS_TOTAL . "
+                  WHERE orders_id = $oID
+                    AND `class` = 'ot_tax'
+                    AND `title` NOT IN ($tax_groups)"
+            );
+            $eo->eoLog("eo_update_database_order_totals, removing tax groups NOT IN ($tax_groups).", 'tax');
+        }
         
         // -----
         // Handle a corner-case:  If the store has set Configuration->My Store->Sales Tax Display Status to '0' (no tax displayed
@@ -1514,6 +1535,7 @@ function eo_update_database_order_total($oID, $order_total) {
 
         zen_db_perform(TABLE_ORDERS_TOTAL, $sql_data_array);
         $updated = true;
+        $eo->eoLog("Adding order-total: " . json_encode($sql_data_array), 'tax');
     } else {
         return $updated;
     }
