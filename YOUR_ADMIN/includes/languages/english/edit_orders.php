@@ -90,6 +90,7 @@ define('TEXT_ATTRIBUTES_UPLOAD_NONE', 'No file was uploaded');
 // Order Totals Display
 define('TEXT_ADD_ORDER_TOTAL', 'Add ');
 define('TEXT_CHOOSE_SHIPPING_MODULE', 'Choose a shipping module: ');
+if (!defined('TEXT_COMMAND_TO_DELETE_CURRENT_COUPON_FROM_ORDER')) define('TEXT_COMMAND_TO_DELETE_CURRENT_COUPON_FROM_ORDER', 'REMOVE');
 
 // Add a Product
 define('TEXT_ADD_NEW_PRODUCT', 'Add Product');
