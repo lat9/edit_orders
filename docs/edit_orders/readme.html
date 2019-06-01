@@ -137,7 +137,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
           </ol>
           
           <ul class="etabs">
-            <li class="tab"><a href="#initial">Initial Installation</a></li>
+            <li class="tab"><a href="#initial">Install/Upgrade</a></li>
             <li class="tab"><a href="#uninstall">Uninstalling</a></li>
             <li class="tab"><a href="#upgrade">Upgrading from EO v4.1.x</a></li>
             <li class="tab"><a href="#notifiers">Required Notifiers</a></li>
@@ -153,6 +153,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                 <li>Rename the YOUR_ADMIN sub-directory to match your custom admin sub-directory's name.</li>
                 <li>If your store uses a version of Zen Cart <em>prior to</em> 1.5.6, you'll need to merge any pre-existing <span class="corefile">core-file</span> changes with the changes required by <em>Edit Orders</em>.  Each of these files is located in the <code>zc155</code> of <em>EO</em>'s distribution, providing the in-core zc156 notifications required:<ol>
                   <li><span class="corefile">/includes/classes/order.php</span> <span class="smaller">(2 marked change-sections)</span></li>
+                  <li><span class="corefile">/includes/modules/order_total/ot_shipping.php</span> <span class="smaller">(This is the zc156b version of the file)</span></li>
                   <li><span class="corefile">/YOUR_ADMIN/orders.php</span> <span class="smaller">(3 marked change-sections)</span></li>
                 </ol>After you've merged your pre-existing changes into the files, copy them to your store's file-system (renaming the <code>YOUR_ADMIN</code> sub-directory to match your store's admin-directory name).</li>
                 <li>Sign into your Zen Cart's admin panel.</li>
@@ -504,7 +505,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.4.0, 2019-05-xx (lat9)<ul>
+          <li>v4.4.0, 2019-06-01 (lat9)<ul>
             <li>CHANGE: Additional notifications for external tax-handlers.</li>
             <li>BUGFIX: Remove doubly-defined constant.</li>
             <li>BUGFIX: Correct various PHP warnings.</li>
