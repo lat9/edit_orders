@@ -930,7 +930,7 @@ function eo_add_product_to_order($order_id, $product)
 
         if (!$stock_values->EOF) {
             // do not decrement quantities if products_attributes_filename exists
-            if (DOWNLOAD_ENABLED != 'true' || $stock_values->fields['product_is_always_free_shipping'] == 2 || !empty($stock_values->fields['products_attributes_filename'])) {
+            if (DOWNLOAD_ENABLED != 'true' || $stock_values->fields['product_is_always_free_shipping'] == 2 || empty($stock_values->fields['products_attributes_filename'])) {
                 $stock_left = $stock_values->fields['products_quantity'] - $product['qty'];
                 $product['stock_reduce'] = $product['qty'];
             } else {
@@ -1196,7 +1196,7 @@ function eo_remove_product_from_order($order_id, $orders_products_id)
                       WHERE p.products_id = {$query->fields['products_id']}"
                 );
             }
-            if (!$check->EOF && (DOWNLOAD_ENABLED != 'true' || $check->fields['product_is_always_free_shipping'] == 2 || !empty($check->fields['products_attributes_filename']))) {
+            if (!$check->EOF && (DOWNLOAD_ENABLED != 'true' || $check->fields['product_is_always_free_shipping'] == 2 || empty($check->fields['products_attributes_filename']))) {
                 $sql_data_array = array(
                     'products_quantity' => $check->fields['products_quantity'] + $query->fields['products_quantity'],
                     'products_ordered' => $check->fields['products_ordered'] - $query->fields['products_quantity']
