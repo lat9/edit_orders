@@ -875,7 +875,7 @@ if ($action == 'edit') {
     } else {
         $next_button = '<input class="normal_button button" type="button" value="' . BUTTON_TO_LIST . '" onclick="window.location.href=\'' . zen_href_link(FILENAME_ORDERS) . '\'">';
     }
-    $next_button .= PHP_EOL
+    $next_button .= PHP_EOL;
 // END - Add Super Orders Order Navigation Functionality
 ?>
 <!-- body //-->
@@ -884,16 +884,13 @@ if ($action == 'edit') {
 <!-- body_text //-->
         <td class="w100 v-top"><table class="eo-table">
             <tr>
-                <td class="w100 a-c"><table id="order-select">
-                    <tr>
-                        <td class="main a-r"><?php echo $prev_button; ?></td>
-                        <td class="smallText a-c"><?php echo SELECT_ORDER_LIST; ?><br />
-                            <?php echo zen_draw_form('input_oid', FILENAME_ORDERS, 'action=edit', 'get', '', true) . zen_draw_input_field('oID', '', 'size="6"'); ?>
-                            </form>
-                        </td>
-                        <td class="main a-l"><?php echo $next_button; ?></td>
-                    </tr>
-                </table></td>
+                <td class="w100 a-c">
+<?php
+    echo $prev_button . '&nbsp;&nbsp;' . SELECT_ORDER_LIST . '&nbsp;&nbsp;';
+    echo zen_draw_form('input_oid', FILENAME_ORDERS, 'action=edit', 'get', '', true) . zen_draw_input_field('oID', '', 'size="6"') . '</form>';
+    echo '&nbsp;&nbsp;' . $next_button . '<br />';
+?>
+                </td>
             </tr>
 
             <tr>
@@ -2292,7 +2289,12 @@ $(document).ready(function() {
 
     function getProductTaxRate(opi) 
     {
-        return parseInt($('input[name="update_products['+opi+'][tax]"]').val());
+        return getValidatedTaxRate($('input[name="update_products['+opi+'][tax]"]').val());
+    }
+    function getValidatedTaxRate(taxRate)
+    {
+        var regex = /(?:\d*\.\d{1,2}|\d+)$/;
+        return (regex.test(taxRate)) ? taxRate : 0;
     }
 
     function updateProductGross(opi) 
@@ -2326,7 +2328,7 @@ $(document).ready(function() {
     
     function getShippingTaxRate()
     {
-        return parseInt($('#s-t').val());
+        return getValidatedTaxRate($('#s-t').val());
     }
     
     function updateShippingGross()
