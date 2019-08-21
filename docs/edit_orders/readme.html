@@ -89,7 +89,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
 
 <body>
   <h1 id="title">Edit Orders for Zen Cart&reg;</h1>
-  <p>Version 4.4.2.  Copyright &copy; 2015-2019, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
+  <p>Version 4.4.3.  Copyright &copy; 2015-2019, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
   <p>Current Support Thread on the Zen Cart forums: <a href="https://www.zen-cart.com/showthread.php?200407" target="_blank">https://www.zen-cart.com/showthread.php?200407</a></p>
   <p>Released under the General Public License (see the file named <code class="no-pad">LICENSE</code> in the plugin's distribution for full details). This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>
   
@@ -506,6 +506,15 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
+          <li>v4.4.3, 2019-08-21 (lat9)<ul>
+            <li>BUGFIX: Correct variable-name identifying product to use for attribute-pricing.</li>
+            <li>BUGFIX: Correct PHP notices when updating an order's totals.</li>
+            <li>The following files were changed:<ol>
+              <li>/YOUR_ADMIN/edit_orders.php</li>
+              <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
+              <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
+            </ol></li>
+          </ul></li>
           <li>v4.4.2, 2019-07-27 (lat9)<ul>
             <li>BUGFIX: Correctly enable non-integer tax rates for the gross/net handling for stores that display prices with tax.</li>
             <li>BUGFIX: Properly center the top order-navigation links and form.</li>

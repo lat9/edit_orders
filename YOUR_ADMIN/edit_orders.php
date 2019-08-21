@@ -548,6 +548,14 @@ switch ($action) {
 
             $default_sort = 0;
             foreach ($_POST['update_total'] as $order_total) {
+                // -----
+                // The 'update_total' array also includes the current shipping-module selection.  If
+                // that element is found, there's no order-total information so continue with the
+                // next array element.
+                //
+                if (isset($order_total['shipping_module'])) {
+                    continue;
+                }
                 $default_sort++;
                 $order_total['value'] = (float)$order_total['value'];
                 $order_total['text'] = $eo->eoFormatCurrencyValue($order_total['value']);
@@ -1289,11 +1297,18 @@ if ($action == 'edit') {
 <?php
             $selected_attributes_id_mapping = eo_get_orders_products_options_id_mappings($oID, $orders_products_id);
             $attrs = eo_get_product_attributes_options($order->products[$i]['id']);
+
             $optionID = array_keys($attrs);
             for ($j = 0, $j2 = count($attrs); $j < $j2; $j++) {
                 $option_id = $optionID[$j];
                 $optionInfo = $attrs[$option_id];
-                $orders_products_attributes_id = $selected_attributes_id_mapping[$option_id];
+                
+                // -----
+                // If an option for the product wasn't selected (or provided, in the case of TEXT
+                // attributes) previously, there's nothing to be selected for its to-be-displayed
+                // value.
+                //
+                $orders_products_attributes_id = (!in_array($option_id, $selected_attributes_id_mapping)) ? array() : $selected_attributes_id_mapping[$option_id];
                 
                 $option_type = $optionInfo['type'];
                 $option_type_hidden_field = zen_draw_hidden_field("update_products[$orders_products_id][attr][$option_id][type]", $option_type);
@@ -1315,7 +1330,7 @@ if ($action == 'edit') {
                         $products_options_array = array();
                         $selected_attribute = null;
                         foreach ($optionInfo['options'] as $attributeId => $attributeValue) {
-                            if (eo_is_selected_product_attribute_id($orders_products_attributes_id[0], $attributeId)) {
+                            if (!empty($orders_products_attributes_id) && eo_is_selected_product_attribute_id($orders_products_attributes_id[0], $attributeId)) {
                                 $selected_attribute = $attributeId;
                             }
                             $products_options_array[] = array(
@@ -1364,7 +1379,10 @@ if ($action == 'edit') {
                         break;
                         
                     case PRODUCTS_OPTIONS_TYPE_TEXT:
-                        $text = eo_get_selected_product_attribute_value_by_id($orders_products_attributes_id[0], array_key_first($optionInfo['options']));
+                        $text = null;
+                        if (!empty($orders_products_attributes_id)) {
+                            $text = eo_get_selected_product_attribute_value_by_id($orders_products_attributes_id[0], array_key_first($optionInfo['options']));
+                        }
                         if ($text === null) {
                             $text = '';
                         }
@@ -1383,7 +1401,10 @@ if ($action == 'edit') {
                         break;
                         
                     case PRODUCTS_OPTIONS_TYPE_FILE:
-                        $optionValue = eo_get_selected_product_attribute_value_by_id($orders_products_attributes_id[0], array_key_first($optionInfo['options']));
+                        $optionValue = '';
+                        if (!empty($orders_products_attributes_id)) {
+                            $optionValue = eo_get_selected_product_attribute_value_by_id($orders_products_attributes_id[0], array_key_first($optionInfo['options']));
+                        }
                         echo "<span class=\"attribsFile\">$option_name: " . (!empty($optionValue) ? $optionValue : TEXT_ATTRIBUTES_UPLOAD_NONE) . '</span><br />';
                         if (!empty($optionValue)) {
                             echo zen_draw_hidden_field("update_products[$orders_products_id][attr][$option_id][value]", $optionValue);
