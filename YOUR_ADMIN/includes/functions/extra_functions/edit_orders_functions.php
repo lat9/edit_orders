@@ -845,8 +845,8 @@ function eo_get_product_attribute_prices($attr_id, $attr_value = '', $qty = 1)
         // attributes_price_factor
         $added_charge = 0;
         if ($attribute_price->fields['attributes_price_factor'] > 0) {
-            $chk_price = zen_get_products_base_price($products_id);
-            $chk_special = zen_get_products_special_price($products_id, false);
+            $chk_price = zen_get_products_base_price($product_id);
+            $chk_special = zen_get_products_special_price($product_id, false);
             $added_charge = zen_get_attributes_price_factor($chk_price, $chk_special, $attribute_price->fields['attributes_price_factor'], $attribute_price->fields['attributes_price_factor_offset']);
             $retval['price'] += $added_charge;
         }
@@ -854,8 +854,8 @@ function eo_get_product_attribute_prices($attr_id, $attr_value = '', $qty = 1)
         // attributes_qty_prices
         $added_charge = 0;
         if ($attribute_price->fields['attributes_qty_prices'] != '') {
-            $chk_price = zen_get_products_base_price($products_id);
-            $chk_special = zen_get_products_special_price($products_id, false);
+            $chk_price = zen_get_products_base_price($product_id);
+            $chk_special = zen_get_products_special_price($product_id, false);
             $added_charge = zen_get_attributes_qty_prices_onetime($attribute_price->fields['attributes_qty_prices'], $qty);
             $retval['price'] += $added_charge;
         }
@@ -867,16 +867,16 @@ function eo_get_product_attribute_prices($attr_id, $attr_value = '', $qty = 1)
         // attributes_price_factor_onetime
         $added_charge = 0;
         if ($attribute_price->fields['attributes_price_factor_onetime'] > 0) {
-            $chk_price = zen_get_products_base_price($products_id);
-            $chk_special = zen_get_products_special_price($products_id, false);
+            $chk_price = zen_get_products_base_price($product_id);
+            $chk_special = zen_get_products_special_price($product_id, false);
             $added_charge = zen_get_attributes_price_factor($chk_price, $chk_special, $attribute_price->fields['attributes_price_factor_onetime'], $attribute_price->fields['attributes_price_factor_onetime_offset']);
             $retval['onetime_charges'] += $added_charge;
         }
         // attributes_qty_prices_onetime
         $added_charge = 0;
         if ($attribute_price->fields['attributes_qty_prices_onetime'] != '') {
-            $chk_price = zen_get_products_base_price($products_id);
-            $chk_special = zen_get_products_special_price($products_id, false);
+            $chk_price = zen_get_products_base_price($product_id);
+            $chk_special = zen_get_products_special_price($product_id, false);
             $added_charge = zen_get_attributes_qty_prices_onetime($attribute_price->fields['attributes_qty_prices_onetime'], $qty);
             $retval['onetime_charges'] += $added_charge;
         }
