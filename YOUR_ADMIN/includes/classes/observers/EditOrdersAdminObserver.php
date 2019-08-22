@@ -52,7 +52,7 @@ class EditOrdersAdminObserver extends base
             //         with the built-in button list.
             //
             case 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END':
-                if (is_object($p1)) {
+                if (is_object($p1) && count($p2) > 0) {
                     $index_to_update = count($p2) - 1;
                     $p2[$index_to_update]['text'] = $this->addEditOrderButton($p1->orders_id, $p2[$index_to_update]['text']);
                 }

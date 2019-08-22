@@ -510,8 +510,10 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>BUGFIX: Correct variable-name identifying product to use for attribute-pricing.</li>
             <li>BUGFIX: Correct PHP notices when updating an order's totals.</li>
             <li>BUGFIX: Correct empty order rendered if observer disallows the order's update.</li>
+            <li>BUGFIX: Correct PHP notice, adding the 'Edit' button to the Customers::Orders display.</li>
             <li>The following files were changed:<ol>
               <li>/YOUR_ADMIN/edit_orders.php</li>
+              <li>/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php</li>
               <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
             </ol></li>
