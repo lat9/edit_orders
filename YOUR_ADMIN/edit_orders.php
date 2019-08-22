@@ -177,7 +177,6 @@ switch ($action) {
         $zco_notifier->notify('EDIT_ORDERS_PRE_UPDATE_ORDER', $oID, $sql_data_array, $allow_update);
         if ($allow_update === false) {
             $eo->eoLog("Update disallowed by observer.");
-            $action = 'edit';
             break;
         }
         zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', "orders_id = $oID LIMIT 1");
@@ -796,22 +795,26 @@ switch ($action) {
         if ($orders_query->EOF) {
             $messageStack->add_session(sprintf(ERROR_ORDER_DOES_NOT_EXIST, $oID), 'error');
             zen_redirect(zen_href_link(FILENAME_ORDERS));
-        } else {
-            $order = $eo->getOrderInfo($action);
-           
-            // -----
-            // Initialize the shipping cost, tax-rate and tax-value.
-            //
-            $eo->eoInitializeShipping($oID, $action);
-            
-            if (!$eo->eoOrderIsVirtual($order) &&
-                   ( !is_array($order->customer['country']) || !isset($order->customer['country']['id']) ||
-                     !is_array($order->billing['country']) || !isset($order->billing['country']['id']) ||
-                     !is_array($order->delivery['country']) || !isset($order->delivery['country']['id']) )) {
-                $messageStack->add(WARNING_ADDRESS_COUNTRY_NOT_FOUND, 'warning');
-            }
         }
         break; 
+}
+
+if ($action == 'edit' || ($action == 'update_order' && empty($allow_update))) {
+    $action = 'edit';
+    
+    $order = $eo->getOrderInfo($action);
+   
+    // -----
+    // Initialize the shipping cost, tax-rate and tax-value.
+    //
+    $eo->eoInitializeShipping($oID, $action);
+    
+    if (!$eo->eoOrderIsVirtual($order) &&
+           ( !is_array($order->customer['country']) || !isset($order->customer['country']['id']) ||
+             !is_array($order->billing['country']) || !isset($order->billing['country']['id']) ||
+             !is_array($order->delivery['country']) || !isset($order->delivery['country']['id']) )) {
+        $messageStack->add(WARNING_ADDRESS_COUNTRY_NOT_FOUND, 'warning');
+    }
 }
 ?>
 <!doctype html>
