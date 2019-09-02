@@ -1549,18 +1549,18 @@ if ($action == 'edit') {
 ?>
                                 <td class="a-r"><?php echo zen_draw_hidden_field($update_total_code, $total['class']) . zen_draw_pull_down_menu($update_total . '[shipping_module]', eo_get_available_shipping_modules(), $order->info['shipping_module_code']) . '&nbsp;&nbsp;' . zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount eo-entry" ' . $shipping_title_max); ?></td>
                                 
-                                <td class="a-r"><?php echo zen_draw_input_field('shipping_tax', (string)$shipping_tax_rate, 'class="amount" id="s-t" min="0" max="100" step="any"', true, 'number'); ?>&nbsp;%</td>
+                                <td class="a-r"><?php echo zen_draw_input_field('shipping_tax', (string)$shipping_tax_rate, 'class="amount" id="s-t" min="0" max="100" step="any"', false, 'number'); ?>&nbsp;%</td>
 <?php
                 if (DISPLAY_PRICE_WITH_TAX == 'true') {
                     $shipping_net = $details['value'] / (1 + ($shipping_tax_rate / 100));
 ?>
-                                <td class="a-r"><?php echo zen_draw_input_field($update_total_value, (string)$shipping_net, 'class="amount" id="s-n" min="0" step="any"', true, 'number'); ?></td>
+                                <td class="a-r"><?php echo zen_draw_input_field($update_total_value, (string)$shipping_net, 'class="amount" id="s-n" min="0" step="any"', false, 'number'); ?></td>
 <?php
                     $update_total_value = 'shipping_gross';
                 }
 ?>
                                 <td>&nbsp;</td>
-                                <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" id="s-g" min="0" step="any"', true, 'number'); ?></td>
+                                <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" id="s-g" min="0" step="any"', false, 'number'); ?></td>
 <?php
                 break;
 
@@ -1574,7 +1574,7 @@ if ($action == 'edit') {
                 if ($details['value'] > 0) {
                     $details['value'] *= -1;
                 }
-                echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" step="any"', true, 'number');
+                echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" step="any"', false, 'number');
 ?>
                                 </td>
 <?php
