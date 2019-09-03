@@ -25,57 +25,71 @@ if (basename($PHP_SELF, '.php') != FILENAME_EDIT_ORDERS) {
 }
 
 // Include various Zen Cart functions (with any necessary changes for admin)
-if(!function_exists('zen_get_country_id')) {
-    function zen_get_country_id($country_name) {
-        global $db;
-        $country_id_query = $db -> Execute("select * from " . TABLE_COUNTRIES . " where countries_name = '" . $country_name . "'");
-
-        if (!$country_id_query->RecordCount()) {
-            return 0;
-        }
-        else {
-            return $country_id_query->fields['countries_id'];
-        }
+if (!function_exists('zen_get_country_id')) {
+    function zen_get_country_id($country_name) 
+    {
+        // -----
+        // Future-proofing for Multi-lingual Country Names in zc157.
+        //
+        $country_name_table = (defined('TABLE_COUNTRIES_NAME')) ? TABLE_COUNTRIES_NAME : TABLE_COUNTRIES;
+        $country_name = zen_db_input($country_name);
+        $country_info = $GLOBALS['db']->Execute(
+            "SELECT *
+               FROM $country_name_table
+              WHERE countries_name = '$country_name'
+              LIMIT 1"
+        );
+        return ($country_info->EOF) ? 0 : $country_info->fields['countries_id'];
     }
 }
 
-if(!function_exists('zen_get_country_iso_code_2')) {
-    function zen_get_country_iso_code_2($country_id) {
-        global $db;
-        $country_iso_query = $db -> Execute("select * from " . TABLE_COUNTRIES . " where countries_id = '" . $country_id . "'");
-
-        if (!zen_db_num_rows($country_iso_query)) {
-            return 0;
-        }
-        else {
-            $country_iso_row = zen_db_fetch_array($country_iso_query);
-            return $country_iso_row['countries_iso_code_2'];
-        }
+if (!function_exists('zen_get_country_iso_code_2')) {
+    function zen_get_country_iso_code_2($country_id) 
+    {
+        $country_id = (int)$country_id;
+        $country_info = $GLOBALS['db']->Execute(
+            "SELECT *
+               FROM " . TABLE_COUNTRIES . "
+              WHERE countries_id = $country_id
+              LIMIT 1"
+        );
+        return ($country_info->EOF) ? '??' : $country_info->fields['countries_iso_code_2'];
     }
 }
 
-if(!function_exists('zen_get_zone_id')) {
-    function zen_get_zone_id($country_id, $zone_name) {
+if (!function_exists('zen_get_zone_id')) {
+    function zen_get_zone_id($country_id, $zone_name) 
+    {
         global $db;
-        $zone_id_query = $db -> Execute("select * from " . TABLE_ZONES . " where zone_country_id = '" . $country_id . "' and zone_name = '" . $zone_name . "'");
-
-        if (!$zone_id_query->RecordCount()) {
-            return 0;
-        }
-        else {
-            return $zone_id_query->fields['zone_id'];
-        }
+        $country_id = (int)$country_id;
+        $zone_name = zen_db_input($zone_name);
+        $zone_id_query = $db->Execute(
+            "SELECT * 
+               FROM " . TABLE_ZONES . " 
+              WHERE zone_country_id = $country_id 
+                AND zone_name = '$zone_name'
+              LIMIT 1"
+        );
+        return ($zone_id_query->EOF) ? 0 : $zone_id_query->fields['zone_id'];
     }
 }
 
 if(!function_exists('zen_get_country_list')) {
-    function zen_get_country_list($name, $selected = '', $parameters = '') {
+    function zen_get_country_list($name, $selected = '', $parameters = '') 
+    {
         $countriesAtTopOfList = array();
-        $countries_array = array(array('id' => '', 'text' => PULL_DOWN_DEFAULT));
+        $countries_array = array(
+            array(
+                'id' => '', 
+                'text' => PULL_DOWN_DEFAULT
+            )
+        );
         $countries = zen_get_countries();
 
         // Set some default entries at top of list:
-        if (STORE_COUNTRY != SHOW_CREATE_ACCOUNT_DEFAULT_COUNTRY) $countriesAtTopOfList[] = SHOW_CREATE_ACCOUNT_DEFAULT_COUNTRY;
+        if (STORE_COUNTRY != SHOW_CREATE_ACCOUNT_DEFAULT_COUNTRY) {
+            $countriesAtTopOfList[] = SHOW_CREATE_ACCOUNT_DEFAULT_COUNTRY;
+        }
         $countriesAtTopOfList[] = STORE_COUNTRY;
         // IF YOU WANT TO ADD MORE DEFAULTS TO THE TOP OF THIS LIST, SIMPLY ENTER THEIR NUMBERS HERE.
         // Duplicate more lines as needed
@@ -83,57 +97,28 @@ if(!function_exists('zen_get_country_list')) {
         //$countriesAtTopOfList[] = 108;
 
         //process array of top-of-list entries:
-        foreach ($countriesAtTopOfList as $key=>$val) {
+        foreach ($countriesAtTopOfList as $key => $val) {
             $countries_array[] = array('id' => $val, 'text' => zen_get_country_name($val));
         }
         // now add anything not in the defaults list:
-        foreach($countries as $country) {
-            $alreadyInList = FALSE;
-            foreach($countriesAtTopOfList as $key=>$val) {
-                if ($country['id'] == $val)
-                {
+        foreach ($countries as $country) {
+            $alreadyInList = false;
+            foreach ($countriesAtTopOfList as $key => $val) {
+                if ($country['id'] == $val) {
                     // If you don't want to exclude entries already at the top of the list, comment out this next line:
-                    $alreadyInList = TRUE;
+                    $alreadyInList = true;
                     continue;
                 }
             }
-            if (!$alreadyInList) $countries_array[] = $country;
+            if (!$alreadyInList) {
+                $countries_array[] = $country;
+            }
         }
-
         return zen_draw_pull_down_menu($name, $countries_array, $selected, $parameters);
     }
 }
 
-if(!function_exists('zen_field_exists')) {
-    function zen_field_exists($table,$field) {
-        global $db;
-        $describe_query = $db -> Execute("describe $table");
-        while (!$describe_query -> EOF) {
-            if ($d_row["Field"] == "$field") {
-                 return true;
-            }
-            $describe_query -> MoveNext();
-        }
-
-        return false;
-    }
-}
-
-if(!function_exists('zen_html_quotes')) {
-    function zen_html_quotes($string) {
-        if(function_exists('zen_db_output'))
-            return zen_db_output($string);
-        return htmlspecialchars($string, ENT_COMPAT, CHARSET, TRUE);
-    }
-}
-
-if(!function_exists('zen_html_unquote')) {
-    function zen_html_unquote($string) {
-        return htmlspecialchars_decode($string, ENT_COMPAT);
-    }
-}
-
-if(!function_exists('zen_get_tax_description')) {
+if (!function_exists('zen_get_tax_description')) {
     function zen_get_tax_description($class_id, $country_id = -1, $zone_id = -1) {
         global $db;
         
@@ -193,7 +178,7 @@ if(!function_exists('zen_get_tax_description')) {
     }
 }
 
-if(!function_exists('zen_get_all_tax_descriptions')) {
+if (!function_exists('zen_get_all_tax_descriptions')) {
     function zen_get_all_tax_descriptions($country_id = -1, $zone_id = -1) {
         global $db;
         if ( ($country_id == -1) && ($zone_id == -1) ) {
@@ -227,7 +212,7 @@ if(!function_exists('zen_get_all_tax_descriptions')) {
     }
 }
 
-if(!function_exists('zen_get_tax_rate_from_desc')) {
+if (!function_exists('zen_get_tax_rate_from_desc')) {
     function zen_get_tax_rate_from_desc($tax_desc) {
         global $db;
         $tax_rate = 0.00;
@@ -247,7 +232,7 @@ if(!function_exists('zen_get_tax_rate_from_desc')) {
         return $tax_rate;
     }
 }
-if(!function_exists('zen_get_multiple_tax_rates')) {
+if (!function_exists('zen_get_multiple_tax_rates')) {
     function zen_get_multiple_tax_rates($class_id, $country_id, $zone_id, $tax_description=array()) {
         global $db;
 //-NOTE: This notification mimics the in-core, storefront, version starting with zc156)
@@ -368,7 +353,7 @@ if (function_exists ('zen_get_tax_locations')) {
         );
     }
 }
-if(!function_exists('is_product_valid')) {
+if (!function_exists('is_product_valid')) {
     function is_product_valid($product_id, $coupon_id) {
         global $db;
         $coupons_query = "SELECT * FROM " . TABLE_COUPON_RESTRICT . "
@@ -421,7 +406,7 @@ if(!function_exists('is_product_valid')) {
         return false; //should never get here
     }
 }
-if(!function_exists('validate_for_category')) {
+if (!function_exists('validate_for_category')) {
     function validate_for_category($product_id, $coupon_id) {
         global $db;
         $retVal = 'none';
@@ -448,7 +433,7 @@ if(!function_exists('validate_for_category')) {
         }
     }
 }
-if(!function_exists('validate_for_product')) {
+if (!function_exists('validate_for_product')) {
     function validate_for_product($product_id, $coupon_id) {
         global $db;
         $sql = "SELECT * FROM " . TABLE_COUPON_RESTRICT . "
@@ -549,53 +534,64 @@ function eo_debug_action_level_list($level)
  * Retrieves the country id, name, iso_code_2, and iso_code_3 from the database
  * for the requested country.
  *
- * @param mixed $country the id, name, or iso code for the country.
+ * Note: Future-proofing for zc157's addition of multi-lingual Country Names.
+ *
+ * @param string $country the name, or iso code for the country.
  * @return NULL|array the country if one is found, otherwise NULL
  */
 function eo_get_country($country) 
 {
-    global $db;
-
-    $query = 
-        "SELECT `countries_id` AS `id`, `countries_name` AS `name`, `countries_iso_code_2` AS `iso_code_2`, `countries_iso_code_3` AS `iso_code_3`
-           FROM " . TABLE_COUNTRIES . " ";
-
-    // Handle null and an array being passed to this method
-    if ($country === null) {
-        return null;
-    }
-    if (is_array($country)) {
-        if (isset($country['id'])) {
-            $country = $country['id'];
-        } elseif (isset($country['iso_code'])) {
-            $country = $country['iso_code'];
-        } elseif (isset($country['iso_code_2'])) {
-            $country = $country['iso_code_2'];
-        } elseif (isset($country['iso_code_3'])) {
-            $country = $country['iso_code_3'];
-        } elseif (isset($country['name'])) {
-            $country = $country['name'];
-        } elseif (count($country) == 1) {
-            $country = array_shift($country);
-        } else {
-            return null;
+    $country = (string)$country;
+    $country_data = null;
+    
+    // -----
+    // First, try to locate the country's ID assuming that the supplied input is the
+    // country's name.
+    //
+    $countries_id = zen_get_country_id($country);
+    
+    // -----
+    // If the country was located by name, gather the additional fields for the country.
+    //
+    if ($countries_id != 0) {
+        $country_info = $GLOBALS['db']->Execute(
+            "SELECT *
+               FROM " . TABLE_COUNTRIES . "
+              WHERE countries_id = $countries_id
+              LIMIT 1"
+        );
+        if (!$country_info->EOF) {
+            $country_data = array(
+                'id' => $countries_id,
+                'name' => $country,
+                'iso_code_2' => $country_info->fields['countries_iso_code_2'],
+                'iso_code_3' => $country_info->fields['countries_iso_code_3'],
+            );
+        }
+        
+    // -----
+    // Otherwise, see if a matching entry can be found for the country's ISO-code-2 or -3.
+    //
+    } else {
+        $country_info = $GLOBALS['db']->Execute(
+            "SELECT *
+               FROM " . TABLE_COUNTRIES . "
+              WHERE countries_iso_code_2 = '$country'
+                 OR countries_iso_code_3 = '$country'
+              LIMIT 1"
+        );
+        if (!$country_info->EOF) {
+            $country_data = array(
+                'id' => $country_info->fields['countries_id'],
+                'name' => zen_get_countries_name($country_info->fields['countries_id']),
+                'iso_code_2' => $country_info->fields['countries_iso_code_2'],
+                'iso_code_3' => $country_info->fields['countries_iso_code_3'],
+            );
         }
     }
-
-    // Determine where clause by passed variable type
-    if (is_numeric($country)) {
-        $query .= "WHERE `countries_id` = " . (int)$country;
-    } elseif (strlen($country) == 2) {
-        $query .= "WHERE `countries_iso_code_2` = '" . $db->prepare_input($country) . "'";
-    } elseif (strlen($country) == 3) {
-        $query .= "WHERE `countries_iso_code_3` = '" . $db->prepare_input($country) . "'";
-    } else {
-        $query .= "WHERE `countries_name` = '" . $db->prepare_input($country) . "'";
-    }
-
-    $product = $db->Execute($query, false, true, 43200);
-    return ($product->EOF) ? null : $product->fields;
+    return $country_data;
 }
+
 function eo_get_product_attributes_options($products_id, $readonly = false) 
 {
     global $db;

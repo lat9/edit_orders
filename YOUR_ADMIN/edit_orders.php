@@ -957,59 +957,59 @@ if ($action == 'edit') {
 
                             <tr>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_NAME; ?>:&nbsp;</td>
-                                <td><input name="update_customer_name" size="45" value="<?php echo zen_html_quotes($order->customer['name']); ?>" <?php echo $max_name_length; ?>></td>
+                                <td><input name="update_customer_name" size="45" value="<?php echo zen_db_output($order->customer['name']); ?>" <?php echo $max_name_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_NAME; ?>:&nbsp;</td>
-                                <td><input name="update_billing_name" size="45" value="<?php echo zen_html_quotes($order->billing['name']); ?>" <?php echo $max_name_length; ?>></td>
+                                <td><input name="update_billing_name" size="45" value="<?php echo zen_db_output($order->billing['name']); ?>" <?php echo $max_name_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_NAME; ?>:&nbsp;</td>
-                                <td><input name="update_delivery_name" size="45" value="<?php echo zen_html_quotes($order->delivery['name']); ?>" <?php echo $max_name_length; ?>></td>
+                                <td><input name="update_delivery_name" size="45" value="<?php echo zen_db_output($order->delivery['name']); ?>" <?php echo $max_name_length; ?>></td>
                             </tr>
                             <tr>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_COMPANY; ?>:&nbsp;</td>
-                                <td><input name="update_customer_company" size="45" value="<?php echo zen_html_quotes($order->customer['company']); ?>" <?php echo $max_company_length; ?>></td>
+                                <td><input name="update_customer_company" size="45" value="<?php echo zen_db_output($order->customer['company']); ?>" <?php echo $max_company_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_COMPANY; ?>:&nbsp;</td>
-                                <td><input name="update_billing_company" size="45" value="<?php echo zen_html_quotes($order->billing['company']); ?>" <?php echo $max_company_length; ?>></td>
+                                <td><input name="update_billing_company" size="45" value="<?php echo zen_db_output($order->billing['company']); ?>" <?php echo $max_company_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_COMPANY; ?>:&nbsp;</td>
-                                <td><input name="update_delivery_company" size="45" value="<?php echo zen_html_quotes($order->delivery['company']); ?>" <?php echo $max_company_length; ?>></td>
+                                <td><input name="update_delivery_company" size="45" value="<?php echo zen_db_output($order->delivery['company']); ?>" <?php echo $max_company_length; ?>></td>
                             </tr>
                             <tr>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_ADDRESS; ?>:&nbsp;</td>
-                                <td><input name="update_customer_street_address" size="45" value="<?php echo zen_html_quotes($order->customer['street_address']); ?>" <?php echo $max_street_address_length; ?>></td>
+                                <td><input name="update_customer_street_address" size="45" value="<?php echo zen_db_output($order->customer['street_address']); ?>" <?php echo $max_street_address_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_ADDRESS; ?>:&nbsp;</td>
-                                <td><input name="update_billing_street_address" size="45" value="<?php echo zen_html_quotes($order->billing['street_address']); ?>" <?php echo $max_street_address_length; ?>></td>
+                                <td><input name="update_billing_street_address" size="45" value="<?php echo zen_db_output($order->billing['street_address']); ?>" <?php echo $max_street_address_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_ADDRESS; ?>:&nbsp;</td>
-                                <td><input name="update_delivery_street_address" size="45" value="<?php echo zen_html_quotes($order->delivery['street_address']); ?>" <?php echo $max_street_address_length; ?>></td>
+                                <td><input name="update_delivery_street_address" size="45" value="<?php echo zen_db_output($order->delivery['street_address']); ?>" <?php echo $max_street_address_length; ?>></td>
                             </tr>
                             <tr>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_SUBURB; ?>:&nbsp;</td>
-                                <td><input name="update_customer_suburb" size="45" value="<?php echo zen_html_quotes($order->customer['suburb']); ?>" <?php echo $max_suburb_length; ?>></td>
+                                <td><input name="update_customer_suburb" size="45" value="<?php echo zen_db_output($order->customer['suburb']); ?>" <?php echo $max_suburb_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_SUBURB; ?>:&nbsp;</td>
-                                <td><input name="update_billing_suburb" size="45" value="<?php echo zen_html_quotes($order->billing['suburb']); ?>" <?php echo $max_suburb_length; ?>></td>
+                                <td><input name="update_billing_suburb" size="45" value="<?php echo zen_db_output($order->billing['suburb']); ?>" <?php echo $max_suburb_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_SUBURB; ?>:&nbsp;</td>
-                                <td><input name="update_delivery_suburb" size="45" value="<?php echo zen_html_quotes($order->delivery['suburb']); ?>" <?php echo $max_suburb_length; ?>></td>
+                                <td><input name="update_delivery_suburb" size="45" value="<?php echo zen_db_output($order->delivery['suburb']); ?>" <?php echo $max_suburb_length; ?>></td>
                             </tr>
                             <tr>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_CITY; ?>:&nbsp;</td>
-                                <td><input name="update_customer_city" size="45" value="<?php echo zen_html_quotes($order->customer['city']); ?>" <?php echo $max_city_length; ?>></td>
+                                <td><input name="update_customer_city" size="45" value="<?php echo zen_db_output($order->customer['city']); ?>" <?php echo $max_city_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_CITY; ?>:&nbsp;</td>
-                                <td><input name="update_billing_city" size="45" value="<?php echo zen_html_quotes($order->billing['city']); ?>" <?php echo $max_city_length; ?>></td>
+                                <td><input name="update_billing_city" size="45" value="<?php echo zen_db_output($order->billing['city']); ?>" <?php echo $max_city_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_CITY; ?>:&nbsp;</td>
-                                <td><input name="update_delivery_city" size="45" value="<?php echo zen_html_quotes($order->delivery['city']); ?>" <?php echo $max_city_length; ?>></td>
+                                <td><input name="update_delivery_city" size="45" value="<?php echo zen_db_output($order->delivery['city']); ?>" <?php echo $max_city_length; ?>></td>
                             </tr>
                             <tr>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_STATE; ?>:&nbsp;</td>
-                                <td><input name="update_customer_state" size="45" value="<?php echo zen_html_quotes($order->customer['state']); ?>" <?php echo $max_state_length; ?>></td>
+                                <td><input name="update_customer_state" size="45" value="<?php echo zen_db_output($order->customer['state']); ?>" <?php echo $max_state_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_STATE; ?>:&nbsp;</td>
-                                <td><input name="update_billing_state" size="45" value="<?php echo zen_html_quotes($order->billing['state']); ?>" <?php echo $max_state_length; ?>></td>
+                                <td><input name="update_billing_state" size="45" value="<?php echo zen_db_output($order->billing['state']); ?>" <?php echo $max_state_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_STATE; ?>:&nbsp;</td>
-                                <td><input name="update_delivery_state" size="45" value="<?php echo zen_html_quotes($order->delivery['state']); ?>" <?php echo $max_state_length; ?>></td>
+                                <td><input name="update_delivery_state" size="45" value="<?php echo zen_db_output($order->delivery['state']); ?>" <?php echo $max_state_length; ?>></td>
                             </tr>
                             <tr>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_POSTCODE; ?>:&nbsp;</td>
-                                <td><input name="update_customer_postcode" size="45" value="<?php echo zen_html_quotes($order->customer['postcode']); ?>" <?php echo $max_postcode_length; ?>></td>
+                                <td><input name="update_customer_postcode" size="45" value="<?php echo zen_db_output($order->customer['postcode']); ?>" <?php echo $max_postcode_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_POSTCODE; ?>:&nbsp;</td>
-                                <td><input name="update_billing_postcode" size="45" value="<?php echo zen_html_quotes($order->billing['postcode']); ?>" <?php echo $max_postcode_length; ?>></td>
+                                <td><input name="update_billing_postcode" size="45" value="<?php echo zen_db_output($order->billing['postcode']); ?>" <?php echo $max_postcode_length; ?>></td>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_POSTCODE; ?>:&nbsp;</td>
-                                <td><input name="update_delivery_postcode" size="45" value="<?php echo zen_html_quotes($order->delivery['postcode']); ?>" <?php echo $max_postcode_length; ?>></td>
+                                <td><input name="update_delivery_postcode" size="45" value="<?php echo zen_db_output($order->delivery['postcode']); ?>" <?php echo $max_postcode_length; ?>></td>
                             </tr>
                             <tr>
                                 <td class="eo-label"><?php echo ENTRY_CUSTOMER_COUNTRY; ?>:&nbsp;</td>
@@ -1018,7 +1018,7 @@ if ($action == 'edit') {
     if (is_array($order->customer['country']) && isset($order->customer['country']['id'])) {
         echo zen_get_country_list('update_customer_country', $order->customer['country']['id']);
     } else {
-        echo '<input name="update_customer_country" size="45" value="' . zen_html_quotes($order->customer['country']) . '"' . $max_country_length . '">';
+        echo '<input name="update_customer_country" size="45" value="' . zen_db_output($order->customer['country']) . '"' . $max_country_length . '">';
     } 
 ?>
                                 </td>
@@ -1028,7 +1028,7 @@ if ($action == 'edit') {
     if (is_array($order->billing['country']) && isset($order->billing['country']['id'])) {
         echo zen_get_country_list('update_billing_country', $order->billing['country']['id']);
     } else {
-        echo '<input name="update_billing_country" size="45" value="' . zen_html_quotes($order->billing['country']) . '"' . $max_country_length . '">';
+        echo '<input name="update_billing_country" size="45" value="' . zen_db_output($order->billing['country']) . '"' . $max_country_length . '">';
     } 
 ?>
                                 </td>
@@ -1038,7 +1038,7 @@ if ($action == 'edit') {
     if (is_array($order->delivery['country']) && isset($order->delivery['country']['id'])) {
         echo zen_get_country_list('update_delivery_country', $order->delivery['country']['id']);
     } else {
-        echo '<input name="update_delivery_country" size="45" value="' . zen_html_quotes($order->delivery['country']) . '"' . $max_country_length . '">';
+        echo '<input name="update_delivery_country" size="45" value="' . zen_db_output($order->delivery['country']) . '"' . $max_country_length . '">';
     } 
 ?>
                                 </td>
@@ -1078,11 +1078,11 @@ if ($action == 'edit') {
                         <td><table class="eo-pad">
                             <tr>
                                 <td class="main eo-label"><?php echo ENTRY_TELEPHONE_NUMBER; ?></td>
-                                <td class="main"><input name="update_customer_telephone" size="15" value="<?php echo zen_html_quotes($order->customer['telephone']); ?>" <?php echo $max_telephone_length; ?>></td>
+                                <td class="main"><input name="update_customer_telephone" size="15" value="<?php echo zen_db_output($order->customer['telephone']); ?>" <?php echo $max_telephone_length; ?>></td>
                             </tr>
                             <tr>
                                 <td class="main eo-label"><?php echo ENTRY_EMAIL_ADDRESS; ?></td>
-                                <td class="main"><input name="update_customer_email_address" size="35" value="<?php echo zen_html_quotes($order->customer['email_address']); ?>" <?php echo $max_email_length; ?>></td>
+                                <td class="main"><input name="update_customer_email_address" size="35" value="<?php echo zen_db_output($order->customer['email_address']); ?>" <?php echo $max_email_length; ?>></td>
                             </tr>
 <?php
     if (is_array($additional_contact_info) && count($additional_contact_info) != 0) {
@@ -1114,7 +1114,7 @@ if ($action == 'edit') {
                         <td><table class="eo-pad">
                             <tr>
                                 <td class="main eo-label"><?php echo ENTRY_PAYMENT_METHOD; ?></td>
-                                <td class="main"><input name="update_info_payment_method" size="20" value="<?php echo zen_html_quotes($order->info['payment_method']); ?>" <?php echo $max_payment_length; ?>> <?php echo ($order->info['payment_method'] != 'Credit Card') ? ENTRY_UPDATE_TO_CC : ENTRY_UPDATE_TO_CK; ?></td>
+                                <td class="main"><input name="update_info_payment_method" size="20" value="<?php echo zen_db_output($order->info['payment_method']); ?>" <?php echo $max_payment_length; ?>> <?php echo ($order->info['payment_method'] != 'Credit Card') ? ENTRY_UPDATE_TO_CC : ENTRY_UPDATE_TO_CK; ?></td>
                             </tr>
 <?php 
     if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $order->info['payment_method'] == "Credit Card" || !empty($order->info['cc_number'])) {
@@ -1129,19 +1129,19 @@ if ($action == 'edit') {
                             </tr>
                             <tr>
                                 <td class="main eo-label"><?php echo ENTRY_CREDIT_CARD_TYPE; ?></td>
-                                <td class="main"><input name="update_info_cc_type" size="10" value="<?php echo zen_html_quotes($order->info['cc_type']); ?>" <?php echo $max_type_length; ?>></td>
+                                <td class="main"><input name="update_info_cc_type" size="10" value="<?php echo zen_db_output($order->info['cc_type']); ?>" <?php echo $max_type_length; ?>></td>
                             </tr>
                             <tr>
                                 <td class="main eo-label"><?php echo ENTRY_CREDIT_CARD_OWNER; ?></td>
-                                <td class="main"><input name="update_info_cc_owner" size="20" value="<?php echo zen_html_quotes($order->info['cc_owner']); ?>" <?php echo $max_owner_length; ?>></td>
+                                <td class="main"><input name="update_info_cc_owner" size="20" value="<?php echo zen_db_output($order->info['cc_owner']); ?>" <?php echo $max_owner_length; ?>></td>
                             </tr>
                             <tr>
                                 <td class="main eo-label"><?php echo ENTRY_CREDIT_CARD_NUMBER; ?></td>
-                                <td class="main"><input name="update_info_cc_number" size="20" value="<?php echo zen_html_quotes($order->info['cc_number']); ?>" <?php echo $max_number_length; ?>></td>
+                                <td class="main"><input name="update_info_cc_number" size="20" value="<?php echo zen_db_output($order->info['cc_number']); ?>" <?php echo $max_number_length; ?>></td>
                             </tr>
                             <tr>
                                 <td class="main eo-label"><?php echo ENTRY_CREDIT_CARD_EXPIRES; ?></td>
-                                <td class="main"><input name="update_info_cc_expires" size="4" value="<?php echo zen_html_quotes($order->info['cc_expires']); ?>" <?php echo $max_expires_length; ?>></td>
+                                <td class="main"><input name="update_info_cc_expires" size="4" value="<?php echo zen_db_output($order->info['cc_expires']); ?>" <?php echo $max_expires_length; ?>></td>
                             </tr>
 <!-- End Credit Card Info Block -->
 <?php 
@@ -1161,7 +1161,7 @@ if ($action == 'edit') {
 ?>
                             <tr>
                                 <td class="main"><?php echo ENTRY_ACCOUNT_NAME; ?></td>
-                                <td class="main"><?php echo zen_html_quotes($order->info['account_name']); ?></td>
+                                <td class="main"><?php echo zen_db_output($order->info['account_name']); ?></td>
                             </tr>
 <?php
         }
@@ -1169,7 +1169,7 @@ if ($action == 'edit') {
 ?>
                             <tr>
                                 <td class="main"><?php echo ENTRY_ACCOUNT_NUMBER; ?></td>
-                                <td class="main"><?php echo zen_html_quotes($order->info['account_number']); ?></td>
+                                <td class="main"><?php echo zen_db_output($order->info['account_number']); ?></td>
                             </tr>
 <?php
         }
@@ -1177,7 +1177,7 @@ if ($action == 'edit') {
 ?>
                             <tr>
                                 <td class="main"><strong><?php echo ENTRY_PURCHASE_ORDER_NUMBER; ?></strong></td>
-                                <td class="main"><?php echo zen_html_quotes($order->info['po_number']); ?></td>
+                                <td class="main"><?php echo zen_db_output($order->info['po_number']); ?></td>
                             </tr>
 <?php
         }
@@ -1291,7 +1291,7 @@ if ($action == 'edit') {
                             <tr class="dataTableRow v-top">
                                 <td class="dataTableContent a-c"><input class="eo-qty" name="update_products[<?php echo $orders_products_id; ?>][qty]" value="<?php echo zen_db_prepare_input($order->products[$i]['qty']); ?>" <?php echo $value_parms; ?> /></td>
                                 <td>&nbsp;X&nbsp;</td>
-                                <td class="dataTableContent"><input name="update_products[<?php echo $orders_products_id; ?>][name]" value="<?php echo zen_html_quotes($order->products[$i]['name']); ?>" <?php echo $name_parms; ?> />
+                                <td class="dataTableContent"><input name="update_products[<?php echo $orders_products_id; ?>][name]" value="<?php echo zen_db_output($order->products[$i]['name']); ?>" <?php echo $name_parms; ?> />
 <?php
         if (isset($order->products[$i]['attributes']) && count($order->products[$i]['attributes']) > 0) { 
 ?>
@@ -1389,7 +1389,7 @@ if ($action == 'edit') {
                         if ($text === null) {
                             $text = '';
                         }
-                        $text = zen_html_quotes($text);
+                        $text = zen_db_output($text);
                         $option_html_id = "opid-$orders_products_id-oid-$option_id";
                         $option_input_name = "update_products[$orders_products_id][attr][$option_id][value]";
                         $option_rows = $optionInfo['rows'];
@@ -1665,7 +1665,7 @@ if ($action == 'edit') {
                 }
 ?>
                                 <td class="smallText"><?php echo $display_track_id; ?></td>
-                                <td class="smallText"><?php echo nl2br(zen_html_quotes($orders_history->fields['comments'])); ?></td>
+                                <td class="smallText"><?php echo nl2br(zen_db_output($orders_history->fields['comments'])); ?></td>
                             </tr>
 <?php
                 $orders_history->MoveNext();
@@ -2174,7 +2174,7 @@ if ($action == "add_prdct") {
                         
                     case PRODUCTS_OPTIONS_TYPE_TEXT:
                         $text = (isset($_POST['id'][$optionID]['value']) ? $_POST['id'][$optionID]['value'] : '');
-                        $text = zen_html_quotes($text);
+                        $text = zen_db_output($text);
 ?>
                     <label class="attribsInput" for="<?php echo $attrib_id; ?>"><?php echo $option_name; ?></label>
 <?php
@@ -2250,14 +2250,14 @@ if ($action == "add_prdct") {
                     foreach ($value as $id2 => $value2) {
                         if (is_array($value2)) {
                             foreach ($value2 as $id3 => $value3) {
-                                echo zen_draw_hidden_field('id[' . $id . '][' . $id2 . '][' . $id3 . ']', zen_html_quotes($value3));
+                                echo zen_draw_hidden_field('id[' . $id . '][' . $id2 . '][' . $id3 . ']', zen_db_output($value3));
                             }
                         } else {
-                            echo zen_draw_hidden_field('id[' . $id . '][' . $id2 . ']', zen_html_quotes($value2));
+                            echo zen_draw_hidden_field('id[' . $id . '][' . $id2 . ']', zen_db_output($value2));
                         }
                     }
                 } else {
-                    echo zen_draw_hidden_field('id[' . $id . ']', zen_html_quotes($value));
+                    echo zen_draw_hidden_field('id[' . $id . ']', zen_db_output($value));
                 }
             }
         }
