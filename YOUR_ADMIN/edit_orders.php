@@ -1479,7 +1479,7 @@ if ($action == 'edit') {
     $display_only_totals = array();
     if (!empty($display_only_totals_list)) {
         $eo->eoLog('Display-only totals identified: ' . json_encode($display_only_totals_list));
-        $display_only_totals = explode(',', str_replace(' ', '', (string)$display_only_totals));
+        $display_only_totals = explode(',', str_replace(' ', '', (string)$display_only_totals_list));
     }
     
     // -----
