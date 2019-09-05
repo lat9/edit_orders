@@ -12,6 +12,7 @@ class EditOrdersAdminObserver extends base
     public function __construct() 
     {
         $this->isPre156ZenCart = (PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR < '1.5.6');
+        $this->isEditOrdersPage = (basename($GLOBALS['PHP_SELF'], '.php') == FILENAME_EDIT_ORDERS);
         $this->attach(
             $this, 
             array(
@@ -25,6 +26,15 @@ class EditOrdersAdminObserver extends base
                 'NOTIFY_OT_SHIPPING_TAX_CALCS',
             )
         );
+        
+        // -----
+        // Starting with zc156, the order-class 'squishes' the delivery address to (bool)false when
+        // the order's shipping-method is 'storepickup'.  Watch this event only for Zen Cart 1.5.6
+        // or later, only during Edit Orders' processing!
+        //
+        if ($this->isEditOrdersPage && !$this->isPre156ZenCart) {
+            $this->attach($this, array('NOTIFY_ORDER_AFTER_QUERY'));
+        }
     }
   
     public function update(&$class, $eventID, $p1, &$p2, &$p3, &$p4, &$p5) 
@@ -98,10 +108,48 @@ class EditOrdersAdminObserver extends base
             // $p4 ... A reference to the module's $shipping_tax_description string.
             //
             case 'NOTIFY_OT_SHIPPING_TAX_CALCS':
-                if (basename($GLOBALS['PHP_SELF'], '.php') == FILENAME_EDIT_ORDERS) {
+                if ($this->isEditOrdersPage) {
                     $GLOBALS['eo']->eoUpdateOrderShippingTax($p2, $p3, $p4);
                     $p2 = true;
                 }
+                break;
+                
+            // -----
+            // Issued at the end of an order's recreation and observed **only for** Zen Cart 1.5.6 and
+            // later.  Change introduced in zc156b now sets the order's shipping information to (bool)false
+            // when the order's shipping is 'storepickup'.
+            //
+            // If the order's shipping method *is* 'storepickup, we'll gather and restore the delivery-address
+            // information for Edit Orders' display.
+            //
+            // On entry:
+            //
+            // $p2 ... Identifies the order-id.
+            //
+            case 'NOTIFY_ORDER_AFTER_QUERY':
+                if (!($class->info['shipping_module_code'] == 'storepickup' && $class->delivery === false)) {
+                    break;
+                }
+                $order = $GLOBALS['db']->Execute(
+                    "SELECT *
+                       FROM " . TABLE_ORDERS . "
+                      WHERE orders_id = " . (int)$p2 . "
+                      LIMIT 1"
+                );
+                if ($order->EOF) {
+                    break;
+                }
+                $class->delivery = array(
+                    'name' => $order->fields['delivery_name'],
+                    'company' => $order->fields['delivery_company'],
+                    'street_address' => $order->fields['delivery_street_address'],
+                    'suburb' => $order->fields['delivery_suburb'],
+                    'city' => $order->fields['delivery_city'],
+                    'postcode' => $order->fields['delivery_postcode'],
+                    'state' => $order->fields['delivery_state'],
+                    'country' => $order->fields['delivery_country'],
+                    'format_id' => $order->fields['delivery_address_format_id']
+                );
                 break;
                 
             default:
