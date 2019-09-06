@@ -68,11 +68,12 @@ $eo = new editOrders($oID);
 
 $orders_statuses = array();
 $orders_status_array = array();
+$order_by_field = ($sniffer->field_exists(TABLE_ORDERS_STATUS, 'sort_order')) ? 'sort_order' : 'orders_status_id';
 $orders_status_query = $db->Execute(
     "SELECT orders_status_id, orders_status_name
        FROM " . TABLE_ORDERS_STATUS . "
       WHERE language_id = " . (int)$_SESSION['languages_id'] . "
-  ORDER BY orders_status_id"
+  ORDER BY $order_by_field ASC"
 );
 while (!$orders_status_query->EOF) {
     $status_id = $orders_status_query->fields['orders_status_id'];
