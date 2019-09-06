@@ -545,25 +545,10 @@ switch ($action) {
                 'Starting Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups'])
             );
 
-            $default_sort = 0;
             foreach ($_POST['update_total'] as $order_total) {
-                // -----
-                // The 'update_total' array also includes the current shipping-module selection.  If
-                // that element is found, there's no order-total information so continue with the
-                // next array element.
-                //
-                if (isset($order_total['shipping_module'])) {
-                    continue;
-                }
-                $default_sort++;
                 $order_total['value'] = (float)$order_total['value'];
                 $order_total['text'] = $eo->eoFormatCurrencyValue($order_total['value']);
-                if (isset($GLOBALS[$order_total['code']]) && is_object($GLOBALS[$order_total['code']])) {
-                    $order_total['sort_order'] = $GLOBALS[$order_total['code']]->sort_order;
-                    $default_sort = $order_total['sort_order'];
-                } else {
-                    $order_total['sort_order'] = $default_sort;
-                }
+                $order_total['sort_order'] = $eo->eoGetOrderTotalSortOrder($order_total['code']);
 
                 // TODO Special processing for some modules
                 if (zen_not_null($order_total['title']) && $order_total['title'] != ':') {
@@ -1489,11 +1474,13 @@ if ($action == 'edit') {
     $columns = ((DISPLAY_PRICE_WITH_TAX == 'true') ? 7 : 6) - 2;
 
     // Iterate over the order totals.
-    for ($i = 0, $index = 0, $n = count($order->totals); $i < $n; $i++, $index++) {
+    for ($i = 0, $index = 0, $n = count($order->totals); $i < $n; $i++) {
         $update_total = "update_total[$index]";
         $update_total_code = $update_total . '[code]';
         $update_total_title = $update_total . '[title]';
         $update_total_value = $update_total . '[value]';
+        
+        $index_update_needed = true;
 ?>
                             <tr>
                                 <td class="dataTableContent" colspan="3"><?php echo ($i == 0) ? $eo_add_button_link : '&nbsp;'; ?></td>
@@ -1506,6 +1493,7 @@ if ($action == 'edit') {
         $total_class = (in_array($total['class'], $display_only_totals)) ? 'display-only' : $total['class'];
         switch ($total_class) {
             case 'ot_purchaseorder':
+                $index_update_needed = false;
                 break;
 
             // Automatically generated fields, those should never be included
@@ -1514,18 +1502,18 @@ if ($action == 'edit') {
             case 'ot_tax':
             case 'ot_local_sales_taxes':
             case 'display-only':
+                $index_update_needed = false;
 ?>
                                 <td colspan="<?php echo $columns - 2; ?>">&nbsp;</td>
                                 <td class="main a-r eo-label"><?php echo $total['title']; ?></td>
                                 <td class="main a-r eo-label"><?php echo $total['text']; ?></td>
 <?php
-                $index--;
                 break;
 
             // Include these in the update but do not allow them to be changed
             case 'ot_group_pricing':
             case 'ot_cod_fee':
-            case 'ot_loworderfee': 
+            case 'ot_loworderfee':
 ?>
                                 <td colspan="<?php echo $columns - 2; ?>"><?php echo zen_draw_hidden_field($update_total_code, $total['class']); ?></td>
                                 <td class="main a-r"><?php echo strip_tags($total['title']) . zen_draw_hidden_field($update_total_title, $trimmed_title); ?></td>
@@ -1591,6 +1579,9 @@ if ($action == 'edit') {
 ?>
                             </tr>
 <?php
+        if ($index_update_needed) {
+            $index++;
+        }
     }
     
     if (count(eo_get_available_order_totals_class_values($oID)) > 0) { 

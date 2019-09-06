@@ -506,7 +506,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.4.3, 2019-09-05 (lat9)<ul>
+          <li>v4.4.3, 2019-09-06 (lat9)<ul>
             <li>BUGFIX: Correct variable-name identifying product to use for attribute-pricing.</li>
             <li>BUGFIX: Correct PHP notices when updating an order's totals.</li>
             <li>BUGFIX: Correct empty order rendered if observer disallows the order's update.</li>
@@ -515,8 +515,10 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>CHANGE: zc157 future-proofing; Multi-lingual countries.</li>
             <li>BUGFIX: Correct PHP notice during 'EDIT_ORDERS_DISPLAY_ONLY_TOTALS' notification processing.</li>
             <li>CHANGE: zc156+, restore the order's shipping-address information when the order's shipping-method is 'storepickup'.</li>
+            <li>BUGFIX: Correct new order-totals can no longer be added.</li>
             <li>The following files were changed:<ol>
               <li>/YOUR_ADMIN/edit_orders.php</li>
+              <li>/YOUR_ADMIN/includes/classes/editOrders.php</li>
               <li>/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php</li>
               <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>

@@ -1535,18 +1535,11 @@ function eo_update_database_order_total($oID, $order_total) {
     } else {
         return $updated;
     }
-//DEBUG echo '<div>Updated Order Total: ' . $order_total['code'] . '</div><pre>'; var_dump($sql_data_array); echo '</pre>';
 
     // Update order if relevant
     switch ($order_total['code']) {
         case 'ot_tax':
 //-bof-20160407-lat9-Any tax is now added to the order, so that stores using split-tax display can still use EO
-/*
-            zen_db_perform(
-                TABLE_ORDERS, array('order_tax' => $sql_data_array['value']), 'update',
-                'orders_id = \'' . (int)$oID . '\''
-            );
-*/
             // -----
             // If this is the first "ot_tax" record, it's set into the order's tax; subsequent "ot_tax" records
             // get added ...

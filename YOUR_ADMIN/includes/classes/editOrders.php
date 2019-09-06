@@ -659,4 +659,34 @@ class editOrders extends base
             zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $osh_sql);
         }
     }
+    
+    // -----
+    // This method determines the specified order-total's defined sort-order.
+    //
+    public function eoGetOrderTotalSortOrder($order_total_code)
+    {
+        $sort_order = false;
+        $module_file = $order_total_code . '.php';
+        
+        $lang_file = zen_get_file_directory(DIR_FS_CATALOG . DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/order_total/', $module_file, 'false');
+        if (@file_exists($lang_file)) {
+            include_once $lang_file;
+        }
+        
+        $module_file = DIR_FS_CATALOG . DIR_WS_MODULES . 'order_total/' . $order_total_code . '.php';
+        if (@file_exists($module_file)) {
+            include_once $module_file;
+            $order_total = new $order_total_code();
+            $sort_order = $order_total->sort_order;
+        }
+        
+        if ($sort_order === false) {
+            if (!isset($this->ot_sort_default)) {
+                $this->ot_sort_default = 0;
+            }
+            $sort_order = $this->ot_sort_default;
+            $this->ot_sort_default++;
+        }
+        return $sort_order;
+    }
 }
