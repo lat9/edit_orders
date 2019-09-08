@@ -1229,6 +1229,45 @@ if ($action == 'edit') {
                     <tr>
                         <td><table class="eo-table" id="eo-prods">
                             <tr class="dataTableHeadingRow">
+<?php
+    // -----
+    // To add more columns at the beginning of the order's products' table, a
+    // watching observer can provide an associative array in the form:
+    //
+    // $extra_headings = array(
+    //     array(
+    //       'align' => $alignment,    // One of 'center', 'right', or 'left' (optional)
+    //       'text' => $value
+    //     ),
+    // );
+    //
+    // Observer note:  Be sure to check that the $p2/$extra_headings value is specifically (bool)false before initializing, since
+    // multiple observers might be injecting content!
+    //
+    $extra_headings = false;
+    $zco_notifier->notify('EDIT_ORDERS_PRODUCTS_HEADING_1', array(), $extra_headings);
+    if (is_array($extra_headings)) {
+        foreach ($extra_headings as $heading_info) {
+            $align = '';
+            if (isset($heading_info['align'])) {
+                switch ($heading_info['align']) {
+                    case 'center':
+                        $align = ' a-c';
+                        break;
+                    case 'right':
+                        $align = ' a-r';
+                        break;
+                    default:
+                        $align = '';
+                        break;
+                }
+            }
+?>
+                <td class="dataTableHeadingContent<?php echo $align; ?>"><strong><?php echo $heading_info['text']; ?></td>
+<?php
+        }
+    }
+?>
                                 <td class="dataTableHeadingContent a-c" colspan="3"><?php echo TABLE_HEADING_PRODUCTS; ?></td>
                                 <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_PRODUCTS_MODEL; ?></td>
                                 <td class="dataTableHeadingContent a-r"><?php echo TABLE_HEADING_TAX; ?></td>
@@ -1275,6 +1314,47 @@ if ($action == 'edit') {
         ); 
 ?>
                             <tr class="dataTableRow v-top">
+<?php
+    // -----
+    // To add more columns at the beginning of the order's products' table, a
+    // watching observer can provide an associative array in the form:
+    //
+    // $extra_data = array(
+    //     array(
+    //       'align' => $alignment,    // One of 'center', 'right', or 'left' (optional)
+    //       'text' => $value
+    //     ),
+    // );
+    //
+    // Observer note:  Be sure to check that the $p2/$extra_data value is specifically (bool)false before initializing, since
+    // multiple observers might be injecting content!
+    //
+    $extra_data = false;
+    $product_info = $order->products[$i];
+    $product_info['orders_products_id'] = $orders_products_id;
+    $zco_notifier->notify('EDIT_ORDERS_PRODUCTS_DATA_1', $product_info, $extra_data);
+    if (is_array($extra_data)) {
+        foreach ($extra_data as $data) {
+            $align = '';
+            if (isset($data['align'])) {
+                switch ($data['align']) {
+                    case 'center':
+                        $align = ' a-c';
+                        break;
+                    case 'right':
+                        $align = ' a-r';
+                        break;
+                    default:
+                        $align = '';
+                        break;
+                }
+            }
+?>
+                <td class="dataTableContent<?php echo $align; ?>"><strong><?php echo $data['text']; ?></td>
+<?php
+        }
+    }
+?>
                                 <td class="dataTableContent a-c"><input class="eo-qty" name="update_products[<?php echo $orders_products_id; ?>][qty]" value="<?php echo zen_db_prepare_input($order->products[$i]['qty']); ?>" <?php echo $value_parms; ?> /></td>
                                 <td>&nbsp;X&nbsp;</td>
                                 <td class="dataTableContent"><input name="update_products[<?php echo $orders_products_id; ?>][name]" value="<?php echo zen_db_output($order->products[$i]['name']); ?>" <?php echo $name_parms; ?> />
@@ -1459,6 +1539,10 @@ if ($action == 'edit') {
     //
     // The observer returns a comma-separated string of order-total module names, e.g. 'ot_balance_due, ot_payment_received'
     // that, if found in the order, should be displayed but not enabled as inputs.
+    //
+    // Observer note: Other observers might have previously added THEIR display-only fields, so check to see
+    // if the $display_only_totals_list (i.e. $p2) is an empty string before APPENDING your updates.  If the
+    // value is not '', then be sure to add a leading ', ' to your display-only list!
     //
     $display_only_totals_list = '';
     $zco_notifier->notify('EDIT_ORDERS_DISPLAY_ONLY_TOTALS', '', $display_only_totals_list);
@@ -2378,6 +2462,9 @@ $(document).ready(function() {
 //
 // The observer sets the $addl_js_files value passed to be a comma-separated list
 // of file names to be included.
+//
+// Observer note:  Be sure to add a leading ', ' to any updates if, on receipt of the
+// notification, the $addl_js_files (i.e. $p2) is not empty!
 //
 $addl_js_files = '';
 $zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_JS', '', $addl_js_files);
