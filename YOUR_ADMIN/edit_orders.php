@@ -1296,8 +1296,32 @@ if ($action == 'edit') {
     //
     $name_parms = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_name') . '" class="eo-name"';
     $model_parms = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_model') . '" class="eo-name"';
-    $value_parms = 'type="number" min="0" step="any"';
-    $tax_parms = 'type="number" min="0" max="100" step="any"';
+    
+    // -----
+    // A store can override EO's application of the 'type="number"' parameters by adding the definition
+    //
+    // define('EDIT_ORDERS_USE_NUMERIC_FIELDS', '0');
+    //
+    // to a site-specific /admin/extra_datafiles module.
+    //
+    // Note that EO's rendering of input fields is (currently) a mixture of directly-coded <input /> tags
+    // and inputs generated via zen_draw_input_field.  The variables set below that start with $input_ are
+    // used on the function-call field-generation and the others are used when directly-coded.
+    //
+    if (!defined('EDIT_ORDERS_USE_NUMERIC_FIELDS')) define('EDIT_ORDERS_USE_NUMERIC_FIELDS', '1');
+    if (EDIT_ORDERS_USE_NUMERIC_FIELDS != '1') {
+        $input_value_parms = '';
+        $input_tax_parms = '';
+        $value_parms = '';
+        $tax_parms = '';
+        $input_field_type = 'text';
+    } else {
+        $input_value_parms = ' min="0" step="any"';
+        $input_tax_parms = ' min="0" max="100" step="any"';
+        $value_parms = $input_value_parms . ' type="number"';
+        $tax_parms = $input_tax_parms . ' type="number"';
+        $input_field_type = 'number';
+    }
     
     // -----
     // Loop through each of the products in the order.
@@ -1622,18 +1646,18 @@ if ($action == 'edit') {
 ?>
                                 <td class="a-r"><?php echo zen_draw_hidden_field($update_total_code, $total['class']) . zen_draw_pull_down_menu($update_total . '[shipping_module]', eo_get_available_shipping_modules(), $order->info['shipping_module_code']) . '&nbsp;&nbsp;' . zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount eo-entry" ' . $shipping_title_max); ?></td>
                                 
-                                <td class="a-r"><?php echo zen_draw_input_field('shipping_tax', (string)$shipping_tax_rate, 'class="amount" id="s-t" min="0" max="100" step="any"', false, 'number'); ?>&nbsp;%</td>
+                                <td class="a-r"><?php echo zen_draw_input_field('shipping_tax', (string)$shipping_tax_rate, 'class="amount" id="s-t"' . $input_tax_parms, false, $input_field_type); ?>&nbsp;%</td>
 <?php
                 if (DISPLAY_PRICE_WITH_TAX == 'true') {
                     $shipping_net = $details['value'] / (1 + ($shipping_tax_rate / 100));
 ?>
-                                <td class="a-r"><?php echo zen_draw_input_field($update_total_value, (string)$shipping_net, 'class="amount" id="s-n" min="0" step="any"', false, 'number'); ?></td>
+                                <td class="a-r"><?php echo zen_draw_input_field($update_total_value, (string)$shipping_net, 'class="amount" id="s-n"' . $input_value_parms, false, $input_field_type); ?></td>
 <?php
                     $update_total_value = 'shipping_gross';
                 }
 ?>
                                 <td>&nbsp;</td>
-                                <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" id="s-g" min="0" step="any"', false, 'number'); ?></td>
+                                <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" id="s-g"' . $input_value_parms, false, $input_field_type); ?></td>
 <?php
                 break;
 
@@ -1647,7 +1671,7 @@ if ($action == 'edit') {
                 if ($details['value'] > 0) {
                     $details['value'] *= -1;
                 }
-                echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" step="any"', false, 'number');
+                echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" step="any"', false, $input_field_type);
 ?>
                                 </td>
 <?php
@@ -1675,7 +1699,7 @@ if ($action == 'edit') {
                                 <td colspan="<?php echo $columns; ?>">&nbsp;</td>
                                 <td class="smallText a-r"><?php echo TEXT_ADD_ORDER_TOTAL . zen_draw_pull_down_menu($update_total_code, eo_get_available_order_totals_class_values($oID), '', 'id="update_total_code"'); ?></td>
                                 <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_title, '', 'class="amount eo-entry"'); ?></td>
-                                <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, '', 'class="amount" step="any"', true, 'number'); ?></td>
+                                <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, '', 'class="amount" step="any"', false, $input_field_type); ?></td>
                             </tr>
                             <tr>
                                 <td colspan="<?php echo $columns + 3; ?>" class="smallText a-l" id="update_total_shipping" style="display: none"><?php echo TEXT_CHOOSE_SHIPPING_MODULE . zen_draw_pull_down_menu('update_total[' . $index . '][shipping_module]', eo_get_available_shipping_modules()); ?></td>
@@ -1716,9 +1740,9 @@ if ($action == 'edit') {
                                 <td class="dataTableHeadingContent smallText"><strong><?php echo TABLE_HEADING_DATE_ADDED; ?></strong></td>
                                 <td class="dataTableHeadingContent smallText a-c"><strong><?php echo TABLE_HEADING_CUSTOMER_NOTIFIED; ?></strong></td>
                                 <td class="dataTableHeadingContent smallText"><strong><?php echo TABLE_HEADING_STATUS; ?></strong></td>
-<!-- TY TRACKER 4 BEGIN, DISPLAY TRACKING ID IN COMMENTS TABLE ------------------------------->
+<!-- TY TRACKER 4 BEGIN, DISPLAY TRACKING ID IN COMMENTS TABLE -->
                                 <td class="dataTableHeadingContent smallText"><strong><?php echo TABLE_HEADING_TRACKING_ID; ?></strong></td>
-<!-- END TY TRACKER 4 END, DISPLAY TRACKING ID IN COMMENTS TABLE ------------------------------------------------------------>
+<!-- END TY TRACKER 4 END, DISPLAY TRACKING ID IN COMMENTS TABLE -->
                                 <td class="dataTableHeadingContent smallText"><strong><?php echo TABLE_HEADING_COMMENTS; ?></strong></td>
                             </tr>
 <?php
@@ -2314,7 +2338,7 @@ if ($action == "add_prdct") {
             <tr class="dataTableRow v-top">
                 <td class="dataTableContent a-r eo-label"><?php echo ADDPRODUCT_TEXT_STEP4; ?></td>
                 <td class="dataTableContent"><?php echo ADDPRODUCT_TEXT_CONFIRM_QUANTITY . 
-                    zen_draw_input_field('add_product_quantity', 1, 'class="eo-qty" min="0" step="any"', true, 'number') .
+                    zen_draw_input_field('add_product_quantity', 1, 'class="eo-qty"' . $input_value_parms, true, $input_field_type) .
                     '&nbsp;&nbsp;&nbsp;&nbsp;' .
                     zen_draw_checkbox_field('applyspecialstoprice', '1', true) . ADDPRODUCT_SPECIALS_SALES_PRICE; ?></td>
                  <td class="dataTableContent a-c">
