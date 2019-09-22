@@ -8,3 +8,6 @@ Edit Orders: Updates for continued operation on **Zen Cart v1.5.5a and later**. 
 Additional documentation in this GitHub repository:
 
 - [Shipping Tax Handling](./pages/shipping_tax_handling.md) for EO version 4.4.0 and later.
+- Interoperation
+  - [Notifiers Watched](./pages/notifiers_watched.md)
+  - [Notifications Issued](./pages/notifications_issued.md)
