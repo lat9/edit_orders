@@ -27,7 +27,19 @@ These notifications are issued in `global` scope via `$zco_notifier`.
 
 ## Issued by `edit_orders_functions.php`
 
-Content coming soon!
+These notifications are issued in `function` scope via `$zco_notifier`.
+
+| Notifier | Description |
+| ----- |  ----- |
+| [NOTIFY_ZEN_GET_TAX_DESCRIPTION_OVERRIDE](#zen-get-tax-description-override) | Issued at the start of_EO_'s `zen_get_tax_description` function, mimicking that given during the storefront version of the function. |
+| [NOTIFY_ZEN_GET_MULTIPLE_TAX_RATES_OVERRIDE](#zen-get-multiple-tax-rates-override) | Issued at the start of_EO_'s `zen_get_multiple_tax_rates` function, mimicking that given during the storefront version of the function. |
+| [EDIT_ORDERS_ADD_PRODUCT_STOCK_DECREMENT](#add-product-stock-decrement) | Issued at the start of `eo_add_product_to_order`, enabling a different stock-handler to manage any stock-decrement. |
+| [EDIT_ORDERS_ADD_PRODUCT](#add-product) | Issued just prior to `eo_add_product_to_order`'s return. |
+| [EDIT_ORDERS_REMOVE_PRODUCT_STOCK_DECREMENT](#remove-product-stock-decrement) | Issued at the start of `eo_remove_product_from_order`, enabling a different stock-handler to manage any 'return to stock'. |
+| [EDIT_ORDERS_REMOVE_PRODUCT](#remove-product) | Issued close to the end of `eo_remove_product_from_order`, just prior to removal from the "standard" database tables. |
+| [EO_UPDATE_DATABASE_ORDER_TOTALS_MAIN](#update-database-order-totals-main) | Issued by `eo_update_database_order_totals`, just prior to the loop that updates the order's totals. |
+| [EO_UPDATE_DATABASE_ORDER_TOTALS_ITEM](#update-database-order-totals-item) | Issued by `eo_update_database_order_totals`, once for each order-total to be written for the order. |
+| [EDIT_ORDERS_CHECKS_AND_WARNINGS](#checks-and-warnings) | Issued by `eo_checks_and_warnings`, giving an observer to add any additional checks and warnings. |
 
 ## Issued by `editOrders.php`
 
@@ -248,3 +260,116 @@ The following variables are passed with the notification:
 | :-----: | :------ |
 | $p1 | (n/a) |
 | $p2 | (r/w) Contains a reference to the `$addl_js_files` string, initialized as an empty string.  The observer appends the `filename`(s) of additional `.js` files to be included as a comma-separated string.  Note that other observers might have previously included their additional files, so a leading ', ' should be included if the value is not empty when received. |
+
+-----
+
+### Issued by `\admin\includes\functions\extra_functions\edit_orders_functions.php`
+
+#### Zen Get Tax Description Override
+
+This notifier fires at the very start of EO's _possible_ inclusion of the `zen_get_tax_description` function, mimicking the notification fired by the storefront version of the function starting with zc156.  A watching observer can override the tax-description value returned.
+
+Globally available: `$db`.
+
+The following variables are passed with the notification:
+
+| Variable 'name' | Description |
+| :-----: | :------ |
+| $p1 | (r/o) An associative array containing the function's inputs, as passed, in keys `class_id`, `country_id` and `zone_id`. |
+| $p2 | (r/w) Contains a reference to the `$tax_description` string, initialized as an empty string.  The observer sets this value to the tax-description string that is returned. |
+
+#### Zen Get Multiple Tax Rates Override
+
+This notifier fires at the very start of EO's _possible_ inclusion of the `zen_get_multiple_tax_rates` function, mimicking the notification fired by the storefront version of the function starting with zc156.  A watching observer can override the tax-rates' array returned.
+
+Globally available: `$db`.
+
+The following variables are passed with the notification:
+
+| Variable 'name' | Description |
+| :-----: | :------ |
+| $p1 | (r/o) An associative array containing the function's inputs, as passed, in keys `class_id`, `country_id`,  `zone_id` and `tax_description`. |
+| $p2 | (r/w) Contains a reference to the `$rates_array` string, initialized as an empty string.  The observer sets this value to contain an _**array**_ of rates to be returned.  That value is an associative array, keyed by the `tax_description` with a value that represents the tax rate associated with the description (a value between 0 and 100). |
+
+#### Add Product Stock Decrement
+
+This notifier fires at the beginning of `eo_add_product_to_order`, giving an observer to override _EO_'s stock-decrement handling.
+
+Globally available: `$db`, `$order`, `$zco_notifier`.
+
+The following variables are passed with the notification:
+
+| Variable 'name' | Description |
+| :-----: | :------ |
+| $p1 | (r/o) An associative array containing the `order_id` (the order's numeric id) and the `product` array containing the current to-be-added product's information. |
+| $p2 | (r/w) Contains a reference to the `$doStockDecrement` boolean value, initialized to `true`.  If the observer has already handled the product's stock-decrement, it sets this value to `(bool)false` prior to the return. |
+
+#### Add Product
+
+This notifier fires at the end of `eo_add_product_to_order`, just prior to return, indicating that the product addition has completed.
+
+Globally available: `$db`, `$order`, `$zco_notifier`.
+
+The following variables are passed with the notification:
+
+| Variable 'name' | Description |
+| :-----: | :------ |
+| $p1 | (r/o) An associative array containing the `order_id` (the order's numeric id), the `orders_products_id` and the `product` array containing the just added product's information. |
+
+#### Remove Product Stock Decrement
+
+This notifier fires at the beginning of `eo_remove_product_from_order`, giving an observer to override _EO_'s _stock-increment_ handling.
+
+Globally available: `$db`, `$order`, `$zco_notifier`.
+
+The following variables are passed with the notification:
+
+| Variable 'name' | Description |
+| :-----: | :------ |
+| $p1 | (r/o) An associative array containing the `order_id` (the order's numeric id) and the `orders_products_id` (the removed product's numeric id). |
+| $p2 | (r/w) Contains a reference to the `$doStockDecrement` boolean value, initialized to `true`.  If the observer has already handled the product's stock-increment, it sets this value to `(bool)false` prior to the return. |
+
+#### Remove Product
+
+This notifier fires at the end of `eo_remove_product_from_order`, prior to removing the product from the "standard" database tables, indicating that the product removal has completed.  The observer has the opportunity to remove the product from any other database tables.
+
+Globally available: `$db`, `$order`, `$zco_notifier`.
+
+The following variables are passed with the notification:
+
+| Variable 'name' | Description |
+| :-----: | :------ |
+| $p1 | (r/o) An associative array containing the `order_id` (the order's numeric id) and the `orders_products_id` (the removed product's numeric id). |
+
+#### Update Database Totals Main
+
+This notifier fires by `eo_update_database_order_totals`, just prior to the loop that updates individual order totals in the database.  The observer can use this notification to perform any initialization it requires for that loop.
+
+Globally available: `$db`, `$order`, `$eo`.
+
+The following variables are passed with the notification:
+
+| Variable 'name' | Description |
+| :-----: | :------ |
+| $p1 | (r/o) Contains the order's `orders_id` numeric value. |
+
+#### Update Database Totals Item
+
+This notifier fires by `eo_update_database_order_totals`, within the loop that records each order-total in the order.
+
+Globally available: `$db`, `$order`, `$eo`.
+
+The following variables are passed with the notification:
+
+| Variable 'name' | Description |
+| :-----: | :------ |
+| $p1 | (r/o) Contains the order's `orders_id` numeric value. |
+| $p2 | (r/w) A reference to the current to-be-written total's information to be written to the database. |
+
+#### Checks and Warnings
+
+This notifier fires by `eo_checks_and_warnings`, giving an observer to add their specific checks and warnings prior to editing the order.  Note that the observer has the opportunity to redirect to another page if the order cannot be edited.  Only the superglobal values, i.e. `$_GET` are available to determine the to-be-edited order!
+
+Globally available: `$db`, `$messageStack`.
+
+There are no other variables passed in this notification.
