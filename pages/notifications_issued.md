@@ -43,7 +43,14 @@ These notifications are issued in `function` scope via `$zco_notifier`.
 
 ## Issued by `editOrders.php`
 
-Content coming soon!
+These notifications are issued in `function` scope via `$this`, so watching observers have access to the class' _public_ variables.
+
+| Notifier | Description |
+| ----- |  ----- |
+| [NOTIFY_EO_GET_ORDER_SHIPPING_TAX](#get-order-shipping-tax) | Issued at the start of the `calculateOrderShippingTax` method, allowing an observer to override the shipping tax _value_. |
+| [NOTIFY_EO_GET_ORDER_SHIPPING_TAX_RATE](#get-order-shipping-tax-rate) | Issued at the start of the `eoGetShippingTaxRate` method, allowing an observer to override the shipping tax _rate_. |
+| [NOTIFY_EO_REMOVE_SHIPPING_TAX](#remove-shipping-tax) | Issued at the start of the `removeTaxFromShippingCost` method, allowing an observer to override EO's normal processing. |
+| [NOTIFY_EO_GET_PRODUCTS_STOCK](#get-products-stock) | Issued at the start of the `getProductsStock` method, allowing an observer to supply the specified product's (including attributes) in-stock quantity. |
 
 ## Detailed Descriptions
 The sections below document the variables supplied by each notification.
@@ -373,3 +380,56 @@ This notifier fires by `eo_checks_and_warnings`, giving an observer to add their
 Globally available: `$db`, `$messageStack`.
 
 There are no other variables passed in this notification.
+
+-----
+
+### Issued by `\admin\includes\classes\editOrders.php`
+
+#### Get Order Shipping Tax
+
+This notifier fires at the very start of the `calculateOrderShippingTax` method, allowing a watching observer to override the shipping tax _value_ for the order.
+
+Globally available: `$order`.
+
+The following variables are passed with the notification:
+
+| Variable 'name' | Description |
+| :-----: | :------ |
+| $p1 | (r/o) A copy of the current `$order` object. |
+| $p2 | (r/w) Contains a reference to the `$shipping_tax` value, initialized as `(bool)false`.  The observer sets this value to the shipping tax value to be returned by the method. |
+| $p3 | (r/w) Contains a reference to the `$shipping_tax_rate` value, initialized as `(bool)false`.  The observer sets this value to the shipping tax-rate value to be recorded by the method. |
+
+#### Get Order Shipping Tax Rate
+
+This notifier fires at the very start of the `eoGetShippingTaxRate` method, allowing a watching observer to override the shipping tax _rate_ for the order.
+
+The following variables are passed with the notification:
+
+| Variable 'name' | Description |
+| :-----: | :------ |
+| $p1 | (r/o) A copy of the current `$order` object. |
+| $p2 | (r/w) Contains a reference to the `$shipping_tax_rate` value, initialized as `(bool)false`.  The observer sets this value to the shipping tax rate (a value between 0 and 100) to be returned by the method. |
+
+#### Remove Shipping Tax
+
+This notifier fires at the very start of the `removeTaxFromShippingCost` method, allowing a watching observer to supply its custom processing, removing the shipping tax from the order's shipping cost.  The observer, if setting `$p2` to `(bool)true`, is expected to have removed the tax value from the order's `shipping_cost`, `tax` and `shipping_tax` variables (all present in `$p1->info`.
+
+The following variables are passed with the notification:
+
+| Variable 'name' | Description |
+| :-----: | :------ |
+| $p1 | (n/a) |
+| $p2 | (r/2) Contains a reference to the current `$order` object. |
+| $p3 | (r/w) Contains a reference to the `$shipping_tax_processed` value, initialized as `(bool)false`.  The observer sets this value to `(bool)true` to indicate that it's handled the tax-removal. |
+
+#### Get Products Stock
+
+This notifier fires at the very start of the `getProductsStock` method, allowing a watching observer to supply the specified product's in-stock quantity.
+
+The following variables are passed with the notification:
+
+| Variable 'name' | Description |
+| :-----: | :------ |
+| $p1 | (r/o) A copy of the `$products_id` (a 'uprid'), for which the quantity should be returned. |
+| $p2 | (r/w) Contains a reference to the method's `$stock_quantity` value, returned by the method if `$p3` is other than `(bool)false` upon return from the notification. |
+| $p3 | (r/w) Contains a reference to the `$stock_handled` value, initialized as `(bool)false`.  The observer sets this value to `(bool)true` if it has supplied a 'stock_quantity' override. |
