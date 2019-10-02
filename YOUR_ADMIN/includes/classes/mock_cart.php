@@ -10,6 +10,9 @@ if (!defined('IS_ADMIN_FLAG')) {
  */
 class mockCart extends base 
 {
+    public $total = 0,
+           $weight = 0;
+
     // Do Nothing
     public function restore_contents() 
     { 

@@ -519,9 +519,11 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>CHANGE: Sort orders-status values by their <code>sort_order</code>, if the field exists in the database.</li>
             <li>CHANGE: Additional notifications provided to enable customization.</li>
             <li>CHANGE: Enable a store to override EO's use of numeric fields; see <a href="https://github.com/lat9/edit_orders/issues/136" target="_blank">this</a> GitHub issue for details.</li>
+            <li>BUGFIX: Provide mock-cart 'total' and 'weight' values (interoperation).</li>
             <li>The following files were changed:<ol>
               <li>/YOUR_ADMIN/edit_orders.php</li>
               <li>/YOUR_ADMIN/includes/classes/editOrders.php</li>
+              <li>/YOUR_ADMIN/includes/classes/mock_cart.php</li>
               <li>/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php</li>
               <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
