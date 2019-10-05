@@ -131,11 +131,12 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <div class="tab-container" id="inner-container1">
           
           <p>This section identifies the processes you'll use to initially install <em>Edit Orders</em>, upgrade or uninstall <em>EO</em> entirely.</p>
-          <p><strong>Notes:</strong></p>
+          <p><i class="fas fa-exclamation-circle fa-5x red"></i><strong class="red">Notes:</strong></p>
           <ol>
             <li>Before you install <em>EO</em> v4.2.0 (or later), you'll need a working copy of Zen Cart 1.5.5a or later.</li>
+            <li><em>EO</em>, v4.4.0 and later, requires that the base Zen Cart function <code>zen_add_tax</code> (present in /YOUR_ADMIN/includes/functions/general.php) <b>not</b> pre-round its return value.  Refer to <a href="#zat" class="side-link">this</a> tab for more information.</li>
+            <li>Edit Orders provides an additional admin-sanitization script so that its inputs don't get over-sanitized by the zc155+ sanitizer. This, unfortunately, affects stores that have both EO installed and a cron-job set up to run the <code>/admin/currency_cron.php</code> script; see <a href="https://github.com/zencart/zencart/issues/2849" target="_blank">this</a> Zen Cart issue for details.</li>
           </ol>
-          <p><i class="fas fa-exclamation-circle fa-5x red"></i><em>EO</em>, v4.4.0 and later, requires that the base Zen Cart function <code>zen_add_tax</code> (present in /YOUR_ADMIN/includes/functions/general.php) <b>not</b> pre-round its return value.  Refer to <a href="#zat" class="side-link">this</a> tab for more information.</p>
           
           <ul class="etabs">
             <li class="tab"><a href="#initial">Install/Upgrade</a></li>
