@@ -507,7 +507,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.4.3, 2019-09-06 (lat9)<ul>
+          <li>v4.4.3, 2019-10-05 (lat9)<ul>
             <li>BUGFIX: Correct variable-name identifying product to use for attribute-pricing.</li>
             <li>BUGFIX: Correct PHP notices when updating an order's totals.</li>
             <li>BUGFIX: Correct empty order rendered if observer disallows the order's update.</li>
@@ -521,6 +521,8 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>CHANGE: Additional notifications provided to enable customization.</li>
             <li>CHANGE: Enable a store to override EO's use of numeric fields; see <a href="https://github.com/lat9/edit_orders/issues/136" target="_blank">this</a> GitHub issue for details.</li>
             <li>BUGFIX: Provide mock-cart 'total' and 'weight' values (interoperation).</li>
+            <li>BUGFIX: Correct MySQL error if a store doesn't use <code>ot_shipping</code.</li>
+            <li>BUGFIX: Document change required if a store uses a cron-job for the currency-cron.</li>
             <li>The following files were changed:<ol>
               <li>/YOUR_ADMIN/edit_orders.php</li>
               <li>/YOUR_ADMIN/includes/classes/editOrders.php</li>
