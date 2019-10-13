@@ -444,7 +444,7 @@ class editOrders extends base
                 'Shipping Tax: ' . ((isset($order->info['shipping_tax'])) ? $order->info['shipping_tax'] : '(not set)') . ', ' .
                 'Tax: ' . $order->info['tax'] . ', ' .
                 'Total: ' . $order->info['total'] . ', ' .
-                'Tax Groups: ' . json_encode($order->info['tax_groups']) . PHP_EOL;
+                'Tax Groups: ' . (!empty($order->info['tax_groups']) ? json_encode($order->info['tax_groups']) : 'None') . PHP_EOL;
                 
             $log_info .= "\t" .
                 '$_SESSION[\'shipping\']: ' . ((isset($_SESSION['shipping'])) ? json_encode($_SESSION['shipping'], true) : '(not set)') . PHP_EOL;
