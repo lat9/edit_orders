@@ -1401,7 +1401,7 @@ if ($action == 'edit') {
                 // attributes) previously, there's nothing to be selected for its to-be-displayed
                 // value.
                 //
-                $orders_products_attributes_id = (!in_array($option_id, $selected_attributes_id_mapping)) ? array() : $selected_attributes_id_mapping[$option_id];
+                $orders_products_attributes_id = (!array_key_exists($option_id, $selected_attributes_id_mapping)) ? array() : $selected_attributes_id_mapping[$option_id];
                 
                 $option_type = $optionInfo['type'];
                 $option_type_hidden_field = zen_draw_hidden_field("update_products[$orders_products_id][attr][$option_id][type]", $option_type);
@@ -1760,7 +1760,7 @@ if ($action == 'edit') {
                     $ty_field_name = "track_id$ty";
                     if (!empty($orders_history->fields[$ty_field_name])) {
                         $track_id = nl2br(zen_output_string_protected($orders_history->fields[$ty_field_name]));
-                        $display_track_id .= (constant("CARRIER_NAME_$ty") . ': <a href="' . constant("CARRIER_LINE_$ty") . $track_id . ' target="_blank">' . $track_id . '</a>&nbsp;');
+                        $display_track_id .= (constant("CARRIER_NAME_$ty") . ': <a href="' . constant("CARRIER_LINK_$ty") . $track_id . ' target="_blank">' . $track_id . '</a>&nbsp;');
                     }
                 }
 ?>
