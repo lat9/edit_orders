@@ -835,6 +835,35 @@ function init()
 </div>
 <!-- header_eof //-->
 <?php
+// -----
+// A store can override EO's application of the 'type="number"' parameters by adding the definition
+//
+// define('EDIT_ORDERS_USE_NUMERIC_FIELDS', '0');
+//
+// to a site-specific /admin/extra_datafiles module.
+//
+// Note that EO's rendering of input fields is (currently) a mixture of directly-coded <input /> tags
+// and inputs generated via zen_draw_input_field.  The variables set below that start with $input_ are
+// used on the function-call field-generation and the others are used when directly-coded.
+//
+if (!defined('EDIT_ORDERS_USE_NUMERIC_FIELDS')) define('EDIT_ORDERS_USE_NUMERIC_FIELDS', '1');
+if (EDIT_ORDERS_USE_NUMERIC_FIELDS != '1') {
+    $input_value_parms = '';
+    $input_tax_parms = '';
+    $value_parms = '';
+    $tax_parms = '';
+    $input_field_type = 'text';
+} else {
+    $input_value_parms = ' min="0" step="any"';
+    $input_tax_parms = ' min="0" max="100" step="any"';
+    $value_parms = $input_value_parms . ' type="number"';
+    $tax_parms = $input_tax_parms . ' type="number"';
+    $input_field_type = 'number';
+}
+
+// -----
+// Start action-based rendering ...
+//
 if ($action == 'edit') {
     if ($order->info['payment_module_code']) {
         if (file_exists(DIR_FS_CATALOG_MODULES . 'payment/' . $order->info['payment_module_code'] . '.php')) {
@@ -1296,32 +1325,6 @@ if ($action == 'edit') {
     //
     $name_parms = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_name') . '" class="eo-name"';
     $model_parms = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_model') . '" class="eo-name"';
-    
-    // -----
-    // A store can override EO's application of the 'type="number"' parameters by adding the definition
-    //
-    // define('EDIT_ORDERS_USE_NUMERIC_FIELDS', '0');
-    //
-    // to a site-specific /admin/extra_datafiles module.
-    //
-    // Note that EO's rendering of input fields is (currently) a mixture of directly-coded <input /> tags
-    // and inputs generated via zen_draw_input_field.  The variables set below that start with $input_ are
-    // used on the function-call field-generation and the others are used when directly-coded.
-    //
-    if (!defined('EDIT_ORDERS_USE_NUMERIC_FIELDS')) define('EDIT_ORDERS_USE_NUMERIC_FIELDS', '1');
-    if (EDIT_ORDERS_USE_NUMERIC_FIELDS != '1') {
-        $input_value_parms = '';
-        $input_tax_parms = '';
-        $value_parms = '';
-        $tax_parms = '';
-        $input_field_type = 'text';
-    } else {
-        $input_value_parms = ' min="0" step="any"';
-        $input_tax_parms = ' min="0" max="100" step="any"';
-        $value_parms = $input_value_parms . ' type="number"';
-        $tax_parms = $input_tax_parms . ' type="number"';
-        $input_field_type = 'number';
-    }
     
     // -----
     // Loop through each of the products in the order.
