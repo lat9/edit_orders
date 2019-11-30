@@ -507,15 +507,18 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.4.4, 2019-10-13 (lat9)<ul>
+          <li>v4.4.4, 2019-11-30 (lat9)<ul>
             <li>BUGFIX: Correct PHP notices when an order has no 'tax_groups'.</li>
             <li>BUGFIX: Selected attribute-value not displayed on order's initial display.</li>
             <li>BUGFIX: Incorrect constant name used for Ty Package Tracker link.</li>
             <li>BUGFIX: Correct 'Add Product' PHP notices, missing numeric fields' override variables.</li>
-            <li>The following files were changed:<ol>
+            <li>CHANGE: Enable a store to configure the display-order for the order's addresses.</li>
+            <li>The following files were changed or <span class="added">added</span>:<ol>
               <li>/YOUR_ADMIN/edit_orders.php</li>
               <li>/YOUR_ADMIN/includes/classes/editOrders.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
+              <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_addresses_cbs.php</span></li>
+              <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_addresses_csb.php</span></li>
             </ol></li>
           </ul></li>
           <li>v4.4.3, 2019-10-05 (lat9)<ul>

@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.4.4-beta2');
+define('EO_CURRENT_VERSION', '4.4.4-beta3');
 
 // -----
 // Only update configuration when an admin is logged in.
@@ -182,6 +182,15 @@ if (EO_VERSION != EO_CURRENT_VERSION) {
                     ('Status-update: Customer Notification Default', 'EO_CUSTOMER_NOTIFICATION_DEFAULT', 'Email', 'Choose the default used for the radio-buttons that identify whether the customer receives notification when a  comment is added to the order.', $cgi, 40, now(), NULL, 'zen_cfg_select_option(array(\'Email\', \'No Email\', \'Hidden\'),')"
             );
             $check_init_file_missing = '1';
+                                                //-Fall-through for additional checks
+        case (version_compare(EO_VERSION, '4.4.4', '<')):
+            $default_value = (EO_VERSION == '0.0.0') ? 'CSB' : 'CBS';
+            $db->Execute(
+                "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
+                    (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) 
+                 VALUES 
+                    ('Addresses, Display Order', 'EO_ADDRESSES_DISPLAY_ORDER', '$default_value', 'In what order, left-to-right, should <em>Edit Orders</em> display an order\'s addresses?  Choose <b>CSB</b> to display <em>Customer</em>, <em>Shipping</em> and then <em>Billing</em>; choose <b>CBS</b> to display <em>Customer</em>, <em>Billing</em> and then <em>Shipping</em>.', $cgi, 1, now(), NULL, 'zen_cfg_select_option(array(\'CSB\', \'CBS\'),')"
+            );
                                                 //-Fall-through for additional checks
 
         default:
