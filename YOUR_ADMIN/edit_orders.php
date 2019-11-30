@@ -1800,7 +1800,7 @@ if ($action == 'edit') {
                     // If the current field name is not present in the orders_status_history
                     // table, there's nothing to do.
                     //
-                    if (!isset($orders_history->fields[$field_name])) {
+                    if (!array_key_exists($field_name, $orders_history->fields)) {
                         continue;
                     }
                     
