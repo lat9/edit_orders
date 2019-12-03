@@ -1,6 +1,6 @@
 <?php
 // -----
-// Part of the Edit Orders plugin, v4.4.4 and later, provided by lat9.
+// Part of the Edit Orders plugin, v4.5.0 and later, provided by lat9.
 // Copyright 2019, Vinos de Frutas Tropicales.
 //
 // This module is loaded in global scope by /admin/edit_orders.php when the store has identified via

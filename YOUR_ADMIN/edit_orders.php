@@ -954,7 +954,7 @@ if ($action == 'edit') {
     $max_country_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_country') . '"';
 
     // -----
-    // Starting with EO v4.4.4, a store can indicate the display-order for the order-related addresses.  Rather
+    // Starting with EO v4.5.0, a store can indicate the display-order for the order-related addresses.  Rather
     // than including all that code here, we'll use a separate 'module' to display the Customer-Shipping-Billing vs.
     // Customer-Billing-Shipping version.
     //

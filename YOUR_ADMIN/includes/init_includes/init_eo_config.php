@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.4.4-beta3');
+define('EO_CURRENT_VERSION', '4.5.0-beta1');
 
 // -----
 // Only update configuration when an admin is logged in.
@@ -183,7 +183,7 @@ if (EO_VERSION != EO_CURRENT_VERSION) {
             );
             $check_init_file_missing = '1';
                                                 //-Fall-through for additional checks
-        case (version_compare(EO_VERSION, '4.4.4', '<')):
+        case (version_compare(EO_VERSION, '4.5.0', '<')):
             $default_value = (EO_VERSION == '0.0.0') ? 'CSB' : 'CBS';
             $db->Execute(
                 "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
