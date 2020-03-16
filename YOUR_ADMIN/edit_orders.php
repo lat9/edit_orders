@@ -1601,7 +1601,9 @@ if ($action == 'edit') {
         }
     }
     
-    if (count(eo_get_available_order_totals_class_values($oID)) > 0) { 
+    $additional_totals_displayed = false;
+    if (count(eo_get_available_order_totals_class_values($oID)) > 0) {
+        $additional_totals_displayed = true;
 ?>
                             <tr>
                                 <td colspan="<?php echo $columns; ?>">&nbsp;</td>
@@ -2283,6 +2285,11 @@ if ($action == "add_prdct") {
 </table>
 <?php
 }
+
+// -----
+// Include id-specific javascript only if the associated blocks have been rendered.
+//
+if ($additional_totals_displayed) {
 ?>
 <!-- body_text_eof //-->
 <script>
@@ -2300,6 +2307,8 @@ if ($action == "add_prdct") {
 </script>
 <!-- body_eof //-->
 <?php
+}
+
 if (DISPLAY_PRICE_WITH_TAX == 'true') {
 ?>
 <script>

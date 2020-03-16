@@ -507,9 +507,11 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.5.1, 2020-02-27 (lat9)<ul>
+          <li>v4.5.1, 2020-03-16 (lat9)<ul>
             <li>BUGFIX: Shipping taxes double-recorded for stores that display prices with tax.</li>
+            <li>BUGFIX: Correct javascript error when an order contains all configured order-totals.</li>
             <li>The following files were changed:<ol>
+                <li>/YOUR_ADMIN/edit_orders.php</li>
                 <li>/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php</li>
                 <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
             </ol></li>
