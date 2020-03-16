@@ -510,7 +510,9 @@ div.totals-desc h4 { border-top: 1px solid #666; }
           <li>v4.5.1, 2020-03-16 (lat9)<ul>
             <li>BUGFIX: Shipping taxes double-recorded for stores that display prices with tax.</li>
             <li>BUGFIX: Correct javascript error when an order contains all configured order-totals.</li>
+            <li>BUGFIX: Correct 'ot_onetime_discount' installation check.</li>
             <li>The following files were changed:<ol>
+                <li>/includes/modules/order_total/ot_onetime_discount.php</li>
                 <li>/YOUR_ADMIN/edit_orders.php</li>
                 <li>/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php</li>
                 <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
