@@ -253,7 +253,7 @@ class editOrders extends base
         }
         switch ($action) {
             case 'update_order':
-                $this->shipping_tax_rate = $_POST['shipping_tax'];
+                $this->shipping_tax_rate = is_numeric($_POST['shipping_tax']) ? $_POST['shipping_tax'] : 0;
                 $order->info['shipping_tax'] = $this->calculateOrderShippingTax(true);
                 break;
             case 'add_prdct':
