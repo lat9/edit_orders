@@ -873,6 +873,7 @@ if ($action == 'edit') {
         }
     }
 // BEGIN - Add Super Orders Order Navigation Functionality
+    /*
     $get_prev = $db->Execute(
         "SELECT orders_id 
            FROM " . TABLE_ORDERS . " 
@@ -880,11 +881,16 @@ if ($action == 'edit') {
        ORDER BY orders_id DESC 
           LIMIT 1"
     );
+        $order_list_button = '<a role="button" class="btn btn-default" href="' . zen_href_link(FILENAME_ORDERS) . '"><i class="fa fa-th-list" aria-hidden="true">&nbsp;</i> ' . BUTTON_TO_LIST . '</a>';
+                $prev_button = '<a role="button" class="btn btn-default" href="' . zen_href_link(FILENAME_ORDERS,
+                'oID=' . $result->fields['orders_id'] . '&action=edit') . '">&laquo; ' . $get_prev->fields['orders_id'] . '</a>';
     if (!$get_prev->EOF) {
+
         $prev_oid = $get_prev->fields['orders_id'];
         $prev_button = '<input class="normal_button button" type="button" value="<<< ' . $prev_oid . '" onclick="window.location.href=\'' . zen_href_link(FILENAME_ORDERS, 'oID=' . $prev_oid . '&action=edit') . '\'">';
     } else {
-        $prev_button = '<input class="normal_button button" type="button" value="' . BUTTON_TO_LIST . '" onclick="window.location.href=\'' . zen_href_link(FILENAME_ORDERS) . '\'">';
+        //<i class="fa fa-th-list" aria-hidden="true">&nbsp;</i> '
+        $prev_button = '<a role="button" class="btn btn-default" href="' . zen_href_link(FILENAME_ORDERS) . '"><i class="fa fa-th-list" aria-hidden="true">&nbsp;</i> ' . BUTTON_TO_LIST . '</a>';
     }
     $prev_button .= PHP_EOL;
 
@@ -899,7 +905,7 @@ if ($action == 'edit') {
         $next_oid = $get_next->fields['orders_id'];
         $next_button = '<input class="normal_button button" type="button" value="' . $next_oid . ' >>>" onclick="window.location.href=\'' . zen_href_link(FILENAME_ORDERS, 'oID=' . $next_oid . '&action=edit') . '\'">';
     } else {
-        $next_button = '<input class="normal_button button" type="button" value="' . BUTTON_TO_LIST . '" onclick="window.location.href=\'' . zen_href_link(FILENAME_ORDERS) . '\'">';
+        $next_button = '<a role="button" class="btn btn-default" href="' . zen_href_link(FILENAME_ORDERS) . '"><i class="fa fa-th-list" aria-hidden="true">&nbsp;</i> ' . BUTTON_TO_LIST . '</a>';
     }
     $next_button .= PHP_EOL;
 // END - Add Super Orders Order Navigation Functionality
@@ -915,6 +921,8 @@ if ($action == 'edit') {
     echo $prev_button . '&nbsp;&nbsp;' . SELECT_ORDER_LIST . '&nbsp;&nbsp;';
     echo zen_draw_form('input_oid', FILENAME_ORDERS, 'action=edit', 'get', '', true) . zen_draw_input_field('oID', '', 'size="6"') . '</form>';
     echo '&nbsp;&nbsp;' . $next_button . '<br />';
+*/
+$eo->orderNavigation($oID);
 ?>
                 </td>
             </tr>
@@ -925,8 +933,9 @@ if ($action == 'edit') {
                         <td class="pageHeading"><?php echo HEADING_TITLE; ?> #<?php echo $oID; ?></td>
                         <td class="pageHeading a-r"><?php echo zen_draw_separator('pixel_trans.gif', 1, HEADING_IMAGE_HEIGHT); ?></td>
                         <td class="pageHeading a-r">
-                            <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('action'))); ?>"><?php echo zen_image_button('button_back.gif', IMAGE_BACK); ?></a>
-                            <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$oID&amp;action=edit"); ?>"><?php echo zen_image_button('button_details.gif', IMAGE_ORDER_DETAILS); ?></a>
+                            <?php
+                            $eo->backDetails($oID)
+                            ?>
                         </td>
                     </tr>
                 </table></td>
@@ -1148,7 +1157,9 @@ if ($action == 'edit') {
 
     $additional_inputs = '';
     $zco_notifier->notify('EDIT_ORDERS_FORM_ADDITIONAL_INPUTS', $order, $additional_inputs);
-    echo zen_image_submit('button_update.gif', IMAGE_UPDATE, 'name="update_button"') . "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice$additional_inputs";
+    ?>
+                            <input type="submit" class="btn btn-danger" value="<?= IMAGE_UPDATE; ?>" >
+                        <?= "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice$additional_inputs";
 //-eof-20180323-lat9
 ?>
                         </td>
@@ -1463,8 +1474,8 @@ if ($action == 'edit') {
                             <tr>
 <?php
     $eo_href_link = zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$oID&amp;action=add_prdct");
-    $eo_add_product_button = zen_image_button('button_add_product.gif', TEXT_ADD_NEW_PRODUCT);
-    $eo_add_button_link = '<a href="' . $eo_href_link . '">' . $eo_add_product_button . '</a>';
+    //$eo_add_product_button = zen_image_button('button_add_product.gif', TEXT_ADD_NEW_PRODUCT);
+    $eo_add_button_link = '<a href="' . $eo_href_link . '" class="btn btn-warning " role="button">' . TEXT_ADD_NEW_PRODUCT . '</a>';
     
     // -----
     // Give a watching observer the chance to identify additional order-totals that should be considered display-only.
@@ -1984,7 +1995,7 @@ if ($action == 'edit') {
                     </tr>
 
                     <tr>
-                        <td valign="top"><?php echo zen_image_submit('button_update.gif', IMAGE_UPDATE); ?></td>
+                        <td valign="top"><input type="submit" class="btn btn-danger" value="<?= IMAGE_UPDATE; ?>" ></td>
                     </tr>
                 </table></form></td>
             </tr>
@@ -2004,8 +2015,9 @@ if ($action == "add_prdct") {
                 <td class="pageHeading"><?php echo HEADING_TITLE_ADD_PRODUCT; ?> #<?php echo $oID; ?></td>
                 <td class="pageHeading a-r"><?php echo zen_draw_separator('pixel_trans.gif', 1, HEADING_IMAGE_HEIGHT); ?></td>
                 <td class="pageHeading a-r">
-                    <a href="<?php echo zen_href_link(FILENAME_EDIT_ORDERS, $order_parms); ?>"><?php echo zen_image_button('button_back.gif', IMAGE_EDIT); ?></a>
-                    <a href="<?php echo zen_href_link(FILENAME_ORDERS, $order_parms); ?>"><?php echo zen_image_button('button_details.gif', IMAGE_ORDER_DETAILS); ?></a>
+                            <?php
+                            $eo->backDetails($oID)
+                            ?>
                 </td>
             </tr>
         </table></td>
@@ -2094,8 +2106,7 @@ if ($action == "add_prdct") {
         while (!$result->EOF) {
             $ProductOptions .= 
                 '<option value="' . $result->fields['products_id'] . '">' . 
-                    $result->fields['products_name'] .
-                    ' [' . $result->fields['products_model'] . '] ' . ($result->fields['products_status'] == 0 ? ' (OOS)' : '') . 
+                    ' [' . $result->fields['products_model'] . '] ' . ($result->fields['products_status'] == 0 ? ' (OOS)' : '') .
                 '</option>' . PHP_EOL;
             $result->MoveNext();
         }
