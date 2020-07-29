@@ -690,11 +690,36 @@ class editOrders extends base
         return $sort_order;
     }
 
+    private function createButton($name, $link, $side = '') {
+        $preface = $suffix = '';
+        if  ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) < '1.5.6') {
+            if ($side == 'P') {
+                $preface = '<<< ';
+            } elseif ($side == 'N') {
+                $suffix = ' >>> ';
+            }
+            $button = '<input class="normal_button button" type="button" value="' . $preface . $name . $suffix . '" onclick="window.location.href=\'' . $link . '\'">';
+        } else {
+            $aria = '';
+            if ($name == BUTTON_TO_LIST) {
+                $aria = '<i class="fa fa-th-list" aria-hidden="true">&nbsp;</i> ';
+            }
+            if ($side == 'P') {
+                $preface = '&laquo; ';
+            } elseif ($side == 'N') {
+                $suffix = '&raquo; ';
+            }
+            $button = '<a role="button" class="btn btn-default" href="' . $link . '">' . $aria . $preface . $name . $suffix . '</a>';
+        }
+        return $button;
+    }
+
     function orderNavigation($oID)
     {
         global $db, $zco_notifier;
 
-        $order_list_button = '<a role="button" class="btn btn-default" href="' . zen_href_link(FILENAME_ORDERS) . '"><i class="fa fa-th-list" aria-hidden="true">&nbsp;</i> ' . BUTTON_TO_LIST . '</a>';
+        $order_list_button = $this->createButton(BUTTON_TO_LIST, zen_href_link(FILENAME_ORDERS));
+
         $prev_button = '';
         $result = $db->Execute("SELECT orders_id
                                   FROM " . TABLE_ORDERS . "
@@ -702,8 +727,8 @@ class editOrders extends base
                                   ORDER BY orders_id DESC
                                   LIMIT 1");
         if ($result->RecordCount()) {
-            $prev_button = '<a role="button" class="btn btn-default" href="' . zen_href_link(FILENAME_ORDERS,
-                    'oID=' . $result->fields['orders_id'] . '&action=edit') . '">&laquo; ' . $result->fields['orders_id'] . '</a>';
+            $prev_button = $this->createButton($result->fields['orders_id'], zen_href_link(FILENAME_ORDERS,
+                    'oID=' . $result->fields['orders_id'] . '&action=edit'), 'P');
         }
 
         $next_button = '';
@@ -713,8 +738,8 @@ class editOrders extends base
                                   ORDER BY orders_id ASC
                                   LIMIT 1");
         if ($result->RecordCount()) {
-            $next_button = '<a role="button" class="btn btn-default" href="' . zen_href_link(FILENAME_ORDERS,
-                    'oID=' . $result->fields['orders_id'] . '&action=edit') . '">' . $result->fields['orders_id'] . ' &raquo;</a>';
+            $next_button = $this->createButton($result->fields['orders_id'], zen_href_link(FILENAME_ORDERS,
+                    'oID=' . $result->fields['orders_id'] . '&action=edit'), 'N');
         }
         $left_side_buttons = '';
         $right_side_buttons = '';
@@ -755,12 +780,25 @@ class editOrders extends base
 
     function backDetails($oID)
     {
-        ?>
-        <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('action'))); ?>"
-           class='btn btn-primary btn-sm' role='button'><?= IMAGE_BACK; ?></a>
-        <a href="<?php echo zen_href_link(FILENAME_ORDERS,
-            zen_get_all_get_params(array('oID', 'action')) . "oID=$oID&amp;action=edit"); ?>"
-           class='btn btn-primary btn-sm' role='button'><?= DETAILS; ?></a>
-        <?php
+        if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) > '1.5.5') {
+            ?>
+            <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('action'))); ?>"
+               class='btn btn-primary btn-sm' role='button'><?= IMAGE_BACK; ?></a>
+            <a href="<?php echo zen_href_link(FILENAME_ORDERS,
+                zen_get_all_get_params(array('oID', 'action')) . "oID=$oID&amp;action=edit"); ?>"
+               class='btn btn-primary btn-sm' role='button'><?= DETAILS; ?></a>
+            <?php
+        } else {
+            ?>
+            <a href="<?php echo zen_href_link(FILENAME_ORDERS,
+                zen_get_all_get_params(array('action'))); ?>"><?php echo zen_image_button('button_back.gif',
+                    IMAGE_BACK); ?></a>
+            <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array(
+                    'oID',
+                    'action'
+                )) . "oID=$oID&amp;action=edit"); ?>"><?php echo zen_image_button('button_details.gif',
+                    IMAGE_ORDER_DETAILS); ?></a>
+            <?php
+        }
     }
 }

@@ -806,9 +806,39 @@ if ($action == 'edit' || ($action == 'update_order' && empty($allow_update))) {
 <!doctype html>
 <html <?php echo HTML_PARAMS; ?>>
 <head>
-<?php require DIR_WS_INCLUDES . 'admin_html_head.php'; ?>
+    <?php
+    if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) < '1.5.7') {
+    ?>
+    <meta charset="<?php echo CHARSET; ?>">
+    <title><?php echo TITLE; ?></title>
+    <link rel="stylesheet" type="text/css" href="includes/stylesheet.css">
+    <link rel="stylesheet" type="text/css" href="includes/edit_orders.css">
+    <link rel="stylesheet" type="text/css" href="includes/cssjsmenuhover.css" media="all" id="hoverJS">
+    <script src="includes/menu.js"></script>
+    <script src="includes/general.js"></script>
+    <script>
+        <!--
+        function init() {
+            cssjsmenu('navbar');
+            if (document.getElementById) {
+                var kill = document.getElementById('hoverJS');
+                kill.disabled = true;
+            }
+        }
+
+        // -->
+    </script>
 </head>
-<body >
+<body onload="init();">
+<?php
+} else {
+require DIR_WS_INCLUDES . 'admin_html_head.php';
+?>
+</head>
+<body>
+<?php
+}
+?>
 <!-- header //-->
 <div class="header-area">
 <?php
@@ -855,7 +885,8 @@ if ($action == 'edit') {
         }
     }
 // BEGIN - Add Super Orders Order Navigation Functionality
-    /*
+    if  ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) < '1.5.6') {
+
     $get_prev = $db->Execute(
         "SELECT orders_id 
            FROM " . TABLE_ORDERS . " 
@@ -863,16 +894,12 @@ if ($action == 'edit') {
        ORDER BY orders_id DESC 
           LIMIT 1"
     );
-        $order_list_button = '<a role="button" class="btn btn-default" href="' . zen_href_link(FILENAME_ORDERS) . '"><i class="fa fa-th-list" aria-hidden="true">&nbsp;</i> ' . BUTTON_TO_LIST . '</a>';
-                $prev_button = '<a role="button" class="btn btn-default" href="' . zen_href_link(FILENAME_ORDERS,
-                'oID=' . $result->fields['orders_id'] . '&action=edit') . '">&laquo; ' . $get_prev->fields['orders_id'] . '</a>';
     if (!$get_prev->EOF) {
 
         $prev_oid = $get_prev->fields['orders_id'];
         $prev_button = '<input class="normal_button button" type="button" value="<<< ' . $prev_oid . '" onclick="window.location.href=\'' . zen_href_link(FILENAME_ORDERS, 'oID=' . $prev_oid . '&action=edit') . '\'">';
     } else {
-        //<i class="fa fa-th-list" aria-hidden="true">&nbsp;</i> '
-        $prev_button = '<a role="button" class="btn btn-default" href="' . zen_href_link(FILENAME_ORDERS) . '"><i class="fa fa-th-list" aria-hidden="true">&nbsp;</i> ' . BUTTON_TO_LIST . '</a>';
+        $prev_button = '<input class="normal_button button" type="button" value="' . BUTTON_TO_LIST . '" onclick="window.location.href=\'' . zen_href_link(FILENAME_ORDERS) . '\'">';
     }
     $prev_button .= PHP_EOL;
 
@@ -887,7 +914,7 @@ if ($action == 'edit') {
         $next_oid = $get_next->fields['orders_id'];
         $next_button = '<input class="normal_button button" type="button" value="' . $next_oid . ' >>>" onclick="window.location.href=\'' . zen_href_link(FILENAME_ORDERS, 'oID=' . $next_oid . '&action=edit') . '\'">';
     } else {
-        $next_button = '<a role="button" class="btn btn-default" href="' . zen_href_link(FILENAME_ORDERS) . '"><i class="fa fa-th-list" aria-hidden="true">&nbsp;</i> ' . BUTTON_TO_LIST . '</a>';
+        $next_button = '<input class="normal_button button" type="button" value="' . BUTTON_TO_LIST . '" onclick="window.location.href=\'' . zen_href_link(FILENAME_ORDERS) . '\'">';
     }
     $next_button .= PHP_EOL;
 // END - Add Super Orders Order Navigation Functionality
@@ -903,8 +930,9 @@ if ($action == 'edit') {
     echo $prev_button . '&nbsp;&nbsp;' . SELECT_ORDER_LIST . '&nbsp;&nbsp;';
     echo zen_draw_form('input_oid', FILENAME_ORDERS, 'action=edit', 'get', '', true) . zen_draw_input_field('oID', '', 'size="6"') . '</form>';
     echo '&nbsp;&nbsp;' . $next_button . '<br />';
-*/
-$eo->orderNavigation($oID);
+    } else {
+        $eo->orderNavigation($oID);
+    }
 ?>
                 </td>
             </tr>
@@ -1139,9 +1167,13 @@ $eo->orderNavigation($oID);
 
     $additional_inputs = '';
     $zco_notifier->notify('EDIT_ORDERS_FORM_ADDITIONAL_INPUTS', $order, $additional_inputs);
+    if  ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) >= '1.5.6') {
     ?>
                             <input type="submit" class="btn btn-danger" value="<?= IMAGE_UPDATE; ?>" >
                         <?= "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice$additional_inputs";
+    } else {
+        echo zen_image_submit('button_update.gif', IMAGE_UPDATE, 'name="update_button"') . "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice$additional_inputs";
+    }
 //-eof-20180323-lat9
 ?>
                         </td>
@@ -1456,9 +1488,12 @@ $eo->orderNavigation($oID);
                             <tr>
 <?php
     $eo_href_link = zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$oID&amp;action=add_prdct");
-    //$eo_add_product_button = zen_image_button('button_add_product.gif', TEXT_ADD_NEW_PRODUCT);
-    $eo_add_button_link = '<a href="' . $eo_href_link . '" class="btn btn-warning " role="button">' . TEXT_ADD_NEW_PRODUCT . '</a>';
-    
+    $eo_add_product_button = zen_image_button('button_add_product.gif', TEXT_ADD_NEW_PRODUCT);
+    if  ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) < '1.5.6') {
+        $eo_add_button_link = '<a href="' . $eo_href_link . '">' . $eo_add_product_button . '</a>';
+    } else {
+        $eo_add_button_link = '<a href="' . $eo_href_link . '" class="btn btn-warning " role="button">' . TEXT_ADD_NEW_PRODUCT . '</a>';
+    }
     // -----
     // Give a watching observer the chance to identify additional order-totals that should be considered display-only.
     //
@@ -1977,7 +2012,17 @@ $eo->orderNavigation($oID);
                     </tr>
 
                     <tr>
-                        <td valign="top"><input type="submit" class="btn btn-danger" value="<?= IMAGE_UPDATE; ?>" ></td>
+                        <td valign="top">
+                            <?php
+                            if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) < '1.5.6') {
+                                echo zen_image_submit('button_update.gif', IMAGE_UPDATE);
+                            } else {
+                                ?>
+                                <input type="submit" class="btn btn-danger" value="<?= IMAGE_UPDATE; ?>">
+                                <?php
+                            }
+                            ?>
+                        </td>
                     </tr>
                 </table></form></td>
             </tr>
