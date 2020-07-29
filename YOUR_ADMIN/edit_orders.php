@@ -2133,6 +2133,7 @@ if ($action == "add_prdct") {
         while (!$result->EOF) {
             $ProductOptions .= 
                 '<option value="' . $result->fields['products_id'] . '">' . 
+                     $result->fields['products_name'] .
                     ' [' . $result->fields['products_model'] . '] ' . ($result->fields['products_status'] == 0 ? ' (OOS)' : '') .
                 '</option>' . PHP_EOL;
             $result->MoveNext();
