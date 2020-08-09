@@ -2147,6 +2147,7 @@ if ($action == "add_prdct") {
                     case PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID:
                     case PRODUCTS_OPTIONS_TYPE_RADIO:
                     case PRODUCTS_OPTIONS_TYPE_SELECT:       
+                    case PRODUCTS_OPTIONS_TYPE_SELECT_SBA:
 ?>
                     <label class="attribsSelect" for="<?php echo $attrib_id; ?>"><?php echo $option_name; ?></label>
 <?php
