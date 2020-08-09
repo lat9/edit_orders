@@ -1169,8 +1169,8 @@ if ($action == 'edit') {
     $zco_notifier->notify('EDIT_ORDERS_FORM_ADDITIONAL_INPUTS', $order, $additional_inputs);
     if  ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) >= '1.5.6') {
     ?>
-                            <input type="submit" class="btn btn-danger" value="<?= IMAGE_UPDATE; ?>" >
-                        <?= "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice$additional_inputs";
+                            <input type="submit" class="btn btn-danger" value="<?php echo IMAGE_UPDATE; ?>" >
+                        <?php echo "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice$additional_inputs";
     } else {
         echo zen_image_submit('button_update.gif', IMAGE_UPDATE, 'name="update_button"') . "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice$additional_inputs";
     }
@@ -2018,7 +2018,7 @@ if ($action == 'edit') {
                                 echo zen_image_submit('button_update.gif', IMAGE_UPDATE);
                             } else {
                                 ?>
-                                <input type="submit" class="btn btn-danger" value="<?= IMAGE_UPDATE; ?>">
+                                <input type="submit" class="btn btn-danger" value="<?php echo IMAGE_UPDATE; ?>">
                                 <?php
                             }
                             ?>

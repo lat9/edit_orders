@@ -783,10 +783,10 @@ class editOrders extends base
         if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) > '1.5.5') {
             ?>
             <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(array('action'))); ?>"
-               class='btn btn-primary btn-sm' role='button'><?= IMAGE_BACK; ?></a>
+               class='btn btn-primary btn-sm' role='button'><?php echo IMAGE_BACK; ?></a>
             <a href="<?php echo zen_href_link(FILENAME_ORDERS,
                 zen_get_all_get_params(array('oID', 'action')) . "oID=$oID&amp;action=edit"); ?>"
-               class='btn btn-primary btn-sm' role='button'><?= DETAILS; ?></a>
+               class='btn btn-primary btn-sm' role='button'><?php echo DETAILS; ?></a>
             <?php
         } else {
             ?>
