@@ -583,7 +583,7 @@ function eo_get_country($country)
         if (!$country_info->EOF) {
             $country_data = array(
                 'id' => $country_info->fields['countries_id'],
-                'name' => zen_get_countries_name($country_info->fields['countries_id']),
+                'name' => zen_get_country_name($country_info->fields['countries_id']),
                 'iso_code_2' => $country_info->fields['countries_iso_code_2'],
                 'iso_code_3' => $country_info->fields['countries_iso_code_3'],
             );
