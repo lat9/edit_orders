@@ -115,6 +115,8 @@ define('IMAGE_ORDER_DETAILS', 'Display Order Details');
 define('BUTTON_TO_LIST', 'Order List');
 define('SELECT_ORDER_LIST', 'Jump to Order:');
 
+define('DETAILS', 'Details');
+
 // Required for various added zen_cart functions
 define('TEXT_UNKNOWN_TAX_RATE', 'Tax');
 define('PULL_DOWN_DEFAULT', 'Please Choose Your Country');
