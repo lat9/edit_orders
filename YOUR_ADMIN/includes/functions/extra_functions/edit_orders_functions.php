@@ -625,12 +625,12 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
     global $db;
 
     $product_id = (int)$product_id;
-    $product_qty = (float)$product_qty;
+    $product_qty = floatval($product_qty);
 
     $retval = array(
         'id' => $product_id,
         'qty' => $product_qty,
-        'tax' => (float)$product_tax,
+        'tax' => floatval($product_tax),
     );
 
     $query = $db->Execute(
@@ -658,7 +658,7 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
             'product_is_free' => $query->fields['product_is_free'],
             'products_virtual' => $query->fields['products_virtual'],
             'product_is_always_free_shipping' => $query->fields['product_is_always_free_shipping'],
-            'tax' => ($product_tax === false) ? number_format(zen_get_tax_rate_value($query->fields['products_tax_class_id']), 4) : ((float)$product_tax),
+            'tax' => ($product_tax === false) ? number_format(zen_get_tax_rate_value($query->fields['products_tax_class_id']), 4) : (floatval($product_tax)),
             'tax_description' => zen_get_tax_description($query->fields['products_tax_class_id'])
         ));
 
@@ -807,7 +807,7 @@ function eo_get_product_attribute_prices($attr_id, $attr_value = '', $qty = 1)
         return $retval;
     }
     
-    $qty = (float)$qty;
+    $qty = floatval($qty);
     $product_id = $attribute_price->fields['products_id'];
 
     // Only check when attributes is not free or the product is not free

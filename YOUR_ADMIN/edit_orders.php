@@ -366,7 +366,7 @@ switch ($action) {
             );
 
             foreach ($_POST['update_products'] as $orders_products_id => $product_update) {
-                $product_update['qty'] = (float)$product_update['qty'];
+                $product_update['qty'] = floatval($product_update['qty']);
                 $product_update['name'] = $product_update['name'];
 
                 $rowID = -1;
@@ -547,7 +547,7 @@ switch ($action) {
             );
 
             foreach ($_POST['update_total'] as $order_total) {
-                $order_total['value'] = (float)$order_total['value'];
+                $order_total['value'] = floatval($order_total['value']);
                 $order_total['text'] = $eo->eoFormatCurrencyValue($order_total['value']);
                 $order_total['sort_order'] = $eo->eoGetOrderTotalSortOrder($order_total['code']);
 
