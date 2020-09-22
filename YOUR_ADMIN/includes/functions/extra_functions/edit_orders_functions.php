@@ -1106,7 +1106,7 @@ function eo_update_order_subtotal($order_id, $product, $add = true)
     $products_tax = $product['tax'];
     $qty = $product['qty'];
     $onetime_charges = $product['onetime_charges'];
-    $shown_price = $eo->eoRoundCurrencyValue(zen_add_tax($final_price, $products_tax)) * $qty;
+    $shown_price = $eo->eoRoundCurrencyValue(zen_add_tax($final_price * $qty, $products_tax));
     $shown_price += $eo->eoRoundCurrencyValue(zen_add_tax($onetime_charges, $products_tax));
 
     $starting_totals = array (

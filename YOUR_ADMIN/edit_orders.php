@@ -1459,7 +1459,7 @@ if ($action == 'edit') {
             $final_price = $order->products[$i]['final_price'];
             $onetime_charges = $order->products[$i]['onetime_charges'];
         } else {
-            $final_price = $eo->eoRoundCurrencyValue($order->products[$i]['final_price']);
+            $final_price = $order->products[$i]['final_price'];
             $onetime_charges = $eo->eoRoundCurrencyValue($order->products[$i]['onetime_charges']);
         }
         $data_index = " data-opi=\"$orders_products_id\"";

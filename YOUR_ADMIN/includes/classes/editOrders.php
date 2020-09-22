@@ -367,7 +367,7 @@ class editOrders extends base
         $product_final_price = $product['final_price'];
         $product_onetime = $product['onetime_charges'];
         $product_qty = $product['qty'];
-        $shown_price = $this->eoRoundCurrencyValue(zen_add_tax($product_final_price, $products_tax)) * $product_qty;
+        $shown_price = $this->eoRoundCurrencyValue(zen_add_tax($product_final_price * $product_qty, $products_tax));
         $shown_price += $this->eoRoundCurrencyValue(zen_add_tax($product_onetime, $products_tax));
 
         $query = false;
@@ -403,7 +403,7 @@ class editOrders extends base
             if (DISPLAY_PRICE_WITH_TAX == 'true') {
                 $taxAdd = $this->eoRoundCurrencyValue($shown_price / (100 + $products_tax) * $products_tax);
             } else {
-                $taxAdd = $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue($product_final_price) * $product_qty, $products_tax));
+                $taxAdd = $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue($product_final_price * $product_qty), $products_tax));
                 $taxAdd += $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue($product_onetime), $products_tax));
             }
             $taxAdd = $this->eoRoundCurrencyValue($taxAdd);
