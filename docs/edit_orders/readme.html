@@ -150,10 +150,10 @@ div.totals-desc h4 { border-top: 1px solid #666; }
 
             <div id="initial">
               <noscript><h3>Initial Installation</h3></noscript>
-              <p>If your store uses a version of Zen Cart <em>prior to</em> 1.5.6, there are <span class="corefile">core-file overwrites</span> required by this plugin; you should <strong>always</strong> backup your cart's database and files prior to making any changes. Unzip the plugin's package file and then:</p>
+              <p>If your store uses a version of Zen Cart <em class="red">prior to 1.5.6</em>, there are <span class="corefile">core-file overwrites</span> required by this plugin; you should <strong>always</strong> backup your cart's database and files prior to making any changes. Unzip the plugin's package file and then:</p>
               <ol type="A">
                 <li>Rename the YOUR_ADMIN sub-directory to match your custom admin sub-directory's name.</li>
-                <li>If your store uses a version of Zen Cart <em>prior to</em> 1.5.6, you'll need to merge any pre-existing <span class="corefile">core-file</span> changes with the changes required by <em>Edit Orders</em>.  Each of these files is located in the <code>zc155</code> of <em>EO</em>'s distribution, providing the in-core zc156 notifications required:<ol>
+                <li>If your store uses a version of Zen Cart <em class="red">prior to 1.5.6</em>, you'll need to merge any pre-existing <span class="corefile">core-file</span> changes with the changes required by <em>Edit Orders</em>.  Each of these files is located in the <code>zc155</code> of <em>EO</em>'s distribution, providing the in-core zc156 notifications required:<ol>
                   <li><span class="corefile">/includes/classes/order.php</span> <span class="smaller">(2 marked change-sections)</span></li>
                   <li><span class="corefile">/includes/modules/order_total/ot_shipping.php</span> <span class="smaller">(This is the zc156b version of the file)</span></li>
                   <li><span class="corefile">/YOUR_ADMIN/orders.php</span> <span class="smaller">(3 marked change-sections)</span></li>
@@ -489,7 +489,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <div id="other-modules">
               <noscript><h3>Other Modules (Troubleshooting)</h3></noscript>
               <p>Because <em>Edit Orders</em> loads the same order-total modules as the storefront checkout process, all enabled modules must be able to be loaded and processed from the store's Zen Cart admin-console. Because Zen Cart traditionally does not use those modules during admin-level processing, many 3rd-party order-total modules were designed without the authors taking this into consideration.</p>
-              <p>The most common symptom caused by a problematic order-total module (when editing an order) is the presentation of a &quot;blank&quot; page when adding a product to (or updating) the order. In most cases taking a look at the generated <a href="http://www.zen-cart.com/content.php?124" target="_blank">debug log</a> provides valuable insight as to how to correct the underlying issue. Another option is to disable all add-on order-total modules and then enable them one-by-one to determine which order-total module is causing the blank page.</p>
+              <p>The most common symptom caused by a problematic order-total module (when editing an order) is the presentation of a &quot;blank&quot; page when adding a product to (or updating) the order. In most cases taking a look at the generated <a href="https://docs.zen-cart.com/user/troubleshooting/blank_page/" target="_blank">debug log</a> provides valuable insight as to how to correct the underlying issue. Another option is to disable all add-on order-total modules and then enable them one-by-one to determine which order-total module is causing the blank page.</p>
               <p>Here are some common causes of issues with 3rd-party order-total modules and possible corrective actions:</p>
               <ol>
                 <li>The order-total's installation includes additional storefront functions.<ul>
