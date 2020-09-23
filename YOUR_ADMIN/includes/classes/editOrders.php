@@ -209,7 +209,7 @@ class editOrders extends base
                     $ot_shipping = json_encode($current_total);
                     $found_ot_shipping = true;
                     $shipping_module = $current_total['shipping_module'] . '_';
-                    $shipping_cost = (float)$current_total['value'];
+                    $shipping_cost = floatval($current_total['value']);
                     $shipping_title = $current_total['title'];
                     break;
                 }
