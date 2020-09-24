@@ -2329,7 +2329,7 @@ if ($action == "add_prdct") {
 // -----
 // Include id-specific javascript only if the associated blocks have been rendered.
 //
-if ($additional_totals_displayed) {
+if (!empty($additional_totals_displayed)) {
 ?>
 <!-- body_text_eof //-->
 <script>

@@ -512,6 +512,13 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
+          <li>v4.5.4-beta1, 2020-09-24 (lat9)<ul>
+            <li>BUGFIX: Correct PHP Notice issued during product-addition.</li>
+            <li>The following files were changed:<ol>
+                <li>/YOUR_ADMIN/edit_orders.php</li>
+                <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
+            </ol></li>
+          </ul></li>
           <li>v4.5.3, 2020-09-23 (lat9, proseLA)<ul>
             <li>BUGFIX: Correct early-rounding issue when product's pricing has more significant digits than the currency.</li>
             <li>CHANGE: Use <code>floatval</code> instead of float-cast to reduce the possibility of penny-off calculations.</li>
