@@ -11,7 +11,9 @@ class EditOrdersAdminObserver extends base
 {
     public function __construct() 
     {
-        $this->isPre156ZenCart = (PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR < '1.5.6');
+        $zencart_version = PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR;
+        $this->isPre156ZenCart = ($zencart_version < '1.5.6');
+        $this->is157OrLaterZenCart = ($zencart_version >= '1.5.7');
         $this->isEditOrdersPage = (basename($GLOBALS['PHP_SELF'], '.php') == FILENAME_EDIT_ORDERS);
         $this->attach(
             $this, 
@@ -79,7 +81,8 @@ class EditOrdersAdminObserver extends base
             //         linking to this order's EO processing.
             //
             case 'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE':
-                $p4 .= $this->createEditOrdersLink($p2['orders_id'], zen_image(DIR_WS_IMAGES . EO_BUTTON_ICON_DETAILS, EO_ICON_DETAILS), EO_ZC156_FA_ICON, false);
+                $eo_icon = ($this->is157OrLaterZenCart) ? EO_ZC157_FA_ICON : EO_ZC156_FA_ICON;
+                $p4 .= $this->createEditOrdersLink($p2['orders_id'], zen_image(DIR_WS_IMAGES . EO_BUTTON_ICON_DETAILS, EO_ICON_DETAILS), $eo_icon, false);
                 break;
       
             // -----
@@ -198,6 +201,8 @@ class EditOrdersAdminObserver extends base
             $anchor_text = $link_text;
             if ($include_zc156_parms) {
                 $link_parms = ' class="btn btn-primary" role="button"';
+            } elseif ($this->is157OrLaterZenCart) {
+                $link_parms = ' class="btn btn-default btn-edit"';
             }
         }
         return '&nbsp;<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$orders_id&action=edit", 'NONSSL') . "\"$link_parms>$anchor_text</a>";
