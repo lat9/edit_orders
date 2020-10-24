@@ -956,7 +956,7 @@ if ($action == 'edit') {
             <tr>
                 <td><?php echo zen_draw_form('edit_order', FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action','paycc')) . 'action=update_order'); ?><table width="100%" border="0">
                     <tr>
-                        <td><table class="w100" id="c-form">
+                        <td><table role="table" class="w100" id="c-form">
 <?php
     // -----
     // Gather the maximum database field-length for each of the address-related fields in the
