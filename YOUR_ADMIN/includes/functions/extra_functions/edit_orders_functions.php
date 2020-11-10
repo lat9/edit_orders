@@ -1023,6 +1023,7 @@ function eo_add_product_to_order($order_id, $product)
     //
     zen_db_perform(TABLE_ORDERS_PRODUCTS, $sql_data_array);
     $order_products_id = $db->Insert_ID();
+    $op_sql_data_array = $sql_data_array;
 
     //------ bof: insert customer-chosen options to order--------
     $attributes_exist = '0';
@@ -1139,7 +1140,12 @@ function eo_add_product_to_order($order_id, $product)
     }
 
     $order->products[] = $product;
-    $zco_notifier->notify('EDIT_ORDERS_ADD_PRODUCT', array('order_id' => (int)$order_id, 'orders_products_id' => $order_products_id, 'product' => $product));
+    
+    // -----
+    // Note: The 'sql_data_array' element reflects the data just recorded for the 'orders_products' table, starting
+    // with EO v4.5.5.
+    //
+    $zco_notifier->notify('EDIT_ORDERS_ADD_PRODUCT', array('order_id' => (int)$order_id, 'orders_products_id' => $order_products_id, 'product' => $product, 'sql_data_array' => $op_sql_data_array));
 
     return $product;
 }

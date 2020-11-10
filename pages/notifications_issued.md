@@ -321,7 +321,7 @@ The following variables are passed with the notification:
 
 | Variable 'name' | Description |
 | :-----: | :------ |
-| $p1 | (r/o) An associative array containing the `order_id` (the order's numeric id), the `orders_products_id` and the `product` array containing the just added product's information. |
+| $p1 | (r/o) An associative array containing the `order_id` (the order's numeric id), the `orders_products_id` and the `product` array containing the just added product's information. Starting with EO v4.5.5, the array also contains the `sql_data_array` just written to the database. |
 
 #### Remove Product Stock Decrement
 
