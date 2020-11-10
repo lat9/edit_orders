@@ -233,7 +233,7 @@ class mockCart extends base
         $weight = 0;
         foreach ($this->get_products() as $products) {
             if (isset($products['weight'])) {
-                $weight += (float)$products['weight'];
+                $weight += $products['quantity'] * (float)$products['weight'];
             }
         }
         return $weight;

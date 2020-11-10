@@ -637,7 +637,7 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
         "SELECT p.products_id, p.master_categories_id, p.products_status, pd.products_name, p.products_model, p.products_image, p.products_price,
                 p.products_weight, p.products_tax_class_id, p.manufacturers_id, p.products_quantity_order_min, p.products_quantity_order_units,
                 p.products_quantity_order_max, p.product_is_free, p.products_virtual, p.products_discount_type, p.products_discount_type_from,
-                p.products_priced_by_attribute, p.product_is_always_free_shipping 
+                p.products_priced_by_attribute, p.product_is_always_free_shipping, p.products_quantity_mixed, p.products_mixed_discount_quantity
            FROM " . TABLE_PRODUCTS . " p
                 INNER JOIN " . TABLE_PRODUCTS_DESCRIPTION . " pd
                     ON pd.products_id = p.products_id
@@ -659,7 +659,13 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
             'products_virtual' => $query->fields['products_virtual'],
             'product_is_always_free_shipping' => $query->fields['product_is_always_free_shipping'],
             'tax' => ($product_tax === false) ? number_format(zen_get_tax_rate_value($query->fields['products_tax_class_id']), 4) : (floatval($product_tax)),
-            'tax_description' => zen_get_tax_description($query->fields['products_tax_class_id'])
+            'tax_description' => zen_get_tax_description($query->fields['products_tax_class_id']),
+            'products_weight' => $query->fields['products_weight'],
+            'products_quantity_order_min' => $query->fields['products_quantity_order_min'],
+            'products_quantity_order_max' => $query->fields['products_quantity_order_max'],
+            'products_quantity_order_units' => $query->fields['products_quantity_order_units'],
+            'products_quantity_mixed' => $query->fields['products_quantity_mixed'],
+            'products_mixed_discount_quantity' => $query->fields['products_mixed_discount_quantity'],
         ));
 
         // Handle pricing
@@ -780,12 +786,35 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
                     $prices = eo_get_product_attribute_prices($details['value'], $attr['value'], $product_qty);
                     $retval['onetime_charges'] += $prices['onetime_charges'];
                     $retval['final_price'] += $prices['price'];
+                    $retval['products_weight'] += eo_get_product_attribute_weight($product_id, $attr['option_id'], $attr['value_id']);
                 }
             }
         }
         unset($query, $attr, $prices, $option_id, $details);
     }
     return $retval;
+}
+
+function eo_get_product_attribute_weight($product_id, $option_id, $option_value_id)
+{
+    global $db;
+    
+    $attrib_weight = $db->Execute(
+        "SELECT products_attributes_weight, products_attributes_weight_prefix
+           FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
+          WHERE products_id = $product_id
+            AND options_id = $option_id
+            AND options_values_id = $option_value_id
+          LIMIT 1"
+    );
+    $attribute_weight = 0;
+    if (!$attrib_weight->EOF) {
+        $attribute_weight = $attrib_weight->fields['products_attributes_weight'];
+        if ($attrib_weight->fields['products_attributes_weight_prefix'] == '-') {
+            $attribute_weight *= -1;
+        }
+    }
+    return $attribute_weight;
 }
 
 function eo_get_product_attribute_prices($attr_id, $attr_value = '', $qty = 1) 
@@ -968,6 +997,30 @@ function eo_add_product_to_order($order_id, $product)
         'products_discount_type_from' => $product['products_discount_type_from'],
         'products_prid' => $product['id']
     );
+    
+    // -----
+    // Include fields added to the 'orders_products' table for the zc156 release,
+    // so long as the Zen Cart version we're running under is 1.5.6 or later.
+    //
+    if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) >= '1.5.6') {
+        $sql_data_array = array_merge(
+            $sql_data_array,
+            array(
+                'products_weight' => $product['products_weight'],
+                'products_virtual' => $product['products_virtual'],
+                'product_is_always_free_shipping' => $product['product_is_always_free_shipping'],
+                'products_quantity_order_min'  => $product['products_quantity_order_min'],
+                'products_quantity_order_units' => $product['products_quantity_order_units'],
+                'products_quantity_order_max' => $product['products_quantity_order_max'],
+                'products_quantity_mixed' => $product['products_quantity_mixed'],
+                'products_mixed_discount_quantity' => $product['products_mixed_discount_quantity'],
+            )
+        );
+    }
+    
+    // -----
+    // Add the product to the order.
+    //
     zen_db_perform(TABLE_ORDERS_PRODUCTS, $sql_data_array);
     $order_products_id = $db->Insert_ID();
 
@@ -1060,6 +1113,7 @@ function eo_add_product_to_order($order_id, $product)
                 'products_prid' => $product['id']
             );
             zen_db_perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);
+            $order_products_attributes_id = $db->Insert_ID();
 
             if (DOWNLOAD_ENABLED == 'true' && isset($attributes_values->fields['products_attributes_filename']) && !empty($attributes_values->fields['products_attributes_filename'])) {
                 $sql_data_array = array(
@@ -1070,6 +1124,15 @@ function eo_add_product_to_order($order_id, $product)
                     'download_count' => $attributes_values->fields['products_attributes_maxcount'],
                     'products_prid' => $product['id']
                 );
+
+                // -----
+                // Include fields added to the 'orders_products_download' table for the zc156 release,
+                // so long as the Zen Cart version we're running under is 1.5.6 or later.
+                //
+                if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) >= '1.5.6') {
+                    $sql_data_array['products_attributes_id'] = $order_products_attributes_id;
+                }
+                
                 zen_db_perform(TABLE_ORDERS_PRODUCTS_DOWNLOAD, $sql_data_array);
             }
         }

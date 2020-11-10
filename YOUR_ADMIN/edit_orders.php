@@ -646,6 +646,19 @@ switch ($action) {
 
             // Update the order's order-totals
             eo_update_database_order_totals($oID);
+            
+            // -----
+            // If running under a Zen Cart version 1.5.6 or later, also update the order's
+            // weight.
+            //
+            if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) >= '1.5.6') {
+                $db->Execute(
+                    "UPDATE " . TABLE_ORDERS . "
+                        SET order_weight = " . $_SESSION['cart']->show_weight() . "
+                      WHERE orders_id = $oID
+                      LIMIT 1"
+                );
+            }
 
             $eo->eoLog (
                 $eo->eoFormatOrderTotalsForLog($order) . PHP_EOL .
