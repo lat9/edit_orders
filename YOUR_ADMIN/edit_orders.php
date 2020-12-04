@@ -1485,6 +1485,7 @@ if ($action == 'edit') {
 
         if (DISPLAY_PRICE_WITH_TAX == 'true') {
             $gross_price = zen_add_tax($final_price, $order->products[$i]['tax']);
+            $final_price = $gross_price;
 ?>
                                 <td class="dataTableContent a-r"><input class="amount p-g" name="update_products[<?php echo $orders_products_id; ?>][gross]" value="<?php echo $gross_price; ?>"<?php echo $data_index . ' ' . $value_parms; ?> /></td>
 <?php
