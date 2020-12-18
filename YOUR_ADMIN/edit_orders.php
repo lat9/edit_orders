@@ -364,6 +364,21 @@ switch ($action) {
                 PHP_EOL . 'Requested Products:' . PHP_EOL . $eo->eoFormatArray($_POST['update_products']) . PHP_EOL .
                 'Products in Original Order: ' . PHP_EOL . $eo->eoFormatArray($order->products)
             );
+ 
+            // -----
+            // Determine the 'base' price-calculation method to be used, setting the message to be
+            // written to the order's status-history once the order's products have been processed.
+            //
+            if (EO_PRODUCT_PRICE_CALC_METHOD == 'Auto' || EO_PRODUCT_PRICE_CALC_METHOD == 'AutoSpecials' || (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose' && $_POST['payment_calc_method'] != 3)) {
+                $price_calc_method_message = EO_MESSAGE_PRICING_AUTO;
+                if (EO_PRODUCT_PRICE_CALC_METHOD == 'AutoSpecials' || (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose' && $_POST['payment_calc_method'] == 1)) {
+                    $price_calc_method_message = EO_MESSAGE_PRICING_AUTOSPECIALS;
+                }
+                $price_calc_method = 'auto';
+            } else {
+                $price_calc_method_message = EO_MESSAGE_PRICING_MANUAL;
+                $price_calc_method = 'manual';
+            }
 
             foreach ($_POST['update_products'] as $orders_products_id => $product_update) {
                 $product_update['qty'] = floatval($product_update['qty']);
@@ -383,8 +398,7 @@ switch ($action) {
                     PHP_EOL . 'Order Product ID: ' . $orders_products_id . ' Row ID: ' . $rowID . PHP_EOL .
                     'Product in Request: ' . PHP_EOL . $eo->eoFormatArray($product_update)
                 );
- 
-
+                        
                 // Only update if there is an existing item in the order
                 if ($rowID >= 0) {
                     // Grab the old product + attributes
@@ -450,14 +464,9 @@ switch ($action) {
                         // Depending on the product-price calculation method, either the values entered
                         // or the pricing just calculated "rule".
                         //
-                        if (EO_PRODUCT_PRICE_CALC_METHOD == 'Auto' || EO_PRODUCT_PRICE_CALC_METHOD == 'AutoSpecials' || (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose' && $_POST['payment_calc_method'] != 3)) {
-                            $price_calc_method = EO_MESSAGE_PRICING_AUTO;
-                            if (EO_PRODUCT_PRICE_CALC_METHOD == 'AutoSpecials' || (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose' && $_POST['payment_calc_method'] == 1)) {
-                                $price_calc_method = EO_MESSAGE_PRICING_AUTOSPECIALS;
-                            }
+                        if ($price_calc_method == 'auto') {
                             $new_product = array_merge($product_update, $new_product);
                         } else {
-                            $price_calc_method = EO_MESSAGE_PRICING_MANUAL;
                             $new_product = array_merge($new_product, $product_update);
                         }
                         
@@ -495,7 +504,7 @@ switch ($action) {
                 // -----
                 // Add an orders-status-history record, identifying that an update was performed.
                 //
-                $eo->eoRecordStatusHistory($oID, EO_MESSAGE_ORDER_UPDATED . $price_calc_method);
+                $eo->eoRecordStatusHistory($oID, EO_MESSAGE_ORDER_UPDATED . $price_calc_method_message);
                 
                 // -----
                 // Need to force update the tax field if the tax is zero.

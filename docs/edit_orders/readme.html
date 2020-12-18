@@ -89,7 +89,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
 
 <body>
   <h1 id="title">Edit Orders for Zen Cart&reg;</h1>
-  <p>Version 4.5.5.  Copyright &copy; 2015-2020, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
+  <p>Version 4.5.6.  Copyright &copy; 2015-2020, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
   <p>Current Support Thread on the Zen Cart forums: <a href="https://www.zen-cart.com/showthread.php?200407" target="_blank">https://www.zen-cart.com/showthread.php?200407</a></p>
   <p>Released under the General Public License (see the file named <code class="no-pad">LICENSE</code> in the plugin's distribution for full details). This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>
   
@@ -513,6 +513,13 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
+          <li>v4.5.6-beta1, 2020-12-18 (lat9)<ul>
+            <li>BUGFIX: Correct &quot;missing variable&quot; PHP notice when updating an order to have no products.</li>
+            <li>The following files were changed:<ol>
+                <li>/YOUR_ADMIN/edit_orders.php</li>
+                <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
+            </ol></li>
+          </ul></li>
           <li>v4.5.5, 2020-12-04 (lat9)<ul>
             <li>BUGFIX: Include zc156-added fields in <code>orders</code>, <code>orders_products</code> and <code>orders_products_downloads</code> tables.</li>
             <li>CHANGE: Update the 'EDIT_ORDERS_ADD_PRODUCT' notification to include the SQL array used to create the base <code>orders_products</code> table record.</li>
