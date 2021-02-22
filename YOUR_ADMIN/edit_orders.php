@@ -239,6 +239,8 @@ switch ($action) {
                     EMAIL_TEXT_STATUS_UPDATED . $order_status_label .
                     EMAIL_TEXT_STATUS_PLEASE_REPLY;
 
+                $html_msg['EMAIL_SALUTATION'] = EMAIL_SALUTATION; 
+                $html_msg['EMAIL_ORDER_UPDATE_MESSAGE'] = defined('EMAIL_ORDER_UPDATE_MESSAGE') ? constant('EMAIL_ORDER_UPDATE_MESSAGE') : '';
                 $html_msg['EMAIL_CUSTOMERS_NAME'] = $check_status->fields['customers_name'];
                 $html_msg['EMAIL_TEXT_ORDER_NUMBER'] = EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID;
                 $html_msg['EMAIL_TEXT_INVOICE_URL']  = '<a href="' . $account_history_info_link .'">' . str_replace(':', '', EMAIL_TEXT_INVOICE_URL) . '</a>';
