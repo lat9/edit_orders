@@ -1480,9 +1480,9 @@ function eo_update_database_order_totals($oID)
         
         $GLOBALS['zco_notifier']->notify('EO_UPDATE_DATABASE_ORDER_TOTALS_MAIN', $oID);
         // Update the order totals in the database
-        for ($i = 0, $n = count($order_totals); $i < $n; $i++) {
-            $GLOBALS['zco_notifier']->notify('EO_UPDATE_DATABASE_ORDER_TOTALS_ITEM', $oID, $order_totals[$i]);
-            eo_update_database_order_total($oID, $order_totals[$i]);
+        foreach ($order_totals as $next_total) {
+            $GLOBALS['zco_notifier']->notify('EO_UPDATE_DATABASE_ORDER_TOTALS_ITEM', $oID, $next_total);
+            eo_update_database_order_total($oID, $next_total);
         }
 
         // -----
@@ -1490,23 +1490,25 @@ function eo_update_database_order_totals($oID)
         // needed for the 'ot_shipping' total, since there might be multiple colons (:) tacked to
         // the end of the name.
         //
-        for ($i = 0, $totals_titles = $totals_codes = array(); $i < $n; $i++) {
-            $code = $order_totals[$i]['code'];
-            $totals_titles[] = ($code == 'ot_shipping') ? rtrim($order_totals[$i]['title'], ':') : $order_totals[$i]['title'];
+        $totals_titles = array();
+        $totals_codes = array();
+        foreach ($order_totals as $next_total) {
+            $code = $next_total['code'];
+            $totals_titles[] = ($code == 'ot_shipping') ? rtrim($next_total['title'], ':') : $next_total['title'];
             $totals_codes[] = $code;
         }
-        for ($i = 0, $n = count($order->totals); $i < $n; $i++) {
-            $title = $order->totals[$i]['title'];
-            if ($order->totals[$i]['class'] == 'ot_shipping') {
+        foreach ($order->totals as $next_total) {
+            $title = $next_total['title'];
+            if ($next_total['class'] == 'ot_shipping') {
                 $title = rtrim($title, ':');
             }
-            if (!in_array($title, $totals_titles) || !in_array($order->totals[$i]['class'], $totals_codes)) {
+            if (!in_array($title, $totals_titles) || !in_array($next_total['class'], $totals_codes)) {
                 $and_clause = (!in_array($title, $totals_titles)) ? ("title = '" . zen_db_input($title) . "'") : '';
-                if (!in_array($order->totals[$i]['class'], $totals_codes)) {
+                if (!in_array($next_total['class'], $totals_codes)) {
                     if ($and_clause != '') {
                         $and_clause = "$and_clause OR ";
                     }
-                    $and_clause .= ("`class` = '" . $order->totals[$i]['class'] . "'");
+                    $and_clause .= ("`class` = '" . $next_total['class'] . "'");
                 }
                 $eo->eoLog("Removing order-total, and-clause: $and_clause");
                 $db->Execute("DELETE FROM " . TABLE_ORDERS_TOTAL . " WHERE orders_id = $oID AND ($and_clause) LIMIT 1");
