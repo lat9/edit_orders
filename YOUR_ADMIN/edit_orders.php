@@ -15,7 +15,7 @@
 // | to obtain it through the world-wide-web, please send a note to       |
 // | license@zen-cart.com so we can mail you a copy immediately.          |
 // +----------------------------------------------------------------------+
-
+//-Last modified 20210303-lat9 Edit Orders v4.6.0
 require 'includes/application_top.php';
 
 // -----
@@ -182,144 +182,15 @@ switch ($action) {
         }
         zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', "orders_id = $oID LIMIT 1");
 
-        // BEGIN TY TRACKER 1 - READ FROM POST
-        $track_id = array();
-        if (defined('TY_TRACKER') && TY_TRACKER == 'True') {
-            $track_id = zen_db_prepare_input($_POST['track_id']);
-            $ty_changed = false;
-            foreach ($track_id as $id => $track) {
-                $carrier_constant = "CARRIER_STATUS_$id";
-                if (defined($carrier_constant) && constant($carrier_constant) == 'True' && !empty($track)) {
-                    $ty_changed = true;
-                }
-            }
-            if (!$ty_changed) {
-                $track_id = array();
-            }
-        }
-        // END TY TRACKER 1 - READ FROM POST
-        $check_status = $db->Execute(
-            "SELECT customers_name, customers_email_address, orders_status, date_purchased 
-               FROM " . TABLE_ORDERS . "
-              WHERE orders_id = $oID
-              LIMIT 1"
-        );
-
-        // Begin - Update Status History & Email Customer if Necessary
-        if ($check_status->fields['orders_status'] != $status || !empty($track_id) || !empty($comments)) {
-            $customer_notified = '0';
-            if (isset($_POST['notify']) && $_POST['notify'] == '1') {
-                $notify_comments = '';
-                if (isset($_POST['notify_comments']) && ($_POST['notify_comments'] == 'on')) {
-                    if (!empty($comments)) {
-                        $notify_comments = EMAIL_TEXT_COMMENTS_UPDATE . $comments . PHP_EOL . PHP_EOL;
-                    }
-                    // BEGIN TY TRACKER 2 - EMAIL TRACKING INFORMATION
-                    if (!empty($track_id)) {
-                        $notify_comments = EMAIL_TEXT_COMMENTS_TRACKING_UPDATE . PHP_EOL . PHP_EOL;
-                        $comment = EMAIL_TEXT_COMMENTS_TRACKING_UPDATE;
-                    }
-                    foreach ($track_id as $id => $track) {
-                        if (!empty($track) && constant('CARRIER_STATUS_' . $id) == 'True') {
-                            $notify_comments .= "Your " . constant('CARRIER_NAME_' . $id) . " Tracking ID is " . $track . " \n<br /><a href=" . constant('CARRIER_LINK_' . $id) . $track . ">Click here</a> to track your package. \n<br />If the above link does not work, copy the following URL address and paste it into your Web browser. \n<br />" . constant('CARRIER_LINK_' . $id) . $track . "\n\n<br /><br />It may take up to 24 hours for the tracking information to appear on the website." . "\n<br />";
-                        }
-                    }
-                    unset($id, $track);
-                    // END TY TRACKER 32 - EMAIL TRACKING INFORMATION
-                }
-                //send emails
-                $account_history_info_link = zen_catalog_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL');
-                $date_purchased = zen_date_long($check_status->fields['date_purchased']);
-                $order_status_label = sprintf(EMAIL_TEXT_STATUS_LABEL, $orders_status_array[$status]);
-                $message =
-                    STORE_NAME . ' ' . EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID . PHP_EOL . PHP_EOL .
-                    EMAIL_TEXT_INVOICE_URL . ' ' . $account_history_info_link . PHP_EOL . PHP_EOL .
-                    EMAIL_TEXT_DATE_ORDERED . ' ' . $date_purchased . PHP_EOL . PHP_EOL .
-                    strip_tags($notify_comments) .
-                    EMAIL_TEXT_STATUS_UPDATED . $order_status_label .
-                    EMAIL_TEXT_STATUS_PLEASE_REPLY;
-
-                $html_msg['EMAIL_SALUTATION'] = EMAIL_SALUTATION; 
-                $html_msg['EMAIL_ORDER_UPDATE_MESSAGE'] = defined('EMAIL_ORDER_UPDATE_MESSAGE') ? constant('EMAIL_ORDER_UPDATE_MESSAGE') : '';
-                $html_msg['EMAIL_CUSTOMERS_NAME'] = $check_status->fields['customers_name'];
-                $html_msg['EMAIL_TEXT_ORDER_NUMBER'] = EMAIL_TEXT_ORDER_NUMBER . ' ' . $oID;
-                $html_msg['EMAIL_TEXT_INVOICE_URL']  = '<a href="' . $account_history_info_link .'">' . str_replace(':', '', EMAIL_TEXT_INVOICE_URL) . '</a>';
-                $html_msg['EMAIL_TEXT_DATE_ORDERED'] = EMAIL_TEXT_DATE_ORDERED . ' ' . $date_purchased;
-                $html_msg['EMAIL_TEXT_STATUS_COMMENTS'] = nl2br($notify_comments);
-                $html_msg['EMAIL_TEXT_STATUS_UPDATED'] = str_replace("\n", '', EMAIL_TEXT_STATUS_UPDATED);
-                $html_msg['EMAIL_TEXT_STATUS_LABEL'] = str_replace("\n", '', $order_status_label);
-                $html_msg['EMAIL_TEXT_NEW_STATUS'] = $orders_status_array[$status];
-                $html_msg['EMAIL_TEXT_STATUS_PLEASE_REPLY'] = str_replace("\n",'', EMAIL_TEXT_STATUS_PLEASE_REPLY);
-                $html_msg['EMAIL_PAYPAL_TRANSID'] = '';
-
-                zen_mail(
-                    $check_status->fields['customers_name'], 
-                    $check_status->fields['customers_email_address'], 
-                    EMAIL_TEXT_SUBJECT . ' #' . $oID, 
-                    $message, 
-                    STORE_NAME, 
-                    EMAIL_FROM, 
-                    $html_msg, 
-                    'order_status'
-                );
-                $customer_notified = '1';
-
-                // PayPal Trans ID, if any
-                $sql = 
-                    "SELECT txn_id, parent_txn_id 
-                       FROM " . TABLE_PAYPAL . " 
-                      WHERE order_id = :orderID 
-                   ORDER BY last_modified DESC, date_added DESC, parent_txn_id DESC, paypal_ipn_id DESC ";
-                $sql = $db->bindVars($sql, ':orderID', $oID, 'integer');
-                $result = $db->Execute($sql);
-                if (!$result->EOF) {
-                    $message .= PHP_EOL . PHP_EOL . ' PayPal Trans ID: ' . $result->fields['txn_id'];
-                    $html_msg['EMAIL_PAYPAL_TRANSID'] = $result->fields['txn_id'];
-                }
-
-                //send extra emails
-                if (SEND_EXTRA_ORDERS_STATUS_ADMIN_EMAILS_TO_STATUS == '1' and SEND_EXTRA_ORDERS_STATUS_ADMIN_EMAILS_TO != '') {
-                    zen_mail(
-                        '', 
-                        SEND_EXTRA_ORDERS_STATUS_ADMIN_EMAILS_TO, 
-                        SEND_EXTRA_ORDERS_STATUS_ADMIN_EMAILS_TO_SUBJECT . ' ' . EMAIL_TEXT_SUBJECT . ' #' . $oID, 
-                        $message, 
-                        STORE_NAME, 
-                        EMAIL_FROM, 
-                        $html_msg, 
-                        'order_status_extra'
-                    );
-                }
-            } elseif (isset($_POST['notify']) && $_POST['notify'] == '-1') {
-                // hide comment
-                $customer_notified = -1;
-            }
-
-            $sql_data_array = array(
-                'orders_id' => (int)$oID,
-                'orders_status_id' => $status,
-                'date_added' => 'now()',
-                'customer_notified' => $customer_notified,
-                'comments' => $comments,
-            );
-
-            // BEGIN TY TRACKER 3 - INCLUDE DATABASE FIELDS IN STATUS UPDATE
-            foreach ($track_id as $id => $track) {
-                $sql_data_array['track_id' . $id] = zen_db_input($track);
-            }
-            unset($id, $track);
-            // END TY TRACKER 3 - INCLUDE DATABASE FIELDS IN STATUS UPDATE
-            zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-
-            $sql_data_array = array(
-                'orders_status' => zen_db_input($status),
-                'last_modified' => 'now()'
-            );
-            zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', "orders_id=$oID LIMIT 1");
-            unset($sql_data_array);
-            $order_updated = true;
-        }
-        // End - Update Status History & Email Customer if Necessary
+        // -----
+        // Update the order's status-history (and send emails, if requested) via the common
+        // Zen Cart function.
+        //
+        $email_include_message = (isset($_POST['notify_comments']) && $_POST['notify_comments'] == 'on');
+        $customer_notified = isset($_POST['notify']) ? (int)$_POST['notify'] : 0;
+        
+        $status_updated = zen_update_orders_history($oID, $comments, null, $status, $customer_notified, $email_include_message);
+        $order_updated = ($status_updated > 0);
 
         // -----
         // Load the order's current details (noting that any address-related updates were performed
@@ -1025,7 +896,7 @@ if ($action == 'edit') {
 <?php
     $max_telephone_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_telephone') . '"';
     $max_email_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_email_address') . '"';
-    
+
     // -----
     // Give a watching observer the opportunity to supply additional contact-information for the order.
     //
@@ -1279,7 +1150,7 @@ if ($action == 'edit') {
     //
     $name_parms = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_name') . '" class="eo-name"';
     $model_parms = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_model') . '" class="eo-name"';
-    
+
     // -----
     // Loop through each of the products in the order.
     //
@@ -1352,7 +1223,7 @@ if ($action == 'edit') {
             for ($j = 0, $j2 = count($attrs); $j < $j2; $j++) {
                 $option_id = $optionID[$j];
                 $optionInfo = $attrs[$option_id];
-                
+
                 // -----
                 // If an option for the product wasn't selected (or provided, in the case of TEXT
                 // attributes) previously, there's nothing to be selected for its to-be-displayed
@@ -1400,7 +1271,7 @@ if ($action == 'edit') {
                         ) . "<br />\n";
                         echo $option_type_hidden_field;
                         break;
-                        
+
                     case PRODUCTS_OPTIONS_TYPE_CHECKBOX:
                         // First we need to see which items are checked.
                         // This also handles correctly forwarding $id_map.
@@ -1427,7 +1298,7 @@ if ($action == 'edit') {
                         }
                         echo $option_type_hidden_field . '</div>';
                         break;
-                        
+
                     case PRODUCTS_OPTIONS_TYPE_TEXT:
                         $text = null;
                         if (!empty($orders_products_attributes_id)) {
@@ -1449,7 +1320,7 @@ if ($action == 'edit') {
                         }
                         echo $option_type_hidden_field;
                         break;
-                        
+
                     case PRODUCTS_OPTIONS_TYPE_FILE:
                         $optionValue = '';
                         if (!empty($orders_products_attributes_id)) {
@@ -1461,7 +1332,7 @@ if ($action == 'edit') {
                             echo $option_type_hidden_field;
                         }
                         break;
-                        
+
                     case PRODUCTS_OPTIONS_TYPE_READONLY:
                     default:
                         $optionValue = array_shift($optionInfo['options']);
@@ -1475,7 +1346,7 @@ if ($action == 'edit') {
             }
             unset($optionID, $optionInfo, $products_options_array, $selected_attribute, $attributeId, $attributeValue, $optionValue, $text, $checked);
         } 
-        
+
         // -----
         // Starting with EO v4.4.0, both the net and gross prices are displayed when the store displays prices with tax.
         //
@@ -1536,7 +1407,7 @@ if ($action == 'edit') {
         $eo->eoLog('Display-only totals identified: ' . json_encode($display_only_totals_list));
         $display_only_totals = explode(',', str_replace(' ', '', (string)$display_only_totals_list));
     }
-    
+
     // -----
     // The number of columns displayed in this section depends on whether/not the store displays prices
     // with tax.  If so, both the net- and gross-prices are displayed; otherwise, simply the net.
@@ -1653,7 +1524,7 @@ if ($action == 'edit') {
             $index++;
         }
     }
-    
+
     $additional_totals_displayed = false;
     if (count(eo_get_available_order_totals_class_values($oID)) > 0) {
         $additional_totals_displayed = true;
@@ -1672,7 +1543,6 @@ if ($action == 'edit') {
     unset($i, $index, $n, $total, $details); 
 ?>
 <!-- End Order Total Block -->
-
                         </table></td>
                     </tr>
 
@@ -1697,235 +1567,190 @@ if ($action == 'edit') {
           ORDER BY $osh_order_by"
     );
 
-    if (defined('TY_TRACKER') && TY_TRACKER == 'True') { 
-?>
-                            <tr class="dataTableHeadingRow v-top">
-                                <td class="dataTableHeadingContent smallText"><strong><?php echo TABLE_HEADING_DATE_ADDED; ?></strong></td>
-                                <td class="dataTableHeadingContent smallText a-c"><strong><?php echo TABLE_HEADING_CUSTOMER_NOTIFIED; ?></strong></td>
-                                <td class="dataTableHeadingContent smallText"><strong><?php echo TABLE_HEADING_STATUS; ?></strong></td>
-<!-- TY TRACKER 4 BEGIN, DISPLAY TRACKING ID IN COMMENTS TABLE -->
-                                <td class="dataTableHeadingContent smallText"><strong><?php echo TABLE_HEADING_TRACKING_ID; ?></strong></td>
-<!-- END TY TRACKER 4 END, DISPLAY TRACKING ID IN COMMENTS TABLE -->
-                                <td class="dataTableHeadingContent smallText"><strong><?php echo TABLE_HEADING_COMMENTS; ?></strong></td>
-                            </tr>
-<?php
-        if ($orders_history->RecordCount() > 0) {
-            while (!$orders_history->EOF) {
-                $icon_image = eo_display_customers_notifications_icon($orders_history->fields['customer_notified']);
-?>
-                            <tr class="dataTableHeadingRow v-top">
-                                <td class="smallText"><?php echo zen_datetime_short($orders_history->fields['date_added']); ?></td>
-                                <td class="smallText a-c"><?php echo $icon_image; ?></td>
-                                <td class="smallText"><?php echo $orders_status_array[$orders_history->fields['orders_status_id']]; ?></td>
-<?php
-                $display_track_id = '&nbsp;';
-                for ($ty = 1; $ty < 6; $ty++) {
-                    $ty_field_name = "track_id$ty";
-                    if (!empty($orders_history->fields[$ty_field_name])) {
-                        $track_id = nl2br(zen_output_string_protected($orders_history->fields[$ty_field_name]));
-                        $display_track_id .= (constant("CARRIER_NAME_$ty") . ': <a href="' . constant("CARRIER_LINK_$ty") . $track_id . ' target="_blank">' . $track_id . '</a>&nbsp;');
-                    }
-                }
-?>
-                                <td class="smallText"><?php echo $display_track_id; ?></td>
-                                <td class="smallText"><?php echo nl2br(zen_output_string_protected($orders_history->fields['comments'])); ?></td>
-                            </tr>
-<?php
-                $orders_history->MoveNext();
-            }
-        } else {
-?>
-                            <tr>
-                                <td class="smallText" colspan="5"><?php echo TEXT_NO_ORDER_HISTORY; ?></td>
-                            </tr>
-<?php
-        }
-    } else {
-        if ($orders_history->EOF) {
+    if ($orders_history->EOF) {
 ?>
                     <tr>
                         <td class="smallText no-osh"><?php echo TEXT_NO_ORDER_HISTORY; ?></td>
                     </tr>
 <?php
-        } else {
-            // -----
-            // Initialize the table describing the "standard" table elements to display, then issue a notification
-            // that allows a watching observer to manipulate the table to re-arrange the order of each row's
-            // display and/or insert additional display fields.  The table's columns (left-to-right) will be displayed
-            // in the order specified in this table (top-to-bottom).
-            //
-            // Each table element is an associative array (keyed on the field name in the orders_status_history table),
-            // containing an array with the following recognized elements:
-            //
-            // title ................ (Required) The title to be displayed in the table header for the data column.  Note that the
-            //                        'title' can be blank, indicating that no title is associated with the database field and that
-            //                        the field is not displayed within the overall status table.
-            // show_function ........ (Optional) Identifies the name of the function to be called to display the database value.  The
-            //                        function takes either 1 (the database field value) or 2 (the database field value, then the field
-            //                        name), depending on the value of the 'include_field_name' field.
-            //                        If the element is not supplied, the value present in the database is displayed.
-            // include_field_name ... (Optional) If a 'show_function' is identified and this element is (bool)true, then the 'show_function'
-            //                        takes two parameters, as identified above.
-            // align ................ (Optional) Identifies the alignment to be applied when rendering the element in the table, one of:
-            //                        center, right or left (the default).
-            //
-            $table_elements = array(
-                'date_added' => array(
-                    'title' => TABLE_HEADING_DATE_ADDED,
-                    'show_function' => 'zen_datetime_short',
-                    'include_field_name' => false
-                ),
-                'customer_notified' => array(
-                    'title' => TABLE_HEADING_CUSTOMER_NOTIFIED,
-                    'show_function' => 'eo_display_customers_notifications_icon',
-                    'align' => 'center',
-                    'include_field_name' => false
-                ),
-                'orders_status_id' => array(
-                    'title' => TABLE_HEADING_STATUS,
-                    'show_function' => 'built-in'
-                ),
-                'comments' => array(
-                    'title' => TABLE_HEADING_COMMENTS,
-                    'show_function' => 'built-in'
-                ),
+    } else {
+        // -----
+        // Initialize the table describing the "standard" table elements to display, then issue a notification
+        // that allows a watching observer to manipulate the table to re-arrange the order of each row's
+        // display and/or insert additional display fields.  The table's columns (left-to-right) will be displayed
+        // in the order specified in this table (top-to-bottom).
+        //
+        // Each table element is an associative array (keyed on the field name in the orders_status_history table),
+        // containing an array with the following recognized elements:
+        //
+        // title ................ (Required) The title to be displayed in the table header for the data column.  Note that the
+        //                        'title' can be blank, indicating that no title is associated with the database field and that
+        //                        the field is not displayed within the overall status table.
+        // show_function ........ (Optional) Identifies the name of the function to be called to display the database value.  The
+        //                        function takes either 1 (the database field value) or 2 (the database field value, then the field
+        //                        name), depending on the value of the 'include_field_name' field.
+        //                        If the element is not supplied, the value present in the database is displayed.
+        // include_field_name ... (Optional) If a 'show_function' is identified and this element is (bool)true, then the 'show_function'
+        //                        takes two parameters, as identified above.
+        // align ................ (Optional) Identifies the alignment to be applied when rendering the element in the table, one of:
+        //                        center, right or left (the default).
+        //
+        $table_elements = array(
+            'date_added' => array(
+                'title' => TABLE_HEADING_DATE_ADDED,
+                'show_function' => 'zen_datetime_short',
+                'include_field_name' => false
+            ),
+            'customer_notified' => array(
+                'title' => TABLE_HEADING_CUSTOMER_NOTIFIED,
+                'show_function' => 'eo_display_customers_notifications_icon',
+                'align' => 'center',
+                'include_field_name' => false
+            ),
+            'orders_status_id' => array(
+                'title' => TABLE_HEADING_STATUS,
+                'show_function' => 'built-in'
+            ),
+            'comments' => array(
+                'title' => TABLE_HEADING_COMMENTS,
+                'show_function' => 'built-in'
+            ),
+        );
+
+        // -----
+        // If the orders_status_history::updated_by field exists, add the display of that element to the table.
+        //
+        if (isset($orders_history->fields['updated_by'])) {
+            $table_elements['updated_by'] = array(
+                'title' => TABLE_HEADING_UPDATED_BY,
+                'align' => 'center',
+                'show_function' => 'built-in'
             );
-            
-            // -----
-            // If the orders_status_history::updated_by field exists, add the display of that element to the table.
-            //
-            if (isset($orders_history->fields['updated_by'])) {
-                $table_elements['updated_by'] = array(
-                    'title' => TABLE_HEADING_UPDATED_BY,
-                    'align' => 'center',
-                    'show_function' => 'built-in'
-                );
-            }
-            $zco_notifier->notify('EDIT_ORDERS_STATUS_DISPLAY_ARRAY_INIT', $oID, $table_elements);
-            if (!is_array($table_elements) || count($table_elements) == 0) {
-                trigger_error('Non-array value returned from EDIT_ORDERS_STATUS_DISPLAY_ARRAY_INIT: ' . json_encode($table_elements), E_USER_ERROR);
-                exit();
-            }
-            
-            $eo->eoLog('Preparing to display status history: ' . $eo->eoFormatArray($table_elements));
-            
-            // -----
-            // Create the table's header, based on the current table-elements ...
-            //
+        }
+        $zco_notifier->notify('EDIT_ORDERS_STATUS_DISPLAY_ARRAY_INIT', $oID, $table_elements);
+        if (!is_array($table_elements) || count($table_elements) == 0) {
+            trigger_error('Non-array value returned from EDIT_ORDERS_STATUS_DISPLAY_ARRAY_INIT: ' . json_encode($table_elements), E_USER_ERROR);
+            exit();
+        }
+
+        $eo->eoLog('Preparing to display status history: ' . $eo->eoFormatArray($table_elements));
+
+        // -----
+        // Create the table's header, based on the current table-elements ...
+        //
 ?>
                     <tr class="dataTableHeadingRow v-top">
 <?php
-            foreach ($table_elements as $field_name => $field_values) {
-                if (empty($field_values['title'])) {
-                    continue;
+        foreach ($table_elements as $field_name => $field_values) {
+            if (empty($field_values['title'])) {
+                continue;
+            }
+            
+            $align_class = '';
+            if (isset($field_values['align'])) {
+                switch ($field_values['align']) {
+                    case 'right':
+                        $align_class = ' a-r';
+                        break;
+                    case 'center':
+                        $align_class = ' a-c';
+                        break;
+                    default:
+                        $align_class = ' a-l';
+                        break;
                 }
-                
-                $align_class = '';
-                if (isset($field_values['align'])) {
-                    switch ($field_values['align']) {
-                        case 'right':
-                            $align_class = ' a-r';
-                            break;
-                        case 'center':
-                            $align_class = ' a-c';
-                            break;
-                        default:
-                            $align_class = ' a-l';
-                            break;
-                    }
-                }
-                $table_elements[$field_name]['align_class'] = $align_class;
+            }
+            $table_elements[$field_name]['align_class'] = $align_class;
 ?>
                         <td class="dataTableHeadingContent smallText<?php echo $align_class; ?>"><?php echo $field_values['title']; ?></td>
 <?php
-            }
+        }
 ?>
                     </tr>
 <?php
-            // -----
-            // Loop through each of the order's history records, displaying the columns as
-            // identified in the current table elements.
-            //
-            while (!$orders_history->EOF) {
+        // -----
+        // Loop through each of the order's history records, displaying the columns as
+        // identified in the current table elements.
+        //
+        while (!$orders_history->EOF) {
 ?>
                     <tr class="v-top">
 <?php
-                foreach ($table_elements as $field_name => $field_values) {
-                    // -----
-                    // If the current field name is not present in the orders_status_history
-                    // table, there's nothing to do.
-                    //
-                    if (!array_key_exists($field_name, $orders_history->fields)) {
-                        continue;
-                    }
+            foreach ($table_elements as $field_name => $field_values) {
+                // -----
+                // If the current field name is not present in the orders_status_history
+                // table, there's nothing to do.
+                //
+                if (!array_key_exists($field_name, $orders_history->fields)) {
+                    continue;
+                }
+                
+                // -----
+                // Grab the current field's value to improve readability.
+                //
+                $field_value = $orders_history->fields[$field_name];
+                
+                // -----
+                // No show_function?  Then just output the associated field value.
+                //
+                if (empty($field_values['show_function'])) {
+                    $display_value = $field_value;
+                } else {
+                    $show_function = $field_values['show_function'];
                     
                     // -----
-                    // Grab the current field's value to improve readability.
+                    // Built-in function?  Make sure it's supported and then provide the output for the
+                    // current field.
                     //
-                    $field_value = $orders_history->fields[$field_name];
-                    
+                    if ($show_function == 'built-in') {
+                        switch ($field_name) {
+                            case 'orders_status_id':
+                                $display_value = $orders_status_array[$field_value];
+                                break;
+                            case 'comments':
+                                $display_value = nl2br(zen_output_string_protected($field_value));
+                                break;
+                            case 'updated_by':
+                                $display_value = $field_value;
+                                break;
+                            default:
+                                trigger_error("Unknown field ($field_name) for built-in function display.", E_USER_ERROR);
+                                exit();
+                                break;
+                        }
                     // -----
-                    // No show_function?  Then just output the associated field value.
+                    // Otherwise, it's a 'specified' show_function.  Make sure it exists and then pass either one or
+                    // two arguments, depending on the table's configuration.
                     //
-                    if (empty($field_values['show_function'])) {
-                        $display_value = $field_value;
                     } else {
                         $show_function = $field_values['show_function'];
-                        
-                        // -----
-                        // Built-in function?  Make sure it's supported and then provide the output for the
-                        // current field.
-                        //
-                        if ($show_function == 'built-in') {
-                            switch ($field_name) {
-                                case 'orders_status_id':
-                                    $display_value = $orders_status_array[$field_value];
-                                    break;
-                                case 'comments':
-                                    $display_value = nl2br(zen_output_string_protected($field_value));
-                                    break;
-                                case 'updated_by':
-                                    $display_value = $field_value;
-                                    break;
-                                default:
-                                    trigger_error("Unknown field ($field_name) for built-in function display.", E_USER_ERROR);
-                                    exit();
-                                    break;
-                            }
-                        // -----
-                        // Otherwise, it's a 'specified' show_function.  Make sure it exists and then pass either one or
-                        // two arguments, depending on the table's configuration.
-                        //
+                        if (!function_exists($show_function)) {
+                            trigger_error("Function ($show_function) to display '$field_name' does not exist.", E_USER_ERROR);
+                            exit();
+                        }
+                        if (!empty($field_values['include_field_name']) && $field_values['include_field_name'] === true) {
+                            $display_value = $show_function($field_value, $field_name);
                         } else {
-                            $show_function = $field_values['show_function'];
-                            if (!function_exists($show_function)) {
-                                trigger_error("Function ($show_function) to display '$field_name' does not exist.", E_USER_ERROR);
-                                exit();
-                            }
-                            if (!empty($field_values['include_field_name']) && $field_values['include_field_name'] === true) {
-                                $display_value = $show_function($field_value, $field_name);
-                            } else {
-                                $display_value = $show_function($field_value);
-                            }
+                            $display_value = $show_function($field_value);
                         }
                     }
-                    
-                    // -----
-                    // Output the current field's display-value if there's an associated header-column.
-                    //
-                    if (!empty($field_values['title'])) {
+                }
+                
+                // -----
+                // Output the current field's display-value if there's an associated header-column.
+                //
+                if (!empty($field_values['title'])) {
 ?>
                         <td class="smallText<?php echo $field_values['align_class']; ?>"><?php echo $display_value; ?></td>
 <?php
-                    }
                 }
+            }
 ?>
                     </tr>
 <?php
-                $orders_history->MoveNext();
-            }
+            $orders_history->MoveNext();
         }
-    } 
+    }
 ?>
                         </table></td>
                     </tr>
@@ -1959,40 +1784,6 @@ if ($action == 'edit') {
         }
     }
 ?>
-<!-- TY TRACKER 7 BEGIN, ENTER TRACKING INFORMATION -->
-<?php 
-    if (defined('TY_TRACKER') && TY_TRACKER == 'True') { 
-?>
-    <tr>
-        <td class="main">
-            <table>
-                <tr>
-                    <td class="main"><strong><?php echo zen_image(DIR_WS_IMAGES . 'icon_track_add.png', ENTRY_ADD_TRACK) . '&nbsp;' . ENTRY_ADD_TRACK; ?></strong></td>
-                </tr>
-                <tr class="v-top">
-                    <td>
-                        <table class="w100">
-                            <tr class="dataTableHeadingRow">
-                                <td class="dataTableHeadingContent smallText"><strong><?php echo TABLE_HEADING_CARRIER_NAME; ?></strong></td>
-                                <td class="dataTableHeadingContent smallText"><strong><?php echo TABLE_HEADING_TRACKING_ID; ?></strong></td>
-                            </tr>
-                            <?php for($i=1;$i<=5;$i++) {
-                                if (constant('CARRIER_STATUS_' . $i) == 'True') { ?>
-                            <tr>
-                            <td><?php echo constant('CARRIER_NAME_' . $i); ?></td><td valign="top"><?php echo zen_draw_input_field('track_id[' . $i . ']', '', 'size="50"'); ?></td>
-                            </tr>
-                            <?php } } ?>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-<?php 
-    } 
-?>
-<!-- TY TRACKER 7 END, ENTER TRACKING INFORMATION -->
-
                     <tr>
                         <td><?php echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?></td>
                     </tr>
