@@ -14,7 +14,7 @@
 // | to obtain it through the world-wide-web, please send a note to       |
 // | license@zen-cart.com so we can mail you a copy immediately.          |
 // +----------------------------------------------------------------------+
-
+//-Last updated for EO v4.5.7, 20210304 (lat9)
 // -----
 // Since other plugins (like "Admin New Order") also provide some of these functions,
 // continue this function-file "load" only if the current page-load is on
@@ -735,6 +735,7 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
                 case PRODUCTS_OPTIONS_TYPE_FILE:
                     $attr['option_id'] = $option_id;
                     $attr['value'] = $details['value'];
+                    $attr['value_id'] = 0;
                     if ($attr['value'] == '') {
                         $add_attribute = false;
                         break;
