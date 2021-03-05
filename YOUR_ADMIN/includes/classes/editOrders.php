@@ -15,7 +15,7 @@ class editOrders extends base
         $this->eo_action_level = EO_DEBUG_ACTION_LEVEL;
         $this->orders_id = (int)$orders_id;
         $this->tax_updated = false;
-        $this->product_tax_descriptions = array();
+        $this->product_tax_descriptions = [];
         
         $currency_info = $db->Execute(
             "SELECT currency, currency_value 
@@ -85,7 +85,7 @@ class editOrders extends base
         // Cleanup tax_groups in the order (broken code in order.php)
         // Shipping module will automatically add tax if needed.
         //
-        $order->info['tax_groups'] = array();
+        $order->info['tax_groups'] = [];
         foreach ($order->products as $product) {
             $this->getProductTaxes($product);
         }
@@ -185,18 +185,18 @@ class editOrders extends base
         );
         if (!$query->EOF) {
             $order->info['shipping_cost'] = $query->fields['value'];
-            $_SESSION['shipping'] = array(
+            $_SESSION['shipping'] = [
                 'title' => $order->info['shipping_method'],
                 'id' => $order->info['shipping_module_code'] . '_',
                 'cost' => $order->info['shipping_cost']
-            );
+            ];
         } else {
             $order->info['shipping_cost'] = 0;
-            $_SESSION['shipping'] = array(
+            $_SESSION['shipping'] = [
                 'title' => EO_FREE_SHIPPING,
                 'id' => 'free_free',
                 'cost' => 0
-            );
+            ];
         }
         return $order;
     }
@@ -219,18 +219,18 @@ class editOrders extends base
         }
         if ($found_ot_shipping) {
             $order->info['shipping_cost'] = $shipping_cost;
-            $_SESSION['shipping'] = array(
+            $_SESSION['shipping'] = [
                 'title' => $shipping_title,
                 'id' => $shipping_module,
                 'cost' => $shipping_cost
-            );
+            ];
         } else {
             $order->info['shipping_cost'] = 0;
-            $_SESSION['shipping'] = array(
+            $_SESSION['shipping'] = [
                 'title' => EO_FREE_SHIPPING,
                 'id' => 'free_free',
                 'cost' => 0
-            );
+            ];
         }
         $this->eoLog("initializeShippingCostFromPostedValue, ot_shipping: $ot_shipping, shipping cost: {$order->info['shipping_cost']}.");
         return $order;
@@ -553,7 +553,7 @@ class editOrders extends base
     public function removeTaxFromShippingCost(&$order)
     {
         $shipping_tax_processed = false;
-        $this->notify('NOTIFY_EO_REMOVE_SHIPPING_TAX', array(), $order, $shipping_tax_processed);
+        $this->notify('NOTIFY_EO_REMOVE_SHIPPING_TAX', [], $order, $shipping_tax_processed);
         if ($shipping_tax_processed === true) {
             $this->eoLog("removeTaxFromShippingCost override, shipping_cost ({$order->info['shipping_cost']}), order tax ({$order->info['tax']})", 'tax');
             return;
@@ -587,7 +587,7 @@ class editOrders extends base
     //
     public function eoFormatArray($a)
     {
-        return str_replace(array('},{', '","'), array('},' . PHP_EOL . '{', '",' . PHP_EOL . '"'), json_encode($a));
+        return str_replace(['},{', '","'], ['},' . PHP_EOL . '{', '",' . PHP_EOL . '"'], json_encode($a));
     }
     
     // -----
@@ -642,24 +642,7 @@ class editOrders extends base
     //
     public function eoRecordStatusHistory($oID, $message)
     {
-        if (function_exists('zen_update_orders_history')) {
-            zen_update_orders_history($oID, $message);
-        } else {
-            $check_status = $GLOBALS['db']->Execute(
-                "SELECT orders_status
-                   FROM " . TABLE_ORDERS . "
-                  WHERE orders_id = $oID
-                  LIMIT 1"
-            );
-            $osh_sql = array(
-                'orders_id' => $oID,
-                'orders_status_id' => $check_status->fields['orders_status'],
-                'date_added' => 'now()',
-                'customer_notified' => -1,
-                'comments' => $message
-            );
-            zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $osh_sql);
-        }
+        zen_update_orders_history($oID, $message);
     }
     
     // -----

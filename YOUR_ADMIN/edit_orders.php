@@ -66,8 +66,8 @@ $queryCache = new EditOrdersQueryCache();
 require DIR_WS_CLASSES . 'editOrders.php';
 $eo = new editOrders($oID);
 
-$orders_statuses = array();
-$orders_status_array = array();
+$orders_statuses = [];
+$orders_status_array = [];
 $order_by_field = ($sniffer->field_exists(TABLE_ORDERS_STATUS, 'sort_order')) ? 'sort_order' : 'orders_status_id';
 $orders_status_query = $db->Execute(
     "SELECT orders_status_id, orders_status_name
@@ -78,10 +78,10 @@ $orders_status_query = $db->Execute(
 while (!$orders_status_query->EOF) {
     $status_id = $orders_status_query->fields['orders_status_id'];
     $status_name = $orders_status_query->fields['orders_status_name'];
-    $orders_statuses[] = array(
+    $orders_statuses[] = [
         'id' => $status_id,
         'text' => "$status_name [$status_id]"
-    );
+    ];
     $orders_status_array[$status_id] = $status_name;
     
     $orders_status_query->MoveNext();
@@ -100,7 +100,7 @@ switch ($action) {
         }
 
         $order_updated = false;
-        $sql_data_array = array(
+        $sql_data_array = [
             'customers_name' => $_POST['update_customer_name'],
             'customers_company' => $_POST['update_customer_company'],
             'customers_street_address' => $_POST['update_customer_street_address'],
@@ -135,7 +135,7 @@ switch ($action) {
             'cc_owner' => (isset($_POST['update_info_cc_owner'])) ? $_POST['update_info_cc_owner'] : '',
             'cc_expires' => (isset($_POST['update_info_cc_expires'])) ? $_POST['update_info_cc_expires'] : '',
             'order_tax' => 0
-        );
+        ];
 
         // If the country was passed as an id, change it to the country name for
         // storing in the database. This is done in case a country is removed in
@@ -220,7 +220,7 @@ switch ($action) {
             //
             if (isset($_POST['reset_totals'])) {
                 $order->info['tax'] = $order->info['shipping_tax'] = $order->info['shipping_cost'] = $order->info['total'] = $order->info['subtotal'] = 0;
-                $order->totals = array();
+                $order->totals = [];
                 foreach ($order->info['tax_groups'] as $key => $value) {
                     $order->info['tax_groups'][$key] = 0;
                 }
@@ -386,13 +386,13 @@ switch ($action) {
                 $decimals = $currencies->get_decimal_places($_SESSION['currency']);
                 if (zen_round($order->info['tax'], $decimals) == 0) {
                     if (!isset($_POST['update_total'])) {
-                        $_POST['update_total'] = array();
+                        $_POST['update_total'] = [];
                     }
-                    $_POST['update_total'][] = array(
+                    $_POST['update_total'][] = [
                         'code' => 'ot_tax',
                         'title' => '',
                         'value' => 0,
-                    );
+                    ];
                 }
             }
 
@@ -513,13 +513,13 @@ switch ($action) {
                 }
 
                 if (!$found) {
-                    $order->totals[] = array(
+                    $order->totals[] = [
                         'class' => $order_total['code'],
                         'title' => $order_total['title'],
                         'value' => $order_total['value'],
                         'text' => $order_total['text'],
                         'sort_order' => $order_total['sort_order']
-                    );
+                    ];
                 }
 
                 // Always update the database (allows delete)
@@ -569,7 +569,7 @@ switch ($action) {
         );
         $zco_notifier->notify('EDIT_ORDERS_ORDER_UPDATED', $order);
 
-        zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit', 'NONSSL'));
+        zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit', 'NONSSL'));
         break;
 
     case 'add_prdct':
@@ -601,7 +601,7 @@ switch ($action) {
             }
 
             // Retrieve the information for the new product
-            $attributes = (isset($_POST['id'])) ? zen_db_prepare_input($_POST['id']) : array();
+            $attributes = (isset($_POST['id'])) ? zen_db_prepare_input($_POST['id']) : [];
             $new_product = eo_get_new_product(
                 $add_product_products_id,
                 $add_product_quantity,
@@ -659,7 +659,7 @@ switch ($action) {
                 $comments .= sprintf(EO_MESSAGE_ATTRIBS_ADDED, $attribs_added);
             }
             $eo->eoRecordStatusHistory($oID, $comments);
-            zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit'));
+            zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
         }
         break;
         
@@ -855,9 +855,9 @@ if ($action == 'edit') {
     // The $additional_contact_info (supplied as the notification's 2nd parameter), if supplied, is a
     // numerically-indexed array of arrays containing each label and associated content, e.g.:
     //
-    // $additional_contact_info[] = array('label' => LABEL_TEXT, 'content' => $field_content);
+    // $additional_contact_info[] = ['label' => LABEL_TEXT, 'content' => $field_content];
     //
-    $additional_contact_info = array();
+    $additional_contact_info = [];
     $zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_CONTACT_INFORMATION', $order, $additional_contact_info);
 ?>
                     <tr>
@@ -977,11 +977,11 @@ if ($action == 'edit') {
     $reset_totals_block = '<b>' . RESET_TOTALS . '</b>' . zen_draw_checkbox_field('reset_totals', '', (EO_TOTAL_RESET_DEFAULT == 'on'));
     $payment_calc_choice = '';
     if (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose') {
-        $choices = array(
-            array('id' => 1, 'text' => PAYMENT_CALC_AUTOSPECIALS),
-            array('id' => 2, 'text' => PAYMENT_CALC_AUTO),
-            array('id' => 3, 'text' => PAYMENT_CALC_MANUAL)
-        );
+        $choices = [
+            ['id' => 1, 'text' => PAYMENT_CALC_AUTOSPECIALS],
+            ['id' => 2, 'text' => PAYMENT_CALC_AUTO],
+            ['id' => 3, 'text' => PAYMENT_CALC_MANUAL]
+        ];
         switch (EO_PRODUCT_PRICE_CALC_DEFAULT) {
             case 'AutoSpecials':
                 $default = 1;
@@ -1033,18 +1033,18 @@ if ($action == 'edit') {
     // To add more columns at the beginning of the order's products' table, a
     // watching observer can provide an associative array in the form:
     //
-    // $extra_headings = array(
-    //     array(
+    // $extra_headings = [
+    //     [
     //       'align' => $alignment,    // One of 'center', 'right', or 'left' (optional)
     //       'text' => $value
-    //     ),
-    // );
+    //     ],
+    // ];
     //
     // Observer note:  Be sure to check that the $p2/$extra_headings value is specifically (bool)false before initializing, since
     // multiple observers might be injecting content!
     //
     $extra_headings = false;
-    $zco_notifier->notify('EDIT_ORDERS_PRODUCTS_HEADING_1', array(), $extra_headings);
+    $zco_notifier->notify('EDIT_ORDERS_PRODUCTS_HEADING_1', [], $extra_headings);
     if (is_array($extra_headings)) {
         foreach ($extra_headings as $heading_info) {
             $align = '';
@@ -1116,12 +1116,12 @@ if ($action == 'edit') {
     // To add more columns at the beginning of the order's products' table, a
     // watching observer can provide an associative array in the form:
     //
-    // $extra_data = array(
-    //     array(
+    // $extra_data = [
+    //     [
     //       'align' => $alignment,    // One of 'center', 'right', or 'left' (optional)
     //       'text' => $value
-    //     ),
-    // );
+    //     ],
+    // ];
     //
     // Observer note:  Be sure to check that the $p2/$extra_data value is specifically (bool)false before initializing, since
     // multiple observers might be injecting content!
@@ -1174,7 +1174,7 @@ if ($action == 'edit') {
                 // attributes) previously, there's nothing to be selected for its to-be-displayed
                 // value.
                 //
-                $orders_products_attributes_id = (!array_key_exists($option_id, $selected_attributes_id_mapping)) ? array() : $selected_attributes_id_mapping[$option_id];
+                $orders_products_attributes_id = (!array_key_exists($option_id, $selected_attributes_id_mapping)) ? [] : $selected_attributes_id_mapping[$option_id];
                 
                 $option_type = $optionInfo['type'];
                 $option_type_hidden_field = zen_draw_hidden_field("update_products[$orders_products_id][attr][$option_id][type]", $option_type);
@@ -1193,16 +1193,16 @@ if ($action == 'edit') {
                     case PRODUCTS_OPTIONS_TYPE_SELECT_SBA:
                     case PRODUCTS_OPTIONS_TYPE_IMAGE_SWATCH:
                         echo "<label class=\"attribsSelect\" for=\"opid-$orders_products_id-oid-$option_id\">$option_name</label>";
-                        $products_options_array = array();
+                        $products_options_array = [];
                         $selected_attribute = null;
                         foreach ($optionInfo['options'] as $attributeId => $attributeValue) {
                             if (!empty($orders_products_attributes_id) && eo_is_selected_product_attribute_id($orders_products_attributes_id[0], $attributeId)) {
                                 $selected_attribute = $attributeId;
                             }
-                            $products_options_array[] = array(
+                            $products_options_array[] = [
                                 'id' => $attributeId,
                                 'text' => $attributeValue
-                            );
+                            ];
                         }
                         if ($selected_attribute === null) {
                             $selected_attribute = $products_options_array[0]['id'];
@@ -1220,7 +1220,7 @@ if ($action == 'edit') {
                     case PRODUCTS_OPTIONS_TYPE_CHECKBOX:
                         // First we need to see which items are checked.
                         // This also handles correctly forwarding $id_map.
-                        $checked = array();
+                        $checked = [];
                         foreach ($optionInfo['options'] as $attributeId => $attributeValue) {
                             for ($k = 0, $k2 = count($orders_products_attributes_id); $k < $k2; $k++) {
                                 if (eo_is_selected_product_attribute_id($orders_products_attributes_id[$k], $attributeId)) {
@@ -1328,7 +1328,7 @@ if ($action == 'edit') {
 <!-- Begin Order Total Block -->
                             <tr>
 <?php
-    $eo_href_link = zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$oID&amp;action=add_prdct");
+    $eo_href_link = zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$oID&amp;action=add_prdct");
     $eo_add_product_button = zen_image_button('button_add_product.gif', TEXT_ADD_NEW_PRODUCT);
     $eo_add_button_link = '<a href="' . $eo_href_link . '" class="btn btn-warning " role="button">' . TEXT_ADD_NEW_PRODUCT . '</a>';
 
@@ -1344,7 +1344,7 @@ if ($action == 'edit') {
     //
     $display_only_totals_list = '';
     $zco_notifier->notify('EDIT_ORDERS_DISPLAY_ONLY_TOTALS', '', $display_only_totals_list);
-    $display_only_totals = array();
+    $display_only_totals = [];
     if (!empty($display_only_totals_list)) {
         $eo->eoLog('Display-only totals identified: ' . json_encode($display_only_totals_list));
         $display_only_totals = explode(',', str_replace(' ', '', (string)$display_only_totals_list));
@@ -1537,38 +1537,33 @@ if ($action == 'edit') {
         // align ................ (Optional) Identifies the alignment to be applied when rendering the element in the table, one of:
         //                        center, right or left (the default).
         //
-        $table_elements = array(
-            'date_added' => array(
+        $table_elements = [
+            'date_added' => [
                 'title' => TABLE_HEADING_DATE_ADDED,
                 'show_function' => 'zen_datetime_short',
                 'include_field_name' => false
-            ),
-            'customer_notified' => array(
+            ],
+            'customer_notified' => [
                 'title' => TABLE_HEADING_CUSTOMER_NOTIFIED,
                 'show_function' => 'eo_display_customers_notifications_icon',
                 'align' => 'center',
                 'include_field_name' => false
-            ),
-            'orders_status_id' => array(
+            ],
+            'orders_status_id' => [
                 'title' => TABLE_HEADING_STATUS,
                 'show_function' => 'built-in'
-            ),
-            'comments' => array(
+            ],
+            'comments' => [
                 'title' => TABLE_HEADING_COMMENTS,
                 'show_function' => 'built-in'
-            ),
-        );
-
-        // -----
-        // If the orders_status_history::updated_by field exists, add the display of that element to the table.
-        //
-        if (isset($orders_history->fields['updated_by'])) {
-            $table_elements['updated_by'] = array(
+            ],
+            'updated_by' => [
                 'title' => TABLE_HEADING_UPDATED_BY,
                 'align' => 'center',
                 'show_function' => 'built-in'
-            );
-        }
+            ],
+        ];
+
         $zco_notifier->notify('EDIT_ORDERS_STATUS_DISPLAY_ARRAY_INIT', $oID, $table_elements);
         if (!is_array($table_elements) || count($table_elements) == 0) {
             trigger_error('Non-array value returned from EDIT_ORDERS_STATUS_DISPLAY_ARRAY_INIT: ' . json_encode($table_elements), E_USER_ERROR);
@@ -1714,7 +1709,7 @@ if ($action == 'edit') {
     //
     // The additional-content array is numerically-indexed and provides the HTML to be included.
     //
-    $additional_osh_content = array();
+    $additional_osh_content = [];
     $zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_OSH_CONTENT', $order, $additional_osh_content);
     if (is_array($additional_osh_content) && count($additional_osh_content) != 0) {
         foreach ($additional_osh_content as $osh_content) {
@@ -1783,7 +1778,7 @@ if ($action == 'edit') {
 }
 
 if ($action == "add_prdct") { 
-    $order_parms = zen_get_all_get_params(array('oID', 'action', 'resend')) . "oID=$oID&amp;action=edit";
+    $order_parms = zen_get_all_get_params(['oID', 'action', 'resend']) . "oID=$oID&amp;action=edit";
 ?>
 <table class="eo-table">
     <tr>
@@ -1813,7 +1808,7 @@ if ($action == "add_prdct") {
     if ($add_product_categories_id == .5) {
         // Handle initial population of categories
         $categoriesarr = zen_get_category_tree();
-        array_unshift($categoriesarr, array('id' => 0.5, 'text' => ADDPRODUCT_CHOOSE_CATEGORY));
+        array_unshift($categoriesarr, ['id' => 0.5, 'text' => ADDPRODUCT_CHOOSE_CATEGORY]);
 
         $categoryselectoutput = zen_draw_pull_down_menu('add_product_categories_id', $categoriesarr, 0.5, 'onchange="this.form.submit();"');
     } else {
@@ -1822,7 +1817,7 @@ if ($action == "add_prdct") {
     }
 ?> 
     <tr>
-        <td><?php echo zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action', 'oID')) . "oID=$oID&amp;action=add_prdct", 'post', '', true); ?><table border="0">
+        <td><?php echo zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'oID']) . "oID=$oID&amp;action=add_prdct", 'post', '', true); ?><table border="0">
             <tr class="dataTableRow v-top">
                 <td class="dataTableContent a-r eo-label"><?php echo ADDPRODUCT_TEXT_STEP1; ?></td>
                 <td class="dataTableContent">
@@ -1871,7 +1866,7 @@ if ($action == "add_prdct") {
         }
 ?>
     <tr>
-        <td><?php echo zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action', 'oID')) . "oID=$oID&amp;action=add_prdct", 'post', '', true); ?><table border="0">
+        <td><?php echo zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'oID']) . "oID=$oID&amp;action=add_prdct", 'post', '', true); ?><table border="0">
             <tr class="dataTableRow v-top">
                 <td class="dataTableContent a-r eo-label"><?php echo ADDPRODUCT_TEXT_STEP2; ?></td>
                 <td class="dataTableContent">
@@ -1923,7 +1918,7 @@ if ($action == "add_prdct") {
             $attrs = eo_get_product_attributes_options($add_product_products_id);
 ?>
     <tr>
-        <td><?php echo zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action', 'oID')) . "oID=$oID&amp;action=add_prdct", 'post', '', true); ?><table border="0">
+        <td><?php echo zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'oID']) . "oID=$oID&amp;action=add_prdct", 'post', '', true); ?><table border="0">
             <tr class="dataTableRow v-top">
                 <td class="dataTableContent a-r eo-label"><?php echo ADDPRODUCT_TEXT_STEP3; ?></td>
                 <td class="dataTableContent">
@@ -1939,12 +1934,12 @@ if ($action == "add_prdct") {
 ?>
                     <label class="attribsSelect" for="<?php echo $attrib_id; ?>"><?php echo $option_name; ?></label>
 <?php
-                        $products_options_array = array();
+                        $products_options_array = [];
                         foreach($optionInfo['options'] as $attributeId => $attributeValue) {
-                            $products_options_array[] = array(
+                            $products_options_array[] = [
                                 'id' => $attributeId,
                                 'text' => $attributeValue
-                            );
+                            ];
                         }
                         $selected_attribute = $products_options_array[0]['id'];
                         if (isset($_POST['id'][$optionID])) {
@@ -2033,7 +2028,7 @@ if ($action == "add_prdct") {
     if ($step > 3) {
 ?>
     <tr>
-        <td><?php echo zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action', 'oID')) . "oID=$oID&amp;action=add_prdct", 'post', '', true); ?><table border="0">
+        <td><?php echo zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'oID']) . "oID=$oID&amp;action=add_prdct", 'post', '', true); ?><table border="0">
             <tr class="dataTableRow v-top">
                 <td class="dataTableContent a-r eo-label"><?php echo ADDPRODUCT_TEXT_STEP4; ?></td>
                 <td class="dataTableContent"><?php echo ADDPRODUCT_TEXT_CONFIRM_QUANTITY . 

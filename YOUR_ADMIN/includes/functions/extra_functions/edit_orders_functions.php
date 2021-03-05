@@ -77,13 +77,13 @@ if (!function_exists('zen_get_zone_id')) {
 if(!function_exists('zen_get_country_list')) {
     function zen_get_country_list($name, $selected = '', $parameters = '') 
     {
-        $countriesAtTopOfList = array();
-        $countries_array = array(
-            array(
+        $countriesAtTopOfList = [];
+        $countries_array = [
+            [
                 'id' => '', 
                 'text' => PULL_DOWN_DEFAULT
-            )
-        );
+            ]
+        ];
         $countries = zen_get_countries();
 
         // Set some default entries at top of list:
@@ -98,7 +98,7 @@ if(!function_exists('zen_get_country_list')) {
 
         //process array of top-of-list entries:
         foreach ($countriesAtTopOfList as $key => $val) {
-            $countries_array[] = array('id' => $val, 'text' => zen_get_country_name($val));
+            $countries_array[] = ['id' => $val, 'text' => zen_get_country_name($val)];
         }
         // now add anything not in the defaults list:
         foreach ($countries as $country) {
@@ -129,11 +129,11 @@ if (!function_exists('zen_get_tax_description')) {
         $tax_description = '';
         $GLOBALS['zco_notifier']->notify(
             'NOTIFY_ZEN_GET_TAX_DESCRIPTION_OVERRIDE',
-            array(
+            [
                 'class_id' => $class_id,
                 'country_id' => $country_id,
                 'zone_id' => $zone_id
-            ),
+            ],
             $tax_description
         );
         if ($tax_description != '') {
@@ -202,11 +202,10 @@ if (!function_exists('zen_get_all_tax_descriptions')) {
                or za.zone_id = 0
                or za.zone_id = '" . (int)$zone_id . "')";
         $result = $db->Execute($sql);
-        $taxDescriptions =array();
-        while (!$result->EOF)
-        {
-         $taxDescriptions[] = $result->fields['tax_description'];
-         $result->moveNext();
+        $taxDescriptions = [];
+        while (!$result->EOF) {
+            $taxDescriptions[] = $result->fields['tax_description'];
+            $result->moveNext();
         }
         return $taxDescriptions;
     }
@@ -233,7 +232,7 @@ if (!function_exists('zen_get_tax_rate_from_desc')) {
     }
 }
 if (!function_exists('zen_get_multiple_tax_rates')) {
-    function zen_get_multiple_tax_rates($class_id, $country_id, $zone_id, $tax_description=array()) {
+    function zen_get_multiple_tax_rates($class_id, $country_id, $zone_id, $tax_description = []) {
         global $db;
 //-NOTE: This notification mimics the in-core, storefront, version starting with zc156)
         // -----
@@ -242,18 +241,18 @@ if (!function_exists('zen_get_multiple_tax_rates')) {
         $rates_array = '';
         $GLOBALS['zco_notifier']->notify(
             'NOTIFY_ZEN_GET_MULTIPLE_TAX_RATES_OVERRIDE',
-            array(
+            [
                 'class_id' => $class_id,
                 'country_id' => $country_id,
                 'zone_id' => $zone_id,
                 'tax_description' => $tax_description
-            ),
+            ],
             $rates_array
         );
         if (is_array($rates_array)) {
             return $rates_array;
         }
-        $rates_array = array();
+        $rates_array = [];
 
         if ( ($country_id == -1) && ($zone_id == -1) ) {
             if (isset($_SESSION['customer_id'])) {
@@ -347,10 +346,10 @@ if (function_exists ('zen_get_tax_locations')) {
         $_SESSION['customer_country_id'] = $GLOBALS['customer_country_id'];
         $_SESSION['customer_zone_id'] = $GLOBALS['customer_zone_id'];
         
-        return array(
+        return [
             'zone_id' => $GLOBALS['customer_zone_id'],
             'country_id' => $GLOBALS['customer_country_id']
-        );
+        ];
     }
 }
 if (!function_exists('is_product_valid')) {
@@ -517,10 +516,10 @@ if (!function_exists('array_key_first')) {
 // Start Edit Orders configuration functions
 function eo_debug_action_level_list($level) 
 {
-    $levels = array(
-        array('id' => '0', 'text' => 'Off'),
-        array('id' => '1', 'text' => 'On'),
-    );
+    $levels = [
+        ['id' => '0', 'text' => 'Off'],
+        ['id' => '1', 'text' => 'On'],
+    ];
     
     $level = ($level == 0) ? $level : 1;
 
@@ -561,12 +560,12 @@ function eo_get_country($country)
               LIMIT 1"
         );
         if (!$country_info->EOF) {
-            $country_data = array(
+            $country_data = [
                 'id' => $countries_id,
                 'name' => $country,
                 'iso_code_2' => $country_info->fields['countries_iso_code_2'],
                 'iso_code_3' => $country_info->fields['countries_iso_code_3'],
-            );
+            ];
         }
         
     // -----
@@ -581,12 +580,12 @@ function eo_get_country($country)
               LIMIT 1"
         );
         if (!$country_info->EOF) {
-            $country_data = array(
+            $country_data = [
                 'id' => $country_info->fields['countries_id'],
                 'name' => zen_get_country_name($country_info->fields['countries_id']),
                 'iso_code_2' => $country_info->fields['countries_iso_code_2'],
                 'iso_code_3' => $country_info->fields['countries_iso_code_3'],
-            );
+            ];
         }
     }
     return $country_data;
@@ -601,18 +600,18 @@ function eo_get_product_attributes_options($products_id, $readonly = false)
     $attributes = $attributes->get_attributes_options($products_id, $readonly);
 
     // Rearrange these by option id instead of attribute id
-    $retval = array();
+    $retval = [];
     foreach ($attributes as $attr_id => $info) {
         $id = $info['id'];
         if (!isset($retval[$id])) {
-            $retval[$id] = array(
-                'options' => array(),
+            $retval[$id] = [
+                'options' => [],
                 'name' => $info['name'],
                 'type' => $info['type'],
                 'length' => $info['length'],
                 'size' => $info['size'],
                 'rows' => $info['rows']
-            );
+            ];
         }
         $retval[$id]['options'][$attr_id] = $info['value'];
     }
@@ -620,18 +619,18 @@ function eo_get_product_attributes_options($products_id, $readonly = false)
     return $retval;
 }
 
-function eo_get_new_product($product_id, $product_qty, $product_tax, $product_options = array(), $use_specials = true) 
+function eo_get_new_product($product_id, $product_qty, $product_tax, $product_options = [], $use_specials = true) 
 {
     global $db;
 
     $product_id = (int)$product_id;
     $product_qty = floatval($product_qty);
 
-    $retval = array(
+    $retval = [
         'id' => $product_id,
         'qty' => $product_qty,
         'tax' => floatval($product_tax),
-    );
+    ];
 
     $query = $db->Execute(
         "SELECT p.products_id, p.master_categories_id, p.products_status, pd.products_name, p.products_model, p.products_image, p.products_price,
@@ -648,7 +647,7 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
 
     if (!$query->EOF) {
         // Handle common fields
-        $retval = array_merge($retval, array(
+        $retval = array_merge($retval, [
             'name' => $query->fields['products_name'],
             'model' => $query->fields['products_model'],
             'price' => $query->fields['products_price'],
@@ -666,7 +665,7 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
             'products_quantity_order_units' => $query->fields['products_quantity_order_units'],
             'products_quantity_mixed' => $query->fields['products_quantity_mixed'],
             'products_mixed_discount_quantity' => $query->fields['products_mixed_discount_quantity'],
-        ));
+        ]);
 
         // Handle pricing
         $special_price = zen_get_products_special_price($product_id);
@@ -722,13 +721,13 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
 
     // Handle attributes
     if (is_array($product_options) && count($product_options) > 0) {
-        $retval['attributes'] = array();
+        $retval['attributes'] = [];
 
         include_once DIR_WS_CLASSES . 'attributes.php';
         $attributes = new attributes();
 
         foreach ($product_options as $option_id => $details) {
-            $attr = array();
+            $attr = [];
             $add_attribute = true;
             switch ($details['type']) {
                 case PRODUCTS_OPTIONS_TYPE_TEXT:
@@ -822,10 +821,10 @@ function eo_get_product_attribute_prices($attr_id, $attr_value = '', $qty = 1)
 {
     global $db;
 
-    $retval = array(
+    $retval = [
         'onetime_charges' => 0,
         'price' => 0
-    );
+    ];
     $attr_id = (int)$attr_id;
     $attribute_price = $db->Execute(
         "SELECT *
@@ -930,7 +929,7 @@ function eo_add_product_to_order($order_id, $product)
 
     // Handle product stock
     $doStockDecrement = true;
-    $zco_notifier->notify('EDIT_ORDERS_ADD_PRODUCT_STOCK_DECREMENT', array('order_id' => $order_id, 'product' => $product), $doStockDecrement);
+    $zco_notifier->notify('EDIT_ORDERS_ADD_PRODUCT_STOCK_DECREMENT', ['order_id' => $order_id, 'product' => $product], $doStockDecrement);
     $products_id = (int)zen_get_prid($product['id']);
     if (STOCK_LIMITED == 'true' && $doStockDecrement) {
         if (DOWNLOAD_ENABLED == 'true') {
@@ -982,7 +981,7 @@ function eo_add_product_to_order($order_id, $product)
     // Update products_ordered (for bestsellers list)
     $db->Execute("UPDATE " . TABLE_PRODUCTS . " SET products_ordered = products_ordered + " . sprintf('%f', $product['qty']) . " WHERE products_id = $products_id LIMIT 1");
 
-    $sql_data_array = array(
+    $sql_data_array = [
         'orders_id' => (int)$order_id,
         'products_id' => $products_id,
         'products_model' => $product['model'],
@@ -1005,7 +1004,7 @@ function eo_add_product_to_order($order_id, $product)
         'products_quantity_order_max' => $product['products_quantity_order_max'],
         'products_quantity_mixed' => $product['products_quantity_mixed'],
         'products_mixed_discount_quantity' => $product['products_mixed_discount_quantity'],
-    );
+    ];
 
     // -----
     // Add the product to the order.
@@ -1075,7 +1074,7 @@ function eo_add_product_to_order($order_id, $product)
             }
 
             //clr 030714 update insert query.  changing to use values form $order->products for products_options_values.
-            $sql_data_array = array(
+            $sql_data_array = [
                 'orders_id' => (int)$order_id,
                 'orders_products_id' => (int)$order_products_id,
                 'products_options' => $attributes_values->fields['products_options_name'],
@@ -1101,12 +1100,12 @@ function eo_add_product_to_order($order_id, $product)
                 'products_options_id' => (int)$current_attribute['option_id'],
                 'products_options_values_id' => $value_id,
                 'products_prid' => $product['id']
-            );
+            ];
             zen_db_perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);
             $order_products_attributes_id = $db->Insert_ID();
 
             if (DOWNLOAD_ENABLED == 'true' && isset($attributes_values->fields['products_attributes_filename']) && !empty($attributes_values->fields['products_attributes_filename'])) {
-                $sql_data_array = array(
+                $sql_data_array = [
                     'orders_id' => (int)$order_id,
                     'orders_products_id' => (int)$order_products_id,
                     'orders_products_filename' => $attributes_values->fields['products_attributes_filename'],
@@ -1114,7 +1113,7 @@ function eo_add_product_to_order($order_id, $product)
                     'download_count' => $attributes_values->fields['products_attributes_maxcount'],
                     'products_prid' => $product['id'],
                     'products_attributes_id' => $order_products_attributes_id,
-                );
+                ];
                 zen_db_perform(TABLE_ORDERS_PRODUCTS_DOWNLOAD, $sql_data_array);
             }
         }
@@ -1126,7 +1125,7 @@ function eo_add_product_to_order($order_id, $product)
     // Note: The 'sql_data_array' element reflects the data just recorded for the 'orders_products' table, starting
     // with EO v4.5.5.
     //
-    $zco_notifier->notify('EDIT_ORDERS_ADD_PRODUCT', array('order_id' => (int)$order_id, 'orders_products_id' => $order_products_id, 'product' => $product, 'sql_data_array' => $op_sql_data_array));
+    $zco_notifier->notify('EDIT_ORDERS_ADD_PRODUCT', ['order_id' => (int)$order_id, 'orders_products_id' => $order_products_id, 'product' => $product, 'sql_data_array' => $op_sql_data_array]);
 
     return $product;
 }
@@ -1215,7 +1214,7 @@ function eo_remove_product_from_order($order_id, $orders_products_id)
 
     // Handle product stock
     $doStockDecrement = true;
-    $zco_notifier->notify('EDIT_ORDERS_REMOVE_PRODUCT_STOCK_DECREMENT', array('order_id' => $order_id, 'orders_products_id' => $orders_products_id), $doStockDecrement);
+    $zco_notifier->notify('EDIT_ORDERS_REMOVE_PRODUCT_STOCK_DECREMENT', ['order_id' => $order_id, 'orders_products_id' => $orders_products_id], $doStockDecrement);
     if (STOCK_LIMITED == 'true' && $doStockDecrement) {
         $query = $db->Execute(
             "SELECT products_id, products_quantity
@@ -1243,10 +1242,10 @@ function eo_remove_product_from_order($order_id, $orders_products_id)
                 );
             }
             if (!$check->EOF && (DOWNLOAD_ENABLED != 'true' || $check->fields['product_is_always_free_shipping'] == 2 || empty($check->fields['products_attributes_filename']))) {
-                $sql_data_array = array(
+                $sql_data_array = [
                     'products_quantity' => $check->fields['products_quantity'] + $query->fields['products_quantity'],
                     'products_ordered' => $check->fields['products_ordered'] - $query->fields['products_quantity']
-                );
+                ];
                 if ($sql_data_array['products_ordered'] < 0) {
                     $sql_data_array['products_ordered'] = 0;
                 }
@@ -1263,7 +1262,7 @@ function eo_remove_product_from_order($order_id, $orders_products_id)
         unset($check, $query, $sql_data_array);
     }
     
-    $zco_notifier->notify('EDIT_ORDERS_REMOVE_PRODUCT', array('order_id' => (int)$order_id, 'orders_products_id' => (int)$orders_products_id));
+    $zco_notifier->notify('EDIT_ORDERS_REMOVE_PRODUCT', ['order_id' => (int)$order_id, 'orders_products_id' => (int)$orders_products_id]);
 
     // Remove the product from the order in the database
     $remove_query = 'DELETE FROM `%1$s` WHERE orders_id = ' . (int)$order_id . ' AND orders_products_id = ' . (int)$orders_products_id;
@@ -1297,14 +1296,14 @@ function eo_get_order_total_by_order($order_id, $class = null)
           ORDER BY sort_order ASC"
     );
 
-    $retval = array();
+    $retval = [];
     while (!$ot->EOF) {
-        $retval[$ot->fields['class']] = array(
+        $retval[$ot->fields['class']] = [
             'title' => $ot->fields['title'],
             'text' => $ot->fields['text'],
             'value' => $ot->fields['value'],
             'sort_order' => (int)$ot->fields['sort_order'],
-        );
+        ];
         $ot->moveNext();
     }
     return $retval;
@@ -1320,7 +1319,7 @@ function eo_get_orders_products_id_mappings($order_id)
           ORDER BY `orders_products_id` ASC"
     );
 
-    $retval = array();
+    $retval = [];
     while (!$orders_products_ids->EOF) {
         $retval[] = $orders_products_ids->fields['orders_products_id'];
         $orders_products_ids->moveNext();
@@ -1339,7 +1338,7 @@ function eo_get_orders_products_attributes_id_mappings($order_id, $order_product
           ORDER BY orders_products_attributes_id ASC"
     );
 
-    $retval = array();
+    $retval = [];
     while (!$orders_products_ids->EOF) {
         $retval[] = $orders_products_ids->fields['orders_products_attributes_id'];
         $orders_products_ids->moveNext();
@@ -1357,11 +1356,11 @@ function eo_get_orders_products_options_id_mappings($order_id, $order_product_id
             AND `orders_products_id` = " . (int)$order_product_id
     );
 
-    $retval = array();
+    $retval = [];
     while (!$orders_products_ids->EOF) {
         $options_id = $orders_products_ids->fields['products_options_id'];
         if (!isset($retval[$options_id])) {
-            $retval[$options_id] = array();
+            $retval[$options_id] = [];
         }
         $retval[$options_id][] = $orders_products_ids->fields['orders_products_attributes_id'];
         $orders_products_ids->moveNext();
@@ -1438,7 +1437,7 @@ function eo_update_database_order_totals($oID)
         // tax from the current order in preparation for its recalculation.
         //
         foreach ($order->totals as $current_total) {
-            if (in_array($current_total['class'], array('ot_subtotal', 'ot_tax', 'ot_shipping', 'ot_total', 'ot_misc_cost'))) {
+            if (in_array($current_total['class'], ['ot_subtotal', 'ot_tax', 'ot_shipping', 'ot_total', 'ot_misc_cost'])) {
                 continue;
             }
             $current_total_tax = $eo->eoGetOrderTotalTax($oID, $current_total['class']);
@@ -1471,8 +1470,8 @@ function eo_update_database_order_totals($oID)
         // needed for the 'ot_shipping' total, since there might be multiple colons (:) tacked to
         // the end of the name.
         //
-        $totals_titles = array();
-        $totals_codes = array();
+        $totals_titles = [];
+        $totals_codes = [];
         foreach ($order_totals as $next_total) {
             $code = $next_total['code'];
             $totals_titles[] = ($code == 'ot_shipping') ? rtrim($next_total['title'], ':') : $next_total['title'];
@@ -1550,12 +1549,12 @@ function eo_update_database_order_total($oID, $order_total) {
         $order_total['title'] = rtrim($order_total['title'], ':') . ':';
     }
 
-    $sql_data_array = array(
+    $sql_data_array = [
         'title' => $order_total['title'],
         'text' => $order_total['text'],
         'value' => (is_numeric($order_total['value'])) ? $order_total['value'] : 0,
         'sort_order' => (int)$order_total['sort_order']
-    );
+    ];
     // Update the Order Totals in the Database, recognizing that there might be multiple records for the product's tax
     $and_clause = ($order_total['code'] == 'ot_tax' && SHOW_SPLIT_TAX_CHECKOUT == 'true') ? (" AND `title` = '" . $order_total['title'] . "'") : '';
     $found = $db->Execute(
@@ -1605,16 +1604,16 @@ function eo_update_database_order_total($oID, $order_total) {
 //-eof-20160407-lat9
             break;
         case 'ot_total':
-            zen_db_perform(TABLE_ORDERS, array('order_total' => $sql_data_array['value']), 'update', "orders_id = $oID LIMIT 1");
+            zen_db_perform(TABLE_ORDERS, ['order_total' => $sql_data_array['value']], 'update', "orders_id = $oID LIMIT 1");
             break;
         case 'ot_shipping':
             if (substr($order_total['title'], -1) == ':') {
                 $order_total['title'] = substr($order_total['title'], 0, -1);
             }
-            $sql_data_array = array(
+            $sql_data_array = [
                 'shipping_method' => $order_total['title'],
                 'shipping_tax_rate' => $GLOBALS['eo']->eoGetShippingTaxRate($GLOBALS['order']),
-            );
+            ];
             if (isset($order_total['shipping_module'])) {
                 $sql_data_array['shipping_module_code'] = $order_total['shipping_module'];
             }
@@ -1632,7 +1631,7 @@ function eo_update_database_order_total($oID, $order_total) {
 function eo_get_available_order_totals_class_values($oID) 
 {
     global $order;
-    $retval = array();
+    $retval = [];
 
     // Remove order totals already present in the order
     $module_list = explode(';', (str_replace('.php', '', MODULE_ORDER_TOTAL_INSTALLED)));
@@ -1665,11 +1664,11 @@ function eo_get_available_order_totals_class_values($oID)
         if ($class == 'ot_group_pricing' || $class == 'ot_cod_fee' || $class == 'ot_tax' || $class == 'ot_loworderfee' || $class == 'ot_purchaseorder') {
             continue;
         }
-        $retval[] = array(
+        $retval[] = [
             'id' => $class,
             'text' => $GLOBALS[$class]->title,
             'sort_order' => (int)$GLOBALS[$class]->sort_order
-        );
+        ];
     }
     return $retval;
 }
@@ -1677,7 +1676,7 @@ function eo_get_available_order_totals_class_values($oID)
 function eo_get_available_shipping_modules() 
 {
     global $order;
-    $retval = array();
+    $retval = [];
     if (defined('MODULE_SHIPPING_INSTALLED') && zen_not_null(MODULE_SHIPPING_INSTALLED)) {
         // Load the shopping cart class into the session
         eo_shopping_cart();
@@ -1690,10 +1689,10 @@ function eo_get_available_shipping_modules()
         for ($i = 0, $n = count($shipping_modules->modules); $i < $n; $i++) {
             $class = substr($shipping_modules->modules[$i], 0, strrpos($shipping_modules->modules[$i], '.'));
             if (isset($GLOBALS[$class])) {
-                $retval[] = array(
+                $retval[] = [
                     'id' => $GLOBALS[$class]->code,
                     'text' => ($use_strip_tags) ? strip_tags($GLOBALS[$class]->title) : $GLOBALS[$class]->title
-                );
+                ];
             }
         }
         unset($shipping_modules, $class, $i, $n);
@@ -1753,7 +1752,7 @@ function eo_checks_and_warnings()
                 ('Upload prefix', 'UPLOAD_PREFIX', 'upload_', 'Prefix used to differentiate between upload options and other options', '6', now()),
                 ('Text prefix', 'TEXT_PREFIX', 'txt_', 'Prefix used to differentiate between text option values and other options', '6', now())"
         );
-        zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action')) . 'action=edit'));
+        zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
     }
 
     // -----

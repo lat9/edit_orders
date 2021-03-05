@@ -18,7 +18,7 @@ class EditOrdersAdminObserver extends base
         $this->isEditOrdersPage = (basename($GLOBALS['PHP_SELF'], '.php') == FILENAME_EDIT_ORDERS);
         $this->attach(
             $this, 
-            array(
+            [
                 /* From /admin/orders.php */
                 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS', 
                 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END',
@@ -27,7 +27,7 @@ class EditOrdersAdminObserver extends base
                 
                 /* From /includes/modules/order_total/ot_shipping.php */
                 'NOTIFY_OT_SHIPPING_TAX_CALCS',
-            )
+            ]
         );
         
         // -----
@@ -35,7 +35,7 @@ class EditOrdersAdminObserver extends base
         // the order's shipping-method is 'storepickup'.  Watch this event only during Edit Orders' processing!
         //
         if ($this->isEditOrdersPage) {
-            $this->attach($this, array('NOTIFY_ORDER_AFTER_QUERY'));
+            $this->attach($this, ['NOTIFY_ORDER_AFTER_QUERY']);
         }
     }
   
@@ -123,7 +123,7 @@ class EditOrdersAdminObserver extends base
                 if ($this->isEditOrdersPage) {
                     $GLOBALS['eo']->eoUpdateOrderShippingTax($p2, $p3, $p4);
                     $p2 = true;
-                    $this->detach($this, array('NOTIFY_OT_SHIPPING_TAX_CALCS'));
+                    $this->detach($this, ['NOTIFY_OT_SHIPPING_TAX_CALCS']);
                     
                     $module = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
                     if ($module != '' && $module != 'free') {
@@ -157,7 +157,7 @@ class EditOrdersAdminObserver extends base
                 if ($order->EOF) {
                     break;
                 }
-                $class->delivery = array(
+                $class->delivery = [
                     'name' => $order->fields['delivery_name'],
                     'company' => $order->fields['delivery_company'],
                     'street_address' => $order->fields['delivery_street_address'],
@@ -167,7 +167,7 @@ class EditOrdersAdminObserver extends base
                     'state' => $order->fields['delivery_state'],
                     'country' => $order->fields['delivery_country'],
                     'format_id' => $order->fields['delivery_address_format_id']
-                );
+                ];
                 break;
                 
             default:
@@ -178,14 +178,14 @@ class EditOrdersAdminObserver extends base
     protected function addEditOrderButton($orders_id, $button_list)
     {
         $updated_button_list = str_replace(
-            array(
+            [
                 EO_IMAGE_BUTTON_EDIT,
                 IMAGE_EDIT,
-            ),
-            array(
+            ],
+            [
                 EO_IMAGE_BUTTON_DETAILS,
                 IMAGE_DETAILS
-            ),
+            ],
             $button_list
         );
         return $updated_button_list . '&nbsp;' . $this->createEditOrdersLink($orders_id, zen_image_button(EO_IMAGE_BUTTON_EDIT, IMAGE_EDIT), IMAGE_EDIT);
@@ -199,6 +199,6 @@ class EditOrdersAdminObserver extends base
         } elseif ($this->is157OrLaterZenCart) {
             $link_parms = ' class="btn btn-default btn-edit"';
         }
-        return '&nbsp;<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$orders_id&action=edit", 'NONSSL') . "\"$link_parms>$link_text</a>";
+        return '&nbsp;<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$orders_id&action=edit", 'NONSSL') . "\"$link_parms>$link_text</a>";
     }
 }

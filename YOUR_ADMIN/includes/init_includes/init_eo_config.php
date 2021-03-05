@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.6.0-beta1');
+define('EO_CURRENT_VERSION', '4.6.0-beta2');
 
 // -----
 // Only update configuration when an admin is logged in.
@@ -219,25 +219,25 @@ if (EO_VERSION != EO_CURRENT_VERSION) {
 if (EO_INIT_FILE_MISSING == '1' || !empty($check_init_file_missing)) {
     $notifier_check = new \Vinos\Common\NotifierCheck(EO_INIT_MISSING_NOTIFIERS, EO_INIT_MISSING_FILES);
     $notifier_check->setList(
-        array(
-            array(
+        [
+            [
                 'filename' => DIR_FS_ADMIN . 'orders.php',
                 'required' => true,
-                'notifiers' => array(
+                'notifiers' => [
                     'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS', 
                     'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END',
                     'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS',
                     'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE',
-                ),
-            ),
-            array(
+                ],
+            ],
+            [
                 'filename' => DIR_FS_CATALOG . 'includes/modules/order_total/ot_shipping.php',
                 'required' => true,
-                'notifiers' => array(
+                'notifiers' => [
                     'NOTIFY_OT_SHIPPING_TAX_CALCS',
-                ),
-            ),
-        )
+                ],
+            ],
+        ]
     );
     $notifiers_missing = ($notifier_check->process()) ? '0' : '1';
     $db->Execute(
