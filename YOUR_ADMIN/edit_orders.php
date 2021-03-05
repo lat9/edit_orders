@@ -15,7 +15,7 @@
 // | to obtain it through the world-wide-web, please send a note to       |
 // | license@zen-cart.com so we can mail you a copy immediately.          |
 // +----------------------------------------------------------------------+
-//-Last modified 20210303-lat9 Edit Orders v4.6.0
+//-Last modified 20210304-lat9 Edit Orders v4.6.0
 require 'includes/application_top.php';
 
 // -----
@@ -530,17 +530,14 @@ switch ($action) {
             eo_update_database_order_totals($oID);
             
             // -----
-            // If running under a Zen Cart version 1.5.6 or later, also update the order's
-            // weight.
+            // Update the product's weight, too.
             //
-            if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) >= '1.5.6') {
-                $db->Execute(
-                    "UPDATE " . TABLE_ORDERS . "
-                        SET order_weight = " . $_SESSION['cart']->show_weight() . "
-                      WHERE orders_id = $oID
-                      LIMIT 1"
-                );
-            }
+            $db->Execute(
+                "UPDATE " . TABLE_ORDERS . "
+                    SET order_weight = " . $_SESSION['cart']->show_weight() . "
+                  WHERE orders_id = $oID
+                  LIMIT 1"
+            );
 
             $eo->eoLog (
                 $eo->eoFormatOrderTotalsForLog($order) . PHP_EOL .
@@ -701,9 +698,9 @@ if ($action == 'edit' || ($action == 'update_order' && empty($allow_update))) {
 <!doctype html>
 <html <?php echo HTML_PARAMS; ?>>
 <head>
-    <?php
-    if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) < '1.5.7') {
-    ?>
+<?php
+if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) < '1.5.7') {
+?>
     <meta charset="<?php echo CHARSET; ?>">
     <title><?php echo TITLE; ?></title>
     <link rel="stylesheet" type="text/css" href="includes/stylesheet.css">
@@ -727,7 +724,7 @@ if ($action == 'edit' || ($action == 'update_order' && empty($allow_update))) {
 <body onload="init();">
 <?php
 } else {
-require DIR_WS_INCLUDES . 'admin_html_head.php';
+    require DIR_WS_INCLUDES . 'admin_html_head.php';
 ?>
 </head>
 <body>
@@ -779,39 +776,9 @@ if ($action == 'edit') {
             $module = new $order->info['payment_module_code'];
         }
     }
+
 // BEGIN - Add Super Orders Order Navigation Functionality
-    if  ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) < '1.5.6') {
-
-    $get_prev = $db->Execute(
-        "SELECT orders_id 
-           FROM " . TABLE_ORDERS . " 
-          WHERE orders_id < $oID
-       ORDER BY orders_id DESC 
-          LIMIT 1"
-    );
-    if (!$get_prev->EOF) {
-
-        $prev_oid = $get_prev->fields['orders_id'];
-        $prev_button = '<input class="normal_button button" type="button" value="<<< ' . $prev_oid . '" onclick="window.location.href=\'' . zen_href_link(FILENAME_ORDERS, 'oID=' . $prev_oid . '&action=edit') . '\'">';
-    } else {
-        $prev_button = '<input class="normal_button button" type="button" value="' . BUTTON_TO_LIST . '" onclick="window.location.href=\'' . zen_href_link(FILENAME_ORDERS) . '\'">';
-    }
-    $prev_button .= PHP_EOL;
-
-    $get_next = $db->Execute(
-        "SELECT orders_id 
-           FROM " . TABLE_ORDERS . " 
-          WHERE orders_id > $oID
-       ORDER BY orders_id ASC 
-          LIMIT 1"
-    );
-    if (!$get_next->EOF) {
-        $next_oid = $get_next->fields['orders_id'];
-        $next_button = '<input class="normal_button button" type="button" value="' . $next_oid . ' >>>" onclick="window.location.href=\'' . zen_href_link(FILENAME_ORDERS, 'oID=' . $next_oid . '&action=edit') . '\'">';
-    } else {
-        $next_button = '<input class="normal_button button" type="button" value="' . BUTTON_TO_LIST . '" onclick="window.location.href=\'' . zen_href_link(FILENAME_ORDERS) . '\'">';
-    }
-    $next_button .= PHP_EOL;
+    require DIR_WS_MODULES . 'edit_orders/eo_navigation.php';
 // END - Add Super Orders Order Navigation Functionality
 ?>
 <!-- body //-->
@@ -820,36 +787,21 @@ if ($action == 'edit') {
 <!-- body_text //-->
         <td class="w100 v-top"><table class="eo-table">
             <tr>
-                <td class="w100 a-c">
-<?php
-    echo $prev_button . '&nbsp;&nbsp;' . SELECT_ORDER_LIST . '&nbsp;&nbsp;';
-    echo zen_draw_form('input_oid', FILENAME_ORDERS, 'action=edit', 'get', '', true) . zen_draw_input_field('oID', '', 'size="6"') . '</form>';
-    echo '&nbsp;&nbsp;' . $next_button . '<br />';
-    } else {
-        $eo->orderNavigation($oID);
-    }
-?>
-                </td>
-            </tr>
-
-            <tr>
                 <td class="w100"><table class="w100">
                     <tr>
                         <td class="pageHeading"><?php echo HEADING_TITLE; ?> #<?php echo $oID; ?></td>
                         <td class="pageHeading a-r"><?php echo zen_draw_separator('pixel_trans.gif', 1, HEADING_IMAGE_HEIGHT); ?></td>
                         <td class="pageHeading a-r">
-                            <?php
-                            $eo->backDetails($oID)
-                            ?>
+                            <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(['action'])); ?>" class="btn btn-primary btn-sm" role="button"><?php echo IMAGE_BACK; ?></a>
+                            <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$oID&amp;action=edit"); ?>" class="btn btn-primary btn-sm" role="button"><?php echo DETAILS; ?></a>
                         </td>
                     </tr>
                 </table></td>
             </tr>
 
-
 <!-- Begin Addresses Block -->
             <tr>
-                <td><?php echo zen_draw_form('edit_order', FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('action','paycc')) . 'action=update_order'); ?><table width="100%" border="0">
+                <td><?php echo zen_draw_form('edit_order', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'paycc']) . 'action=update_order'); ?><table width="100%" border="0">
                     <tr>
                         <td><table role="table" class="w100" id="c-form">
 <?php
@@ -1021,8 +973,7 @@ if ($action == 'edit') {
                     </tr>
                     <tr>
                         <td valign="top">
-<?php 
-//-bof-20180323-lat9-GitHub#75, Multiple product-price calculation methods.
+<?php
     $reset_totals_block = '<b>' . RESET_TOTALS . '</b>' . zen_draw_checkbox_field('reset_totals', '', (EO_TOTAL_RESET_DEFAULT == 'on'));
     $payment_calc_choice = '';
     if (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose') {
@@ -1062,15 +1013,9 @@ if ($action == 'edit') {
 
     $additional_inputs = '';
     $zco_notifier->notify('EDIT_ORDERS_FORM_ADDITIONAL_INPUTS', $order, $additional_inputs);
-    if  ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) >= '1.5.6') {
-    ?>
-                            <input type="submit" class="btn btn-danger" value="<?php echo IMAGE_UPDATE; ?>" >
-                        <?php echo "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice$additional_inputs";
-    } else {
-        echo zen_image_submit('button_update.gif', IMAGE_UPDATE, 'name="update_button"') . "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice$additional_inputs";
-    }
-//-eof-20180323-lat9
 ?>
+                            <input type="submit" class="btn btn-danger" value="<?php echo IMAGE_UPDATE; ?>">
+                            <?php echo "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice$additional_inputs"; ?>
                         </td>
                     </tr>
 <!-- End Payment Block -->
@@ -1385,11 +1330,8 @@ if ($action == 'edit') {
 <?php
     $eo_href_link = zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$oID&amp;action=add_prdct");
     $eo_add_product_button = zen_image_button('button_add_product.gif', TEXT_ADD_NEW_PRODUCT);
-    if  ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) < '1.5.6') {
-        $eo_add_button_link = '<a href="' . $eo_href_link . '">' . $eo_add_product_button . '</a>';
-    } else {
-        $eo_add_button_link = '<a href="' . $eo_href_link . '" class="btn btn-warning " role="button">' . TEXT_ADD_NEW_PRODUCT . '</a>';
-    }
+    $eo_add_button_link = '<a href="' . $eo_href_link . '" class="btn btn-warning " role="button">' . TEXT_ADD_NEW_PRODUCT . '</a>';
+
     // -----
     // Give a watching observer the chance to identify additional order-totals that should be considered display-only.
     //
@@ -1829,15 +1771,7 @@ if ($action == 'edit') {
 
                     <tr>
                         <td valign="top">
-                            <?php
-                            if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) < '1.5.6') {
-                                echo zen_image_submit('button_update.gif', IMAGE_UPDATE);
-                            } else {
-                                ?>
-                                <input type="submit" class="btn btn-danger" value="<?php echo IMAGE_UPDATE; ?>">
-                                <?php
-                            }
-                            ?>
+                            <input type="submit" class="btn btn-danger" value="<?php echo IMAGE_UPDATE; ?>">
                         </td>
                     </tr>
                 </table></form></td>
@@ -1858,9 +1792,8 @@ if ($action == "add_prdct") {
                 <td class="pageHeading"><?php echo HEADING_TITLE_ADD_PRODUCT; ?> #<?php echo $oID; ?></td>
                 <td class="pageHeading a-r"><?php echo zen_draw_separator('pixel_trans.gif', 1, HEADING_IMAGE_HEIGHT); ?></td>
                 <td class="pageHeading a-r">
-                            <?php
-                            $eo->backDetails($oID)
-                            ?>
+                    <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(['action'])); ?>" class="btn btn-primary btn-sm" role="button"><?php echo IMAGE_BACK; ?></a>
+                    <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$oID&amp;action=edit"); ?>" class="btn btn-primary btn-sm" role="button"><?php echo DETAILS; ?></a>
                 </td>
             </tr>
         </table></td>

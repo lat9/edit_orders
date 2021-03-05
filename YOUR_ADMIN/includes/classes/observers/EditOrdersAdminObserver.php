@@ -1,7 +1,9 @@
 <?php
 // -----
 // Admin-level observer class, adds "Edit Orders" buttons and links to Customers->Orders processing.
-// Copyright (C) 2017-2020, Vinos de Frutas Tropicales.
+// Copyright (C) 2017-2021, Vinos de Frutas Tropicales.
+//
+// Last updated for EO v4.6.0, lat9, 20210305
 //
 if (!defined('IS_ADMIN_FLAG') || IS_ADMIN_FLAG !== true) {
     die('Illegal Access');
@@ -12,7 +14,6 @@ class EditOrdersAdminObserver extends base
     public function __construct() 
     {
         $zencart_version = PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR;
-        $this->isPre156ZenCart = ($zencart_version < '1.5.6');
         $this->is157OrLaterZenCart = ($zencart_version >= '1.5.7');
         $this->isEditOrdersPage = (basename($GLOBALS['PHP_SELF'], '.php') == FILENAME_EDIT_ORDERS);
         $this->attach(
@@ -31,10 +32,9 @@ class EditOrdersAdminObserver extends base
         
         // -----
         // Starting with zc156, the order-class 'squishes' the delivery address to (bool)false when
-        // the order's shipping-method is 'storepickup'.  Watch this event only for Zen Cart 1.5.6
-        // or later, only during Edit Orders' processing!
+        // the order's shipping-method is 'storepickup'.  Watch this event only during Edit Orders' processing!
         //
-        if ($this->isEditOrdersPage && !$this->isPre156ZenCart) {
+        if ($this->isEditOrdersPage) {
             $this->attach($this, array('NOTIFY_ORDER_AFTER_QUERY'));
         }
     }
@@ -134,9 +134,8 @@ class EditOrdersAdminObserver extends base
                 break;
                 
             // -----
-            // Issued at the end of an order's recreation and observed **only for** Zen Cart 1.5.6 and
-            // later.  Change introduced in zc156b now sets the order's shipping information to (bool)false
-            // when the order's shipping is 'storepickup'.
+            // Issued at the end of an order's recreation (watched during EO processing only). Change introduced 
+            // in zc156b now sets the order's shipping information to (bool)false when the order's shipping is 'storepickup'.
             //
             // If the order's shipping method *is* 'storepickup, we'll gather and restore the delivery-address
             // information for Edit Orders' display.
@@ -195,16 +194,11 @@ class EditOrdersAdminObserver extends base
     protected function createEditOrdersLink($orders_id, $link_button, $link_text, $include_zc156_parms = true)
     {
         $link_parms = '';
-        if ($this->isPre156ZenCart) {
-            $anchor_text = $link_button;
-        } else {
-            $anchor_text = $link_text;
-            if ($include_zc156_parms) {
-                $link_parms = ' class="btn btn-primary" role="button"';
-            } elseif ($this->is157OrLaterZenCart) {
-                $link_parms = ' class="btn btn-default btn-edit"';
-            }
+        if ($include_zc156_parms) {
+            $link_parms = ' class="btn btn-primary" role="button"';
+        } elseif ($this->is157OrLaterZenCart) {
+            $link_parms = ' class="btn btn-default btn-edit"';
         }
-        return '&nbsp;<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$orders_id&action=edit", 'NONSSL') . "\"$link_parms>$anchor_text</a>";
+        return '&nbsp;<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(array('oID', 'action')) . "oID=$orders_id&action=edit", 'NONSSL') . "\"$link_parms>$link_text</a>";
     }
 }

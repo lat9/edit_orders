@@ -14,7 +14,7 @@
 // | to obtain it through the world-wide-web, please send a note to       |
 // | license@zen-cart.com so we can mail you a copy immediately.          |
 // +----------------------------------------------------------------------+
-//-Last updated for EO v4.5.7, 20210304 (lat9)
+//-Last updated for EO v4.6.0, 20210304 (lat9)
 // -----
 // Since other plugins (like "Admin New Order") also provide some of these functions,
 // continue this function-file "load" only if the current page-load is on
@@ -996,29 +996,17 @@ function eo_add_product_to_order($order_id, $product)
         'product_is_free' => $product['product_is_free'],
         'products_discount_type' => $product['products_discount_type'],
         'products_discount_type_from' => $product['products_discount_type_from'],
-        'products_prid' => $product['id']
+        'products_prid' => $product['id'],
+        'products_weight' => $product['products_weight'],
+        'products_virtual' => $product['products_virtual'],
+        'product_is_always_free_shipping' => $product['product_is_always_free_shipping'],
+        'products_quantity_order_min'  => $product['products_quantity_order_min'],
+        'products_quantity_order_units' => $product['products_quantity_order_units'],
+        'products_quantity_order_max' => $product['products_quantity_order_max'],
+        'products_quantity_mixed' => $product['products_quantity_mixed'],
+        'products_mixed_discount_quantity' => $product['products_mixed_discount_quantity'],
     );
-    
-    // -----
-    // Include fields added to the 'orders_products' table for the zc156 release,
-    // so long as the Zen Cart version we're running under is 1.5.6 or later.
-    //
-    if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) >= '1.5.6') {
-        $sql_data_array = array_merge(
-            $sql_data_array,
-            array(
-                'products_weight' => $product['products_weight'],
-                'products_virtual' => $product['products_virtual'],
-                'product_is_always_free_shipping' => $product['product_is_always_free_shipping'],
-                'products_quantity_order_min'  => $product['products_quantity_order_min'],
-                'products_quantity_order_units' => $product['products_quantity_order_units'],
-                'products_quantity_order_max' => $product['products_quantity_order_max'],
-                'products_quantity_mixed' => $product['products_quantity_mixed'],
-                'products_mixed_discount_quantity' => $product['products_mixed_discount_quantity'],
-            )
-        );
-    }
-    
+
     // -----
     // Add the product to the order.
     //
@@ -1124,17 +1112,9 @@ function eo_add_product_to_order($order_id, $product)
                     'orders_products_filename' => $attributes_values->fields['products_attributes_filename'],
                     'download_maxdays' => $attributes_values->fields['products_attributes_maxdays'],
                     'download_count' => $attributes_values->fields['products_attributes_maxcount'],
-                    'products_prid' => $product['id']
+                    'products_prid' => $product['id'],
+                    'products_attributes_id' => $order_products_attributes_id,
                 );
-
-                // -----
-                // Include fields added to the 'orders_products_download' table for the zc156 release,
-                // so long as the Zen Cart version we're running under is 1.5.6 or later.
-                //
-                if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) >= '1.5.6') {
-                    $sql_data_array['products_attributes_id'] = $order_products_attributes_id;
-                }
-                
                 zen_db_perform(TABLE_ORDERS_PRODUCTS_DOWNLOAD, $sql_data_array);
             }
         }
