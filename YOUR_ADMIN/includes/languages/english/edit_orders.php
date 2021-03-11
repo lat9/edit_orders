@@ -140,6 +140,7 @@ define('PAYMENT_CALC_METHOD', 'Choose product-pricing method:');
 define('PRODUCT_PRICES_CALC_AUTO', ' <b>Note:</b> Pricing for products will be <em>automatically</em> calculated <em>without</em> &quot;specials&quot; pricing.');
 define('PRODUCT_PRICES_CALC_AUTOSPECIALS', ' <b>Note:</b> Pricing for products will be <em>automatically</em> calculated, using &quot;specials&quot; pricing.');
 define('PRODUCT_PRICES_CALC_MANUAL', ' <b>Note:</b> Pricing for products will use the value(s) that you enter.');
+define('EO_PRICE_AUTO_GRID_MESSAGE', 'Auto Calculated');
 
 define('EO_MESSAGE_PRICING_AUTO', 'Pricing was automatically calculated, without specials pricing.');
 define('EO_MESSAGE_PRICING_AUTOSPECIALS', 'Pricing was automatically calculated, using specials pricing.');
