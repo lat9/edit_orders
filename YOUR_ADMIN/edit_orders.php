@@ -1313,7 +1313,7 @@ if ($action == 'edit') {
                                 </td>
                                 <td class="dataTableContent"><input name="update_products[<?php echo $orders_products_id; ?>][model]" value="<?php echo $order->products[$i]['model']; ?>" <?php echo $model_parms; ?> /></td>
                                 <td class="dataTableContent a-r"><input class="amount p-t" name="update_products[<?php echo $orders_products_id; ?>][tax]" value="<?php echo zen_display_tax_value($order->products[$i]['tax']); ?>"<?php echo $data_index . ' ' . $tax_parms; ?> />&nbsp;%</td>
-                                <td class="dataTableContent a-r"><input class="<?= $priceClass; ?>" name="update_products[<?php echo $orders_products_id; ?>][final_price]" value="<?php echo $final_price; ?>"<?php echo $data_index . ' ' . $value_parms; ?> /><?= $priceMessage; ?></td>
+                                <td class="dataTableContent a-r"><input class="<?php echo $priceClass; ?>" name="update_products[<?php echo $orders_products_id; ?>][final_price]" value="<?php echo $final_price; ?>"<?php echo $data_index . ' ' . $value_parms; ?> /><?php echo $priceMessage; ?></td>
 <?php
 
         if (DISPLAY_PRICE_WITH_TAX == 'true') {
