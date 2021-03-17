@@ -1223,7 +1223,7 @@ function eo_remove_product_from_order($order_id, $orders_products_id)
                 AND orders_products_id = " . (int)$orders_products_id
         );
 
-        while (!$query->EOF) {
+        foreach ($query as $product) {
             if (DOWNLOAD_ENABLED == 'true') {
                 $check = $db->Execute(
                     "SELECT p.products_quantity, p.products_ordered, pad.products_attributes_filename, p.product_is_always_free_shipping
@@ -1232,19 +1232,19 @@ function eo_remove_product_from_order($order_id, $orders_products_id)
                                 ON p.products_id = pa.products_id
                             LEFT JOIN " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " AS pad 
                                 ON pa.products_attributes_id = pad.products_attributes_id
-                      WHERE p.products_id = {$query->fields['products_id']}"
+                      WHERE p.products_id = {$product['products_id']}"
                 );
             } else {
                 $check = $db->Execute(
                     "SELECT p.products_quantity, p.products_ordered 
                        FROM " . TABLE_PRODUCTS . " AS p
-                      WHERE p.products_id = {$query->fields['products_id']}"
+                      WHERE p.products_id = {$product['products_id']}"
                 );
             }
             if (!$check->EOF && (DOWNLOAD_ENABLED != 'true' || $check->fields['product_is_always_free_shipping'] == 2 || empty($check->fields['products_attributes_filename']))) {
                 $sql_data_array = [
-                    'products_quantity' => $check->fields['products_quantity'] + $query->fields['products_quantity'],
-                    'products_ordered' => $check->fields['products_ordered'] - $query->fields['products_quantity']
+                    'products_quantity' => $check->fields['products_quantity'] + $product['products_quantity'],
+                    'products_ordered' => $check->fields['products_ordered'] - $product['products_quantity']
                 ];
                 if ($sql_data_array['products_ordered'] < 0) {
                     $sql_data_array['products_ordered'] = 0;
@@ -1255,9 +1255,8 @@ function eo_remove_product_from_order($order_id, $orders_products_id)
                         $sql_data_array['products_status'] = 1;
                     }
                 }
-                zen_db_perform(TABLE_PRODUCTS, $sql_data_array, 'update', 'products_id = ' . (int)$query->fields['products_id']);
+                zen_db_perform(TABLE_PRODUCTS, $sql_data_array, 'update', 'products_id = ' . (int)$product['products_id']);
             }
-            $query->MoveNext();
         }
         unset($check, $query, $sql_data_array);
     }
@@ -1289,7 +1288,7 @@ function eo_get_order_total_by_order($order_id, $class = null)
 
     // Retrieve the raw value
     $and_clause = ($class !== null) ? " AND `class` = '$class'" : '';
-    $ot = $db->Execute(
+    $order_totals = $db->Execute(
         "SELECT *
            FROM " . TABLE_ORDERS_TOTAL . "
           WHERE orders_id = " . (int)$order_id . "$and_clause
@@ -1297,14 +1296,13 @@ function eo_get_order_total_by_order($order_id, $class = null)
     );
 
     $retval = [];
-    while (!$ot->EOF) {
-        $retval[$ot->fields['class']] = [
-            'title' => $ot->fields['title'],
-            'text' => $ot->fields['text'],
-            'value' => $ot->fields['value'],
-            'sort_order' => (int)$ot->fields['sort_order'],
+    foreach ($order_totals as $ot) {
+        $retval[$o['class']] = [
+            'title' => $ot['title'],
+            'text' => $ot['text'],
+            'value' => $ot['value'],
+            'sort_order' => (int)$ot['sort_order'],
         ];
-        $ot->moveNext();
     }
     return $retval;
 }
@@ -1320,9 +1318,8 @@ function eo_get_orders_products_id_mappings($order_id)
     );
 
     $retval = [];
-    while (!$orders_products_ids->EOF) {
-        $retval[] = $orders_products_ids->fields['orders_products_id'];
-        $orders_products_ids->moveNext();
+    foreach ($orders_products_ids as $opi) {
+        $retval[] = $opi['orders_products_id'];
     }
     return $retval;
 }
@@ -1339,9 +1336,8 @@ function eo_get_orders_products_attributes_id_mappings($order_id, $order_product
     );
 
     $retval = [];
-    while (!$orders_products_ids->EOF) {
-        $retval[] = $orders_products_ids->fields['orders_products_attributes_id'];
-        $orders_products_ids->moveNext();
+    foreach ($orders_products_ids as $opa) {
+        $retval[] = $opa['orders_products_attributes_id'];
     }
     return $retval;
 }
@@ -1357,13 +1353,12 @@ function eo_get_orders_products_options_id_mappings($order_id, $order_product_id
     );
 
     $retval = [];
-    while (!$orders_products_ids->EOF) {
-        $options_id = $orders_products_ids->fields['products_options_id'];
+    foreach ($orders_products_ids as $ids) {
+        $options_id = $ids['products_options_id'];
         if (!isset($retval[$options_id])) {
             $retval[$options_id] = [];
         }
-        $retval[$options_id][] = $orders_products_ids->fields['orders_products_attributes_id'];
-        $orders_products_ids->moveNext();
+        $retval[$options_id][] = $ids['orders_products_attributes_id'];
     }
     return $retval;
 }

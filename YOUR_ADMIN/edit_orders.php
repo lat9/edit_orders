@@ -75,16 +75,14 @@ $orders_status_query = $db->Execute(
       WHERE language_id = " . (int)$_SESSION['languages_id'] . "
   ORDER BY $order_by_field ASC"
 );
-while (!$orders_status_query->EOF) {
-    $status_id = $orders_status_query->fields['orders_status_id'];
-    $status_name = $orders_status_query->fields['orders_status_name'];
+foreach ($orders_status_query as $orders_status) {
+    $status_id = $orders_status['orders_status_id'];
+    $status_name = $orders_status['orders_status_name'];
     $orders_statuses[] = [
         'id' => $status_id,
         'text' => "$status_name [$status_id]"
     ];
     $orders_status_array[$status_id] = $status_name;
-    
-    $orders_status_query->MoveNext();
 }
 
 $action = (!empty($_GET['action']) ? $_GET['action'] : 'edit');
@@ -1615,7 +1613,7 @@ if ($action == 'edit') {
         // Loop through each of the order's history records, displaying the columns as
         // identified in the current table elements.
         //
-        while (!$orders_history->EOF) {
+        foreach ($orders_history as $osh) {
 ?>
                     <tr class="v-top">
 <?php
@@ -1624,14 +1622,14 @@ if ($action == 'edit') {
                 // If the current field name is not present in the orders_status_history
                 // table, there's nothing to do.
                 //
-                if (!array_key_exists($field_name, $orders_history->fields)) {
+                if (!array_key_exists($field_name, $osh)) {
                     continue;
                 }
                 
                 // -----
                 // Grab the current field's value to improve readability.
                 //
-                $field_value = $orders_history->fields[$field_name];
+                $field_value = $osh[$field_name];
                 
                 // -----
                 // No show_function?  Then just output the associated field value.
@@ -1691,7 +1689,6 @@ if ($action == 'edit') {
 ?>
                     </tr>
 <?php
-            $orders_history->MoveNext();
         }
     }
 ?>
@@ -1880,13 +1877,12 @@ if ($action == "add_prdct") {
 <?php
         $ProductOptions = '<option value="0">' .  ADDPRODUCT_TEXT_SELECT_PRODUCT . '</option>' . PHP_EOL;
         $result = $db->Execute($query);
-        while (!$result->EOF) {
+        foreach ($result as $product) {
             $ProductOptions .= 
-                '<option value="' . $result->fields['products_id'] . '">' . 
-                     $result->fields['products_name'] .
-                    ' [' . $result->fields['products_model'] . '] ' . ($result->fields['products_status'] == 0 ? ' (OOS)' : '') .
+                '<option value="' . $product['products_id'] . '">' . 
+                     $product['products_name'] .
+                    ' [' . $product['products_model'] . '] ' . ($product['products_status'] == 0 ? ' (OOS)' : '') .
                 '</option>' . PHP_EOL;
-            $result->MoveNext();
         }
         $ProductOptions = str_replace(
             'value="' . $add_product_products_id . '"',

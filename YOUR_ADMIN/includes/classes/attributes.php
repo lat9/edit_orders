@@ -78,9 +78,8 @@ class attributes extends base
         $queryResult = $db->Execute($query);
 
         $retval = array();
-        while (!$queryResult->EOF) {
-            $retval[$queryResult->fields['products_attributes_id']] = $queryResult->fields;
-            $queryResult->MoveNext();
+        foreach ($queryRestult as $result) {
+            $retval[$result['products_attributes_id']] = $result;
         }
         return $retval;
     }
@@ -112,9 +111,8 @@ class attributes extends base
         $queryResult = $db->Execute($query);
 
         $retval = [];
-        while (!$queryResult->EOF) {
-            $retval[] = zen_db_prepare_input($queryResult->fields);
-            $queryResult->MoveNext();
+        foreach ($queryResult as $result) {
+            $retval[] = zen_db_prepare_input($result);
         }
         return $retval;
     }
