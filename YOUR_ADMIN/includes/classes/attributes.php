@@ -2,6 +2,8 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
+//-Last modified 20210317-lat9 Edit Orders v4.6.0
+//
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
@@ -109,7 +111,7 @@ class attributes extends base
 
         $queryResult = $db->Execute($query);
 
-        $retval = array();
+        $retval = [];
         while (!$queryResult->EOF) {
             $retval[] = zen_db_prepare_input($queryResult->fields);
             $queryResult->MoveNext();
@@ -144,14 +146,14 @@ class attributes extends base
               LIMIT 1";
         $queryResult = $db->Execute($query);
 
-        $retval = array();
+        $retval = [];
         if (!$queryResult->EOF) {
             if ($key_format == 'order') {
-                $retval = array(
+                $retval = [
                     'option_id' => $queryResult->fields['options_id'],
                     'value_id' => $queryResult->fields['options_values_id'],
                     'value' => $queryResult->fields['value'],
-                );
+                ];
             } else {
                 $retval = zen_db_prepare_input($queryResult->fields);
                 $retval['option_id'] = $queryResult->fields['options_id'];

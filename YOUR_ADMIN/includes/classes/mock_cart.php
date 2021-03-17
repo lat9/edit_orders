@@ -1,4 +1,9 @@
 <?php
+// -----
+// A 'mock cart' used by the /admin/edit_orders.php processing (Edit Orders).
+//
+//-Last modified 20210317-lat9 Edit Orders v4.6.0
+//
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
@@ -72,10 +77,10 @@ class mockCart extends base
     {
         global $order;
 
-        $this->notify('NOTIFIER_CART_GET_QUANTITY_START', array(), $products_id);
+        $this->notify('NOTIFIER_CART_GET_QUANTITY_START', [], $products_id);
         foreach ($order->products as $product) {
             if ($product['id'] == $products_id) {
-                $this->notify('NOTIFIER_CART_GET_QUANTITY_END_QTY', array(), $products_id);
+                $this->notify('NOTIFIER_CART_GET_QUANTITY_END_QTY', [], $products_id);
                 return $product['qty'];
             }
         }
@@ -94,10 +99,10 @@ class mockCart extends base
     {
         global $order;
 
-        $this->notify('NOTIFIER_CART_IN_CART_START', array(), $products_id);
+        $this->notify('NOTIFIER_CART_IN_CART_START', [], $products_id);
         foreach($order->products as $product) {
             if ($product['id'] == $products_id) {
-                $this->notify('NOTIFIER_CART_IN_CART_END_TRUE', array(), $products_id);
+                $this->notify('NOTIFIER_CART_IN_CART_END_TRUE', [], $products_id);
                 return true;
             }
         }
@@ -177,7 +182,7 @@ class mockCart extends base
     {
         global $db, $order;
 
-        $retval = array();
+        $retval = [];
         foreach ($order->products as $product) {
             // Adjust fields to match
             $product['quantity'] = $product['qty'];
