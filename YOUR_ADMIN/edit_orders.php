@@ -976,6 +976,8 @@ if ($action == 'edit') {
 <?php
     $reset_totals_block = '<b>' . RESET_TOTALS . '</b>' . zen_draw_checkbox_field('reset_totals', '', (EO_TOTAL_RESET_DEFAULT == 'on'));
     $payment_calc_choice = '';
+    $priceClass = 'amount p-n';
+    $priceMessage = '';
     if (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose') {
         $choices = [
             ['id' => 1, 'text' => PAYMENT_CALC_AUTOSPECIALS],
@@ -1001,9 +1003,13 @@ if ($action == 'edit') {
         switch (EO_PRODUCT_PRICE_CALC_METHOD) {
             case 'AutoSpecials':
                 $payment_calc_choice = PRODUCT_PRICES_CALC_AUTOSPECIALS;
+                $priceClass = 'amount p-n hidden';
+                $priceMessage = EO_PRICE_AUTO_GRID_MESSAGE;
                 break;
             case 'Auto':
                 $payment_calc_choice = PRODUCT_PRICES_CALC_AUTO;
+                $priceClass = 'amount p-n hidden';
+                $priceMessage = EO_PRICE_AUTO_GRID_MESSAGE;
                 break;
             default:
                 $payment_calc_choice = PRODUCT_PRICES_CALC_MANUAL;
@@ -1307,7 +1313,7 @@ if ($action == 'edit') {
                                 </td>
                                 <td class="dataTableContent"><input name="update_products[<?php echo $orders_products_id; ?>][model]" value="<?php echo $order->products[$i]['model']; ?>" <?php echo $model_parms; ?> /></td>
                                 <td class="dataTableContent a-r"><input class="amount p-t" name="update_products[<?php echo $orders_products_id; ?>][tax]" value="<?php echo zen_display_tax_value($order->products[$i]['tax']); ?>"<?php echo $data_index . ' ' . $tax_parms; ?> />&nbsp;%</td>
-                                <td class="dataTableContent a-r"><input class="amount p-n" name="update_products[<?php echo $orders_products_id; ?>][final_price]" value="<?php echo $final_price; ?>"<?php echo $data_index . ' ' . $value_parms; ?> /></td>
+                                <td class="dataTableContent a-r"><input class="<?php echo $priceClass; ?>" name="update_products[<?php echo $orders_products_id; ?>][final_price]" value="<?php echo $final_price; ?>"<?php echo $data_index . ' ' . $value_parms; ?> /><?php echo $priceMessage; ?></td>
 <?php
 
         if (DISPLAY_PRICE_WITH_TAX == 'true') {
