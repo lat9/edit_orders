@@ -138,13 +138,13 @@ switch ($action) {
         // If the country was passed as an id, change it to the country name for
         // storing in the database. This is done in case a country is removed in
         // the future, so the country name is still associated with the order.
-        if (is_numeric($sql_data_array['customers_country'])) {
+        if (ctype_digit($sql_data_array['customers_country'])) {
             $sql_data_array['customers_country'] = zen_get_country_name((int)$sql_data_array['customers_country']);
         }
-        if (is_numeric($sql_data_array['billing_country'])) {
+        if (ctype_digit($sql_data_array['billing_country'])) {
             $sql_data_array['billing_country'] = zen_get_country_name((int)$sql_data_array['billing_country']);
         }
-        if (is_numeric($sql_data_array['delivery_country'])) {
+        if (ctype_digit($sql_data_array['delivery_country'])) {
             $sql_data_array['delivery_country'] = zen_get_country_name((int)$sql_data_array['delivery_country']);
         }
 
@@ -155,7 +155,7 @@ switch ($action) {
 
             // If the number is not already obfuscated, we use the same method
             // as the authorize.net module to obfuscate the entered CC number
-            if (is_numeric($update_info_cc_number)) {
+            if (ctype_digit($update_info_cc_number)) {
                 $update_info_cc_number = str_pad(substr($_POST['update_info_cc_number'], -4), strlen($_POST['update_info_cc_number']), "X", STR_PAD_LEFT);
             }
 
