@@ -78,7 +78,7 @@ class attributes extends base
         $queryResult = $db->Execute($query);
 
         $retval = array();
-        foreach ($queryRestult as $result) {
+        foreach ($queryResult as $result) {
             $retval[$result['products_attributes_id']] = $result;
         }
         return $retval;
