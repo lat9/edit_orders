@@ -80,12 +80,12 @@ $zco_notifier->notify('EDIT_ORDERS_START_ACTION_PROCESSING');
 switch ($action) {
     // Update Order
     case 'update_order':
-        require DIR_WS_MODULES . '/edit_orders/eo_update_order_action_processing.php';
+        require DIR_WS_MODULES . 'edit_orders/eo_update_order_action_processing.php';
         zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit', 'NONSSL'));
         break;
 
     case 'add_prdct':
-        require DIR_WS_MODULES . '/edit_orders/eo_add_prdct_action_processing.php';
+        require DIR_WS_MODULES . 'edit_orders/eo_add_prdct_action_processing.php';
         if ($redirect_required) {
             zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
         }
@@ -197,9 +197,9 @@ if (EDIT_ORDERS_USE_NUMERIC_FIELDS != '1') {
 // Start action-based rendering ...
 //
 if ($action == 'edit') {
-    require DIR_WS_MODULES . '/edit_orders/eo_edit_action_display.php';
+    require DIR_WS_MODULES . 'edit_orders/eo_edit_action_display.php';
 } elseif ($action == "add_prdct") { 
-    require DIR_WS_MODULES . '/edit_orders/eo_add_prdct_action_display.php';
+    require DIR_WS_MODULES . 'edit_orders/eo_add_prdct_action_display.php';
 }
 
 // -----
