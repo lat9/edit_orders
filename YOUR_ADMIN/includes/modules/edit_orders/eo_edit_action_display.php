@@ -758,9 +758,9 @@
 
     if ($orders_history->EOF) {
 ?>
-                    <tr>
-                        <td class="smallText no-osh"><?php echo TEXT_NO_ORDER_HISTORY; ?></td>
-                    </tr>
+                            <tr>
+                                <td class="smallText no-osh"><?php echo TEXT_NO_ORDER_HISTORY; ?></td>
+                            </tr>
 <?php
     } else {
         // -----
@@ -823,7 +823,7 @@
         // Create the table's header, based on the current table-elements ...
         //
 ?>
-                    <tr class="dataTableHeadingRow v-top">
+                            <tr class="dataTableHeadingRow v-top">
 <?php
         foreach ($table_elements as $field_name => $field_values) {
             if (empty($field_values['title'])) {
@@ -846,11 +846,11 @@
             }
             $table_elements[$field_name]['align_class'] = $align_class;
 ?>
-                        <td class="dataTableHeadingContent smallText<?php echo $align_class; ?>"><?php echo $field_values['title']; ?></td>
+                                <td class="dataTableHeadingContent smallText<?php echo $align_class; ?>"><?php echo $field_values['title']; ?></td>
 <?php
         }
 ?>
-                    </tr>
+                            </tr>
 <?php
         // -----
         // Loop through each of the order's history records, displaying the columns as
@@ -858,7 +858,7 @@
         //
         foreach ($orders_history as $osh) {
 ?>
-                    <tr class="v-top">
+                            <tr class="v-top">
 <?php
             foreach ($table_elements as $field_name => $field_values) {
                 // -----
@@ -925,12 +925,12 @@
                 //
                 if (!empty($field_values['title'])) {
 ?>
-                        <td class="smallText<?php echo $field_values['align_class']; ?>"><?php echo $display_value; ?></td>
+                                <td class="smallText<?php echo $field_values['align_class']; ?>"><?php echo $display_value; ?></td>
 <?php
                 }
             }
 ?>
-                    </tr>
+                            </tr>
 <?php
         }
     }
