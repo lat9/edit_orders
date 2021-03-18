@@ -514,6 +514,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>CHANGE: Dropping support for Zen Cart versions prior to 1.5.6 and PHP versions &lt; 5.6.</li>
             <li>CHANGE: Remove <a href="https://www.zen-cart.com/downloads.php?do=file&id=75" target="_blank">Ty Package Tracker</a> integration; use <b>TyPT</b> v4.0.0 or later for continued tracking support.</li>
             <li>CHANGE: Don't display price-input fields when pricing is auto-calculated.</li>
+            <li>CHANGE: Restructuring, migrating various processing sections to their own module.</li>
             <li>The following files were changed, <span class="added">added</span> or <span class="removed">removed</span>:<ol>
                 <li>/YOUR_ADMIN/edit_orders.php</li>
                 <li>/YOUR_ADMIN/includes/auto_loaders/config.eo.php</li>
@@ -524,7 +525,11 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                 <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
                 <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
                 <li>/YOUR_ADMIN/includes/languages/english/edit_orders.php</li>
-                <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_navigation.php</li>
+                <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_add_prdct_action_display.php</span></li>
+                <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_add_prdct_action_processing.php</span></li>
+                <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_display.php</span></li>
+                <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_navigation.php</span></li>
+                <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_update_order_action_processing.php</span></li>
                 <li><span class="removed">/zc155/*.*</span></li>
             </ol></li>
           </ul></li>
