@@ -13,7 +13,7 @@
 $comments = zen_db_prepare_input($_POST['comments']);
 $status = (int)$_POST['status'];
 if ($status < 1) {
-    break;
+    return;
 }
 
 $order_updated = false;
@@ -95,7 +95,7 @@ $allow_update = true;
 $zco_notifier->notify('EDIT_ORDERS_PRE_UPDATE_ORDER', $oID, $sql_data_array, $allow_update);
 if ($allow_update === false) {
     $eo->eoLog("Update disallowed by observer.");
-    break;
+    return;
 }
 zen_db_perform(TABLE_ORDERS, $sql_data_array, 'update', "orders_id = $oID LIMIT 1");
 
