@@ -95,7 +95,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
   
   <p><strong>Usage Notes:</strong></p>
   <ol>
-    <li>A working copy of Zen Cart (v1.5.6 or later) is required by Edit Orders.</li>
+    <li>A working copy of Zen Cart (v1.5.6 or later) running on a PHP version &gt;= 5.6 is required by Edit Orders v4.6.0 and later.</li>
     <li>Some <code class="no-pad">order-total</code> modules are incompatibile with <em>EO</em>, especially if they require storefront conditions to perform their processing.</li>
     <li>Products added to an order via <em>EO</em> cannot include a &quot;file-upload&quot; option as that option-type is not currently supported.</li>
     <li>If your store's shipping-tax rate is different from the products' tax-rate, the setting <b><em>My Store :: Show Split Tax Lines</em></b> must be set to <code>true</code> to enable <em>EO</em> to correctly locate the shipping-tax rate on an order's initial edit.</li>
@@ -134,7 +134,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
           <p>This section identifies the processes you'll use to initially install <em>Edit Orders</em>, upgrade or uninstall <em>EO</em> entirely.</p>
           <p><i class="fas fa-exclamation-circle fa-5x red"></i><strong class="red">Notes:</strong></p>
           <ol>
-            <li>Before you install <em>EO</em> v4.6.0 (or later), you'll need a working copy of Zen Cart 1.5.6 or later.</li>
+            <li>Before you install <em>EO</em> v4.6.0 (or later), you'll need a working copy of Zen Cart 1.5.6 or later, running on a PHP version &gt;= 5.6.</li>
             <li>Before you install <em>EO</em> v4.2.0 (or later), you'll need a working copy of Zen Cart 1.5.5a or later.</li>
             <li><em>EO</em>, v4.4.0 and later, requires that the base Zen Cart function <code>zen_add_tax</code> (present in /YOUR_ADMIN/includes/functions/general.php) <b>not</b> pre-round its return value.  Refer to <a href="#zat" class="side-link">this</a> tab for more information.</li>
             <li>Edit Orders provides an additional admin-sanitization script so that its inputs don't get over-sanitized by the zc155+ sanitizer. This, unfortunately, affects stores that have both EO installed and a cron-job set up to run the <code>/admin/currency_cron.php</code> script; see <a href="https://github.com/zencart/zencart/issues/2849" target="_blank">this</a> Zen Cart issue for details.</li>
@@ -510,8 +510,8 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.6.0-beta2, 2021-03-05 (lat9)<ul>
-            <li>CHANGE: Dropping support for Zen Cart versions prior to 1.5.6.</li>
+          <li>v4.6.0-beta2, 2021-03-18 (lat9/proseLA)<ul>
+            <li>CHANGE: Dropping support for Zen Cart versions prior to 1.5.6 and PHP versions &lt; 5.6.</li>
             <li>CHANGE: Remove <a href="https://www.zen-cart.com/downloads.php?do=file&id=75" target="_blank">Ty Package Tracker</a> integration; use <b>TyPT</b> v4.0.0 or later for continued tracking support.</li>
             <li>CHANGE: Don't display price-input fields when pricing is auto-calculated.</li>
             <li>The following files were changed, <span class="added">added</span> or <span class="removed">removed</span>:<ol>
