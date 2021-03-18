@@ -573,7 +573,6 @@
 <!-- End Products Listings Block -->
 
 <!-- Begin Order Total Block -->
-                            <tr>
 <?php
     $eo_href_link = zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$oID&amp;action=add_prdct");
     $eo_add_product_button = zen_image_button('button_add_product.gif', TEXT_ADD_NEW_PRODUCT);
