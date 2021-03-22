@@ -44,39 +44,7 @@ require DIR_WS_MODULES . 'edit_orders/eo_navigation.php';
             <tr>
                 <td><?php echo zen_draw_form('edit_order', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'paycc']) . 'action=update_order'); ?><table width="100%" border="0">
                     <tr>
-                        <td><table role="table" class="w100" id="c-form">
-<?php
-// -----
-// Gather the maximum database field-length for each of the address-related fields in the
-// order, noting that the ASSUMPTION is made that each of the customer/billing/delivery fields
-// are of equal length!
-//
-$max_name_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_name') . '"';
-$max_company_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_company') . '"';
-$max_street_address_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_street_address') . '"';
-$max_suburb_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_suburb') . '"';
-$max_city_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_city') . '"';
-$max_state_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_state') . '"';
-$max_postcode_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_postcode') . '"';
-$max_country_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_country') . '"';
-
-// -----
-// Starting with EO v4.5.0, a store can indicate the display-order for the order-related addresses.  Rather
-// than including all that code here, we'll use a separate 'module' to display the Customer-Shipping-Billing vs.
-// Customer-Billing-Shipping version.
-//
-$module_name = (EO_ADDRESSES_DISPLAY_ORDER == 'CBS') ? 'eo_addresses_cbs.php' : 'eo_addresses_csb.php';
-require DIR_WS_MODULES . 'edit_orders/' . $module_name;
-
-// -----
-// Give a watching observer the chance to inject some additional, per-address-type, information.
-//
-$additional_rows = '';
-$zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_ADDRESS_ROWS', $order, $additional_rows);
-echo $additional_rows;
-?>
-
-                        </table></td>
+                        <td><?php require DIR_WS_MODULES . 'edit_orders/eo_edit_action_addresses_display.php'; ?></td>
                     </tr>
 
 <!-- End Addresses Block -->

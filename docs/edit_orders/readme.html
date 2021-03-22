@@ -192,10 +192,10 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                   <li>/YOUR_ADMIN/includes/languages/english/edit_orders.php</li>
                   <li>/YOUR_ADMIN/includes/languages/english/extra_definitions/edit_orders.php</li>
                   <li>/YOUR_ADMIN/includes/languages/english/images/buttons/button_add_product.gif</li>
-                  <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_addresses_cbs.php <span class="smaller">(Added in v4.5.0)</span></li>
-                  <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_addresses_csb.php <span class="smaller">(Added in v4.5.0)</span></li>
                   <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_add_prdct_action_display.php <span class="smaller">(Added in v4.6.0)</span></li>
                   <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_add_prdct_action_processing.php <span class="smaller">(Added in v4.6.0)</span></li>
+                  <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_common_address_format.php <span class="smaller">(Added in v4.6.0)</span></li>
+                  <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_addresses_display.php <span class="smaller">(Added in v4.6.0)</span></li>
                   <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_display.php <span class="smaller">(Added in v4.6.0)</span></li>
                   <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_osh_table_display.php <span class="smaller">(Added in v4.6.0)</span></li>
                   <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_ot_table_display.php <span class="smaller">(Added in v4.6.0)</span></li>
@@ -286,17 +286,17 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                 <tr>
                   <td>/YOUR_ADMIN/orders.php</td>
                   <td>NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE</td>
-                  <td><span class="added">Added</span>, issued during the orders-listing display, enabling additional icons to be associated with each order's line-item when creating the bottom button-group.  This notifier is based on the like-named one in the Zen Cart 1.5.6+ repository.</td>
+                  <td>Built-in, issued during the orders-listing display, enabling additional icons to be associated with each order's line-item when creating the bottom button-group.</td>
                 </tr>
                 <tr>
                   <td>/YOUR_ADMIN/orders.php</td>
                   <td>NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS</td>
-                  <td><span class="added">Added</span>, issued during an order's detailed view when creating the bottom button-group.  This notifier is based on the like-named one in the Zen Cart 1.5.6+ repository.</td>
+                  <td>Built-in, issued during an order's detailed view when creating the bottom button-group.</td>
                 </tr>
                 <tr>
                   <td>/includes/modules/order_total/ot_shipping.php</td>
                   <td>NOTIFY_OT_SHIPPING_TAX_CALCS</td>
-                  <td>Issued during an order's &quot;order-totals&quot; processing, allowing the order's shipping tax-rate and tax-description to be overridden.  See <a href="https://github.com/zencart/zencart/commit/d0e663df3558d73475d99dcc2770038221ad70b6#diff-0995b79fef2e5ca29956202233852b76" target="_blank">this</a> Zen Cart commit for zc156 for details.  If your store runs on a zc155 variant, you can safely copy the entire zc156 module for use while you plan your store's zc156 upgrade!</td>
+                  <td>Issued during an order's &quot;order-totals&quot; processing, allowing the order's shipping tax-rate and tax-description to be overridden.  See <a href="https://github.com/zencart/zencart/commit/d0e663df3558d73475d99dcc2770038221ad70b6#diff-0995b79fef2e5ca29956202233852b76" target="_blank">this</a> Zen Cart commit for zc156 for details.</td>
                 </tr>
               </table>
             </div>
@@ -531,8 +531,12 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                 <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
                 <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
                 <li>/YOUR_ADMIN/includes/languages/english/edit_orders.php</li>
+                <li><span class="removed">/YOUR_ADMIN/includes/modules/edit_orders/eo_addresses_cbs.php</span></li>
+                <li><span class="removed">/YOUR_ADMIN/includes/modules/edit_orders/eo_addresses_csb.php</span></li>
                 <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_add_prdct_action_display.php</span></li>
                 <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_add_prdct_action_processing.php</span></li>
+                <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_common_address_format.php</span></li>
+                <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_addresses_display.php</span></li>
                 <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_display.php</span></li>
                 <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_osh_table_display.php</span></li>
                 <li><span class="added">/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_ot_table_display.php</span></li>
