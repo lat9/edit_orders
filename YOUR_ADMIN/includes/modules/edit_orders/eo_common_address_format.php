@@ -86,7 +86,7 @@ if (is_array($address_fields['country']) && isset($address_fields['country']['id
 // );
 //
 $additional_rows = [];
-$zco_notifier->notify($address_notifier, null, $additional_rows);
+$zco_notifier->notify($address_notifier, $address_fields, $additional_rows);
 if (!empty($additional_rows)) {
     foreach ($additional_rows as $next_row) {
 ?>
