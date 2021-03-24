@@ -50,7 +50,7 @@ if (EO_ADDRESSES_DISPLAY_ORDER == 'CBS') {
 } else {
     $address_icon = 'icon_shipping.png';
     $address_label = ENTRY_SHIPPING_ADDRESS;
-    $address_name = 'shipping';
+    $address_name = 'delivery';
     $address_fields = $order->delivery;
     $address_notifier = 'EDIT_ORDERS_ADDL_SHIPPING_ADDRESS_ROWS';
 }
@@ -66,7 +66,7 @@ require DIR_WS_MODULES . 'edit_orders/eo_common_address_format.php';
 if (EO_ADDRESSES_DISPLAY_ORDER == 'CBS') {
     $address_icon = 'icon_shipping.png';
     $address_label = ENTRY_SHIPPING_ADDRESS;
-    $address_name = 'shipping';
+    $address_name = 'delivery';
     $address_fields = $order->delivery;
     $address_notifier = 'EDIT_ORDERS_ADDL_SHIPPING_ADDRESS_ROWS';
 } else {
