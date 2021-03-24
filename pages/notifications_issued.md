@@ -15,7 +15,10 @@ These notifications are issued in `global` scope via `$zco_notifier`.
 | [EDIT_ORDERS_ORDER_UPDATED](#order-updated) | Issued at the end of the `update_order` processing, just prior to the redirect. |
 | [EDIT_ORDERS_START_ADD_PRODUCT](#start-add-product) | Issued just prior to the start of the `add_prdct` processing, after the product's quantity and attributes have been selected. |
 | [EDIT_ORDERS_PRODUCT_ADDED](#product-added) | Issued near the end of the `add_prdct` processing, just prior to the order's status-history update and the redirect. |
-| [EDIT_ORDERS_ADDITIONAL_ADDRESS_ROWS](#additional-address-rows) | Issued at the end of the rendering of the order's address block. |
+| ~[EDIT_ORDERS_ADDITIONAL_ADDRESS_ROWS](#additional-address-rows)~ | ~Issued at the end of the rendering of the order's address block.~ **Removed in EO 4.6.0.** |
+| [EDIT_ORDERS_ADDL_CUSTOMER_ADDRESS_ROWS](#additional-address-rows) | Issued at the end of rendering the order's *customer-address* block.  **Added in EO 4.6.0** |
+| [EDIT_ORDERS_ADDL_BILLING_ADDRESS_ROWS](#additional-address-rows) | Issued at the end of rendering the order's *billing-address* block.  **Added in EO 4.6.0** |
+| [EDIT_ORDERS_ADDL_SHIPPING_ADDRESS_ROWS](#additional-address-rows) | Issued at the end of rendering the order's *shipping-address* block.  **Added in EO 4.6.0** |
 | [EDIT_ORDERS_ADDITIONAL_CONTACT_INFORMATION](#additional-contact-information) | Issued after rendering the 'base' order's contact information. |
 | [EDIT_ORDERS_FORM_ADDITIONAL_INPUTS](#form-additional-inputs) | Issued just prior to rendering the `update` button, allowing additional form inputs to be supplied. |
 | [EDIT_ORDERS_PRODUCTS_HEADING_1](#products-heading-1) | Issued just prior to rendering the first heading-column of the order's products' listing. |
@@ -133,6 +136,8 @@ The following variables are passed with the notification:
 
 #### Additional Address Rows
 
+##### EO Versions Prior to v4.6.0
+
 This notifier fires after the 'base' address rows are rendered, allowing an observer to supply additional rows associated with the three address elements (customer, billing, shipping).  I'm not proud of this one, and it's on the `deprecation` list!
 
 The following variables are passed with the notification:
@@ -141,6 +146,26 @@ The following variables are passed with the notification:
 | :-----: | :------ |
 | $p1 | (r/o) Contains the order-object that represents the order. |
 | $p2 | (r/w) Contains a reference to the `$additional_rows` string, which is _directly output_ to the screen. |
+
+##### EO Versions v4.6.0 and Later
+
+These notifiers fires after the 'base' address rows are rendered, allowing an observer to supply additional rows associated with a specific address elements (customer, billing, shipping).
+
+A watching observer adds its additions to the second parameter (`$p2`, below) as arrays formatted as
+
+```
+array(
+    'label' => label_text,  //-No trailing ':', that will be added by EO.
+    'value' => the associated form-field value
+)
+```
+
+The following variables are passed with the notification:
+
+| Variable 'name' | Description                                                  |
+| :-------------: | :----------------------------------------------------------- |
+|       $p1       | (r/o) Contains the 'base' order fields for the specific address-element, e.g. `$order->customer`, `$order->billing` or `$order->delivery`. |
+|       $p2       | (r/w) Contains a reference to the `$additional_rows` array, initialized to an empty array.  An observer provides the content-specific additions in the format described above. |
 
 #### Additional Contact Information
 
