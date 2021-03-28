@@ -173,6 +173,12 @@ if (isset($_POST['update_products'])) {
     foreach ($_POST['update_products'] as $orders_products_id => $product_update) {
         $product_update['qty'] = floatval($product_update['qty']);
         $product_update['name'] = $product_update['name'];
+        if (empty($product_update['tax'])) {
+            $product_update['tax'] = 0;
+        }
+        if (empty($product_update['final_price'])) {
+            $product_update['final_price'] = 0;
+        }
 
         $rowID = -1;
         $orders_products_id_mapping = eo_get_orders_products_id_mappings((int)$oID);
