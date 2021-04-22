@@ -564,7 +564,7 @@ require DIR_WS_MODULES . 'edit_orders/eo_edit_action_ot_table_display.php';
                         <td class="main"><br /><strong><?php echo TABLE_HEADING_COMMENTS; ?></strong></td>
                     </tr>
                     
-                    <tr>
+                    <tr aria-hidden="true">
                         <td><?php echo zen_draw_separator('pixel_trans.gif', '1', '5'); ?></td>
                     </tr>
                     
@@ -589,7 +589,7 @@ if (is_array($additional_osh_content) && count($additional_osh_content) != 0) {
     }
 }
 ?>
-                    <tr>
+                    <tr aria-hidden="true">
                         <td><?php echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?></td>
                     </tr>
                     
@@ -626,7 +626,7 @@ switch (EO_CUSTOMER_NOTIFICATION_DEFAULT) {
                     <tr>
                         <td><table>
                             <tr>
-                                <td class="main"><strong><?php echo ENTRY_NOTIFY_CUSTOMER; ?></strong> [<?php echo zen_draw_radio_field('notify', '1', $email_default) . '-' . TEXT_EMAIL . ' ' . zen_draw_radio_field('notify', '0', $noemail_default) . '-' . TEXT_NOEMAIL . ' ' . zen_draw_radio_field('notify', '-1', $hidden_default) . '-' . TEXT_HIDE; ?>]&nbsp;&nbsp;&nbsp;</td>
+                                <td class="main"><strong><?php echo ENTRY_NOTIFY_CUSTOMER; ?></strong> [<label><?php echo zen_draw_radio_field('notify', '1', $email_default) . '-' . TEXT_EMAIL . '</label> <label>' . zen_draw_radio_field('notify', '0', $noemail_default) . '-' . TEXT_NOEMAIL . '</label> <label>' . zen_draw_radio_field('notify', '-1', $hidden_default) . '-' . TEXT_HIDE . '</label>'; ?>]&nbsp;&nbsp;&nbsp;</td>
                                 <td class="main"><strong><?php echo ENTRY_NOTIFY_COMMENTS; ?></strong> <?php echo zen_draw_checkbox_field('notify_comments', '', true); ?></td>
                             </tr>
                         </table></td>
