@@ -66,7 +66,7 @@
     if (is_array($address_fields['country']) && isset($address_fields['country']['id'])) {
         echo zen_get_country_list('update_' . $address_name . '_country', $address_fields['country']['id'], 'id="update_' . $address_name . '_country"');
     } else {
-        echo '<input name="update_' . $address_name . '_country" size="45" value="' . zen_output_string_protected($address_fields['country']) . '"' . $max_country_length . '" id="update_<?php echo $address_name; ?>_country">';
+        echo '<input name="update_' . $address_name . '_country" size="45" value="' . zen_output_string_protected($address_fields['country']) . '"' . $max_country_length . '" id="update_"' . $address_name . '_country">';
     } 
     ?>
             </td>
