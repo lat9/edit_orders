@@ -3,7 +3,7 @@
 // Part of the Edit Orders plugin (v4.1.6 and later) by lat9 (lat9@vinosdefrutastropicales.com).
 // Copyright (C) 2016-2021, Vinos de Frutas Tropicales
 //
-// Last updated: EO v4.6.0, 20210304, lat9
+// Last updated: EO v4.6.0, 20210512, lat9
 //
 if (!defined('EO_DEBUG_TAXES_ONLY')) define('EO_DEBUG_TAXES_ONLY', 'false');  //-Either 'true' or 'false'
 class editOrders extends base
@@ -517,6 +517,14 @@ class editOrders extends base
     public function eoGetOrderTotalTax($oID, $ot_class)
     {
         global $db;
+        
+        // -----
+        // As of EO v4.6.0, this method is no longer used by the base EO processing and will be removed
+        // in a future version of EO.  Just in case there's a customization out there that's using the
+        // method, log a deprecation warning.
+        //
+        trigger_error('The eoGetOrderTotalTax method is deprecated as of EO v4.6.0 and will be removed in a future version.', E_USER_DEPRECATED);
+
         $order_total_tax = 0;
         if ($ot_class == 'ot_cod_fee') {
             $ot_tax_class_name = 'MODULE_ORDER_TOTAL_COD_TAX_CLASS';

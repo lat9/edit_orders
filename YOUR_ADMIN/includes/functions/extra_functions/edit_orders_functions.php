@@ -2,7 +2,8 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-//-Last updated for EO v4.6.0, 20210304 (lat9)
+// Last updated: EO v4.6.0, 20210512, lat9
+//
 // -----
 // Since other plugins (like "Admin New Order") also provide some of these functions,
 // continue this function-file "load" only if the current page-load is on
