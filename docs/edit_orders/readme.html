@@ -516,13 +516,14 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.6.0-beta4, 2021-04-21 (lat9/proseLA/jage9)<ul>
+          <li>v4.6.0-beta5, 2021-05-11 (lat9/proseLA/jage9)<ul>
             <li>CHANGE: Dropping support for Zen Cart versions prior to 1.5.6 and PHP versions &lt; 5.6.</li>
             <li>CHANGE: Remove <a href="https://www.zen-cart.com/downloads.php?do=file&id=75" target="_blank">Ty Package Tracker</a> integration; use <b>TyPT</b> v4.0.0 or later for continued tracking support.</li>
             <li>CHANGE: Don't display price-input fields when pricing is auto-calculated.</li>
             <li>CHANGE: Restructuring, migrating various processing sections to their own module.</li>
             <li>BUGFIX: Correcting MySQL error when product tax and/or price is set to an empty string.</li>
             <li>BUGFIX: Add changes to make EO more 'friendly' to screen-readers.</li>
+            <li>BUGFIX: Correct order-update calculations when an order-total module is taxed.</li>
             <li>The following files were changed, <span class="added">added</span> or <span class="removed">removed</span>:<ol>
                 <li>/YOUR_ADMIN/edit_orders.php</li>
                 <li>/YOUR_ADMIN/includes/auto_loaders/config.eo.php</li>

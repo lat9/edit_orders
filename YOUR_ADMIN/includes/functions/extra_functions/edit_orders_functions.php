@@ -1414,18 +1414,6 @@ function eo_update_database_order_totals($oID)
 
         // Load the shopping cart class into the session
         eo_shopping_cart();
-        
-        // -----
-        // Cycle through the order-totals to see if any are currently taxed.  If so, remove the
-        // tax from the current order in preparation for its recalculation.
-        //
-        foreach ($order->totals as $current_total) {
-            if (in_array($current_total['class'], ['ot_subtotal', 'ot_tax', 'ot_shipping', 'ot_total', 'ot_misc_cost'])) {
-                continue;
-            }
-            $current_total_tax = $eo->eoGetOrderTotalTax($oID, $current_total['class']);
-            $order->info['tax'] -= $current_total_tax;
-        }
 
         // Reset the final total (include tax if not already tax-inc)
         // This code causes the order totals to be correctly calculated.
