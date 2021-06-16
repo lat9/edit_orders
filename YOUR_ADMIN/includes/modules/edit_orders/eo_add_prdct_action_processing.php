@@ -25,12 +25,12 @@ if ($step == 5) {
 
     // Get Order Info
     $order = $eo->getOrderInfo($action);
-   
+
     // -----
     // Initialize the shipping cost, tax-rate and tax-value.
     //
     $eo->eoInitializeShipping($oID, $action);
-    
+
     // Check qty field
     $add_max = zen_get_products_quantity_order_max($add_product_products_id);
     if ($add_product_quantity > $add_max && $add_max != 0) {
@@ -68,6 +68,7 @@ if ($step == 5) {
             $total['title'] = '';
             $total['value'] = 0;
             $total['code'] = $total['class'];
+            $total['sort_order'] = 0;
 
             eo_update_database_order_total($oID, $total);
             unset($order->totals[$key]);
@@ -76,7 +77,7 @@ if ($step == 5) {
     }
 
     eo_update_database_order_totals($oID);
-    
+
     unset($_SESSION['cc_id']);
 
     $eo->eoLog(
@@ -86,7 +87,7 @@ if ($step == 5) {
         'Final Tax Groups:' . PHP_EOL . $eo->eoFormatArray($order->info['tax_groups']) . PHP_EOL
     );
     $zco_notifier->notify('EDIT_ORDERS_PRODUCT_ADDED', $order);
-    
+
     $comments = sprintf(EO_MESSAGE_PRODUCT_ADDED, (string)$new_product['qty'], $new_product['name']);
     if (isset($new_product['attributes'])) {
         $attribs_added = '';
@@ -97,7 +98,7 @@ if ($step == 5) {
         $comments .= sprintf(EO_MESSAGE_ATTRIBS_ADDED, $attribs_added);
     }
     $eo->eoRecordStatusHistory($oID, $comments);
-    
+
     // -----
     // Let the main script 'know' that a redirect is required.
     //
