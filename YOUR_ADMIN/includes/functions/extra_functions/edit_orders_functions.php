@@ -633,10 +633,7 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
     ];
 
     $query = $db->Execute(
-        "SELECT p.products_id, p.master_categories_id, p.products_status, pd.products_name, p.products_model, p.products_image, p.products_price,
-                p.products_weight, p.products_tax_class_id, p.manufacturers_id, p.products_quantity_order_min, p.products_quantity_order_units,
-                p.products_quantity_order_max, p.product_is_free, p.products_virtual, p.products_discount_type, p.products_discount_type_from,
-                p.products_priced_by_attribute, p.product_is_always_free_shipping, p.products_quantity_mixed, p.products_mixed_discount_quantity
+        "SELECT p.*, pd.*
            FROM " . TABLE_PRODUCTS . " p
                 INNER JOIN " . TABLE_PRODUCTS_DESCRIPTION . " pd
                     ON pd.products_id = p.products_id
@@ -646,26 +643,19 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
     );
 
     if (!$query->EOF) {
-        // Handle common fields
-        $retval = array_merge($retval, [
-            'name' => $query->fields['products_name'],
-            'model' => $query->fields['products_model'],
-            'price' => $query->fields['products_price'],
-            'products_discount_type' => $query->fields['products_discount_type'],
-            'products_discount_type_from' => $query->fields['products_discount_type_from'],
-            'products_priced_by_attribute' => $query->fields['products_priced_by_attribute'],
-            'product_is_free' => $query->fields['product_is_free'],
-            'products_virtual' => $query->fields['products_virtual'],
-            'product_is_always_free_shipping' => $query->fields['product_is_always_free_shipping'],
-            'tax' => ($product_tax === false) ? number_format(zen_get_tax_rate_value($query->fields['products_tax_class_id']), 4) : (floatval($product_tax)),
-            'tax_description' => zen_get_tax_description($query->fields['products_tax_class_id']),
-            'products_weight' => $query->fields['products_weight'],
-            'products_quantity_order_min' => $query->fields['products_quantity_order_min'],
-            'products_quantity_order_max' => $query->fields['products_quantity_order_max'],
-            'products_quantity_order_units' => $query->fields['products_quantity_order_units'],
-            'products_quantity_mixed' => $query->fields['products_quantity_mixed'],
-            'products_mixed_discount_quantity' => $query->fields['products_mixed_discount_quantity'],
-        ]);
+        // -----
+        // First, handle some common product-related fields used by EO.
+        //
+        $retval['name'] = $query->fields['products_name'];
+        $retval['model'] = $query->fields['products_model'];
+        $retval['price'] = $query->fields['products_price'];
+        $retval['tax'] = ($product_tax === false) ? number_format(zen_get_tax_rate_value($query->fields['products_tax_class_id']), 4) : (floatval($product_tax));
+        $retval['tax_description'] = zen_get_tax_description($query->fields['products_tax_class_id']);
+        
+        // -----
+        // Next, merge the product-related fields from the database.
+        //
+        $retval = array_merge($retval, $query->fields);
 
         // Handle pricing
         $special_price = zen_get_products_special_price($product_id);
