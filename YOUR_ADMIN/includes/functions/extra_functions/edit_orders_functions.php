@@ -2,7 +2,7 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-// Last updated: EO v4.6.0, 20210512, lat9
+// Last updated: EO v4.6.0, 20210616, lat9
 //
 // -----
 // Since other plugins (like "Admin New Order") also provide some of these functions,
@@ -529,15 +529,26 @@ function eo_debug_action_level_list($level)
  */
 function eo_get_country($country) 
 {
+    // -----
+    // If the $country input is already an array, then an observer has already manipulated an
+    // element of the 'order' class' addresses and the value will be simply returned, noting
+    // the processing via an EO log.
+    //
+    if (is_array($country)) {
+        global $eo;
+        $eo->eoLog('eo_get_country, returning modified country array: ' . json_encode($country));
+        return $country;
+    }
+
     $country = (string)$country;
     $country_data = null;
-    
+
     // -----
     // First, try to locate the country's ID assuming that the supplied input is the
     // country's name.
     //
     $countries_id = zen_get_country_id($country);
-    
+
     // -----
     // If the country was located by name, gather the additional fields for the country.
     //
@@ -556,7 +567,7 @@ function eo_get_country($country)
                 'iso_code_3' => $country_info->fields['countries_iso_code_3'],
             ];
         }
-        
+
     // -----
     // Otherwise, see if a matching entry can be found for the country's ISO-code-2 or -3.
     //
