@@ -1,9 +1,9 @@
 <?php
 // -----
 // Part of the Edit Orders plugin (v4.1.6 and later) by lat9 (lat9@vinosdefrutastropicales.com).
-// Copyright (C) 2016-2021, Vinos de Frutas Tropicales
+// Copyright (C) 2016-2022, Vinos de Frutas Tropicales
 //
-// Last updated: EO v4.6.0, 20210512, lat9
+// Last updated: EO v4.6.1, 20220301, lat9
 //
 if (!defined('EO_DEBUG_TAXES_ONLY')) define('EO_DEBUG_TAXES_ONLY', 'false');  //-Either 'true' or 'false'
 class editOrders extends base
@@ -11,12 +11,19 @@ class editOrders extends base
     public function __construct($orders_id)
     {
         global $db, $currencies;
-        
+
+        // -----
+        // Save the current value for the session-stored currency (in case the order was
+        // placed in a different one).  The value will be restored when the class is
+        // destructed by the main 'edit_orders.php' processing.
+        //
+        $this->session_currency = (isset($_SESSION['currency'])) ? $_SESSION['currency'] : null;
+
         $this->eo_action_level = EO_DEBUG_ACTION_LEVEL;
         $this->orders_id = (int)$orders_id;
         $this->tax_updated = false;
         $this->product_tax_descriptions = [];
-        
+
         $currency_info = $db->Execute(
             "SELECT currency, currency_value 
                FROM " . TABLE_ORDERS . " 
@@ -26,7 +33,7 @@ class editOrders extends base
         $this->currency = $currency_info->fields['currency'];
         $this->currency_value = $currency_info->fields['currency_value'];
         unset($currency_info);
-        
+
         if (!isset($currencies)) {
             if (!class_exists('currencies')) {
                 require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
@@ -49,7 +56,20 @@ class editOrders extends base
             }
         }
     }
-    
+
+    // -----
+    // On destruction of the class, restore the (saved during __construct) the on-entry value
+    // for the session's active currency.
+    //
+    public function __destruct()
+    {
+        if ($this->session_currency === null) {
+            unset($_SESSION['currency']);
+        } else {
+            $_SESSION['currency'] = $this->session_currency;
+        }
+    }
+
     public function eoLog($message, $message_type = 'general') 
     {
         if ($this->eo_action_level != 0) {
@@ -73,7 +93,7 @@ class editOrders extends base
         //
         $order = new order($oID);
         $this->eoLog("getOrderInfo($action), on entry:" .  $this->eoFormatTaxInfoForLog(true), 'tax');
-        
+
         // -----
         // Add some required customer information for tax calculation.
         // The next method has been modified to add required info to the
@@ -132,7 +152,7 @@ class editOrders extends base
             }
         }
         unset($country);
-        
+
         // -----
         // Some order-totals (notably ot_cod_fee) rely on the payment-module code being present in the session ...
         //
@@ -141,7 +161,7 @@ class editOrders extends base
         $this->eoLog("getOrderInfo($action), on exit:" . PHP_EOL . $this->eoFormatTaxInfoForLog(), 'tax');
         return $order;
     }
-    
+
     public function eoInitializeShipping($oID, $action)
     {
         global $order;
@@ -169,7 +189,7 @@ class editOrders extends base
         }
         $this->eoLog("eoInitializeShipping($oID, $action), on exit: " . $this->eoFormatTaxInfoForLog(), 'tax');
     }
-    
+
     protected function initializeShippingCostFromOrder($order)
     {
         // -----
@@ -200,7 +220,7 @@ class editOrders extends base
         }
         return $order;
     }
-    
+
     protected function initializeShippingCostFromPostedValue($order)
     {
         $found_ot_shipping = false;
@@ -235,7 +255,7 @@ class editOrders extends base
         $this->eoLog("initializeShippingCostFromPostedValue, ot_shipping: $ot_shipping, shipping cost: {$order->info['shipping_cost']}.");
         return $order;
     }
-    
+
     protected function initializeOrderShippingTax($oID, $action)
     {
         global $order;
@@ -283,7 +303,7 @@ class editOrders extends base
     protected function calculateOrderShippingTax($use_saved_tax_rate = false)
     {
         global $order;
-        
+
         $shipping_tax = false;
         $shipping_tax_rate = false;
         $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX', $order, $shipping_tax, $shipping_tax_rate);
@@ -312,7 +332,7 @@ class editOrders extends base
         $this->eoLog("calculateOrderShippingTax returning $shipping_tax, rate = " . var_export($tax_rate, true) . ", cost = {$order->info['shipping_cost']}.");
         return $shipping_tax;
     }
-    
+
     // -----
     // Invoked by EO's admin observer-class to override the tax to be applied to any
     // shipping cost, as offered by the ot_shipping module's processing.
@@ -330,7 +350,7 @@ class editOrders extends base
         }
         $this->shipping_tax_description = $shipping_tax_description;
         $this->eoLog("eoUpdateOrderShippingTax($tax_updated, $shipping_tax_rate, $shipping_tax_description): " . json_encode($this->product_tax_descriptions), 'tax');
-        
+
         if (isset($GLOBALS['order']) && is_object($GLOBALS['order'])) {
             if (!isset($GLOBALS['order']->info['tax_groups'][$shipping_tax_description])) {
                 $GLOBALS['order']->info['tax_groups'][$shipping_tax_description] = 0;
@@ -340,7 +360,7 @@ class editOrders extends base
             }
         }
     }
-    
+
     public function eoGetShippingTaxRate($order)
     {
         $shipping_tax_rate = false;
@@ -360,7 +380,7 @@ class editOrders extends base
         }
         return (empty($tax_rate)) ? 0 : $tax_rate;
     }
-    
+
     public function getProductTaxes($product, $shown_price = -1, $add = true)
     {
         global $order;
@@ -388,16 +408,16 @@ class editOrders extends base
                 $products_tax_description = TEXT_UNKNOWN_TAX_RATE . ' (' . zen_display_tax_value($products_tax) . '%)';
             }
         }
-        
+
         // -----
         // Save the association of the current product's tax-rate to its description for possible use by the
         // eoUpdateOrderShippingTax method.  If the order's shipping tax-rate is the same as a product's tax-rate,
         // the shipping tax value will be added to that product-based tax description.
         //
         $this->product_tax_descriptions[$products_tax] = $products_tax_description;
-        
+
         $this->eoLog(PHP_EOL . "getProductTaxes($products_tax_description)\n" . (($query === false) ? 'false' : (($query->EOF) ? 'EOF' : json_encode($query->fields))) . json_encode($product), 'tax');
-        
+
         $totalTaxAdd = 0;
         if (!empty($products_tax_description)) {
             $taxAdd = 0;
@@ -424,17 +444,17 @@ class editOrders extends base
         $this->eoLog("getProductTaxes, returning $totalTaxAdd." . PHP_EOL);
         return $totalTaxAdd;
     }
-    
+
     public function eoFormatTaxInfoForLog($include_caller = false)
     {
         global $order;
         $log_info = PHP_EOL;
-        
+
         if ($include_caller) {
             $trace = debug_backtrace();
             $log_info = ' Called by ' . $trace[1]['file'] . ' on line #' . $trace[1]['line'] . PHP_EOL;
         }
-        
+
         if (!is_object($order)) {
             $log_info .= "\t" . 'Order-object is not set.' . PHP_EOL;
         } else {
@@ -447,7 +467,7 @@ class editOrders extends base
                 'Tax: ' . $order->info['tax'] . ', ' .
                 'Total: ' . $order->info['total'] . ', ' .
                 'Tax Groups: ' . (!empty($order->info['tax_groups']) ? json_encode($order->info['tax_groups']) : 'None') . PHP_EOL;
-                
+
             $log_info .= "\t" .
                 '$_SESSION[\'shipping\']: ' . ((isset($_SESSION['shipping'])) ? json_encode($_SESSION['shipping'], true) : '(not set)') . PHP_EOL;
                 
@@ -455,7 +475,7 @@ class editOrders extends base
         }
         return $log_info;
     }
-    
+
     public function eoFormatOrderTotalsForLog($order, $title = '')
     {
         $log_info = ($title === '') ? (PHP_EOL . 'Order Totals' . PHP_EOL) : $title;
@@ -464,7 +484,7 @@ class editOrders extends base
         }
         return $log_info;
     }
-    
+
     public function eoOrderIsVirtual($order)
     {
         $virtual_products = 0;
@@ -499,13 +519,13 @@ class editOrders extends base
                 }
             }
         }
-        
+
         $product_count = count($order->products);
         $this->eoLog(PHP_EOL . "Checking order for virtual status.  Order contains $product_count unique products, $virtual_products of those are virtual");
         
         return ($virtual_products == $product_count);
     }
-    
+
     // -----
     // Some order-total modules (like ot_cod_fee and ot_loworder_fee) are taxable but there's no built-in
     // way to determine the tax that they're adding to the order.  Since EO "re-builds" the order after a
@@ -517,7 +537,7 @@ class editOrders extends base
     public function eoGetOrderTotalTax($oID, $ot_class)
     {
         global $db;
-        
+
         // -----
         // As of EO v4.6.0, this method is no longer used by the base EO processing and will be removed
         // in a future version of EO.  Just in case there's a customization out there that's using the
@@ -552,7 +572,7 @@ class editOrders extends base
         $this->eoLog("Checking taxes for $ot_class: Tax class ($ot_tax_class_name:$ot_tax_class), $order_total_tax", 'tax');
         return $order_total_tax;
     }
-    
+
     // -----
     // When a store "Displays Prices with Tax" and shipping is taxed, the shipping-cost recorded in the order includes
     // the shipping tax.  This function, called when an EO order is created, backs that tax quantity out of the shipping
@@ -575,21 +595,21 @@ class editOrders extends base
             $order->info['shipping_cost'] = $shipping_cost - $shipping_tax;
             $order->info['tax'] -= $shipping_tax;
             $order->info['shipping_tax'] = 0;
-         
+
             $this->eoLog("removeTaxFromShippingCost, updated: $tax_rate, $shipping_cost, $shipping_cost_ex, $shipping_tax", 'tax');
         }
     }
-    
+
     public function eoRoundCurrencyValue($value)
     {
         return $GLOBALS['currencies']->value($value, false, $this->currency, $this->currency_value);
     }
-    
+
     public function eoFormatCurrencyValue($value)
     {
         return $GLOBALS['currencies']->format($this->eoRoundCurrencyValue($value), true, $this->currency, $this->currency_value);
     }
-    
+
     // -----
     // Format an array for output to the debug log.
     //
@@ -597,7 +617,7 @@ class editOrders extends base
     {
         return str_replace(['},{', '","'], ['},' . PHP_EOL . '{', '",' . PHP_EOL . '"'], json_encode($a));
     }
-    
+
     // -----
     // This class function mimics the zen_get_products_stock function, present in /includes/functions/functions_lookups.php.
     //
@@ -621,7 +641,7 @@ class editOrders extends base
         }
         return $stock_quantity;
     }
-    
+
     // -----
     // This method, called during a product addition, records the coupon-id associated
     // with the order into the session, so that the coupon is processed during that
@@ -644,7 +664,7 @@ class editOrders extends base
             $_SESSION['cc_id'] = $check->fields['coupon_id'];
         }
     }
-    
+
     // -----
     // This method creates a hidden record in the order's status history.
     //
@@ -652,7 +672,7 @@ class editOrders extends base
     {
         zen_update_orders_history($oID, $message);
     }
-    
+
     // -----
     // This method determines the specified order-total's defined sort-order.
     //
@@ -665,14 +685,14 @@ class editOrders extends base
         if (@file_exists($lang_file)) {
             include_once $lang_file;
         }
-        
+
         $module_file = DIR_FS_CATALOG . DIR_WS_MODULES . 'order_total/' . $order_total_code . '.php';
         if (@file_exists($module_file)) {
             include_once $module_file;
             $order_total = new $order_total_code();
             $sort_order = $order_total->sort_order;
         }
-        
+
         if ($sort_order === false) {
             if (!isset($this->ot_sort_default)) {
                 $this->ot_sort_default = 0;

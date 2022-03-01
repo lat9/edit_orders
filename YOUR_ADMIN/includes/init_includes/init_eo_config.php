@@ -1,13 +1,13 @@
 <?php
 // -----
 // Admin-level initialization script for the Edit Orders plugin for Zen Cart, by lat9.
-// Copyright (C) 2018-2021, Vinos de Frutas Tropicales.
+// Copyright (C) 2018-2022, Vinos de Frutas Tropicales.
 //
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.6.0');
+define('EO_CURRENT_VERSION', '4.6.1-beta1');
 
 // -----
 // Only update configuration when an admin is logged in.
