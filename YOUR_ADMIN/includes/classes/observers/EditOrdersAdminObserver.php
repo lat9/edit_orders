@@ -1,9 +1,9 @@
 <?php
 // -----
 // Admin-level observer class, adds "Edit Orders" buttons and links to Customers->Orders processing.
-// Copyright (C) 2017-2021, Vinos de Frutas Tropicales.
+// Copyright (C) 2017-2022, Vinos de Frutas Tropicales.
 //
-// Last updated for EO v4.6.0, lat9, 20210305
+// Last updated for EO v4.6.1, lat9, 20220301
 //
 if (!defined('IS_ADMIN_FLAG') || IS_ADMIN_FLAG !== true) {
     die('Illegal Access');
@@ -29,7 +29,7 @@ class EditOrdersAdminObserver extends base
                 'NOTIFY_OT_SHIPPING_TAX_CALCS',
             ]
         );
-        
+
         // -----
         // Starting with zc156, the order-class 'squishes' the delivery address to (bool)false when
         // the order's shipping-method is 'storepickup'.  Watch this event only during Edit Orders' processing!
@@ -38,7 +38,7 @@ class EditOrdersAdminObserver extends base
             $this->attach($this, ['NOTIFY_ORDER_AFTER_QUERY']);
         }
     }
-  
+
     public function update(&$class, $eventID, $p1, &$p2, &$p3, &$p4, &$p5) 
     {
         switch ($eventID) {
@@ -55,7 +55,7 @@ class EditOrdersAdminObserver extends base
                     $p2[$index_to_update]['text'] = $this->addEditOrderButton($p1->orders_id, $p2[$index_to_update]['text']);
                 }
                 break;
-      
+
             // -----
             // Issued during the orders-listing sidebar generation, after the lower-button-list has been created.
             //
@@ -64,12 +64,12 @@ class EditOrdersAdminObserver extends base
             //         with the built-in button list.
             //
             case 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END':
-                if (is_object($p1) && count($p2) > 0) {
+                if (is_object($p1) && count($p2) > 0 && isset($_GET['action']) && $_GET['action'] !== 'delete') {
                     $index_to_update = count($p2) - 1;
                     $p2[$index_to_update]['text'] = $this->addEditOrderButton($p1->orders_id, $p2[$index_to_update]['text']);
                 }
                 break;
-                
+
             // -----
             // Issued during the orders-listing generation for each order, gives us a chance to add the icon to
             // quickly edit the associated order.
@@ -84,7 +84,7 @@ class EditOrdersAdminObserver extends base
                 $eo_icon = ($this->is157OrLaterZenCart) ? EO_ZC157_FA_ICON : EO_ZC156_FA_ICON;
                 $p4 .= $this->createEditOrdersLink($p2['orders_id'], zen_image(DIR_WS_IMAGES . EO_BUTTON_ICON_DETAILS, EO_ICON_DETAILS), $eo_icon, false);
                 break;
-      
+
             // -----
             // Issued during an order's detailed display, allows the insertion of the "edit" button to link
             // the order to the "Edit Orders" processing.
@@ -96,7 +96,7 @@ class EditOrdersAdminObserver extends base
             case 'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS':
                 $p3 .= '&nbsp;' . $this->createEditOrdersLink($p1, zen_image_button(EO_IMAGE_BUTTON_EDIT, IMAGE_EDIT), IMAGE_EDIT);
                 break;
-                
+
             // -----
             // Issued during the order-totals' construction by the ot_shipping module, giving observers the chance
             // to override the shipping tax-related calculations.
@@ -132,7 +132,7 @@ class EditOrdersAdminObserver extends base
                     }
                 }
                 break;
-                
+
             // -----
             // Issued at the end of an order's recreation (watched during EO processing only). Change introduced 
             // in zc156b now sets the order's shipping information to (bool)false when the order's shipping is 'storepickup'.
@@ -169,12 +169,12 @@ class EditOrdersAdminObserver extends base
                     'format_id' => $order->fields['delivery_address_format_id']
                 ];
                 break;
-                
+
             default:
                 break;
         }
     }
-    
+
     protected function addEditOrderButton($orders_id, $button_list)
     {
         $updated_button_list = str_replace(
