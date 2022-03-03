@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified 20220301-lat9 Edit Orders v4.6.1
+//-Last modified 20220302-lat9 Edit Orders v4.6.1
 //
 require 'includes/application_top.php';
 
@@ -339,12 +339,6 @@ if (!empty($addl_js_files)) {
         }
     }
 }
-
-// -----
-// "Unset" the $eo class, causing its destructor to run which will restore the session's previous value
-// for 'currencies'.
-//
-unset($eo);
 ?>
 <!-- footer //-->
 <?php 

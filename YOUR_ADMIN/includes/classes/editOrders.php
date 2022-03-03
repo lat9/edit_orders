@@ -14,10 +14,9 @@ class editOrders extends base
 
         // -----
         // Save the current value for the session-stored currency (in case the order was
-        // placed in a different one).  The value will be restored when the class is
-        // destructed by the main 'edit_orders.php' processing.
-        //
-        $this->session_currency = (isset($_SESSION['currency'])) ? $_SESSION['currency'] : null;
+        // placed in a different one).  The value will be restored EO's initialization routine
+        // is run.
+        $_SESSION['eo_saved_currency'] = isset($_SESSION['currency']) ? $_SESSION['currency'] : false;
 
         $this->eo_action_level = EO_DEBUG_ACTION_LEVEL;
         $this->orders_id = (int)$orders_id;
@@ -54,19 +53,6 @@ class editOrders extends base
             } else {
                 $this->logfile_name = $log_file_dir . '/debug_edit_orders_' . $orders_id . '.log';
             }
-        }
-    }
-
-    // -----
-    // On destruction of the class, restore the (saved during __construct) the on-entry value
-    // for the session's active currency.
-    //
-    public function __destruct()
-    {
-        if ($this->session_currency === null) {
-            unset($_SESSION['currency']);
-        } else {
-            $_SESSION['currency'] = $this->session_currency;
         }
     }
 
