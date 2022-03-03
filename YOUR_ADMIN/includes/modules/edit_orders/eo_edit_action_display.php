@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified 20210318-lat9 Edit Orders v4.6.0
+//-Last modified 20220302-lat9 Edit Orders v4.6.1
 //
 // -----
 // Prior to EO v4.6.0, this code was in-line in the main /admin/edit_orders.php script.  Now required by
@@ -472,11 +472,12 @@ if (is_array($extra_data)) {
                     $option_input_name = "update_products[$orders_products_id][attr][$option_id][value]";
                     $option_rows = $optionInfo['rows'];
                     $option_cols = $optionInfo['size'];
+                    $option_length = $optionInfo['length'];
                     echo "<label class=\"attribsInput\" for=\"$option_html_id\">$option_name</label>";
                     if ($optionInfo['rows'] > 1 ) {
                         echo "<textarea class=\"attribsTextarea\" name=\"$option_input_name\" rows=\"$option_rows\" cols=\"$option_cols\" id=\"$option_html_id\">$text</textarea>" . PHP_EOL;
                     } else {
-                        echo "<input type=\"text\" name=\"$option_input_name\" size=\"$option_cols\" maxlength=\"$option_cols\" value=\"$text\" id=\"$option_html_id\" /><br />" . PHP_EOL;
+                        echo "<input type=\"text\" name=\"$option_input_name\" size=\"$option_cols\" maxlength=\"$option_length\" value=\"$text\" id=\"$option_html_id\" /><br>" . PHP_EOL;
                     }
                     echo $option_type_hidden_field;
                     break;

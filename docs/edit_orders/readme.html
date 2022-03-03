@@ -516,17 +516,20 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
-          <li>v4.6.1, 2022-03-01 (lat9)<ul>
+          <li>v4.6.1, 2022-03-03 (lat9)<ul>
             <li>BUGFIX: Correctly manage $_SESSION['currency'] for orders placed in a currency other than the site's default.</li>
             <li>BUGFIX: Remove &quot;Ty Package Tracker&quot; and other duplicates from the language file.</li>
             <li>BUGFIX: Correct unwanted &quot;Edit&quot; button (and log) when an order-deletion is being confirmed.</li>
             <li>BUGFIX: Ensure 'EO_DEBUG_ACTION_LEVEL' configuration setting is recorded; might not be for way-old versions when updating.</li>
+            <li>BUGFIX: On add/update, TEXT attributes' maximum-entry should be based on the option's <b>length</b>, not the <b>size</b>.</li>
             <li>The following files were changed, <span class="added">added</span> or <span class="removed">removed</span>:<ol>
                 <li>/YOUR_ADMIN/edit_orders.php</li>
                 <li>/YOUR_ADMIN/includes/classes/editOrders.php</li>
                 <li>/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php</li>
                 <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
                 <li>/YOUR_ADMIN/includes/languages/english/edit_orders.php</li>
+                <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_add_prdct_action_display.php</li>
+                <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_display.php</li>
             </ol></li>
           </ul></li>
           <li>v4.6.0, 2021-06-16 (lat9/proseLA/jage9)<ul>

@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified 20210318-lat9 Edit Orders v4.6.0
+//-Last modified 20220302-lat9 Edit Orders v4.6.1
 //
 // -----
 // Prior to EO v4.6.0, this code was in-line in the main /admin/edit_orders.php script.  Now required by
@@ -176,7 +176,7 @@
                         if (isset($_POST['id'][$optionID])) {
                             $selected_attribute = $_POST['id'][$optionID]['value'];
                         }
-                        echo zen_draw_pull_down_menu('id[' . $optionID . '][value]', $products_options_array, $selected_attribute, 'id="' . $attrib_id . '"') . '<br />' . PHP_EOL;
+                        echo zen_draw_pull_down_menu('id[' . $optionID . '][value]', $products_options_array, $selected_attribute, 'id="' . $attrib_id . '"') . '<br>' . PHP_EOL;
                         unset($products_options_array, $selected_attribute, $attributeId, $attributeValue);
                         echo zen_draw_hidden_field('id[' . $optionID . '][type]', $optionInfo['type']);
                         break;
@@ -188,7 +188,7 @@
 <?php
                         foreach ($optionInfo['options'] as $attributeId => $attributeValue) {
                             $checked = isset($_POST['id'][$optionID]['value'][$attributeId]);
-                            echo zen_draw_checkbox_field('id[' . $optionID . '][value][' . $attributeId . ']', $attributeId, $checked, null, 'id="' . $attrib_id . '-' . $attributeId . '"') . '<label class="attribsCheckbox" for="' . $attrib_id . '-' . $attributeId . '">' . $attributeValue . '</label><br />' . PHP_EOL;
+                            echo zen_draw_checkbox_field('id[' . $optionID . '][value][' . $attributeId . ']', $attributeId, $checked, null, 'id="' . $attrib_id . '-' . $attributeId . '"') . '<label class="attribsCheckbox" for="' . $attrib_id . '-' . $attributeId . '">' . $attributeValue . '</label><br>' . PHP_EOL;
                         }
                         unset($checked, $attributeId, $attributeValue);
                         echo zen_draw_hidden_field('id[' . $optionID . '][type]', $optionInfo['type']);
@@ -205,24 +205,25 @@
 <?php
                         $field_name = 'id[' . $optionID . '][value]';
                         $field_size = $optionInfo['size'];
+                        $field_length = $optionInfo['length'];
                         if ($optionInfo['rows'] > 1 ) {
-                            echo zen_draw_textarea_field($field_name, 'hard', $field_size, $optionInfo['rows'], $text, 'class="attribsTextarea" id="' . $attrib_id . '"') . '<br />' . PHP_EOL;
+                            echo zen_draw_textarea_field($field_name, 'hard', $field_size, $optionInfo['rows'], $text, 'class="attribsTextarea" id="' . $attrib_id . '"') . '<br>' . PHP_EOL;
                         } else {
-                            echo zen_draw_input_field($field_name, $text, 'size="' . $field_size . '" maxlength="' . $field_size . '" id="' . $attrib_id . '"') . '<br />' . PHP_EOL;
+                            echo zen_draw_input_field($field_name, $text, 'size="' . $field_size . '" maxlength="' . $field_length . '" id="' . $attrib_id . '"') . '<br>' . PHP_EOL;
                         }
                         echo zen_draw_hidden_field('id[' . $optionID . '][type]', $optionInfo['type']);
                         break;
                         
                     case PRODUCTS_OPTIONS_TYPE_FILE:
 ?>
-                    <span class="attribsFile"><?php echo $option_name . ': FILE UPLOAD NOT SUPPORTED'; ?></span><br />
+                    <span class="attribsFile"><?php echo $option_name . ': FILE UPLOAD NOT SUPPORTED'; ?></span><br>
 <?php
                         break;
                         
                     case PRODUCTS_OPTIONS_TYPE_READONLY:
                     default:
 ?>
-                    <span class="attribsRO"><?php echo $option_name . ': ' . $optionValue; ?></span><br />
+                    <span class="attribsRO"><?php echo $option_name . ': ' . $optionValue; ?></span><br>
 <?php
                         $optionValue = array_shift($optionInfo['options']);
                         echo 
