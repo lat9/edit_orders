@@ -371,6 +371,7 @@ if (is_array($extra_data)) {
                                 <td>&nbsp;X&nbsp;</td>
                                 <td class="dataTableContent"><input name="update_products[<?php echo $orders_products_id; ?>][name]" value="<?php echo zen_output_string_protected($order->products[$i]['name']); ?>" <?php echo $name_parms; ?> />
 <?php
+    echo zen_draw_hidden_field('update_products[' . $orders_products_id . '][products_id]', $order->products[$i]['id']);
     if (isset($order->products[$i]['attributes']) && count($order->products[$i]['attributes']) > 0) { 
 ?>
                                     <br/><nobr><small>&nbsp;<i><?php echo TEXT_ATTRIBUTES_ONE_TIME_CHARGE; ?>
