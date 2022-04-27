@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.6.1');
+define('EO_CURRENT_VERSION', '4.6.2-beta1');
 
 // -----
 // Only update configuration when an admin is logged in.
@@ -197,7 +197,7 @@ if (EO_VERSION != EO_CURRENT_VERSION) {
         //
         case (EO_VERSION !== '0.0.0' && !defined('EO_DEBUG_ACTION_LEVEL')):
             $db->Execute(
-                "INSERT INTO " . TABLE_CONFIGURATION . " 
+                "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " 
                     ( configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function ) 
                  VALUES 
                     ( 'Debug Action Level', 'EO_DEBUG_ACTION_LEVEL', '0', 'When enabled when actions are performed by Edit Orders additional debugging information will be stored in a log file.<br /><br />Enabling debugging will result in a large number of created log files and may adversely affect server performance. Only enable this if absolutely necessary!', $cgi, 12, now(), NULL, 'eo_debug_action_level_list(')"

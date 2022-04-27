@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Edit Orders</title>
 <link rel="icon" href="../vinos_favicon.ico" type="image/x-icon" />
-<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
-<style type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+<style>
 <!--
 a, a:active, a:visited { color: #006666; text-decoration: underline; }
 .tab a, .tab a:active, .tab a:visited { text-decoration: none; }
@@ -80,7 +80,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 <script src="../jquery-3.5.1.min.js"></script> 
 <script src="../jquery.easytabs.min.js"></script>
-<script type="text/javascript">
+<script>
     $(document).ready( function() {
         $('#tab-container').easytabs();
     });
@@ -89,7 +89,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
 
 <body>
   <h1 id="title">Edit Orders for Zen Cart&reg;</h1>
-  <p>Version 4.6.1.  Copyright &copy; 2015-2022, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
+  <p>Version 4.6.2.  Copyright &copy; 2015-2022, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
   <p>Current Support Thread on the Zen Cart forums: <a href="https://www.zen-cart.com/showthread.php?200407" target="_blank">https://www.zen-cart.com/showthread.php?200407</a></p>
   <p>Released under the General Public License (see the file named <code class="no-pad">LICENSE</code> in the plugin's distribution for full details). This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>
   
@@ -516,6 +516,13 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         <noscript><h3>Version History</h3></noscript>
         <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
         <ul>
+          <li>v4.6.2, 2022-04-27 (lat9)<ul>
+            <li>BUGFIX: Correct <em>strict</em> MySQL Fatal error when updating using &quot;Auto&quot; price calculations.</li>
+            <li>The following files were changed, <span class="added">added</span> or <span class="removed">removed</span>:<ol>
+                <li>/YOUR_ADMIN/includes/functions/edit_orders_functions.php</li>
+                <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
+            </ol></li>
+          </ul></li>
           <li>v4.6.1, 2022-03-05 (lat9)<ul>
             <li>BUGFIX: Correctly manage $_SESSION['currency'] for orders placed in a currency other than the site's default.</li>
             <li>BUGFIX: Remove &quot;Ty Package Tracker&quot; and other duplicates from the language file.</li>
