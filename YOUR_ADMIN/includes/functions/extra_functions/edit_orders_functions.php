@@ -2,7 +2,7 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-// Last updated: EO v4.6.0, 20210616, lat9
+// Last updated: EO v4.6.2, 20220427, lat9
 //
 // -----
 // Since other plugins (like "Admin New Order") also provide some of these functions,
@@ -1425,12 +1425,12 @@ function eo_update_database_order_totals($oID)
             $order->info['total'] = $order->info['subtotal'] + $order->info['tax'] + $order->info['shipping_cost'];
         }
         
-        $eo->eoLog('eo_update_database_order_totals, after adjustments: ' . $eo->eoFormatArray($order->info), 'tax');
+        $eo->eoLog('eo_update_database_order_totals, after adjustments: ' . $eo->eoFormatArray($order->info) . PHP_EOL . $eo->eoFormatArray($order->totals), 'tax');
 
         // Process the order totals
         $order_totals = $GLOBALS['order_total_modules']->process();
         $eo->eoLog('eo_update_database_order_totals, after process: ' . $eo->eoFormatArray($order->info) . PHP_EOL . $eo->eoFormatArray($order_totals) . PHP_EOL . $eo->eoFormatArray($order->totals), 'tax');
-        
+
         $GLOBALS['zco_notifier']->notify('EO_UPDATE_DATABASE_ORDER_TOTALS_MAIN', $oID);
         // Update the order totals in the database
         foreach ($order_totals as $next_total) {
@@ -1474,13 +1474,16 @@ function eo_update_database_order_totals($oID)
         // update.  Make sure that any no-longer-valid tax totals, i.e. those that aren't recorded in the
         // order's tax_groups, are removed.
         //
+        // Note: Special handling required when a store's got SHOW_SPLIT_TAX_CHECKOUT set to 'false', i.e. multiple
+        // tax-groups are combined into a single ot_tax record.
+        //
         if (isset($order->info['tax_groups']) && is_array($order->info['tax_groups'])) {
             $tax_groups = array_keys($order->info['tax_groups']);
-            foreach ($tax_groups as &$tax_group) {
-                $tax_group = $db->prepareInput($tax_group) . ':';
+            if (SHOW_SPLIT_TAX_CHECKOUT === 'false') {
+                $tax_groups = "'" . implode(' + ', $tax_groups) . ":'";
+            } else {
+                $tax_groups = "'" . implode(":', '", $tax_groups) . ":'";
             }
-            unset($tax_group);
-            $tax_groups = "'" . implode("', '", $tax_groups) . "'";
             $db->Execute(
                 "DELETE FROM " . TABLE_ORDERS_TOTAL . "
                   WHERE orders_id = $oID
