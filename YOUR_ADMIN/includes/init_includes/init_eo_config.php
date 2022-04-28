@@ -7,7 +7,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-define('EO_CURRENT_VERSION', '4.6.2-beta1');
+define('EO_CURRENT_VERSION', '4.6.2-beta3');
 
 // -----
 // Only update configuration when an admin is logged in.
@@ -217,7 +217,8 @@ if (EO_VERSION != EO_CURRENT_VERSION) {
     }
     $db->Execute(
         "UPDATE " . TABLE_CONFIGURATION . "
-            SET configuration_value = '" . EO_CURRENT_VERSION . "'
+            SET configuration_value = '" . EO_CURRENT_VERSION . "',
+                set_function = 'zen_cfg_read_only('
           WHERE configuration_key = 'EO_VERSION'
           LIMIT 1"
     );

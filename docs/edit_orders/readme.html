@@ -187,6 +187,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                   <li>/YOUR_ADMIN/includes/extra_datafiles/eo_sanitization.php</li>
                   <li>/YOUR_ADMIN/includes/functions/extra_functions/common_orders_functions.php <span class="smaller">(Non-processing module, can be safely removed)</span></li>
                   <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
+                  <li>/YOUR_ADMIN/includes/functions/extra_functions/zen_cfg_read_only.php <span class="smaller">(Added in v4.6.2)</span></li>
                   <li>/YOUR_ADMIN/includes/init_includes/edit_orders_cautions.php <span class="smaller">(Added in v4.3.5)</span></li>
                   <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
                   <li>/YOUR_ADMIN/includes/languages/english/edit_orders.php</li>
@@ -519,8 +520,10 @@ div.totals-desc h4 { border-top: 1px solid #666; }
           <li>v4.6.2, 2022-04-27 (lat9)<ul>
             <li>BUGFIX: Correct <em>strict</em> MySQL Fatal error when updating using &quot;Auto&quot; price calculations.</li>
             <li>BUGFIX: Multiple tax-groups' tax-record not added on order-update if &quot;Show Split Tax Lines&quot; is set to <em>false</em>.</li>
+            <li>BUGFIX: Use <code>zen_cfg_read_only</code> for EO's &quot;Version&quot; configuration setting, since it's expected to be read-only!</li>
             <li>The following files were changed, <span class="added">added</span> or <span class="removed">removed</span>:<ol>
                 <li>/YOUR_ADMIN/includes/functions/edit_orders_functions.php</li>
+                <li><span class="added">/YOUR_ADMIN/includes/functions/extra_functions/zen_cfg_read_only.php</span></li>
                 <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
             </ol></li>
           </ul></li>
