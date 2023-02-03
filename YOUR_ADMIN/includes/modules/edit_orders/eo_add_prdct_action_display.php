@@ -79,22 +79,38 @@
                         ON pd.products_id = p.products_id
                        AND pd.language_id = " . (int)$_SESSION['languages_id'];
 
+        $orderBy = ' ORDER BY pd.products_name';
+        if (function_exists('zen_products_sort_order')) {
+            $orderBy = zen_products_sort_order();
+        }
+
         if ($add_product_categories_id >= 1) {
             $query .=
                 " LEFT JOIN " . TABLE_PRODUCTS_TO_CATEGORIES . " ptc
                     ON ptc.products_id = p.products_id
-                 WHERE ptc.categories_id=" . (int)$add_product_categories_id . "
-                 ORDER BY p.products_id";
+                 WHERE ptc.categories_id=" . (int)$add_product_categories_id . $orderBy;
         } elseif (zen_not_null($_POST['search'])) {
             // Handle case where a product search was entered
             $keywords = zen_db_input(zen_db_prepare_input($_POST['search']));
 
-            $query .=
+            $search =
                 " WHERE (pd.products_name LIKE '%$keywords%'
                     OR pd.products_description LIKE '%$keywords%'
                     OR p.products_id = " . (int)$keywords . "
-                    OR p.products_model LIKE '%$keywords%')
-              ORDER BY p.products_id";
+                    OR p.products_model LIKE '%$keywords%')";
+
+            if (function_exists('zen_build_keyword_where_clause')) {
+                $keyword_search_fields = [
+                    'pd.products_name',
+                    'pd.products_description',
+                    'p.products_id',
+                    'p.products_model',
+                ];
+                $search = zen_build_keyword_where_clause($keyword_search_fields, trim($keywords));
+            }
+
+            $query .= $search . $orderBy;
+
         }
 ?>
     <tr>
