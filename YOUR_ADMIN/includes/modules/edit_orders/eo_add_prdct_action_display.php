@@ -84,19 +84,18 @@ if ($step > 1 && ($add_product_categories_id != .5 || !empty($_POST['search'])))
         $query .=
             " LEFT JOIN " . TABLE_PRODUCTS_TO_CATEGORIES . " ptc
                 ON ptc.products_id = p.products_id
-             WHERE ptc.categories_id=" . (int)$add_product_categories_id . "
-             ORDER BY p.products_id";
+             WHERE ptc.categories_id=" . (int)$add_product_categories_id;
     } elseif (!empty($_POST['search'])) {
-        // Handle case where a product search was entered
-        $keywords = zen_db_input(zen_db_prepare_input($_POST['search']));
-
-        $query .=
-            " WHERE (pd.products_name LIKE '%$keywords%'
-                OR pd.products_description LIKE '%$keywords%'
-                OR p.products_id = " . (int)$keywords . "
-                OR p.products_model LIKE '%$keywords%')
-          ORDER BY p.products_id";
+        $keyword_search_fields = [
+            'pd.products_name',
+            'pd.products_description',
+            'p.products_id',
+            'p.products_model',
+        ];
+        $query .= zen_build_keyword_where_clause($keyword_search_fields, trim($_POST['search']));
     }
+
+    $query .= zen_products_sort_order();
 ?>
     <tr>
         <td><?php echo zen_draw_form('add_prdct', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'oID']) . "oID=$oID&amp;action=add_prdct", 'post', '', true); ?><table border="0">
