@@ -2,7 +2,7 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-//-Last modified 20210317-lat9 Edit Orders v4.6.0
+//-Last modified 20210317-lat9 Edit Orders v4.7.0
 //
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
@@ -14,30 +14,31 @@ if (!defined('IS_ADMIN_FLAG')) {
  * @author Andrew Ballanger
  * @package classes
  */
-class attributes extends base 
+class attributes extends base
 {
-    protected $options_order_by,
-              $options_values_order_by;
-    
+    protected
+        $options_order_by,
+        $options_values_order_by;
+
     /**
      * Constructs an Attributes class for accessing product attributes, options,
      * and values.
      */
-    public function __construct() 
+    public function __construct()
     {
         // -----
         // Preset the "ORDER BY" clause for the products' options.
         //
-        if (PRODUCTS_OPTIONS_SORT_ORDER == '0') {
+        if (PRODUCTS_OPTIONS_SORT_ORDER === '0') {
             $this->options_order_by = 'LPAD(po.products_options_sort_order,11,"0"), po.products_options_name';
         } else {
             $this->options_order_by = 'po.products_options_name';
         }
-        
+
         // -----
         // Preset the "ORDER BY" clause for the products' options' values.
         //
-       if (PRODUCTS_OPTIONS_SORT_BY_PRICE == '1') {
+       if (PRODUCTS_OPTIONS_SORT_BY_PRICE === '1') {
             $this->options_values_order_by = 'LPAD(pa.products_options_sort_order,11,"0"), pov.products_options_values_name';
         } else {
             $this->options_values_order_by = 'LPAD(pa.products_options_sort_order,11,"0"), pa.options_values_price';
@@ -53,12 +54,14 @@ class attributes extends base
      *        product to the cart, defaults to false.
      * @return array
      */
-    public function get_attributes_options($zf_product_id, $readonly = false) 
+    public function get_attributes_options($zf_product_id, $readonly = false)
     {
         global $db;
-        $query = 
-            "SELECT pa.products_attributes_id, pa.options_id AS `id`, po.products_options_name AS `name`, po.products_options_type AS `type`, 
-                    po.products_options_size AS `size`, po.products_options_rows AS `rows`, po.products_options_length AS `length`, pov.products_options_values_name as `value`
+        $query =
+            "SELECT pa.products_attributes_id, pa.options_id AS `id`,
+                    po.products_options_name AS `name`, po.products_options_type AS `type`, 
+                    po.products_options_size AS `size`, po.products_options_rows AS `rows`,
+                    po.products_options_length AS `length`, pov.products_options_values_name as `value`
                FROM " . TABLE_PRODUCTS_ATTRIBUTES . " AS pa
                     LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " AS po
                         ON pa.options_id = po.products_options_id
@@ -69,7 +72,7 @@ class attributes extends base
               WHERE pa.products_id = " . (int)$zf_product_id;
  
         // Don't include READONLY attributes if product can be added to cart without them
-        if (PRODUCTS_OPTIONS_TYPE_READONLY_IGNORED == '1' && $readonly === false) {
+        if (PRODUCTS_OPTIONS_TYPE_READONLY_IGNORED === '1' && $readonly === false) {
             $query .= " AND po.products_options_type != " . (int)PRODUCTS_OPTIONS_TYPE_READONLY;
         }
 
@@ -77,7 +80,7 @@ class attributes extends base
 
         $queryResult = $db->Execute($query);
 
-        $retval = array();
+        $retval = [];
         foreach ($queryResult as $result) {
             $retval[$result['products_attributes_id']] = $result;
         }
@@ -92,10 +95,10 @@ class attributes extends base
      * @param int|string $zf_option_id the specified option id.
      * @return array
      */
-    public function get_attributes_by_option($zf_product_id, $zf_option_id) 
+    public function get_attributes_by_option($zf_product_id, $zf_option_id)
     {
         global $db;
-        $query = 
+        $query =
             "SELECT pa.*, po.products_options_name, pov.products_options_values_name, po.products_options_type
                FROM " . TABLE_PRODUCTS_ATTRIBUTES . " AS pa
                     LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " AS po
@@ -131,7 +134,7 @@ class attributes extends base
     public function get_attribute_by_id($zf_attribute_id, $key_format = 'database') 
     {
         global $db;
-        $query = 
+        $query =
             "SELECT pa.*, po.products_options_name, pov.products_options_values_name AS value, po.products_options_type
                FROM " . TABLE_PRODUCTS_ATTRIBUTES . " AS pa
                     LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " AS po

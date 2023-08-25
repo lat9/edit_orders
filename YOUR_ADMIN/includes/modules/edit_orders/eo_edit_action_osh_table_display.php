@@ -17,7 +17,7 @@
 // -----
 // Gather the order's status-history records, sorting based on the configuration setting added in v4.4.0.
 //
-$osh_order_by = (EO_STATUS_HISTORY_DISPLAY_ORDER == 'Desc') ? "date_added DESC, orders_status_history_id DESC" : "date_added ASC, orders_status_history_id ASC";
+$osh_order_by = (EO_STATUS_HISTORY_DISPLAY_ORDER === 'Desc') ? 'date_added DESC, orders_status_history_id DESC' : 'date_added ASC, orders_status_history_id ASC';
 $orders_history = $db->Execute(
     "SELECT *
        FROM " . TABLE_ORDERS_STATUS_HISTORY . "
@@ -137,12 +137,12 @@ if ($orders_history->EOF) {
             if (!array_key_exists($field_name, $osh)) {
                 continue;
             }
-            
+
             // -----
             // Grab the current field's value to improve readability.
             //
             $field_value = $osh[$field_name];
-            
+
             // -----
             // No show_function?  Then just output the associated field value.
             //
@@ -150,12 +150,12 @@ if ($orders_history->EOF) {
                 $display_value = $field_value;
             } else {
                 $show_function = $field_values['show_function'];
-                
+
                 // -----
                 // Built-in function?  Make sure it's supported and then provide the output for the
                 // current field.
                 //
-                if ($show_function == 'built-in') {
+                if ($show_function === 'built-in') {
                     switch ($field_name) {
                         case 'orders_status_id':
                             $display_value = $orders_status_array[$field_value];
@@ -188,7 +188,7 @@ if ($orders_history->EOF) {
                     }
                 }
             }
-            
+
             // -----
             // Output the current field's display-value if there's an associated header-column.
             //
@@ -196,12 +196,12 @@ if ($orders_history->EOF) {
 ?>
         <td class="smallText<?php echo $field_values['align_class']; ?>"><?php echo $display_value; ?></td>
 <?php
-                }
             }
+        }
 ?>
     </tr>
 <?php
-        }
     }
+}
 ?>
 </table>

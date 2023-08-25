@@ -62,41 +62,41 @@
         <tr>
             <td class="eo-label"><label for="update_<?php echo $address_name; ?>_country"><?php echo ENTRY_CUSTOMER_COUNTRY; ?></label>:&nbsp;</td>
             <td>
-    <?php
-    if (is_array($address_fields['country']) && isset($address_fields['country']['id'])) {
-        echo zen_get_country_list('update_' . $address_name . '_country', $address_fields['country']['id'], 'id="update_' . $address_name . '_country"');
-    } else {
-        echo '<input name="update_' . $address_name . '_country" size="45" value="' . zen_output_string_protected($address_fields['country']) . '"' . $max_country_length . '" id="update_"' . $address_name . '_country">';
-    } 
-    ?>
+<?php
+if (is_array($address_fields['country']) && isset($address_fields['country']['id'])) {
+    echo zen_get_country_list('update_' . $address_name . '_country', $address_fields['country']['id'], 'id="update_' . $address_name . '_country"');
+} else {
+    echo '<input name="update_' . $address_name . '_country" size="45" value="' . zen_output_string_protected($address_fields['country']) . '"' . $max_country_length . '" id="update_"' . $address_name . '_country">';
+} 
+?>
             </td>
         </tr>
-    <?php
-    // -----
-    // Now, issue the address-specific notification to allow other plugins to add fields to the
-    // associated address.
-    // 
-    // A watching observer can provide an associative array in the form:
-    //
-    // $extra_data = array(
-    //     array(
-    //       'label' => 'label_name',   //-No trailing ':', that will be added by EO.
-    //       'value' => $value          //-This is the form-field to be added
-    //     ),
-    // );
-    //
-    $additional_rows = [];
-    $zco_notifier->notify($address_notifier, $address_fields, $additional_rows);
-    if (!empty($additional_rows)) {
-        foreach ($additional_rows as $next_row) {
-    ?>
+<?php
+// -----
+// Now, issue the address-specific notification to allow other plugins to add fields to the
+// associated address.
+// 
+// A watching observer can provide an associative array in the form:
+//
+// $extra_data = array(
+//     array(
+//       'label' => 'label_name',   //-No trailing ':', that will be added by EO.
+//       'value' => $value          //-This is the form-field to be added
+//     ),
+// );
+//
+$additional_rows = [];
+$zco_notifier->notify($address_notifier, $address_fields, $additional_rows);
+if (!empty($additional_rows)) {
+    foreach ($additional_rows as $next_row) {
+?>
         <tr>
             <td class="eo-label"><?php echo $next_row['label']; ?></label>:&nbsp;</td>
             <td><?php echo $next_row['value']; ?></td>
         </tr>
-    <?php
-        }
+<?php
     }
-    ?>
+}
+?>
     </table>
 </div>

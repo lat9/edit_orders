@@ -80,7 +80,7 @@ $zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_CONTACT_INFORMATION', $order, $add
                                 <td class="main"><input name="update_customer_email_address" size="35" value="<?php echo zen_output_string_protected($order->customer['email_address']); ?>" <?php echo $max_email_length; ?>></td>
                             </tr>
 <?php
-if (is_array($additional_contact_info) && count($additional_contact_info) != 0) {
+if (is_array($additional_contact_info) && count($additional_contact_info) !== 0) {
     foreach ($additional_contact_info as $contact_info) {
         if (!empty($contact_info['label']) && !empty($contact_info['content'])) {
 ?>
@@ -109,10 +109,10 @@ $max_payment_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'payment_me
                         <td><table class="eo-pad">
                             <tr>
                                 <td class="main eo-label"><?php echo ENTRY_PAYMENT_METHOD; ?></td>
-                                <td class="main"><input name="update_info_payment_method" size="20" value="<?php echo zen_output_string_protected($order->info['payment_method']); ?>" <?php echo $max_payment_length; ?>> <?php echo ($order->info['payment_method'] != 'Credit Card') ? ENTRY_UPDATE_TO_CC : ENTRY_UPDATE_TO_CK; ?></td>
+                                <td class="main"><input name="update_info_payment_method" size="20" value="<?php echo zen_output_string_protected($order->info['payment_method']); ?>" <?php echo $max_payment_length; ?>> <?php echo ($order->info['payment_method'] !== 'Credit Card') ? ENTRY_UPDATE_TO_CC : ENTRY_UPDATE_TO_CK; ?></td>
                             </tr>
 <?php 
-if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $order->info['payment_method'] == "Credit Card" || !empty($order->info['cc_number'])) {
+if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $order->info['payment_method'] === "Credit Card" || !empty($order->info['cc_number'])) {
     $max_type_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_type') . '"';
     $max_owner_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_owner') . '"';
     $max_number_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_number') . '"';
@@ -139,7 +139,7 @@ if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $orde
                                 <td class="main"><input name="update_info_cc_expires" size="4" value="<?php echo zen_output_string_protected($order->info['cc_expires']); ?>" <?php echo $max_expires_length; ?>></td>
                             </tr>
 <!-- End Credit Card Info Block -->
-<?php 
+<?php
 }
 
 // -----
@@ -183,11 +183,11 @@ if (isset($order->info['account_name']) || isset($order->info['account_number'])
                     <tr>
                         <td valign="top">
 <?php
-$reset_totals_block = '<b>' . RESET_TOTALS . '</b>' . zen_draw_checkbox_field('reset_totals', '', (EO_TOTAL_RESET_DEFAULT == 'on'));
+$reset_totals_block = '<b>' . RESET_TOTALS . '</b>' . zen_draw_checkbox_field('reset_totals', '', (EO_TOTAL_RESET_DEFAULT === 'on'));
 $payment_calc_choice = '';
 $priceClass = 'amount p-n';
 $priceMessage = '';
-if (EO_PRODUCT_PRICE_CALC_METHOD == 'Choose') {
+if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
     $choices = [
         ['id' => 1, 'text' => PAYMENT_CALC_AUTOSPECIALS],
         ['id' => 2, 'text' => PAYMENT_CALC_AUTO],
@@ -277,7 +277,7 @@ if (is_array($extra_headings)) {
             }
         }
 ?>
-                <td class="dataTableHeadingContent<?php echo $align; ?>"><strong><?php echo $heading_info['text']; ?></td>
+                                <td class="dataTableHeadingContent<?php echo $align; ?>"><strong><?php echo $heading_info['text']; ?></td>
 <?php
     }
 }
@@ -323,59 +323,60 @@ for ($i = 0, $i2 = count($order->products); $i < $i2; $i++) {
         PHP_EOL . '============================================================' .
         PHP_EOL . 'Product Details:' .
         PHP_EOL . $eo->eoFormatArray($order->products[$i]) . PHP_EOL
-    ); 
+    );
 ?>
                             <tr class="dataTableRow v-top">
 <?php
-// -----
-// To add more columns at the beginning of the order's products' table, a
-// watching observer can provide an associative array in the form:
-//
-// $extra_data = [
-//     [
-//       'align' => $alignment,    // One of 'center', 'right', or 'left' (optional)
-//       'text' => $value
-//     ],
-// ];
-//
-// Observer note:  Be sure to check that the $p2/$extra_data value is specifically (bool)false before initializing, since
-// multiple observers might be injecting content!
-//
-$extra_data = false;
-$product_info = $order->products[$i];
-$product_info['orders_products_id'] = $orders_products_id;
-$zco_notifier->notify('EDIT_ORDERS_PRODUCTS_DATA_1', $product_info, $extra_data);
-if (is_array($extra_data)) {
-    foreach ($extra_data as $data) {
-        $align = '';
-        if (isset($data['align'])) {
-            switch ($data['align']) {
-                case 'center':
-                    $align = ' a-c';
-                    break;
-                case 'right':
-                    $align = ' a-r';
-                    break;
-                default:
-                    $align = '';
-                    break;
+    // -----
+    // To add more columns at the beginning of the order's products' table, a
+    // watching observer can provide an associative array in the form:
+    //
+    // $extra_data = [
+    //     [
+    //       'align' => $alignment,    // One of 'center', 'right', or 'left' (optional)
+    //       'text' => $value
+    //     ],
+    // ];
+    //
+    // Observer note:  Be sure to check that the $p2/$extra_data value is specifically (bool)false before initializing, since
+    // multiple observers might be injecting content!
+    //
+    $extra_data = false;
+    $product_info = $order->products[$i];
+    $product_info['orders_products_id'] = $orders_products_id;
+    $zco_notifier->notify('EDIT_ORDERS_PRODUCTS_DATA_1', $product_info, $extra_data);
+    if (is_array($extra_data)) {
+        foreach ($extra_data as $data) {
+            $align = '';
+            if (isset($data['align'])) {
+                switch ($data['align']) {
+                    case 'center':
+                        $align = ' a-c';
+                        break;
+                    case 'right':
+                        $align = ' a-r';
+                        break;
+                    default:
+                        $align = '';
+                        break;
+                }
             }
-        }
 ?>
                 <td class="dataTableContent<?php echo $align; ?>"><strong><?php echo $data['text']; ?></td>
 <?php
+        }
     }
-}
 ?>
                                 <td class="dataTableContent a-c"><input class="eo-qty" name="update_products[<?php echo $orders_products_id; ?>][qty]" value="<?php echo zen_db_prepare_input($order->products[$i]['qty']); ?>" <?php echo $value_parms; ?> /></td>
                                 <td>&nbsp;X&nbsp;</td>
-                                <td class="dataTableContent"><input name="update_products[<?php echo $orders_products_id; ?>][name]" value="<?php echo zen_output_string_protected($order->products[$i]['name']); ?>" <?php echo $name_parms; ?> />
+                                <td class="dataTableContent">
+                                    <input name="update_products[<?php echo $orders_products_id; ?>][name]" value="<?php echo zen_output_string_protected($order->products[$i]['name']); ?>" <?php echo $name_parms; ?>>
 <?php
     echo zen_draw_hidden_field('update_products[' . $orders_products_id . '][products_id]', $order->products[$i]['id']);
-    if (isset($order->products[$i]['attributes']) && count($order->products[$i]['attributes']) > 0) { 
+    if (isset($order->products[$i]['attributes']) && count($order->products[$i]['attributes']) !== 0) { 
 ?>
-                                    <br/><nobr><small>&nbsp;<i><?php echo TEXT_ATTRIBUTES_ONE_TIME_CHARGE; ?>
-                                    <input name="update_products[<?php echo $orders_products_id; ?>][onetime_charges]" value="<?php echo zen_db_prepare_input($order->products[$i]['onetime_charges']); ?>" <?php echo $value_parms; ?> />&nbsp;&nbsp;&nbsp;&nbsp;</i></small></nobr><br/>
+                                    <br><nobr><small>&nbsp;<i><?php echo TEXT_ATTRIBUTES_ONE_TIME_CHARGE; ?>
+                                    <input name="update_products[<?php echo $orders_products_id; ?>][onetime_charges]" value="<?php echo zen_db_prepare_input($order->products[$i]['onetime_charges']); ?>" <?php echo $value_parms; ?>>&nbsp;&nbsp;&nbsp;&nbsp;</i></small></nobr><br>
 <?php
         $selected_attributes_id_mapping = eo_get_orders_products_options_id_mappings($oID, $orders_products_id);
         $attrs = eo_get_product_attributes_options($order->products[$i]['id']);
@@ -429,7 +430,7 @@ if (is_array($extra_data)) {
                         $products_options_array,
                         $selected_attribute, 
                         "id=\"opid-$orders_products_id-oid-$option_id\""
-                    ) . "<br />\n";
+                    ) . "<br>\n";
                     echo $option_type_hidden_field;
                     break;
 
@@ -455,7 +456,7 @@ if (is_array($extra_data)) {
                             isset($checked[$attributeId]),
                             null, 
                             "id=\"$option_html_id\""
-                        ) . "<label class=\"attribsCheckbox\" for=\"$option_html_id\">$attributeValue</label><br />" . PHP_EOL;
+                        ) . "<label class=\"attribsCheckbox\" for=\"$option_html_id\">$attributeValue</label><br>" . PHP_EOL;
                     }
                     echo $option_type_hidden_field . '</div>';
                     break;
@@ -488,7 +489,7 @@ if (is_array($extra_data)) {
                     if (!empty($orders_products_attributes_id)) {
                         $optionValue = eo_get_selected_product_attribute_value_by_id($orders_products_attributes_id[0], array_key_first($optionInfo['options']));
                     }
-                    echo "<span class=\"attribsFile\">$option_name: " . (!empty($optionValue) ? $optionValue : TEXT_ATTRIBUTES_UPLOAD_NONE) . '</span><br />';
+                    echo "<span class=\"attribsFile\">$option_name: " . (!empty($optionValue) ? $optionValue : TEXT_ATTRIBUTES_UPLOAD_NONE) . '</span><br>';
                     if (!empty($optionValue)) {
                         echo zen_draw_hidden_field("update_products[$orders_products_id][attr][$option_id][value]", $optionValue);
                         echo $option_type_hidden_field;
@@ -501,7 +502,7 @@ if (is_array($extra_data)) {
                     echo '<input type="hidden" name="update_products[' .
                         $orders_products_id . '][attr][' . $optionID[$j] . '][value]" value="' .
                         $optionValue . '" /><span class="attribsRO">' .
-                        $optionInfo['name'] . ': ' . $optionValue . '</span><br />';
+                        $optionInfo['name'] . ': ' . $optionValue . '</span><br>';
                     echo $option_type_hidden_field;
                     break;
             }
@@ -512,7 +513,7 @@ if (is_array($extra_data)) {
     // -----
     // Starting with EO v4.4.0, both the net and gross prices are displayed when the store displays prices with tax.
     //
-    if (DISPLAY_PRICE_WITH_TAX == 'true') {
+    if (DISPLAY_PRICE_WITH_TAX === 'true') {
         $final_price = $order->products[$i]['final_price'];
         $onetime_charges = $order->products[$i]['onetime_charges'];
     } else {
@@ -523,18 +524,27 @@ if (is_array($extra_data)) {
 ?>
                                 </td>
                                 <td class="dataTableContent"><input name="update_products[<?php echo $orders_products_id; ?>][model]" value="<?php echo $order->products[$i]['model']; ?>" <?php echo $model_parms; ?> /></td>
-                                <td class="dataTableContent a-r"><input class="amount p-t" name="update_products[<?php echo $orders_products_id; ?>][tax]" value="<?php echo zen_display_tax_value($order->products[$i]['tax']); ?>"<?php echo $data_index . ' ' . $tax_parms; ?> />&nbsp;%</td>
-                                <td class="dataTableContent a-r"><input class="<?php echo $priceClass; ?>" name="update_products[<?php echo $orders_products_id; ?>][final_price]" value="<?php echo $final_price; ?>"<?php echo $data_index . ' ' . $value_parms; ?> /><?php echo $priceMessage; ?></td>
+                                <td class="dataTableContent a-r">
+                                    <input class="amount p-t" name="update_products[<?php echo $orders_products_id; ?>][tax]" value="<?php echo zen_display_tax_value($order->products[$i]['tax']); ?>"<?php echo $data_index . ' ' . $tax_parms; ?>>&nbsp;%
+                                </td>
+                                <td class="dataTableContent a-r">
+                                    <input class="<?php echo $priceClass; ?>" name="update_products[<?php echo $orders_products_id; ?>][final_price]" value="<?php echo $final_price; ?>"<?php echo $data_index . ' ' . $value_parms; ?>>
+                                    <?php echo $priceMessage; ?>
+                                </td>
 <?php
-    if (DISPLAY_PRICE_WITH_TAX == 'true') {
+    if (DISPLAY_PRICE_WITH_TAX === 'true') {
         $gross_price = zen_add_tax($final_price, $order->products[$i]['tax']);
         $final_price = $gross_price;
 ?>
-                                <td class="dataTableContent a-r"><input class="amount p-g" name="update_products[<?php echo $orders_products_id; ?>][gross]" value="<?php echo $gross_price; ?>"<?php echo $data_index . ' ' . $value_parms; ?> /></td>
+                                <td class="dataTableContent a-r">
+                                    <input class="amount p-g" name="update_products[<?php echo $orders_products_id; ?>][gross]" value="<?php echo $gross_price; ?>"<?php echo $data_index . ' ' . $value_parms; ?>>
+                                </td>
 <?php
     }
 ?>
-                                <td class="dataTableContent a-r"><?php echo $currencies->format($final_price * $order->products[$i]['qty'] + $onetime_charges, true, $order->info['currency'], $order->info['currency_value']); ?></td>
+                                <td class="dataTableContent a-r">
+                                    <?php echo $currencies->format($final_price * $order->products[$i]['qty'] + $onetime_charges, true, $order->info['currency'], $order->info['currency_value']); ?>
+                                </td>
                             </tr>
 <?php
 } 
@@ -555,7 +565,7 @@ require DIR_WS_MODULES . 'edit_orders/eo_edit_action_ot_table_display.php';
                     <tr>
                         <td class="main"><strong><?php echo zen_image(DIR_WS_IMAGES . 'icon_comment_add.png', TABLE_HEADING_STATUS_HISTORY) . '&nbsp;' . TABLE_HEADING_STATUS_HISTORY; ?></strong></td>
                     </tr>
-                    
+
                     <tr>
                         <td class="main">
                             <?php require DIR_WS_MODULES . 'edit_orders/eo_edit_action_osh_table_display.php'; ?>
@@ -563,7 +573,7 @@ require DIR_WS_MODULES . 'edit_orders/eo_edit_action_ot_table_display.php';
                     </tr>
 
                     <tr>
-                        <td class="main"><br /><strong><?php echo TABLE_HEADING_COMMENTS; ?></strong></td>
+                        <td class="main"><br><strong><?php echo TABLE_HEADING_COMMENTS; ?></strong></td>
                     </tr>
                     
                     <tr aria-hidden="true">
@@ -581,7 +591,7 @@ require DIR_WS_MODULES . 'edit_orders/eo_edit_action_ot_table_display.php';
 //
 $additional_osh_content = [];
 $zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_OSH_CONTENT', $order, $additional_osh_content);
-if (is_array($additional_osh_content) && count($additional_osh_content) != 0) {
+if (is_array($additional_osh_content) && count($additional_osh_content) !== 0) {
     foreach ($additional_osh_content as $osh_content) {
 ?>
                     <tr>
@@ -596,11 +606,15 @@ if (is_array($additional_osh_content) && count($additional_osh_content) != 0) {
                     </tr>
                     
                     <tr>
-                        <td class="main"><strong><?php echo ENTRY_CURRENT_STATUS; ?><?php echo $orders_status_array[$orders_history->fields['orders_status_id']] ;?></strong></td>
+                        <td class="main">
+                            <strong><?php echo ENTRY_CURRENT_STATUS . $orders_status_array[$orders_history->fields['orders_status_id']] ;?></strong>
+                        </td>
                     </tr>
                     
                     <tr>
-                        <td class="main"><strong><?php echo ENTRY_STATUS; ?></strong> <?php echo zen_draw_pull_down_menu('status', $orders_statuses, $orders_history->fields['orders_status_id']); ?></td>
+                        <td class="main">
+                            <strong><?php echo ENTRY_STATUS; ?></strong> <?php echo zen_draw_pull_down_menu('status', $orders_statuses, $orders_history->fields['orders_status_id']); ?>
+                        </td>
                     </tr>
 <?php
 // -----

@@ -1,23 +1,24 @@
 <?php
 // -----
 // Admin-level observer class, adds "Edit Orders" buttons and links to Customers->Orders processing.
-// Copyright (C) 2017-2022, Vinos de Frutas Tropicales.
+// Copyright (C) 2017-2023, Vinos de Frutas Tropicales.
 //
-// Last updated for EO v4.6.1, lat9, 20220301
+// Last updated for EO v4.7.0
 //
 if (!defined('IS_ADMIN_FLAG') || IS_ADMIN_FLAG !== true) {
     die('Illegal Access');
 }
 
-class EditOrdersAdminObserver extends base 
+class EditOrdersAdminObserver extends base
 {
+    protected
+        $isEditOrdersPage;
+
     public function __construct() 
     {
-        $zencart_version = PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR;
-        $this->is157OrLaterZenCart = ($zencart_version >= '1.5.7');
         $this->isEditOrdersPage = (basename($GLOBALS['PHP_SELF'], '.php') == FILENAME_EDIT_ORDERS);
         $this->attach(
-            $this, 
+            $this,
             [
                 /* From /admin/orders.php */
                 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS', 
@@ -35,11 +36,19 @@ class EditOrdersAdminObserver extends base
         // the order's shipping-method is 'storepickup'.  Watch this event only during Edit Orders' processing!
         //
         if ($this->isEditOrdersPage) {
-            $this->attach($this, ['NOTIFY_ORDER_AFTER_QUERY']);
+            $this->attach(
+                $this,
+                [
+                    'NOTIFY_ORDER_AFTER_QUERY',
+
+                    /* From /includes/functions/functions_taxes.php */
+                    'ZEN_GET_TAX_LOCATIONS',
+                ]
+            );
         }
     }
 
-    public function update(&$class, $eventID, $p1, &$p2, &$p3, &$p4, &$p5) 
+    public function update(&$class, $eventID, $p1, &$p2, &$p3, &$p4, &$p5)
     {
         switch ($eventID) {
             // -----
@@ -50,10 +59,8 @@ class EditOrdersAdminObserver extends base
             //         with the built-in button list.
             //
             case 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS': 
-                if (is_object($p1)) {
-                    $index_to_update = count($p2) - 2;
-                    $p2[$index_to_update]['text'] = $this->addEditOrderButton($p1->orders_id, $p2[$index_to_update]['text']);
-                }
+                $index_to_update = count($p2) - 2;
+                $p2[$index_to_update]['text'] = $this->addEditOrderButton($p1->orders_id, $p2[$index_to_update]['text']);
                 break;
 
             // -----
@@ -64,7 +71,7 @@ class EditOrdersAdminObserver extends base
             //         with the built-in button list.
             //
             case 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END':
-                if (is_object($p1) && count($p2) > 0 && isset($_GET['action']) && $_GET['action'] !== 'delete') {
+                if (isset($_GET['action']) && $_GET['action'] !== 'delete') {
                     $index_to_update = count($p2) - 1;
                     $p2[$index_to_update]['text'] = $this->addEditOrderButton($p1->orders_id, $p2[$index_to_update]['text']);
                 }
@@ -81,8 +88,7 @@ class EditOrdersAdminObserver extends base
             //         linking to this order's EO processing.
             //
             case 'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE':
-                $eo_icon = ($this->is157OrLaterZenCart) ? EO_ZC157_FA_ICON : EO_ZC156_FA_ICON;
-                $p4 .= $this->createEditOrdersLink($p2['orders_id'], zen_image(DIR_WS_IMAGES . EO_BUTTON_ICON_DETAILS, EO_ICON_DETAILS), $eo_icon, false);
+                $p4 .= $this->createEditOrdersLink($p2['orders_id'], zen_image(DIR_WS_IMAGES . EO_BUTTON_ICON_DETAILS, EO_ICON_DETAILS), EO_ZC157_FA_ICON, false);
                 break;
 
             // -----
@@ -125,8 +131,8 @@ class EditOrdersAdminObserver extends base
                     $p2 = true;
                     $this->detach($this, ['NOTIFY_OT_SHIPPING_TAX_CALCS']);
                     
-                    $module = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
-                    if ($module != '' && $module != 'free') {
+                    $module = (isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
+                    if ($module !== '' && $module !== 'free') {
                         require DIR_WS_CLASSES . 'EditOrdersOtShippingStub.php';
                         $GLOBALS[$module] = new EditOrdersOtShippingStub();
                     }
@@ -145,7 +151,7 @@ class EditOrdersAdminObserver extends base
             // $p2 ... Identifies the order-id.
             //
             case 'NOTIFY_ORDER_AFTER_QUERY':
-                if (!($class->info['shipping_module_code'] == 'storepickup' && $class->delivery === false)) {
+                if (!($class->info['shipping_module_code'] === 'storepickup' && $class->delivery === false)) {
                     break;
                 }
                 $order = $GLOBALS['db']->Execute(
@@ -167,6 +173,58 @@ class EditOrdersAdminObserver extends base
                     'state' => $order->fields['delivery_state'],
                     'country' => $order->fields['delivery_country'],
                     'format_id' => $order->fields['delivery_address_format_id']
+                ];
+                break;
+
+            // -----
+            // Added v4.7.0, replacing function override on EO page.
+            //
+            // On entry:
+            //
+            // $p1 ... (r/o) An associative array containing the 'store_country' and 'store_zone'.
+            // $p2 ... (r/w) A reference to the $tax_address array to be returned (containing a 'country_id' and 'zone_id').
+            //
+            case 'ZEN_GET_TAX_LOCATIONS':
+                global $order, $customer_country_id, $customer_zone_id;
+
+                if (STORE_PRODUCT_TAX_BASIS === 'Store') {
+                    $customer_country_id = STORE_COUNTRY;
+                    $customer_zone_id = STORE_ZONE;
+                } else {
+                    $_SESSION['customer_id'] = $order->customer['id'];
+
+                    if (STORE_PRODUCT_TAX_BASIS === 'Shipping') {
+                        global $eo;
+                        if ($eo->eoOrderIsVirtual($order)) {
+                            if (is_array($order->billing['country'])) {
+                                $customer_country_id = $order->billing['country']['id'];
+                            } else {
+                                $customer_country_id = zen_get_country_id($order->billing['country']);
+                            }
+                            $customer_zone_id = zen_get_zone_id($customer_country_id, $order->billing['state']);
+                        } else {
+                            if (is_array($order->delivery['country'])) {
+                                $customer_country_id = $order->delivery['country']['id'];
+                            } else {
+                                $customer_country_id = zen_get_country_id($order->delivery['country']);
+                            }
+                            $customer_zone_id = zen_get_zone_id($customer_country_id, $order->delivery['state']);
+                        }
+                    } elseif (STORE_PRODUCT_TAX_BASIS === 'Billing') {
+                        if (is_array ($order->billing['country'])) {
+                            $customer_country_id = $order->billing['country']['id'];
+                        } else {
+                            $customer_country_id = zen_get_country_id($order->billing['country']);
+                        }
+                        $customer_zone_id = zen_get_zone_id($customer_country_id, $order->billing['state']);
+                    }
+                }
+                $_SESSION['customer_country_id'] = $customer_country_id;
+                $_SESSION['customer_zone_id'] = $customer_zone_id;
+
+                $p2 = [
+                    'zone_id' => $customer_zone_id,
+                    'country_id' => $customer_country_id,
                 ];
                 break;
 
@@ -196,9 +254,9 @@ class EditOrdersAdminObserver extends base
         $link_parms = '';
         if ($include_zc156_parms) {
             $link_parms = ' class="btn btn-primary" role="button"';
-        } elseif ($this->is157OrLaterZenCart) {
+        } else {
             $link_parms = ' class="btn btn-default btn-edit"';
         }
-        return '&nbsp;<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$orders_id&action=edit", 'NONSSL') . "\"$link_parms>$link_text</a>";
+        return '&nbsp;<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$orders_id&action=edit") . "\"$link_parms>$link_text</a>";
     }
 }

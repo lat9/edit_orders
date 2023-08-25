@@ -11,7 +11,7 @@
 // that script in global context for its 'add_prdct' action.
 //
 $redirect_required = false;
-if (!zen_not_null($step)) {
+if (empty($step)) {
     $step = 1;
 }
 $eo->eoLog(
@@ -39,7 +39,7 @@ if ($step == 5) {
     }
 
     // Retrieve the information for the new product
-    $attributes = (isset($_POST['id'])) ? zen_db_prepare_input($_POST['id']) : [];
+    $attributes = zen_db_prepare_input($_POST['id'] ?? []);
     $new_product = eo_get_new_product(
         $add_product_products_id,
         $add_product_quantity,
@@ -63,7 +63,7 @@ if ($step == 5) {
 
     // Remove the low order and/or cod fees (will automatically repopulate if needed)
     foreach ($order->totals as $key => $total) {
-        if ($total['class'] == 'ot_loworderfee' || $total['class'] == 'ot_cod_fee') {
+        if ($total['class'] === 'ot_loworderfee' || $total['class'] === 'ot_cod_fee') {
             // Update the information in the order
             $total['title'] = '';
             $total['value'] = 0;

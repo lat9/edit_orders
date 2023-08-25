@@ -2,7 +2,7 @@
 // -----
 // A 'mock cart' used by the /admin/edit_orders.php processing (Edit Orders).
 //
-//-Last modified 20210317-lat9 Edit Orders v4.6.0
+//-Last modified 20210317-lat9 Edit Orders v4.7.0
 //
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
@@ -13,34 +13,34 @@ if (!defined('IS_ADMIN_FLAG')) {
  *
  * Many methods are not implemented and may return incorrect values,
  */
-class mockCart extends base 
+class mockCart extends base
 {
     public $total = 0,
            $weight = 0;
 
     // Do Nothing
-    public function restore_contents() 
-    { 
+    public function restore_contents()
+    {
     }
 
     // Do Nothing
-    public function reset($reset_database = false) 
-    { 
+    public function reset($reset_database = false)
+    {
     }
 
     // Do Nothing
-    public function add_cart($products_id, $qty = '1', $attributes = '', $notify = true) 
-    { 
+    public function add_cart($products_id, $qty = '1', $attributes = '', $notify = true)
+    {
     }
 
     // Do Nothing
-    public function update_quantity($products_id, $quantity = '', $attributes = '') 
-    { 
+    public function update_quantity($products_id, $quantity = '', $attributes = '')
+    {
     }
 
     // Do Nothing
-    public function cleanup() 
-    { 
+    public function cleanup()
+    {
     }
 
     /**
@@ -54,13 +54,13 @@ class mockCart extends base
      *
      * @return total number of items in cart
      */
-    public function count_contents() 
+    public function count_contents()
     {
         global $order;
 
         $this->notify('NOTIFIER_CART_COUNT_CONTENTS_START');
         $retval = 0;
-        foreach($order->products as $product) {
+        foreach ($order->products as $product) {
             $retval += $product['qty'];
         }
         $this->notify('NOTIFIER_CART_COUNT_CONTENTS_END');
@@ -73,7 +73,7 @@ class mockCart extends base
      * @param mixed product ID of item to check
      * @return decimal the quantity of the item
      */
-    public function get_quantity($products_id) 
+    public function get_quantity($products_id)
     {
         global $order;
 
@@ -95,12 +95,12 @@ class mockCart extends base
      * @param mixed product ID of item to check
      * @return boolean
      */
-    public function in_cart($products_id) 
+    public function in_cart($products_id)
     {
         global $order;
 
         $this->notify('NOTIFIER_CART_IN_CART_START', [], $products_id);
-        foreach($order->products as $product) {
+        foreach ($order->products as $product) {
             if ($product['id'] == $products_id) {
                 $this->notify('NOTIFIER_CART_IN_CART_END_TRUE', [], $products_id);
                 return true;
@@ -111,13 +111,13 @@ class mockCart extends base
     }
 
     // Do Nothing
-    public function remove($products_id) 
-    { 
+    public function remove($products_id)
+    {
     }
 
     // Do Nothing
-    public function remove_all() 
-    { 
+    public function remove_all()
+    {
     }
 
     /**
@@ -126,7 +126,7 @@ class mockCart extends base
      * @return string
      * @todo ICW - is this actually used anywhere?
      */
-    function get_product_id_list() 
+    function get_product_id_list()
     {
         global $order;
 
@@ -138,18 +138,18 @@ class mockCart extends base
     }
 
     // Do Nothing
-    public function calculate() 
-    { 
+    public function calculate()
+    {
     }
 
     // Do Nothing
-    public function attributes_price($products_id) 
+    public function attributes_price($products_id)
     { 
         return 0; 
     }
 
     // Do Nothing
-    public function attributes_price_onetime_charges($products_id, $qty) 
+    public function attributes_price_onetime_charges($products_id, $qty)
     { 
         return 0; 
     }
@@ -160,7 +160,7 @@ class mockCart extends base
      * @param mixed the product ID of the item to check
      * @return decimal the weight of the items attributes
      */
-    function attributes_weight($products_id) 
+    function attributes_weight($products_id)
     {
         global $order;
 
@@ -178,7 +178,7 @@ class mockCart extends base
      * @param boolean whether to check if cart contents are valid
      * @return array
      */
-    function get_products($check_for_valid_cart = false) 
+    function get_products($check_for_valid_cart = false)
     {
         global $db, $order;
 
@@ -189,7 +189,9 @@ class mockCart extends base
             unset($product['qty']);
 
             $products = $db->Execute(
-                "SELECT master_categories_id AS category, products_image AS image, products_weight AS weight, products_virtual, product_is_always_free_shipping, products_tax_class_id AS tax_class_id
+                "SELECT master_categories_id AS category, products_image AS image,
+                        products_weight AS weight, products_virtual, product_is_always_free_shipping,
+                        products_tax_class_id AS tax_class_id
                    FROM ". TABLE_PRODUCTS . "
                   WHERE products_id = " . (int)$product['id'] . "
                   LIMIT 1"
@@ -209,7 +211,7 @@ class mockCart extends base
      *
      * @return decimal Total Price
      */
-    public function show_total() 
+    public function show_total()
     {
         $total = 0;
         $this->notify('NOTIFIER_CART_SHOW_TOTAL_START');
@@ -223,8 +225,8 @@ class mockCart extends base
     }
 
     // Do Nothing
-    public function show_total_before_discounts() 
-    { 
+    public function show_total_before_discounts()
+    {
         return 0; 
     }
 
@@ -233,7 +235,7 @@ class mockCart extends base
      *
      * @return decimal Total Weight
      */
-    public function show_weight() 
+    public function show_weight()
     {
         $weight = 0;
         foreach ($this->get_products() as $products) {
@@ -250,26 +252,26 @@ class mockCart extends base
      * @param length of ID to generate
      * @return string cart ID
      */
-    public function generate_cart_id($length = 5) 
+    public function generate_cart_id($length = 5)
     {
         return zen_create_random_value($length, 'digits');
     }
 
     // Do Nothing
-    public function get_content_type($gv_only = 'false') 
-    { 
+    public function get_content_type($gv_only = 'false')
+    {
         return ''; 
     }
 
     // Do Nothing
-    public function in_cart_mixed($products_id) 
-    { 
+    public function in_cart_mixed($products_id)
+    {
         return 0; 
     }
 
     // Do Nothing
-    public function in_cart_mixed_discount_quantity($products_id) 
-    { 
+    public function in_cart_mixed_discount_quantity($products_id)
+    {
         return 0; 
     }
 
@@ -284,7 +286,7 @@ class mockCart extends base
      * @param mixed value to check for
      * @return integer number of items matching restraint
      */
-    public function in_cart_check($check_what, $check_value = '1') 
+    public function in_cart_check($check_what, $check_value = '1')
     {
         global $db, $order;
 
@@ -304,83 +306,83 @@ class mockCart extends base
     }
 
     // Do Nothing
-    public function gv_only() 
-    { 
+    public function gv_only()
+    {
         return 0; 
     }
 
     // Do Nothing
-    public function free_shipping_items() 
-    { 
+    public function free_shipping_items()
+    {
         return false; 
     }
 
     // Do Nothing
-    public function free_shipping_prices() 
-    { 
+    public function free_shipping_prices()
+    {
         return 0; 
     }
 
     // Do Nothing
-    public function free_shipping_weight() 
-    { 
+    public function free_shipping_weight()
+    {
         return 0; 
     }
 
     // Do Nothing
-    public function download_counts() 
-    { 
+    public function download_counts()
+    {
         return 0; 
     }
 
     // Do Nothing
-    public function actionUpdateProduct($goto, $parameters) 
-    { 
+    public function actionUpdateProduct($goto, $parameters)
+    {
     }
 
     // Do Nothing
     public function actionAddProduct($goto, $parameters)
-    { 
+    {
     }
 
     // Do Nothing
     public function actionBuyNow($goto, $parameters)
-    { 
+    {
     }
 
     // Do Nothing
     public function actionMultipleAddProduct($goto, $parameters)
-    { 
+    {
     }
 
     // Do Nothing
     public function actionNotify($goto, $parameters)
-    { 
+    {
     }
 
     // Do Nothing
     public function actionNotifyRemove($goto, $parameters)
-    { 
+    {
     }
 
     // Do Nothing
     public function actionCustomerOrder($goto, $parameters)
-    { 
+    {
     }
 
     // Do Nothing
     public function actionRemoveProduct($goto, $parameters)
-    { 
+    {
     }
 
     // Do Nothing
     public function actionCartUserAction($goto, $parameters)
-    { 
+    {
     }
 
     // Do Nothing
-    public function adjust_quantity($check_qty, $products, $stack = 'shopping_cart') 
-    { 
+    public function adjust_quantity($check_qty, $products, $stack = 'shopping_cart')
+    {
         return $check_qty; 
     }
 
@@ -390,7 +392,7 @@ class mockCart extends base
      * @param array $product the product array from the order
      * @return number the weight
      */
-    private function get_attribute_weight($product) 
+    private function get_attribute_weight($product)
     {
         global $db;
 

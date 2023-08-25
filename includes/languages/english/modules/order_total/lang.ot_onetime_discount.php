@@ -19,5 +19,9 @@
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU GPL V2.0
  * @author Andrew Ballanger
  */
-define('MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_TITLE', 'Onetime Discount');
-define('MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_DESCRIPTION', 'Onetime Discount applied to the order');
+$define = [
+    'MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_TITLE' => 'Onetime Discount',
+    'MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_DESCRIPTION' => 'Onetime Discount applied to the order',
+];
+
+return $define;

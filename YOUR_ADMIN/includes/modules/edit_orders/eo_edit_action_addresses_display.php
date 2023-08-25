@@ -41,7 +41,7 @@ require DIR_WS_MODULES . 'edit_orders/eo_common_address_format.php';
 // -----
 // Set variables for common address-format display, based on the site's preferential order.
 //
-if (EO_ADDRESSES_DISPLAY_ORDER == 'CBS') {
+if (EO_ADDRESSES_DISPLAY_ORDER === 'CBS') {
     $address_icon = 'icon_billing.png';
     $address_label = ENTRY_BILLING_ADDRESS;
     $address_name = 'billing';
@@ -63,7 +63,7 @@ require DIR_WS_MODULES . 'edit_orders/eo_common_address_format.php';
 // -----
 // Set variables for common address-format display, based on the site's preferential order.
 //
-if (EO_ADDRESSES_DISPLAY_ORDER == 'CBS') {
+if (EO_ADDRESSES_DISPLAY_ORDER === 'CBS') {
     $address_icon = 'icon_shipping.png';
     $address_label = ENTRY_SHIPPING_ADDRESS;
     $address_name = 'delivery';

@@ -11,7 +11,7 @@
 // /admin/includes/modules/edit_orders/eo_edit_action_display.php in global context for the rendering of the
 // current order's orders-status-history table.
 //
-$eo_href_link = zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$oID&amp;action=add_prdct");
+$eo_href_link = zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$oID&action=add_prdct");
 $eo_add_product_button = zen_image_button('button_add_product.gif', TEXT_ADD_NEW_PRODUCT);
 $eo_add_button_link = '<a href="' . $eo_href_link . '" class="btn btn-warning " role="button">' . TEXT_ADD_NEW_PRODUCT . '</a>';
 
@@ -105,7 +105,7 @@ for ($i = 0, $index = 0, $n = count($order->totals); $i < $n; $i++) {
     
     <td class="a-r"><?php echo zen_draw_input_field('shipping_tax', (string)$shipping_tax_rate, 'class="amount" id="s-t"' . $input_tax_parms, false, $input_field_type); ?>&nbsp;%</td>
 <?php
-            if (DISPLAY_PRICE_WITH_TAX == 'true') {
+            if (DISPLAY_PRICE_WITH_TAX === 'true') {
                 $shipping_net = $details['value'] / (1 + ($shipping_tax_rate / 100));
 ?>
     <td class="a-r"><?php echo zen_draw_input_field($update_total_value, (string)$shipping_net, 'class="amount" id="s-n"' . $input_value_parms, false, $input_field_type); ?></td>
@@ -141,7 +141,7 @@ for ($i = 0, $index = 0, $n = count($order->totals); $i < $n; $i++) {
     <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount"'); ?></td>
 <?php
             break;
-    } 
+    }
 ?>
 </tr>
 <?php
@@ -161,7 +161,9 @@ if (count(eo_get_available_order_totals_class_values($oID)) > 0) {
     <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, '', 'class="amount" step="any"', false, $input_field_type); ?></td>
 </tr>
 <tr>
-    <td colspan="<?php echo $columns + 3; ?>" class="smallText a-l" id="update_total_shipping" style="display: none"><?php echo TEXT_CHOOSE_SHIPPING_MODULE . zen_draw_pull_down_menu('update_total[' . $index . '][shipping_module]', eo_get_available_shipping_modules()); ?></td>
+    <td colspan="<?php echo $columns + 3; ?>" class="smallText a-l" id="update_total_shipping" style="display: none">
+        <?php echo TEXT_CHOOSE_SHIPPING_MODULE . zen_draw_pull_down_menu('update_total[' . $index . '][shipping_module]', eo_get_available_shipping_modules()); ?>
+    </td>
 </tr>
 <?php
 }

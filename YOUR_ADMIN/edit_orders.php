@@ -75,7 +75,7 @@ foreach ($orders_status_query as $orders_status) {
     $orders_status_array[$status_id] = $status_name;
 }
 
-$action = (!empty($_GET['action']) ? $_GET['action'] : 'edit');
+$action = $_GET['action'] ?? 'edit';
 $eo->eoLog(PHP_EOL . date('Y-m-d H:i:s') . ", Edit Orders entered (" . EO_VERSION . ") action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
 $zco_notifier->notify('EDIT_ORDERS_START_ACTION_PROCESSING');
 switch ($action) {
@@ -91,7 +91,7 @@ switch ($action) {
             zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
         }
         break;
-        
+
     default:
         $action = 'edit';
         $orders_query = $db->Execute(
@@ -106,20 +106,20 @@ switch ($action) {
         break; 
 }
 
-if ($action == 'edit' || ($action == 'update_order' && empty($allow_update))) {
+if ($action === 'edit' || ($action === 'update_order' && empty($allow_update))) {
     $action = 'edit';
-    
+
     $order = $eo->getOrderInfo($action);
-   
+
     // -----
     // Initialize the shipping cost, tax-rate and tax-value.
     //
     $eo->eoInitializeShipping($oID, $action);
-    
+
     if (!$eo->eoOrderIsVirtual($order) &&
-           ( !is_array($order->customer['country']) || !isset($order->customer['country']['id']) ||
-             !is_array($order->billing['country']) || !isset($order->billing['country']['id']) ||
-             !is_array($order->delivery['country']) || !isset($order->delivery['country']['id']) )) {
+           (!is_array($order->customer['country']) || !isset($order->customer['country']['id']) ||
+            !is_array($order->billing['country']) || !isset($order->billing['country']['id']) ||
+            !is_array($order->delivery['country']) || !isset($order->delivery['country']['id']))) {
         $messageStack->add(WARNING_ADDRESS_COUNTRY_NOT_FOUND, 'warning');
     }
 }
@@ -127,34 +127,7 @@ if ($action == 'edit' || ($action == 'update_order' && empty($allow_update))) {
 <!doctype html>
 <html <?php echo HTML_PARAMS; ?>>
 <head>
-<?php
-if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) < '1.5.7') {
-?>
-    <meta charset="<?php echo CHARSET; ?>">
-    <title><?php echo TITLE; ?></title>
-    <link rel="stylesheet" type="text/css" href="includes/stylesheet.css">
-    <link rel="stylesheet" type="text/css" href="includes/edit_orders.css">
-    <link rel="stylesheet" type="text/css" href="includes/cssjsmenuhover.css" media="all" id="hoverJS">
-    <script src="includes/menu.js"></script>
-    <script src="includes/general.js"></script>
-    <script>
-        <!--
-        function init() {
-            cssjsmenu('navbar');
-            if (document.getElementById) {
-                var kill = document.getElementById('hoverJS');
-                kill.disabled = true;
-            }
-        }
-
-        // -->
-    </script>
-</head>
-<body onload="init();">
-<?php
-} else {
-    require DIR_WS_INCLUDES . 'admin_html_head.php';
-?>
+    <?php require DIR_WS_INCLUDES . 'admin_html_head.php'; ?>
 </head>
 <body>
 <?php
@@ -162,9 +135,7 @@ if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) < '1.5.7') {
 ?>
 <!-- header //-->
 <div class="header-area">
-<?php
-    require DIR_WS_INCLUDES . 'header.php';
-?>
+    <?php require DIR_WS_INCLUDES . 'header.php'; ?>
 </div>
 <!-- header_eof //-->
 <?php
@@ -179,8 +150,8 @@ if ((PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR) < '1.5.7') {
 // and inputs generated via zen_draw_input_field.  The variables set below that start with $input_ are
 // used on the function-call field-generation and the others are used when directly-coded.
 //
-if (!defined('EDIT_ORDERS_USE_NUMERIC_FIELDS')) define('EDIT_ORDERS_USE_NUMERIC_FIELDS', '1');
-if (EDIT_ORDERS_USE_NUMERIC_FIELDS != '1') {
+zen_define_default('EDIT_ORDERS_USE_NUMERIC_FIELDS', '1');
+if (EDIT_ORDERS_USE_NUMERIC_FIELDS !== '1') {
     $input_value_parms = '';
     $input_tax_parms = '';
     $value_parms = '';
@@ -197,9 +168,9 @@ if (EDIT_ORDERS_USE_NUMERIC_FIELDS != '1') {
 // -----
 // Start action-based rendering ...
 //
-if ($action == 'edit') {
+if ($action === 'edit') {
     require DIR_WS_MODULES . 'edit_orders/eo_edit_action_display.php';
-} elseif ($action == "add_prdct") { 
+} elseif ($action === 'add_prdct') { 
     require DIR_WS_MODULES . 'edit_orders/eo_add_prdct_action_display.php';
 }
 
@@ -226,7 +197,7 @@ if (!empty($additional_totals_displayed)) {
 <?php
 }
 
-if (DISPLAY_PRICE_WITH_TAX == 'true') {
+if (DISPLAY_PRICE_WITH_TAX === 'true') {
 ?>
 <script>
 $(document).ready(function() {
@@ -234,18 +205,18 @@ $(document).ready(function() {
         var opi = $(this).attr('data-opi');
         updateProductGross(opi);
     });
-    
+
     $('.p-g').on('keyup', function(e) {
         var opi = $(this).attr('data-opi');
         updateProductNet(opi);
     });
 
-    function doRound(x, places) 
+    function doRound(x, places)
     {
         return Math.round(x * Math.pow(10, places)) / Math.pow(10, places);
     }
 
-    function getProductTaxRate(opi) 
+    function getProductTaxRate(opi)
     {
         return getValidatedTaxRate($('input[name="update_products['+opi+'][tax]"]').val());
     }
@@ -255,7 +226,7 @@ $(document).ready(function() {
         return (regex.test(taxRate)) ? taxRate : 0;
     }
 
-    function updateProductGross(opi) 
+    function updateProductGross(opi)
     {
         var taxRate = getProductTaxRate(opi);
         var gross = $('input[name="update_products['+opi+'][final_price]"]').val();
@@ -266,7 +237,7 @@ $(document).ready(function() {
         $('input[name="update_products['+opi+'][gross]"]').val(doRound(gross, 4));
     }
 
-    function updateProductNet(opi) 
+    function updateProductNet(opi)
     {
         var taxRate = getProductTaxRate(opi);
         var net = $('input[name="update_products['+opi+'][gross]"]').val();
@@ -283,12 +254,12 @@ $(document).ready(function() {
     $('#s-g').on('keyup', function(e) {
         updateShippingNet();
     });
-    
+
     function getShippingTaxRate()
     {
         return getValidatedTaxRate($('#s-t').val());
     }
-    
+
     function updateShippingGross()
     {
         var taxRate = getShippingTaxRate();
@@ -298,7 +269,7 @@ $(document).ready(function() {
         }
         $('#s-g').val(doRound(gross, 4));
     }
-    
+
     function updateShippingNet()
     {
         var taxRate = getShippingTaxRate();

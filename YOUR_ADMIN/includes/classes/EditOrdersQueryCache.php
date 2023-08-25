@@ -5,9 +5,12 @@
 //
 // Last updated 20210305-lat9 for EO v4.6.0
 // 
-class EditOrdersQueryCache 
+class EditOrdersQueryCache
 {
-    function __construct() 
+    protected
+        $queries;
+
+    function __construct()
     {
         $this->queries = [];
     }
@@ -19,30 +22,30 @@ class EditOrdersQueryCache
     // -----
     // For Edit Orders, no caching ...
     //
-    function cache($query, $result) 
+    function cache($query, $result)
     {
         return false;
     }
 
-    function getFromCache($query) 
+    function getFromCache($query)
     {
         trigger_error('Invalid call received during Edit Orders processing', E_USER_ERROR);
         exit();
     }
 
-    function inCache($query) 
+    function inCache($query)
     {
         return false;
     }
 
-    function isSelectStatement($q) 
+    function isSelectStatement($q)
     {
         return false;
     }
 
-    function reset($query) 
+    function reset($query)
     {
-        if ('ALL' == $query) {
+        if ('ALL' === $query) {
             $this->queries = [];
             return false;
         }
