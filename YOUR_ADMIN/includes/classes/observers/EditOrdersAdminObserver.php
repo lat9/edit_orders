@@ -55,25 +55,27 @@ class EditOrdersAdminObserver extends base
             // Issued during the orders-listing sidebar generation, after the upper button-list has been created.
             //
             // $p1 ... Contains the current $oInfo object, which contains the orders-id.
-            // $p2 ... A reference to the current $contents array; the NEXT-TO-LAST element has been updated
-            //         with the built-in button list.
+            // $p2 ... A reference to the current $contents array; the 'Edit' button will be added on its own line.
             //
             case 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS': 
-                $index_to_update = count($p2) - 2;
-                $p2[$index_to_update]['text'] = $this->addEditOrderButton($p1->orders_id, $p2[$index_to_update]['text']);
+                $p2[] = [
+                    'align' => 'text-center',
+                    'text' => $this->addEditOrderButton($p1->orders_id),
+                ];
                 break;
 
             // -----
             // Issued during the orders-listing sidebar generation, after the lower-button-list has been created.
             //
             // $p1 ... Contains the current $oInfo object (could be empty), containing the orders-id.
-            // $p2 ... A reference to the current $contents array; the LAST element has been updated
-            //         with the built-in button list.
+            // $p2 ... A reference to the current $contents array; the 'Edit' button will be added on its own line.
             //
             case 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END':
                 if (isset($_GET['action']) && $_GET['action'] !== 'delete') {
-                    $index_to_update = count($p2) - 1;
-                    $p2[$index_to_update]['text'] = $this->addEditOrderButton($p1->orders_id, $p2[$index_to_update]['text']);
+                    $p2[] = [
+                        'align' => 'text-center',
+                        'text' => $this->addEditOrderButton($p1->orders_id),
+                    ];
                 }
                 break;
 
@@ -88,7 +90,11 @@ class EditOrdersAdminObserver extends base
             //         linking to this order's EO processing.
             //
             case 'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE':
-                $p4 .= $this->createEditOrdersLink($p2['orders_id'], zen_image(DIR_WS_IMAGES . EO_BUTTON_ICON_DETAILS, EO_ICON_DETAILS), EO_ZC157_FA_ICON, false);
+                $p4 .= $this->createEditOrdersLink(
+                    $p2['orders_id'],
+                    null,
+                    '<i class="fa fa-wrench overlay" title="' . EO_ICON_DETAILS . '"></i>'
+                );
                 break;
 
             // -----
@@ -100,7 +106,7 @@ class EditOrdersAdminObserver extends base
             // $p3 ... A reference to the $extra_buttons string, which is updated to include that edit button.
             //
             case 'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS':
-                $p3 .= '&nbsp;' . $this->createEditOrdersLink($p1, zen_image_button(EO_IMAGE_BUTTON_EDIT, IMAGE_EDIT), IMAGE_EDIT);
+                $p3 .= '&nbsp;' . $this->addEditOrderButton($p1);
                 break;
 
             // -----
@@ -185,7 +191,7 @@ class EditOrdersAdminObserver extends base
             // $p2 ... (r/w) A reference to the $tax_address array to be returned (containing a 'country_id' and 'zone_id').
             //
             case 'ZEN_GET_TAX_LOCATIONS':
-                global $order, $customer_country_id, $customer_zone_id;
+                global $order, $customer_country_id, $customer_zone_id, $eo;
 
                 if (STORE_PRODUCT_TAX_BASIS === 'Store') {
                     $customer_country_id = STORE_COUNTRY;
@@ -199,24 +205,24 @@ class EditOrdersAdminObserver extends base
                             if (is_array($order->billing['country'])) {
                                 $customer_country_id = $order->billing['country']['id'];
                             } else {
-                                $customer_country_id = zen_get_country_id($order->billing['country']);
+                                $customer_country_id = $eo->getCountryId($order->billing['country']);
                             }
-                            $customer_zone_id = zen_get_zone_id($customer_country_id, $order->billing['state']);
+                            $customer_zone_id = $eo->getZoneId((int)$customer_country_id, $order->billing['state']);
                         } else {
                             if (is_array($order->delivery['country'])) {
                                 $customer_country_id = $order->delivery['country']['id'];
                             } else {
-                                $customer_country_id = zen_get_country_id($order->delivery['country']);
+                                $customer_country_id = $eo->getCountryId($order->delivery['country']);
                             }
-                            $customer_zone_id = zen_get_zone_id($customer_country_id, $order->delivery['state']);
+                            $customer_zone_id = $eo->getZoneId((int)$customer_country_id, $order->delivery['state']);
                         }
                     } elseif (STORE_PRODUCT_TAX_BASIS === 'Billing') {
                         if (is_array ($order->billing['country'])) {
                             $customer_country_id = $order->billing['country']['id'];
                         } else {
-                            $customer_country_id = zen_get_country_id($order->billing['country']);
+                            $customer_country_id = $eo->getCountryId($order->billing['country']);
                         }
-                        $customer_zone_id = zen_get_zone_id($customer_country_id, $order->billing['state']);
+                        $customer_zone_id = $eo->getZoneId((int)$customer_country_id, $order->billing['state']);
                     }
                 }
                 $_SESSION['customer_country_id'] = $customer_country_id;
@@ -233,30 +239,21 @@ class EditOrdersAdminObserver extends base
         }
     }
 
-    protected function addEditOrderButton($orders_id, $button_list)
+    protected function addEditOrderButton($orders_id)
     {
-        $updated_button_list = str_replace(
-            [
-                EO_IMAGE_BUTTON_EDIT,
-                IMAGE_EDIT,
-            ],
-            [
-                EO_IMAGE_BUTTON_DETAILS,
-                IMAGE_DETAILS
-            ],
-            $button_list
-        );
-        return $updated_button_list . '&nbsp;' . $this->createEditOrdersLink($orders_id, zen_image_button(EO_IMAGE_BUTTON_EDIT, IMAGE_EDIT), IMAGE_EDIT);
+        return $this->createEditOrdersLink($orders_id, 'button', IMAGE_EDIT);
     }
 
-    protected function createEditOrdersLink($orders_id, $link_button, $link_text, $include_zc156_parms = true)
+    protected function createEditOrdersLink($orders_id, $link_button, $link_text)
     {
-        $link_parms = '';
-        if ($include_zc156_parms) {
+        if ($link_button !== null) {
             $link_parms = ' class="btn btn-primary" role="button"';
         } else {
-            $link_parms = ' class="btn btn-default btn-edit"';
+            $link_parms = ' class="btn btn-default btn-sm btn-edit" role="button"';
         }
-        return '&nbsp;<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$orders_id&action=edit") . "\"$link_parms>$link_text</a>";
+        return
+            '<a href="' . zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['oID', 'action']) . 'action=edit&oID=' . $orders_id) . '"' . $link_parms . '>' .
+                $link_text .
+            '</a>';
     }
 }

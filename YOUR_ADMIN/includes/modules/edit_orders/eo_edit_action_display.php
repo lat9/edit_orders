@@ -4,17 +4,17 @@
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified 20220302-lat9 Edit Orders v4.6.1
+//-Last modified v4.7.0
 //
 // -----
 // Prior to EO v4.6.0, this code was in-line in the main /admin/edit_orders.php script.  Now required by
 // that script in global context for the rendering for its 'edit' action.
 //
-if ($order->info['payment_module_code']) {
-    if (file_exists(DIR_FS_CATALOG_MODULES . 'payment/' . $order->info['payment_module_code'] . '.php')) {
-        require DIR_FS_CATALOG_MODULES . 'payment/' . $order->info['payment_module_code'] . '.php';
-        require DIR_FS_CATALOG_LANGUAGES . $_SESSION['language'] . '/modules/payment/' . $order->info['payment_module_code'] . '.php';
-        $module = new $order->info['payment_module_code'];
+if (!empty($order->info['payment_module_code'])) {
+    $payment_module_file = $order->info['payment_module_code'] . '.php';
+    if ($eo->loadModuleLanguageFile('payment', $payment_module_file) === true) {
+        require DIR_FS_CATALOG_MODULES . 'payment/' . $payment_module_file;
+        $module = new $order->info['payment_module_code']();
     }
 }
 
@@ -33,8 +33,8 @@ require DIR_WS_MODULES . 'edit_orders/eo_navigation.php';
                         <td class="pageHeading"><?php echo HEADING_TITLE; ?> #<?php echo $oID; ?></td>
                         <td class="pageHeading a-r"><?php echo zen_draw_separator('pixel_trans.gif', 1, HEADING_IMAGE_HEIGHT); ?></td>
                         <td class="pageHeading a-r">
-                            <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(['action'])); ?>" class="btn btn-primary btn-sm" role="button"><?php echo IMAGE_BACK; ?></a>
-                            <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$oID&amp;action=edit"); ?>" class="btn btn-primary btn-sm" role="button"><?php echo DETAILS; ?></a>
+                            <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(['action'])); ?>" class="btn btn-primary btn-xs" role="button"><?php echo IMAGE_BACK; ?></a>
+                            <a href="<?php echo zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$oID&amp;action=edit"); ?>" class="btn btn-primary btn-xs" role="button"><?php echo DETAILS; ?></a>
                         </td>
                     </tr>
                 </table></td>
@@ -229,7 +229,7 @@ if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
 $additional_inputs = '';
 $zco_notifier->notify('EDIT_ORDERS_FORM_ADDITIONAL_INPUTS', $order, $additional_inputs);
 ?>
-                            <input type="submit" class="btn btn-danger" value="<?php echo IMAGE_UPDATE; ?>">
+                            <input type="submit" class="btn btn-danger btn-xs" value="<?php echo IMAGE_UPDATE; ?>">
                             <?php echo "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice$additional_inputs"; ?>
                         </td>
                     </tr>
@@ -508,7 +508,7 @@ for ($i = 0, $i2 = count($order->products); $i < $i2; $i++) {
             }
         }
         unset($optionID, $optionInfo, $products_options_array, $selected_attribute, $attributeId, $attributeValue, $optionValue, $text, $checked);
-    } 
+    }
 
     // -----
     // Starting with EO v4.4.0, both the net and gross prices are displayed when the store displays prices with tax.
@@ -563,7 +563,7 @@ require DIR_WS_MODULES . 'edit_orders/eo_edit_action_ot_table_display.php';
                         <td><?php echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?></td>
                     </tr>
                     <tr>
-                        <td class="main"><strong><?php echo zen_image(DIR_WS_IMAGES . 'icon_comment_add.png', TABLE_HEADING_STATUS_HISTORY) . '&nbsp;' . TABLE_HEADING_STATUS_HISTORY; ?></strong></td>
+                        <td class="main"><strong><i class="fa fa-comments fa-lg"></i>&nbsp;<?php echo TABLE_HEADING_STATUS_HISTORY; ?></strong></td>
                     </tr>
 
                     <tr>
@@ -650,7 +650,7 @@ switch (EO_CUSTOMER_NOTIFICATION_DEFAULT) {
 
                     <tr>
                         <td valign="top">
-                            <input type="submit" class="btn btn-danger" value="<?php echo IMAGE_UPDATE; ?>">
+                            <input type="submit" class="btn btn-danger btn-xs" value="<?php echo IMAGE_UPDATE; ?>">
                         </td>
                     </tr>
                 </table></form></td>

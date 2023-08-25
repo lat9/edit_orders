@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified 20210318-lat9 Edit Orders v4.6.0
+//-Last modified v4.7.0
 //
 // -----
 // Prior to EO v4.6.0, this code was in-line in the main /admin/edit_orders.php script.  Now required by
@@ -13,7 +13,7 @@
 //
 $eo_href_link = zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$oID&action=add_prdct");
 $eo_add_product_button = zen_image_button('button_add_product.gif', TEXT_ADD_NEW_PRODUCT);
-$eo_add_button_link = '<a href="' . $eo_href_link . '" class="btn btn-warning " role="button">' . TEXT_ADD_NEW_PRODUCT . '</a>';
+$eo_add_button_link = '<a href="' . $eo_href_link . '" class="btn btn-warning btn-xs" role="button">' . TEXT_ADD_NEW_PRODUCT . '</a>';
 
 // -----
 // Give a watching observer the chance to identify additional order-totals that should be considered display-only.
@@ -37,7 +37,7 @@ if (!empty($display_only_totals_list)) {
 // The number of columns displayed in this section depends on whether/not the store displays prices
 // with tax.  If so, both the net- and gross-prices are displayed; otherwise, simply the net.
 //
-$columns = ((DISPLAY_PRICE_WITH_TAX == 'true') ? 7 : 6) - 2;
+$columns = ((DISPLAY_PRICE_WITH_TAX === 'true') ? 7 : 6) - 2;
 
 // Iterate over the order totals.
 for ($i = 0, $index = 0, $n = count($order->totals); $i < $n; $i++) {

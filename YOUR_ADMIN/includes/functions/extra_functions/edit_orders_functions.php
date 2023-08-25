@@ -14,14 +14,6 @@ if (basename($PHP_SELF, '.php') !== FILENAME_EDIT_ORDERS) {
 }
 
 // -----
-// Starting with v4.7.0, load storefront function-files needed for EO's operations
-// that aren't already included by the zc158 config.core.php.
-//
-// zen_product_in_category and zen_product_in_parent_category
-//
-require DIR_FS_CATALOG . DIR_WS_FUNCTIONS . 'functions_categories.php';
-
-// -----
 // Present in the storefront version of the html_output.php functions.
 //
 if (!function_exists('zen_get_country_list')) {
@@ -73,7 +65,7 @@ if (!function_exists('zen_get_country_list')) {
                 $countries_array[] = [
                     'id' => $country['countries_id'],
                     'text' => $country['countries_name'],
-                ]
+                ];
             }
         }
         return zen_draw_pull_down_menu($name, $countries_array, $selected, $parameters);
@@ -107,6 +99,8 @@ function eo_debug_action_level_list($level)
  */
 function eo_get_country($country) 
 {
+    global $eo;
+
     // -----
     // If the $country input is already an array, then an observer has already manipulated an
     // element of the 'order' class' addresses and the value will be simply returned, noting
@@ -125,7 +119,7 @@ function eo_get_country($country)
     // First, try to locate the country's ID assuming that the supplied input is the
     // country's name.
     //
-    $countries_id = zen_get_country_id($country);
+    $countries_id = $eo->getCountryId($country);
 
     // -----
     // If the country was located by name, gather the additional fields for the country.
@@ -1273,21 +1267,23 @@ function eo_shopping_cart()
 
 function eo_display_customers_notifications_icon($customer_notified)
 {
+    $icon_color = 'text-success';
     switch ($customer_notified) {
         case '1':
-            $status_icon = 'tick.gif';
+            $status_icon = 'fa fa-check';
             $icon_alt_text = TEXT_YES;
             break;
          case '-1':
-            $status_icon = 'locked.gif';
+            $status_icon = 'fa fa-lock';
             $icon_alt_text = TEXT_HIDDEN;
+            $icon_color = 'text-warning';
             break;
           default:
-            $status_icon = 'unlocked.gif';
+            $status_icon = 'fa fa-unlock';
             $icon_alt_text = TEXT_VISIBLE;
             break;
     }
-    return zen_image(DIR_WS_ICONS . $status_icon, $icon_alt_text);
+    return '<i class="fa-lg ' . $status_icon . ' ' . $icon_color . '" title="' . $icon_alt_text . '"></i>';
 }
 
 function eo_checks_and_warnings()

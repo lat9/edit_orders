@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified 20210304-lat9 Edit Orders v4.6.0
+//-Last modified v4.7.0
 //
 // -----
 // Prior to EO v4.6.0, this code was in-line in the main /admin/edit_orders.php script.  Now required by

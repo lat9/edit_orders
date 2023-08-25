@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified 20220302-lat9 Edit Orders v4.6.1
+//-Last modified v4.7.0
 //
 require 'includes/application_top.php';
 
@@ -130,9 +130,6 @@ if ($action === 'edit' || ($action === 'update_order' && empty($allow_update))) 
     <?php require DIR_WS_INCLUDES . 'admin_html_head.php'; ?>
 </head>
 <body>
-<?php
-}
-?>
 <!-- header //-->
 <div class="header-area">
     <?php require DIR_WS_INCLUDES . 'header.php'; ?>

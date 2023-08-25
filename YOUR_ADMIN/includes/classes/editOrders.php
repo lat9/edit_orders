@@ -1,11 +1,11 @@
 <?php
 // -----
 // Part of the Edit Orders plugin (v4.1.6 and later) by lat9 (lat9@vinosdefrutastropicales.com).
-// Copyright (C) 2016-2022, Vinos de Frutas Tropicales
+// Copyright (C) 2016-2023, Vinos de Frutas Tropicales
 //
-// Last updated: EO v4.6.1, 20220301, lat9
+// Last updated: EO v4.7.0
 //
-if (!defined('EO_DEBUG_TAXES_ONLY')) define('EO_DEBUG_TAXES_ONLY', 'false');  //-Either 'true' or 'false'
+zen_define_default('EO_DEBUG_TAXES_ONLY', 'false');  //-Either 'true' or 'false'
 class editOrders extends base
 {
     public
@@ -71,6 +71,47 @@ class editOrders extends base
         }
     }
 
+    public function loadModuleLanguageFile(string $module_type, string $module_file_name): bool
+    {
+        global $languageLoader;
+
+        $language_file_loaded = false;
+        if (file_exists(DIR_FS_CATALOG_MODULES . $module_type . '/' . $module_file_name)) {
+            if ($languageLoader->hasLanguageFile(DIR_FS_CATALOG . DIR_WS_LANGUAGES, $_SESSION['language'], $module_file_name, '/modules/' . $module_type)) {
+                $languageLoader->loadExtraLanguageFiles(DIR_FS_CATALOG . DIR_WS_LANGUAGES, $_SESSION['language'], $module_file_name, '/modules/' . $module_type);
+                $language_file_loaded = true;
+            }
+        }
+        return $language_file_loaded;
+    }
+
+    public function getZoneId(int $country_id, string $zone_name): int
+    {
+        global $db;
+
+        $zone_id_query = $db->Execute(
+            "SELECT * 
+               FROM " . TABLE_ZONES . " 
+              WHERE zone_country_id = $country_id 
+                AND zone_name = '". zen_db_input($zone_name) . "'
+              LIMIT 1"
+        );
+        return ($zone_id_query->EOF) ? 0 : (int)$zone_id_query->fields['zone_id'];
+    }
+
+    public function getCountryId(string $country_name): int
+    {
+        global $db;
+
+        $country_info = $db->Execute(
+            "SELECT *
+               FROM " . TABLE_COUNTRIES . "
+              WHERE countries_name = '" . zen_db_input($country_name) . "'
+              LIMIT 1"
+        );
+        return ($country_info->EOF) ? 0 : (int)$country_info->fields['countries_id'];
+    }
+
     public function getOrderInfo($action)
     {
         // -----
@@ -124,7 +165,7 @@ class editOrders extends base
             if ($country !== null) {
                 $order->customer['country'] = $country;
                 $order->customer['country_id'] = $country['id'];
-                $order->customer['zone_id'] = zen_get_zone_id($order->customer['country']['id'], $order->customer['state']);
+                $order->customer['zone_id'] = $this->getZoneId((int)$order->customer['country']['id'], $order->customer['state']);
             }
         }
         if (is_array($order->delivery) && isset($order->delivery['country'])) { //-20150811-lat9-Add is_array since virtual products don't have a delivery address
@@ -132,7 +173,7 @@ class editOrders extends base
             if ($country !== null) {
                 $order->delivery['country'] = $country;
                 $order->delivery['country_id'] = $country['id'];
-                $order->delivery['zone_id'] = zen_get_zone_id($order->delivery['country']['id'], $order->delivery['state']);
+                $order->delivery['zone_id'] = $this->getZoneId((int)$order->delivery['country']['id'], $order->delivery['state']);
             }
         }
         if (isset($order->billing['country'])) {
@@ -140,7 +181,7 @@ class editOrders extends base
             if ($country !== null) {
                 $order->billing['country'] = $country;
                 $order->billing['country_id'] = $country['id'];
-                $order->billing['zone_id'] = zen_get_zone_id($order->billing['country']['id'], $order->billing['state']);
+                $order->billing['zone_id'] = $this->getZoneId((int)$order->billing['country']['id'], $order->billing['state']);
             }
         }
         unset($country);
@@ -615,19 +656,13 @@ class editOrders extends base
     // -----
     // This method determines the specified order-total's defined sort-order.
     //
-    public function eoGetOrderTotalSortOrder($order_total_code)
+    public function eoGetOrderTotalSortOrder(string $order_total_code)
     {
         $sort_order = false;
         $module_file = $order_total_code . '.php';
-        
-        $lang_file = zen_get_file_directory(DIR_FS_CATALOG . DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/order_total/', $module_file, 'false');
-        if (@file_exists($lang_file)) {
-            include_once $lang_file;
-        }
 
-        $module_file = DIR_FS_CATALOG . DIR_WS_MODULES . 'order_total/' . $order_total_code . '.php';
-        if (@file_exists($module_file)) {
-            include_once $module_file;
+        if ($this->loadModuleLanguageFile('order_total', $module_file) === true) {
+            require_once DIR_FS_CATALOG_MODULES . 'order_total/' . $module_file;
             $order_total = new $order_total_code();
             $sort_order = $order_total->sort_order;
         }

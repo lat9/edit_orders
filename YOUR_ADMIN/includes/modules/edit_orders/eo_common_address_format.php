@@ -3,13 +3,13 @@
 // Part of the Edit Orders plugin, v4.5.0 and later, provided by lat9.
 // Copyright 2019-2021, Vinos de Frutas Tropicales.
 //
-//-Last modified 20210321-lat9 Edit Orders v4.6.0
+//-Last modified v4.7.0
 //
 // This module is loaded in global scope by /admin/includes/modules/edit_orders/eo_edit_action_display.php.
 //
 // The following variables are set for the module's use:
 //
-// $address_icon ..... The name of the icon associated with the address' information.
+// $address_icon ..... The name of the FA icon associated with the address' information.
 // $address_label .... The label, e.g. "Customer" to associate with the address information.
 // $address_name ..... The specific address, e.g. 'customer' or 'billing', that is being displayed.  This is
 //                     used to create unique form-field names for the three variants of addresses.
@@ -21,7 +21,7 @@
 <div role="group" aria-labelledby="sr-<?php echo $address_name; ?>">
     <table class="table">
         <tr>
-            <td aria-hidden="true"><?php echo zen_image(DIR_WS_IMAGES . $address_icon, $address_label); ?></td>
+            <td aria-hidden="true"><i class="fa-lg <?php echo $address_icon; ?>"></i></td>
             <td class="eo-label" id="sr-<?php echo $address_name; ?>" role="heading" aria-level="2"><?php echo $address_label; ?></td>
         </tr>
         <tr>
