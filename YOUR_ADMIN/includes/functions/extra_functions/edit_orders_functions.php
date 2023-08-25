@@ -544,9 +544,18 @@ function eo_add_product_to_order($order_id, $product)
     // Update products_ordered (for bestsellers list)
     $db->Execute("UPDATE " . TABLE_PRODUCTS . " SET products_ordered = products_ordered + " . sprintf('%f', $product['qty']) . " WHERE products_id = $products_id LIMIT 1");
 
+    $products_prid = $product['id'];
+    if (isset($product['attributes']) && is_array($product['attributes'])) {
+        $attributeArray = [];
+        foreach ($product['attributes'] as $attributes) {
+            $attributeArray[$attributes['option_id']] = $attributes['value_id'];
+        }
+        $products_prid = zen_get_uprid($product['id'], $attributeArray);
+    }
+
     $sql_data_array = [
         'orders_id' => (int)$order_id,
-        'products_id' => $products_id,
+        'products_id' => $products_prid,
         'products_model' => $product['model'],
         'products_name' => $product['name'],
         'products_price' => $product['price'],
@@ -662,7 +671,7 @@ function eo_add_product_to_order($order_id, $product)
                 'attributes_price_letters_free' => $attributes_values->fields['attributes_price_letters_free'],
                 'products_options_id' => (int)$current_attribute['option_id'],
                 'products_options_values_id' => $value_id,
-                'products_prid' => $product['id']
+                'products_prid' => $products_prid,
             ];
             zen_db_perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);
             $order_products_attributes_id = $db->Insert_ID();
@@ -674,7 +683,7 @@ function eo_add_product_to_order($order_id, $product)
                     'orders_products_filename' => $attributes_values->fields['products_attributes_filename'],
                     'download_maxdays' => $attributes_values->fields['products_attributes_maxdays'],
                     'download_count' => $attributes_values->fields['products_attributes_maxcount'],
-                    'products_prid' => $product['id'],
+                    'products_prid' => $products_prid,
                     'products_attributes_id' => $order_products_attributes_id,
                 ];
                 zen_db_perform(TABLE_ORDERS_PRODUCTS_DOWNLOAD, $sql_data_array);
