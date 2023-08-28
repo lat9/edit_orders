@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified 20220302-lat9 Edit Orders v4.6.1
+//-Last modified: EO v2.7.0
 //
 // -----
 // Prior to EO v4.6.0, this code was in-line in the main /admin/edit_orders.php script.  Now required by
@@ -138,7 +138,7 @@ if ($step > 1 && ($add_product_categories_id != .5 || !empty($_POST['search'])))
 // Step 3: Choose Options
 if ($step > 2 && $add_product_products_id > 0) {
     // Skip to Step 4 if no Options
-    if (!zen_has_product_attributes($add_product_products_id)) {
+    if (!zen_has_product_attributes($add_product_products_id, false)) {
         $step = 4;
 ?>
     <tr class="dataTableRow v-top">
@@ -166,7 +166,7 @@ if ($step > 2 && $add_product_products_id > 0) {
                     <label class="attribsSelect" for="<?php echo $attrib_id; ?>"><?php echo $option_name; ?></label>
 <?php
                     $products_options_array = [];
-                    foreach($optionInfo['options'] as $attributeId => $attributeValue) {
+                    foreach ($optionInfo['options'] as $attributeId => $attributeValue) {
                         $products_options_array[] = [
                             'id' => $attributeId,
                             'text' => $attributeValue
@@ -188,7 +188,11 @@ if ($step > 2 && $add_product_products_id > 0) {
 <?php
                     foreach ($optionInfo['options'] as $attributeId => $attributeValue) {
                         $checked = isset($_POST['id'][$optionID]['value'][$attributeId]);
-                        echo zen_draw_checkbox_field('id[' . $optionID . '][value][' . $attributeId . ']', $attributeId, $checked, null, 'id="' . $attrib_id . '-' . $attributeId . '"') . '<label class="attribsCheckbox" for="' . $attrib_id . '-' . $attributeId . '">' . $attributeValue . '</label><br>' . PHP_EOL;
+                        echo
+                            zen_draw_checkbox_field('id[' . $optionID . '][value][' . $attributeId . ']', $attributeId, $checked, null, 'id="' . $attrib_id . '-' . $attributeId . '"') .
+                            '<label class="attribsCheckbox" for="' . $attrib_id . '-' . $attributeId . '">' .
+                                $attributeValue .
+                            '</label><br>' . PHP_EOL;
                     }
                     unset($checked, $attributeId, $attributeValue);
                     echo zen_draw_hidden_field('id[' . $optionID . '][type]', $optionInfo['type']);
@@ -198,7 +202,7 @@ if ($step > 2 && $add_product_products_id > 0) {
                     break;
 
                 case PRODUCTS_OPTIONS_TYPE_TEXT:
-                    $text = (isset($_POST['id'][$optionID]['value']) ? $_POST['id'][$optionID]['value'] : '');
+                    $text = $_POST['id'][$optionID]['value'] ?? '';
                     $text = zen_output_string_protected($text);
 ?>
                     <label class="attribsInput" for="<?php echo $attrib_id; ?>"><?php echo $option_name; ?></label>
@@ -222,10 +226,10 @@ if ($step > 2 && $add_product_products_id > 0) {
 
                 case PRODUCTS_OPTIONS_TYPE_READONLY:
                 default:
+                    $optionValue = array_pop($optionInfo['options']);
 ?>
                     <span class="attribsRO"><?php echo $option_name . ': ' . $optionValue; ?></span><br>
 <?php
-                    $optionValue = array_shift($optionInfo['options']);
                     echo
                         zen_draw_hidden_field('id[' . $optionID . '][value]', $optionValue) .
                         zen_draw_hidden_field('id[' . $optionID . '][type]', $optionInfo['type']) . PHP_EOL;

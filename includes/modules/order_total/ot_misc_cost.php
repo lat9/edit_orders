@@ -41,6 +41,12 @@ class ot_misc_cost
     public $output;
 
     /**
+    * The Tax Class for this Order Total Module
+    * @var int
+    */
+    public $tax_class_id;
+
+    /**
     * Enter description here...
     *
     * @return ot_coupon

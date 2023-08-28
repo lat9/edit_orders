@@ -162,7 +162,7 @@ function eo_get_country($country)
     return $country_data;
 }
 
-function eo_get_product_attributes_options($products_id, $readonly = false)
+function eo_get_product_attributes_options($products_id)
 {
     global $db;
 
@@ -171,7 +171,7 @@ function eo_get_product_attributes_options($products_id, $readonly = false)
     }
 
     $attributes = new attributes();
-    $attributes = $attributes->get_attributes_options($products_id, $readonly);
+    $attributes = $attributes->get_attributes_options($products_id);
 
     // Rearrange these by option id instead of attribute id
     $retval = [];
@@ -312,7 +312,7 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
                     }
                     unset($get_attr_id);
                     break;
-                    
+
                 case PRODUCTS_OPTIONS_TYPE_CHECKBOX:
                     if (!isset($details['value'])) {
                         $add_attribute = false;
@@ -337,7 +337,17 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
                     $attr = $attributes->get_attribute_by_id($details['value'], 'order');
                     unset($attribute_id, $attribute_value, $tmp_id);
                     break;
-                    
+
+                case PRODUCTS_OPTIONS_TYPE_READONLY:
+                    $attr['option_id'] = $option_id;
+                    $attr['value'] = $details['value'];
+
+                    // There should only be one R/O attributer per option_id
+                    $ro_attrs = $attributes->get_attributes_by_option($product_id, $option_id);
+                    $attr['value_id'] = $ro_attrs[0]['options_values_id'];
+                    unset($ro_attrs);
+                    break;
+
                 default:
                     $attr = $attributes->get_attribute_by_id($details['value'], 'order');
                     break;
@@ -363,7 +373,7 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
 function eo_get_product_attribute_weight($product_id, $option_id, $option_value_id)
 {
     global $db;
-    
+
     $attrib_weight = $db->Execute(
         "SELECT products_attributes_weight, products_attributes_weight_prefix
            FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
@@ -507,7 +517,7 @@ function eo_add_product_to_order($order_id, $product)
 
             // Will work with only one option for downloadable products
             // otherwise, we have to build the query dynamically with a loop
-            if (isset($product['attributes']) && is_array($product['attributes']) && count($product['attributes']) !== 0) {
+            if (!empty($product['attributes']) && is_array($product['attributes'])) {
                 $products_attributes = $product['attributes'];
                 $stock_query_raw .= " AND pa.options_id = " . (int)$product['attributes'][0]['option_id'] . " AND pa.options_values_id = " . (int)$product['attributes'][0]['value_id'];
             }
@@ -545,7 +555,7 @@ function eo_add_product_to_order($order_id, $product)
     $db->Execute("UPDATE " . TABLE_PRODUCTS . " SET products_ordered = products_ordered + " . sprintf('%f', $product['qty']) . " WHERE products_id = $products_id LIMIT 1");
 
     $products_prid = $product['id'];
-    if (isset($product['attributes']) && is_array($product['attributes'])) {
+    if (!empty($product['attributes']) && is_array($product['attributes'])) {
         $attributeArray = [];
         foreach ($product['attributes'] as $attributes) {
             $attributeArray[$attributes['option_id']] = $attributes['value_id'];
@@ -555,7 +565,7 @@ function eo_add_product_to_order($order_id, $product)
 
     $sql_data_array = [
         'orders_id' => (int)$order_id,
-        'products_id' => $products_prid,
+        'products_id' => $product['id'],
         'products_model' => $product['model'],
         'products_name' => $product['name'],
         'products_price' => $product['price'],
@@ -567,7 +577,7 @@ function eo_add_product_to_order($order_id, $product)
         'product_is_free' => (int)$product['product_is_free'],
         'products_discount_type' => (int)$product['products_discount_type'],
         'products_discount_type_from' => (int)$product['products_discount_type_from'],
-        'products_prid' => $product['id'],
+        'products_prid' => $products_prid,
         'products_weight' => (float)$product['products_weight'],
         'products_virtual' => (int)$product['products_virtual'],
         'product_is_always_free_shipping' => (int)$product['product_is_always_free_shipping'],
@@ -587,13 +597,13 @@ function eo_add_product_to_order($order_id, $product)
 
     //------ bof: insert customer-chosen options to order--------
     $attributes_exist = '0';
-    if (isset($product['attributes']) && is_array($product['attributes'])) {
+    if (!empty($product['attributes']) && is_array($product['attributes'])) {
         $attributes_exist = '1';
         foreach ($product['attributes'] as $current_attribute) {
             // -----
             // For TEXT type attributes, the 'value_id' isn't set ... default to 0.
             //
-            $value_id = (isset($current_attribute['value_id'])) ? ((int)$current_attribute['value_id']) : 0;
+            $value_id = (int)($current_attribute['value_id'] ?? 0);
             if (DOWNLOAD_ENABLED == 'true') {
                 $attributes_values = $db->Execute(
                     "SELECT popt.products_options_name, poval.products_options_values_name,

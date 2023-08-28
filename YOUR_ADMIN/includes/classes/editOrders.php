@@ -10,6 +10,7 @@ class editOrders extends base
 {
     public
         $eo_action_level,
+        $logfile_name,
         $orders_id,
         $tax_updated,
         $product_tax_descriptions,
