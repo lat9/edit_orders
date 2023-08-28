@@ -2,7 +2,7 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-//-Last modified 20210317-lat9 Edit Orders v4.7.0
+//-Last modified: EO v4.7.0
 //
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
@@ -50,11 +50,10 @@ class attributes extends base
      * id / name / value rows for the specified product.
      *
      * @param int|string $zf_product_id the specified product id.
-     * @param bool $readonly include readonly attributes not required to add a
-     *        product to the cart, defaults to false.
+
      * @return array
      */
-    public function get_attributes_options($zf_product_id, $readonly = false)
+    public function get_attributes_options($zf_product_id)
     {
         global $db;
         $query =
@@ -72,7 +71,7 @@ class attributes extends base
               WHERE pa.products_id = " . (int)$zf_product_id;
  
         // Don't include READONLY attributes if product can be added to cart without them
-        if (PRODUCTS_OPTIONS_TYPE_READONLY_IGNORED === '1' && $readonly === false) {
+        if (PRODUCTS_OPTIONS_TYPE_READONLY_IGNORED === '0') {
             $query .= " AND po.products_options_type != " . (int)PRODUCTS_OPTIONS_TYPE_READONLY;
         }
 
@@ -123,9 +122,9 @@ class attributes extends base
     /**
      * Returns an array containing product attribute information. This method
      * allows you to specify a key format to change the names of the keys in the
-     * returned array. Currently supported formats are:<br />
-     * <strong>database</strong>: Uses the keys found in the database.<br />
-     * <strong>order</strong>: Uses the keys used when adding a product to an order.<br />
+     * returned array. Currently supported formats are:
+     * 'database': Uses the keys found in the database.
+     * 'order': Uses the keys used when adding a product to an order.
      *
      * @param int|string $zf_attribute_id the specified product id.
      * @param string $key_format the specified key format for the array
