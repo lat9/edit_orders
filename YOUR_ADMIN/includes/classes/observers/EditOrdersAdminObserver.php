@@ -11,38 +11,44 @@ if (!defined('IS_ADMIN_FLAG') || IS_ADMIN_FLAG !== true) {
 
 class EditOrdersAdminObserver extends base
 {
-    protected
-        $isEditOrdersPage;
-
-    public function __construct() 
+    public function __construct()
     {
-        $this->isEditOrdersPage = (basename($GLOBALS['PHP_SELF'], '.php') == FILENAME_EDIT_ORDERS);
-        $this->attach(
-            $this,
-            [
-                /* From /admin/orders.php */
-                'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS', 
-                'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END',
-                'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS',
-                'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE',    //-This is the zc156+ version of the above notification.
-                
-                /* From /includes/modules/order_total/ot_shipping.php */
-                'NOTIFY_OT_SHIPPING_TAX_CALCS',
-            ]
-        );
+        global $current_page;
+
+        $current_page_base = basename($current_page, '.php');
 
         // -----
-        // Starting with zc156, the order-class 'squishes' the delivery address to (bool)false when
-        // the order's shipping-method is 'storepickup'.  Watch this event only during Edit Orders' processing!
+        // If on the 'orders' page, watch for events pertinent to that page's processing.
         //
-        if ($this->isEditOrdersPage) {
+        if ($current_page_base === FILENAME_ORDERS) {
+            $orders_page_notifications = [
+                'NOTIFY_ADMIN_ORDERS_EDIT_BUTTONS',
+            ];
+            if (EO_SHOW_EDIT_ORDER_ICON === 'Yes') {
+                $orders_page_notifications[] = 'NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE';
+            }
+            if (EO_SHOW_EDIT_ORDER_BUTTON === 'Both' || EO_SHOW_EDIT_ORDER_BUTTON === 'Top Only') {
+                $orders_page_notifications[] = 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS';
+            }
+            if (EO_SHOW_EDIT_ORDER_BUTTON === 'Both' || EO_SHOW_EDIT_ORDER_BUTTON === 'Bottom Only') {
+                $orders_page_notifications[] = 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END';
+            }
+            $this->attach($this, $orders_page_notifications);
+        // -----
+        // If on the 'edit_orders' page, watch for events pertinent to that page's processing.
+        //
+        } elseif ($current_page_base === FILENAME_EDIT_ORDERS) {
             $this->attach(
                 $this,
                 [
+                    /* From /includes/classes/order.php */
                     'NOTIFY_ORDER_AFTER_QUERY',
 
                     /* From /includes/functions/functions_taxes.php */
                     'ZEN_GET_TAX_LOCATIONS',
+
+                    /* From /includes/modules/order_total/ot_shipping.php */
+                    'NOTIFY_OT_SHIPPING_TAX_CALCS',
                 ]
             );
         }
@@ -71,7 +77,7 @@ class EditOrdersAdminObserver extends base
             // $p2 ... A reference to the current $contents array; the 'Edit' button will be added on its own line.
             //
             case 'NOTIFY_ADMIN_ORDERS_MENU_BUTTONS_END':
-                if (isset($_GET['action']) && $_GET['action'] !== 'delete') {
+                if ((!isset($_GET['action']) || $_GET['action'] !== 'delete') && !empty($p1)) {
                     $p2[] = [
                         'align' => 'text-center',
                         'text' => $this->addEditOrderButton($p1->orders_id),
@@ -83,6 +89,8 @@ class EditOrdersAdminObserver extends base
             // Issued during the orders-listing generation for each order, gives us a chance to add the icon to
             // quickly edit the associated order.
             //
+            // Starting with v4.7.0, displayed only if so-configured.
+            //
             // $p1 ... An empty array
             // $p2 ... A reference to the current order's database fields array.
             // $p3 ... A reference to the $show_difference variable, unused by this processing.
@@ -93,7 +101,7 @@ class EditOrdersAdminObserver extends base
                 $p4 .= $this->createEditOrdersLink(
                     $p2['orders_id'],
                     null,
-                    '<i class="fa fa-wrench overlay" title="' . EO_ICON_DETAILS . '"></i>'
+                    '<i class="fa fa-wrench fa-sm overlay" title="' . EO_ICON_DETAILS . '"></i>'
                 );
                 break;
 
@@ -132,16 +140,14 @@ class EditOrdersAdminObserver extends base
             //    what tax-rate to apply.
             //
             case 'NOTIFY_OT_SHIPPING_TAX_CALCS':
-                if ($this->isEditOrdersPage) {
-                    $GLOBALS['eo']->eoUpdateOrderShippingTax($p2, $p3, $p4);
-                    $p2 = true;
-                    $this->detach($this, ['NOTIFY_OT_SHIPPING_TAX_CALCS']);
-                    
-                    $module = (isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
-                    if ($module !== '' && $module !== 'free') {
-                        require DIR_WS_CLASSES . 'EditOrdersOtShippingStub.php';
-                        $GLOBALS[$module] = new EditOrdersOtShippingStub();
-                    }
+                $GLOBALS['eo']->eoUpdateOrderShippingTax($p2, $p3, $p4);
+                $p2 = true;
+                $this->detach($this, ['NOTIFY_OT_SHIPPING_TAX_CALCS']);
+
+                $module = (isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
+                if ($module !== '' && $module !== 'free') {
+                    require DIR_WS_CLASSES . 'EditOrdersOtShippingStub.php';
+                    $GLOBALS[$module] = new EditOrdersOtShippingStub();
                 }
                 break;
 
