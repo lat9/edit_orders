@@ -86,6 +86,18 @@ class editOrders extends base
         return $language_file_loaded;
     }
 
+    public function arrayImplode($array_fields, $output_string = '')
+    {
+        foreach ($array_fields as $key => $value) {
+            if (is_array($value)) {
+                $output_string = $this->arrayImplode($value, $output_string);
+            } else {
+                $output_string .= $value . '^';
+            }
+        }
+        return $output_string;
+    }
+
     public function getZoneId(int $country_id, string $zone_name): int
     {
         global $db;
@@ -265,7 +277,7 @@ class editOrders extends base
                     $ot_shipping = json_encode($current_total);
                     $found_ot_shipping = true;
                     $shipping_module = $current_total['shipping_module'] . '_';
-                    $shipping_cost = $this->eoRoundCurrencyValue((float)$current_total['value']);
+                    $shipping_cost = $this->eoRoundCurrencyValue($current_total['value']);
                     $shipping_title = $current_total['title'];
                     break;
                 }
@@ -421,8 +433,7 @@ class editOrders extends base
         $product_final_price = $product['final_price'];
         $product_onetime = $product['onetime_charges'];
         $product_qty = $product['qty'];
-        $shown_price = $this->eoRoundCurrencyValue(zen_add_tax($product_final_price * $product_qty, $products_tax));
-        $shown_price += $this->eoRoundCurrencyValue(zen_add_tax($product_onetime, $products_tax));
+        $shown_price = zen_add_tax(($product_final_price * $product_qty) + $product_onetime, $products_tax);
 
         $query = false;
         if (isset($product['tax_description'])) {
@@ -446,8 +457,12 @@ class editOrders extends base
         // eoUpdateOrderShippingTax method.  If the order's shipping tax-rate is the same as a product's tax-rate,
         // the shipping tax value will be added to that product-based tax description.
         //
-        $this->product_tax_descriptions[$products_tax] = $products_tax_description;
+        $this->product_tax_descriptions[(string)$this->eoRoundCurrencyValue($products_tax)] = $products_tax_description;
 
+        // -----
+        // Product's description not needed for the log.
+        //
+        unset($product['products_description']);
         $this->eoLog(PHP_EOL . "getProductTaxes($products_tax_description)\n" . (($query === false) ? 'false' : (($query->EOF) ? 'EOF' : json_encode($query->fields))) . json_encode($product), 'tax');
 
         $totalTaxAdd = 0;
@@ -457,8 +472,7 @@ class editOrders extends base
             if (DISPLAY_PRICE_WITH_TAX === 'true') {
                 $taxAdd = $this->eoRoundCurrencyValue($shown_price / (100 + $products_tax) * $products_tax);
             } else {
-                $taxAdd = $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue($product_final_price * $product_qty), $products_tax));
-                $taxAdd += $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue($product_onetime), $products_tax));
+                $taxAdd = $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue(($product_final_price * $product_qty) + $product_onetime), $products_tax));
             }
             $taxAdd = $this->eoRoundCurrencyValue($taxAdd);
             if (isset($order->info['tax_groups'][$products_tax_description])) {
@@ -585,9 +599,13 @@ class editOrders extends base
         }
     }
 
+    // -----
+    // Convert a currency value in the database's decimal(15,4) format, in string format.  This
+    // should help in the penny-off rounding calculations.
+    //
     public function eoRoundCurrencyValue($value)
     {
-        return $GLOBALS['currencies']->value($value, false, $this->currency, $this->currency_value);
+        return $value;
     }
 
     public function eoFormatCurrencyValue($value)
@@ -600,7 +618,7 @@ class editOrders extends base
     //
     public function eoFormatArray($a)
     {
-        return str_replace(['},{', '","'], ['},' . PHP_EOL . '{', '",' . PHP_EOL . '"'], json_encode($a));
+        return json_encode($a, JSON_PRETTY_PRINT);
     }
 
     // -----
