@@ -595,6 +595,16 @@ function eo_add_product_to_order($order_id, $product)
     $order_products_id = $db->Insert_ID();
     $op_sql_data_array = $sql_data_array;
 
+    // -----
+    // Note: Similar to the 'EDIT_ORDERS_ADD_PRODUCT' notification at the end of the function, but moved
+    // here as a heads-up for products with attributes.  Added in EO v4.7.0.
+    //
+    $zco_notifier->notify('NOTIFY_EO_ADD_PRODUCT', [
+        'orders_products_id' => $order_products_id,
+        'product' => $product,
+        'sql_data_array' => $sql_data_array,
+    ]);
+
     //------ bof: insert customer-chosen options to order--------
     $attributes_exist = '0';
     if (!empty($product['attributes']) && is_array($product['attributes'])) {
@@ -686,6 +696,16 @@ function eo_add_product_to_order($order_id, $product)
             zen_db_perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);
             $order_products_attributes_id = $db->Insert_ID();
 
+            // -----
+            // Note: Added in EO v4.7.0 to indicate that an attribute for the current
+            // product has been added/updated.
+            //
+            $zco_notifier->notify('NOTIFY_EO_ADD_PRODUCT_ATTRIBUTE', [
+                'orders_products_attributes_id' => $order_products_attributes_id,
+                'product' => $product,
+                'sql_data_array' => $sql_data_array,
+            ]);
+
             if (DOWNLOAD_ENABLED === 'true' && !empty($attributes_values->fields['products_attributes_filename'])) {
                 $sql_data_array = [
                     'orders_id' => (int)$order_id,
@@ -697,6 +717,15 @@ function eo_add_product_to_order($order_id, $product)
                     'products_attributes_id' => $order_products_attributes_id,
                 ];
                 zen_db_perform(TABLE_ORDERS_PRODUCTS_DOWNLOAD, $sql_data_array);
+
+                // -----
+                // Note: Added in EO v4.7.0 to indicate that an download attribute for the current
+                // product has been added/updated.
+                //
+                $zco_notifier->notify('NOTIFY_EO_ADD_PRODUCT_ATTRIBUTE_DOWNLOAD', [
+                    'product' => $product,
+                    'sql_data_array' => $sql_data_array,
+                ]);
             }
         }
     }
