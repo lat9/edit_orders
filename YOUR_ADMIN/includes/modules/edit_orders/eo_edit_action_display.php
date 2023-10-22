@@ -289,7 +289,7 @@ if (is_array($extra_headings)) {
 // -----
 // Starting with v4.4.0, show both the net and gross unit prices when the store is configured to display prices with tax.
 //
-if (DISPLAY_PRICE_WITH_TAX == 'true') {
+if (DISPLAY_PRICE_WITH_TAX === 'true') {
 ?>
                                 <td class="dataTableHeadingContent a-r"><?php echo TABLE_HEADING_UNIT_PRICE_NET; ?></td>
                                 <td class="dataTableHeadingContent a-r"><?php echo TABLE_HEADING_UNIT_PRICE_GROSS; ?></td>
@@ -373,7 +373,7 @@ for ($i = 0, $i2 = count($order->products); $i < $i2; $i++) {
                                     <input name="update_products[<?php echo $orders_products_id; ?>][name]" value="<?php echo zen_output_string_protected($order->products[$i]['name']); ?>" <?php echo $name_parms; ?>>
 <?php
     echo zen_draw_hidden_field('update_products[' . $orders_products_id . '][products_id]', $order->products[$i]['id']);
-    if (isset($order->products[$i]['attributes']) && count($order->products[$i]['attributes']) !== 0) { 
+    if (isset($order->products[$i]['attributes']) && count($order->products[$i]['attributes']) !== 0) {
 ?>
                                     <br><nobr><small>&nbsp;<i><?php echo TEXT_ATTRIBUTES_ONE_TIME_CHARGE; ?>
                                     <input name="update_products[<?php echo $orders_products_id; ?>][onetime_charges]" value="<?php echo zen_db_prepare_input($order->products[$i]['onetime_charges']); ?>" <?php echo $value_parms; ?>>&nbsp;&nbsp;&nbsp;&nbsp;</i></small></nobr><br>
@@ -547,7 +547,7 @@ for ($i = 0, $i2 = count($order->products); $i < $i2; $i++) {
                                 </td>
                             </tr>
 <?php
-} 
+}
 ?>
 <!-- End Products Listings Block -->
 
@@ -558,9 +558,19 @@ require DIR_WS_MODULES . 'edit_orders/eo_edit_action_ot_table_display.php';
 <!-- End Order Total Block -->
                         </table></td>
                     </tr>
-
+<?php
+// -----
+// Add a hidden field containing the MD5 hash of the order's current products and totals.
+//
+?>
                     <tr>
-                        <td><?php echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?></td>
+                        <td>
+                            <?php echo
+                                zen_draw_separator('pixel_trans.gif', '1', '10') .
+                                zen_draw_hidden_field('existing_products', md5($eo->arrayImplode($order->products))) .
+                                zen_draw_hidden_field('existing_totals', md5($eo->arrayImplode($order->totals)));
+                            ?>
+                        </td>
                     </tr>
                     <tr>
                         <td class="main"><strong><i class="fa fa-comments fa-lg"></i>&nbsp;<?php echo TABLE_HEADING_STATUS_HISTORY; ?></strong></td>

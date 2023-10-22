@@ -2,7 +2,7 @@
 // -----
 // Language constants used by the /admin/edit_orders.php processing (Edit Orders).
 //
-//-Last modified 20220301-lat9 Edit Orders v4.7.0.  Now using zc158+ language array
+//-Last modified Edit Orders v4.7.0.  Now using zc158+ language array
 //
 $define = [
 // Page / Section Headings
@@ -139,6 +139,10 @@ $define = [
     'EO_MESSAGE_PRICING_AUTOSPECIALS' => 'Pricing was automatically calculated, using specials pricing.',
     'EO_MESSAGE_PRICING_MANUAL' => 'Pricing was supplied manually.',
     'EO_MESSAGE_ORDER_UPDATED' => 'The order was updated via "Edit Orders". ',
+    'EO_MESSAGE_ADDRESS_UPDATED' => 'The order\'s %1$s address was updated from: ',   //-%1$s: The type of address (see below) that was updated
+        'EO_CUSTOMER' => 'customer',
+        'EO_BILLING' => 'billing',
+        'EO_DELIVERY' => 'delivery',
     'EO_MESSAGE_PRODUCT_ADDED' => 'Added %1$s x "%2$s" to the order',   //-%1$s: The product quantity, %2$s: The product name
     'EO_MESSAGE_ATTRIBS_ADDED' => ', with options (%s)',
 

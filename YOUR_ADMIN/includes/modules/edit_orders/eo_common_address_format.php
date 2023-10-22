@@ -19,6 +19,13 @@
 //
 ?>
 <div role="group" aria-labelledby="sr-<?php echo $address_name; ?>">
+<?php
+// -----
+// Add a hidden field containing the JSON-encoded version of the currently-displayed address.  Used
+// on an update_order action to see if any of the addresses have changed.
+//
+echo zen_draw_hidden_field('existing-' . $address_name, $eo->arrayImplode($address_fields));
+?>
     <table class="table">
         <tr>
             <td aria-hidden="true"><i class="fa-lg <?php echo $address_icon; ?>"></i></td>

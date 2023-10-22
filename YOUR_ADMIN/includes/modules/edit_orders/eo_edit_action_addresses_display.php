@@ -22,7 +22,7 @@ $max_postcode_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers
 $max_country_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_country') . '"';
 ?>
 <div class="row" id="c-form">
-    <div class="col-sm-4">
+    <div class="col-sm-12 col-lg-4">
 <?php
 // -----
 // Set variables for common address-format display.
@@ -36,7 +36,7 @@ require DIR_WS_MODULES . 'edit_orders/eo_common_address_format.php';
 ?>
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-sm-12 col-lg-4">
 <?php
 // -----
 // Set variables for common address-format display, based on the site's preferential order.
@@ -58,7 +58,7 @@ require DIR_WS_MODULES . 'edit_orders/eo_common_address_format.php';
 ?>
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-sm-12 col-lg-4">
 <?php
 // -----
 // Set variables for common address-format display, based on the site's preferential order.

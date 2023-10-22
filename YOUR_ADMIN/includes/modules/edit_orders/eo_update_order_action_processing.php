@@ -284,6 +284,10 @@ if (isset($_POST['update_products'])) {
                 // Update Subtotal and Pricing
                 eo_update_order_subtotal($oID, $new_product);
 
+                // -----
+                // Log the new product added; don't need its description!
+                //
+                unset($new_product['products_description']);
                 $eo->eoLog (
                     PHP_EOL . $price_calc_method . PHP_EOL .
                     'Added Product:' . PHP_EOL . $eo->eoFormatArray($new_product) . PHP_EOL .
@@ -302,9 +306,23 @@ if (isset($_POST['update_products'])) {
     //
     if ($order_updated === true) {
         // -----
+        // See if additional details regarding what was updated in the order are available.
+        //
+        $additional_history = '';
+        if ($eo->arrayImplode($order->customer) !== $_POST['existing-customer']) {
+            $additional_history .= "\n\n" . sprintf(EO_MESSAGE_ADDRESS_UPDATED, EO_CUSTOMER) . $_POST['existing-customer'];
+        }
+        if ($eo->arrayImplode($order->billing) !== $_POST['existing-billing']) {
+            $additional_history .= "\n\n" . sprintf(EO_MESSAGE_ADDRESS_UPDATED, EO_BILLING) . $_POST['existing-billing'];
+        }
+        if ($eo->arrayImplode($order->delivery) !== $_POST['existing-delivery']) {
+            $additional_history .= "\n\n" . sprintf(EO_MESSAGE_ADDRESS_UPDATED, EO_DELIVERY) . $_POST['existing-delivery'];
+        }
+
+        // -----
         // Add an orders-status-history record, identifying that an update was performed.
         //
-        $eo->eoRecordStatusHistory($oID, EO_MESSAGE_ORDER_UPDATED . $price_calc_method_message);
+        $eo->eoRecordStatusHistory($oID, EO_MESSAGE_ORDER_UPDATED . $price_calc_method_message . $additional_history);
 
         // -----
         // Need to force update the tax field if the tax is zero.
@@ -334,6 +352,7 @@ if (isset($_POST['update_products'])) {
             $order->info['tax'] += $tax_value;
         }
     }
+    unset($order->products['products_description']);
     $eo->eoLog (
         PHP_EOL . 'Updated Products in Order:' . PHP_EOL . $eo->eoFormatArray($order->products) . PHP_EOL .
         $eo->eoFormatOrderTotalsForLog($order, 'Updated Products Order Totals:') .
