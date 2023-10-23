@@ -381,6 +381,7 @@ if (isset($_POST['update_total'])) {
 
         // TODO Special processing for some modules
         if (!empty($order_total['title']) && $order_total['title'] !== ':') {
+            $order_total['title'] = rtrim($order_total['title']) . ':';
             switch ($order_total['code']) {
                 case 'ot_shipping':
                     $order->info['shipping_method'] = $order_total['title'];
@@ -410,7 +411,7 @@ if (isset($_POST['update_total'])) {
                 case 'ot_coupon':
                     // Default to using the title from the module
                     $coupon = rtrim($order_total['title'], ': ');
-                    $order_total['title'] = (isset($GLOBALS['ot_coupon'])) ? $GLOBALS['ot_coupon']->title : '';
+                    $order_total['title'] = $GLOBALS['ot_coupon']->title ?? '';
 
                     // Look for correctly formatted title
                     preg_match('/([^:]+):([^:]+)/', $coupon, $matches);
