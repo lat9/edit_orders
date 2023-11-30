@@ -2,7 +2,7 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-// Last updated: EO v4.7.0, 20230822, lat9
+// Last updated: EO v4.7.0, 20231130, lat9
 //
 // -----
 // Since other plugins (like "Admin New Order") also provide some of these functions,
@@ -1098,6 +1098,19 @@ function eo_update_database_order_totals($oID)
         // tax-groups are combined into a single ot_tax record.
         //
         if (isset($order->info['tax_groups']) && is_array($order->info['tax_groups'])) {
+            // -----
+            // If more than one tax-group is recorded, check to see if the "Unknown" one
+            // is recorded.  If it is and its value is 0, it's not contributing anything
+            // so it'll be removed.
+            //
+            if (count($order->info['tax_groups']) > 1) {
+                foreach ($order->info['tax_groups'] as $tax_name => $tax_value) {
+                    if ($tax_name === TEXT_UNKNOWN_TAX_RATE && $tax_value == 0) {
+                        unset($order->info['tax_groups'][$tax_name]);
+                        break;
+                    }
+                }
+            }
             $tax_groups = array_keys($order->info['tax_groups']);
             if (SHOW_SPLIT_TAX_CHECKOUT === 'false') {
                 $tax_groups = "'" . implode(' + ', $tax_groups) . ":'";
