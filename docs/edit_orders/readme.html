@@ -107,7 +107,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
     <p>This section identifies the processes you'll use to initially install <em>Edit Orders</em>, upgrade or uninstall <em>EO</em> entirely.</p>
     <p><i class="fas fa-exclamation-circle fa-5x red"></i><strong class="red">Notes:</strong></p>
     <ol>
-        <li>Before you install <em>EO</em> v4.7.0 (or later), you'll need a working copy of Zen Cart 1.5.8a or later, running on a PHP version &gt;= 7.4.</li>
+        <li>Before you install <em>EO</em> v4.7.0 (or later), you'll need a working copy of Zen Cart 1.5.8 or later (1.5.8<b>a</b> recommended), running on a PHP version &gt;= 7.4.</li>
         <li>Edit Orders provides an additional admin-sanitization script so that its inputs don't get over-sanitized by the zc155+ sanitizer. This, unfortunately, affects stores that have both EO installed and a cron-job set up to run the <code>/admin/currency_cron.php</code> script; see <a href="https://github.com/zencart/zencart/issues/2849" target="_blank">this</a> Zen Cart issue for details.</li>
     </ol>
 
@@ -171,8 +171,8 @@ div.totals-desc h4 { border-top: 1px solid #666; }
     <h2>Change History</h3>
     <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
     <ul>
-        <li>v4.7.0-beta4, 2024-02-28 (lat9)<ul>
-            <li>CHANGE: Drop support for Zen Cart versions <em>prior to</em> 1.5.8 (1.5.8a recommended).</li>
+        <li>v4.7.0, 2024-02-28 (lat9)<ul>
+            <li>CHANGE: Drop support for Zen Cart versions <em>prior to</em> 1.5.8 (1.5.8<b>a</b> recommended).</li>
             <li>BUGFIX: Set <code>orders_products::products_prid</code> to the product's uprid, not its products_id.</li>
             <li>CHANGE: Use the zc158 search function.</li>
             <li>BUGFIX: Include read-only attributes when updating, if they're enabled.</li>

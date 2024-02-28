@@ -1,8 +1,8 @@
 # edit_orders
 
-## Current Version: 4.6.2
+## Current Version: 4.7.0
 
-Edit Orders: Updates for continued operation on **Zen Cart v1.5.6 and later**.  If your store is running an earlier version of Zen Cart, please use _EO_ v4.5.7.
+Edit Orders: Updates for continued operation on **Zen Cart v1.5.8 and later**.
 
 - _**Download from Zen Cart**_: https://www.zen-cart.com/downloads.php?do=file&id=1513
 - _**Zen Cart Support Thread**_: https://www.zen-cart.com/showthread.php?200407
