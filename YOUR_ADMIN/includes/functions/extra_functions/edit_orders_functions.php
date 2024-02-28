@@ -2,7 +2,7 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-// Last updated: EO v4.7.0, 20231130, lat9
+// Last updated: EO v4.7.0, 20240228, lat9
 //
 // -----
 // Since other plugins (like "Admin New Order") also provide some of these functions,
@@ -1067,18 +1067,18 @@ function eo_update_database_order_totals($oID)
         $totals_codes = [];
         foreach ($order_totals as $next_total) {
             $code = $next_total['code'];
-            $totals_titles[] = ($code == 'ot_shipping') ? rtrim($next_total['title'], ':') : $next_total['title'];
+            $totals_titles[] = ($code === 'ot_shipping') ? rtrim($next_total['title'], ':') : $next_total['title'];
             $totals_codes[] = $code;
         }
         foreach ($order->totals as $next_total) {
             $title = $next_total['title'];
-            if ($next_total['class'] == 'ot_shipping') {
+            if ($next_total['class'] === 'ot_shipping') {
                 $title = rtrim($title, ':');
             }
             if (!in_array($title, $totals_titles) || !in_array($next_total['class'], $totals_codes)) {
                 $and_clause = (!in_array($title, $totals_titles)) ? ("title = '" . zen_db_input($title) . "'") : '';
                 if (!in_array($next_total['class'], $totals_codes)) {
-                    if ($and_clause != '') {
+                    if ($and_clause !== '') {
                         $and_clause = "$and_clause OR ";
                     }
                     $and_clause .= ("`class` = '" . $next_total['class'] . "'");
@@ -1088,6 +1088,13 @@ function eo_update_database_order_totals($oID)
             }
         }
         unset($order_totals);
+
+        // -----
+        // Now, remove any order-totals that were previously recorded but are no longer present.
+        //
+        $present_order_totals = implode("','", $totals_codes);
+        $eo->eoLog("eo_update_database_order_totals, removing order-totals previously recorded other than: $present_order_totals");
+        $db->Execute("DELETE FROM " . TABLE_ORDERS_TOTAL . " WHERE orders_id = $oID AND `class` NOT IN ('$present_order_totals')");
 
         // -----
         // It's possible to have a "rogue" ot_tax value recorded, based on tax-processing for a previous

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Edit Orders</title>
-<link rel="icon" href="../vinos_favicon.ico" type="image/x-icon" />
+<link rel="icon" href="../vinos_favicon.ico" type="image/x-icon">
 <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 <style>
 a, a:active, a:visited { color: #006666; text-decoration: underline; }
@@ -80,7 +80,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
 
 <body>
     <h1 id="title">Edit Orders for Zen Cart&reg;</h1>
-    <p>Version 4.7.0.  Copyright &copy; 2015-2023, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
+    <p>Version 4.7.0.  Copyright &copy; 2015-2024, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
     <p>Current Support Thread on the Zen Cart forums: <a href="https://www.zen-cart.com/showthread.php?200407" target="_blank">https://www.zen-cart.com/showthread.php?200407</a></p>
     <p>Released under the General Public License (see the file named <code class="no-pad">LICENSE</code> in the plugin's distribution for full details). This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>
 
@@ -171,7 +171,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
     <h2>Change History</h3>
     <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
     <ul>
-        <li>v4.7.0-beta1, 2023-10-21 (lat9)<ul>
+        <li>v4.7.0-beta4, 2024-02-28 (lat9)<ul>
             <li>CHANGE: Drop support for Zen Cart versions <em>prior to</em> 1.5.8 (1.5.8a recommended).</li>
             <li>BUGFIX: Set <code>orders_products::products_prid</code> to the product's uprid, not its products_id.</li>
             <li>CHANGE: Use the zc158 search function.</li>
@@ -179,6 +179,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>CHANGE: Enable a site to control position of icons/buttons on admin orders' listing.</li>
             <li>CHANGE: Added notifications in support of updated/added product attributes and downloads.</li>
             <li>BUGFIX: <var>ot_tax</var> order-totals' dropped when zero-value 'default' tax is present.</li>
+            <li>BUGFIX: Remove any order-totals that were previously recorded in the database, but are no longer present.</li>
             <li>The following files were changed, <span class="added">added</span> or <span class="removed">removed</span>:<ol>
                 <li>/YOUR_ADMIN/edit_orders.php</li>
                 <li><span class="removed">/YOUR_ADMIN/images/icon_billing.png</span></li>
@@ -196,9 +197,9 @@ div.totals-desc h4 { border-top: 1px solid #666; }
                 <li>/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php</li>
                 <li><span class="removed">/YOUR_ADMIN/includes/extra_configures/edit_orders.php</span></li>
                 <li>/YOUR_ADMIN/includes/extra_datafiles/eo_sanitization.php</li>
-                <li>/YOUR_ADMIN/includes/functions/edit_orders_functions.php</li>
                 <li><span class="removed">/YOUR_ADMIN/includes/functions/extra_functions/common_orders_functions.php</span></li>
                 <li><span class="removed">/YOUR_ADMIN/includes/functions/extra_functions/zen_cfg_read_only.php</span></li>
+                <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
                 <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
                 <li><span class="removed">/YOUR_ADMIN/includes/languages/english/images/buttons/button_add_product.gif</span></li>
                 <li><span class="removed">/YOUR_ADMIN/includes/languages/english/edit_orders.php</span></li>
