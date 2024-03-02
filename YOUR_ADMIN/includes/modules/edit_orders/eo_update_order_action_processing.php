@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified v4.7.0
+//-Last modified v4.7.1
 //
 // -----
 // Prior to EO v4.6.0, this code was in-line in the main /admin/edit_orders.php script.  Now required by
@@ -309,13 +309,13 @@ if (isset($_POST['update_products'])) {
         // See if additional details regarding what was updated in the order are available.
         //
         $additional_history = '';
-        if ($eo->arrayImplode($order->customer) !== $_POST['existing-customer']) {
+        if (html_entity_decode($eo->arrayImplode($order->customer), ENT_COMPAT, CHARSET) !== html_entity_decode($_POST['existing-customer'], ENT_COMPAT, CHARSET)) {
             $additional_history .= "\n\n" . sprintf(EO_MESSAGE_ADDRESS_UPDATED, EO_CUSTOMER) . $_POST['existing-customer'];
         }
-        if ($eo->arrayImplode($order->billing) !== $_POST['existing-billing']) {
+        if (html_entity_decode($eo->arrayImplode($order->billing), ENT_COMPAT, CHARSET) !== html_entity_decode($_POST['existing-billing'], ENT_COMPAT, CHARSET)) {
             $additional_history .= "\n\n" . sprintf(EO_MESSAGE_ADDRESS_UPDATED, EO_BILLING) . $_POST['existing-billing'];
         }
-        if ($eo->arrayImplode($order->delivery) !== $_POST['existing-delivery']) {
+        if (html_entity_decode($eo->arrayImplode($order->delivery), ENT_COMPAT, CHARSET) !== html_entity_decode($_POST['existing-delivery'], ENT_COMPAT, CHARSET)) {
             $additional_history .= "\n\n" . sprintf(EO_MESSAGE_ADDRESS_UPDATED, EO_DELIVERY) . $_POST['existing-delivery'];
         }
 

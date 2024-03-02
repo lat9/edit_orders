@@ -17,77 +17,34 @@ h2 { font-size: 16px; }
 h2, h3 { border: 1px solid #666; background-color: #eee; }
 h1+h3 { border: none; background-color: inherit; }
 h5 { border-bottom: 1px dashed #666; padding-bottom: 5px; }
-pre { font-size: 10pt; line-height: 1em; overflow: scroll; }
-code.no-pad, pre.no-pad { padding: 0; margin: 0; }
-.tableHead { background-color: #eee; }
 ol li, ol li p { margin-left: 0; }
-img { margin: 0 20px 10px; float: left; border: 1px solid #666; }
-img.wide { width: 95%; float: none; margin: 0 2.5%; }
-table, td, th { border: 1px solid black; border-collapse: collapse; }
-td, th { padding: 5px; }
-th { text-align: left; }
 span.title { font-style: italic; font-weight: bold; color: #006666; }
 .corefile, .red, .edit { color: red; }
 .bold-red { color: red; font-weight: bold; }
 .template { color: green; }
 .added { color: blue; }
 .removed { text-decoration: line-through; }
-.osh { color: blue; }
-.minspacing li { margin: 0; }
-.smallimg { float: left; width: auto; margin: 0.5% 0.25% 0.25% auto; }
 .forward { float: right; }
 ol li, ul li { margin-top: 5px; margin-bottom: 5px; }
 ul li ul { padding-left: 0; }
-dt { font-weight: bold; margin-bottom: 0; }
-dd { margin-top: 0; padding-left: 40px; }
-.table { display: table; padding-left: 0.5%; font-size: smaller; }
-.head_outer, .item_outer { display: table-row; }
-.thead, .item { display: table-cell; padding: 0.25% 0.25%;}
-.thead { font-weight: bold; }
-.table ul { list-style-type: none; padding-left: 0; margin: 0; }
-.table ul li { margin: 0; }
-.c1 { text-align: center; font-weight: bold; width: 15%; color: #333333; vertical-align: top; }
-.c3 { vertical-align: top; }
 .clearBoth { clear: both; }
 .smaller { font-size: smaller; }
 .e { background-color: #eee; }
-ul.simple, ul.simple li { list-style-type: none; padding: 0 0 0 0.5em; margin: 0; }
-#table-config-osm tr td:first-child, #table-config-osm tr th:first-child { width: 30em; }
-#overview-images { margin-right: 0.5em; }
 .back { float: left; }
-#fdcv ol { margin: 0; }
-.nowrap { white-space: nowrap; }
-.h-name { font-style: italic; font-weight: bold; }
-#t-handlers td, #t-handlers th { vertical-align: top; }
-div.totals-desc h4 { border-top: 1px solid #666; }
-
-.etabs { margin: 0; padding: 0; }
-.tab { display: inline-block; zoom:1; *display:inline; background: #eee; border: solid 1px #999; border-bottom: none; border-radius: 4px 4px 0 0; margin: 0; }
-.tab a { font-size: 14px; line-height: 2em; display: block; padding: 0 10px; outline: none; }
-.tab a:hover { text-decoration: underline; }
-.tab.active { background: #fff; padding-top: 6px; position: relative; top: 1px; border-color: #666; }
-.tab a.active { font-weight: bold; }
-.tab-container .panel-container { background: #fff; border: solid #666 1px; padding: 10px; border-radius: 0 4px 4px 4px; }
-.panel-container { margin-bottom: 10px; }
-
-#dbio_layout { text-align: center; float: right; background-color: #ebebeb; }
-#dbio_layout2 { padding: 0; }
-#dbio_layout2 table, #dbio_layout2 td { margin: 0; border: none; }
-#dbio_layout2 tr:first-child td { border-bottom: 1px solid black; }
 </style>
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 </head>
 
 <body>
     <h1 id="title">Edit Orders for Zen Cart&reg;</h1>
-    <p>Version 4.7.0.  Copyright &copy; 2015-2024, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
+    <p>Version 4.7.1.  Copyright &copy; 2015-2024, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
     <p>Current Support Thread on the Zen Cart forums: <a href="https://www.zen-cart.com/showthread.php?200407" target="_blank">https://www.zen-cart.com/showthread.php?200407</a></p>
-    <p>Released under the General Public License (see the file named <code class="no-pad">LICENSE</code> in the plugin's distribution for full details). This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>
+    <p>Released under the General Public License (see the file named <code>LICENSE</code> in the plugin's distribution for full details). This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>
 
     <p><strong>Usage Notes:</strong></p>
     <ol>
         <li>A working copy of Zen Cart (v1.5.8a or later) running on a PHP version &gt;= 7.4 is required by Edit Orders v4.7.0 and later.</li>
-        <li>Some <code class="no-pad">order-total</code> modules are incompatibile with <em>EO</em>, especially if they require storefront conditions to perform their processing.</li>
+        <li>Some <code>order-total</code> modules are incompatibile with <em>EO</em>, especially if they require storefront conditions to perform their processing.</li>
         <li>Products added to an order via <em>EO</em> cannot include a &quot;file-upload&quot; option as that option-type is not currently supported.</li>
         <li>If your store's shipping-tax rate is different from the products' tax-rate, the setting <b><em>My Store :: Show Split Tax Lines</em></b> must be set to <code>true</code> to enable <em>EO</em> to correctly locate the shipping-tax rate on an order's initial edit.</li>
     </ol>
@@ -171,6 +128,13 @@ div.totals-desc h4 { border-top: 1px solid #666; }
     <h2>Change History</h3>
     <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
     <ul>
+        <li>v4.7.1-beta1, 2024-03-02 (lat9)<ul>
+            <li>BUGFIX: Correct &quot;naggy&quot; status-history messages when an address has html-special-characters.</li>
+            <li>The following files were changed:<ol>
+                <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
+                <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_update_order_action_processing.php</li>
+            </ol></li>
+        </ul></li>
         <li>v4.7.0, 2024-02-28 (lat9)<ul>
             <li>CHANGE: Drop support for Zen Cart versions <em>prior to</em> 1.5.8 (1.5.8<b>a</b> recommended).</li>
             <li>BUGFIX: Set <code>orders_products::products_prid</code> to the product's uprid, not its products_id.</li>
@@ -490,7 +454,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>The following files were changed:<ol>
               <li>/includes/modules/order_total/ot_onetime_discount.php</li>
               <li>/YOUR_ADMIN/edit_orders.php</li>
-              <li><span class="corefile">/YOUR_ADMIN/orders.php</span> <span class="smaller">Single line (#928) changed, modifying notification id from <code class="no-pad">NOTIFY_ADMIN_ORDERS_LISTING_ROW</code> to <code class="no-pad">NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE</code>.</span></li>
+              <li><span class="corefile">/YOUR_ADMIN/orders.php</span> <span class="smaller">Single line (#928) changed, modifying notification id from <code>NOTIFY_ADMIN_ORDERS_LISTING_ROW</code> to <code>NOTIFY_ADMIN_ORDERS_SHOW_ORDER_DIFFERENCE</code>.</span></li>
               <li>/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php</li>
               <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
               <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
@@ -511,7 +475,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         </ul></li>
         <li>v4.3.2, 2018-03-07 (lat9)<ul>
             <li>BUGFIX: Attributes are lost from products when an order is updated.</li>
-            <li>BUGFIX: Load admin extra functions only for <code class="no-pad">edit_orders</code> use; corrects unwanted interaction with <em>Admin New Order</em>.</li>
+            <li>BUGFIX: Load admin extra functions only for <code>edit_orders</code> use; corrects unwanted interaction with <em>Admin New Order</em>.</li>
             <li>CHANGE: Log-file formatting updates.</li>
             <li>The following files were changed:<ol>
               <li>/YOUR_ADMIN/includes/edit_orders.php</li>
@@ -575,7 +539,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
         </ul></li>
         <li>v4.2.0, 2017-03-01 (lat9)<ul>
             <li>CHANGE: Require Zen Cart 1.5.5a or later.</li>
-            <li>CHANGE: Remove integration with <em>Ty Package Tracker</em> from <code class="no-pad">\YOUR_ADMIN\orders.php</code>.</li>
+            <li>CHANGE: Remove integration with <em>Ty Package Tracker</em> from <code>\YOUR_ADMIN\orders.php</code>.</li>
             <li>CHANGE: Restructure plugin installation.</li>
             <li>The following files were changed, <span class="added">added</span> or <span class="removed">removed</span>:<ol>
               <li><span class="added">/includes/auto_loaders/init_vinos_autoload.php</span></li>
@@ -766,7 +730,7 @@ div.totals-desc h4 { border-top: 1px solid #666; }
             <li>Updated the installation script to add additional failure messages and not report success if a step fails.</li>
             <li>Fixed the order status dropdown to correctly select order status. This avoids the status being accidentally changed if the status is not "Pending (1)".</li>
             <li>Moved the &quot;edit&quot; button in the order menu over so the "details" button is more likely to be clicked by someone quickly looking at an order. This should hopefully lower the number of &quot;accidentally&quot; edited orders.</li>
-            <li>Added special handling to support the <code class="no-pad">ot_loworderfee</code> module.</li>
+            <li>Added special handling to support the <code>ot_loworderfee</code> module.</li>
             <li>Added some "dummy" files for those upgrading from an older version.</li>
             <li>Minor updates to the readme for version 4.1.</li>
         </ul></li>
