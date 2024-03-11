@@ -1,9 +1,9 @@
 <?php
 // -----
 // Part of the Edit Orders plugin, v4.5.0 and later, provided by lat9.
-// Copyright 2019-2023, Vinos de Frutas Tropicales.
+// Copyright 2019-2024, Vinos de Frutas Tropicales.
 //
-//-Last modified v4.7.0
+//-Last modified v4.7.1
 //
 // This module is loaded in global scope by /admin/edit_orders.php.
 //
@@ -27,7 +27,7 @@ $max_country_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_
 // -----
 // Set variables for common address-format display.
 //
-$address_icon = 'fa-solid fa-user';
+$address_icon = 'fa-solid fa fa-user';
 $address_label = ENTRY_CUSTOMER;
 $address_name = 'customer';
 $address_fields = $order->customer;
@@ -42,13 +42,13 @@ require DIR_WS_MODULES . 'edit_orders/eo_common_address_format.php';
 // Set variables for common address-format display, based on the site's preferential order.
 //
 if (EO_ADDRESSES_DISPLAY_ORDER === 'CBS') {
-    $address_icon = 'fa-regular fa-credit-card';
+    $address_icon = 'fa-regular fa fa-credit-card';
     $address_label = ENTRY_BILLING_ADDRESS;
     $address_name = 'billing';
     $address_fields = $order->billing;
     $address_notifier = 'EDIT_ORDERS_ADDL_BILLING_ADDRESS_ROWS';
 } else {
-    $address_icon = 'fa-solid fa-truck';
+    $address_icon = 'fa-solid fa fa-truck';
     $address_label = ENTRY_SHIPPING_ADDRESS;
     $address_name = 'delivery';
     $address_fields = $order->delivery;
@@ -64,13 +64,13 @@ require DIR_WS_MODULES . 'edit_orders/eo_common_address_format.php';
 // Set variables for common address-format display, based on the site's preferential order.
 //
 if (EO_ADDRESSES_DISPLAY_ORDER === 'CBS') {
-    $address_icon = 'fa-solid fa-truck';
+    $address_icon = 'fa-solid fa fa-truck';
     $address_label = ENTRY_SHIPPING_ADDRESS;
     $address_name = 'delivery';
     $address_fields = $order->delivery;
     $address_notifier = 'EDIT_ORDERS_ADDL_SHIPPING_ADDRESS_ROWS';
 } else {
-    $address_icon = 'fa-regular fa-credit-card';
+    $address_icon = 'fa-regular fa fa-credit-card';
     $address_label = ENTRY_BILLING_ADDRESS;
     $address_name = 'billing';
     $address_fields = $order->billing;

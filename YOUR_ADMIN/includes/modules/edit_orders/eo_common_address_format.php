@@ -1,9 +1,9 @@
 <?php
 // -----
 // Part of the Edit Orders plugin, v4.5.0 and later, provided by lat9.
-// Copyright 2019-2021, Vinos de Frutas Tropicales.
+// Copyright 2019-2024, Vinos de Frutas Tropicales.
 //
-//-Last modified v4.7.0
+//-Last modified v4.7.1
 //
 // This module is loaded in global scope by /admin/includes/modules/edit_orders/eo_edit_action_display.php.
 //
@@ -18,7 +18,7 @@
 // $address_notifier . The notification to be raised at the end of EO's standard address elements.
 //
 ?>
-<div role="group" aria-labelledby="sr-<?php echo $address_name; ?>">
+<div role="group" aria-labelledby="sr-<?= $address_name ?>">
 <?php
 // -----
 // Add a hidden field containing the JSON-encoded version of the currently-displayed address.  Used
@@ -28,46 +28,46 @@ echo zen_draw_hidden_field('existing-' . $address_name, $eo->arrayImplode($addre
 ?>
     <table class="table">
         <tr>
-            <td aria-hidden="true"><i class="fa-lg <?php echo $address_icon; ?>"></i></td>
-            <td class="eo-label" id="sr-<?php echo $address_name; ?>" role="heading" aria-level="2"><?php echo $address_label; ?></td>
+            <td aria-hidden="true"><i class="fa-2x <?= $address_icon ?>"></i></td>
+            <td class="eo-label" id="sr-<?= $address_name ?>" role="heading" aria-level="2"><?= $address_label ?></td>
         </tr>
         <tr>
-            <td class="eo-label"><label for="update_<?php echo $address_name; ?>_name"><?php echo ENTRY_CUSTOMER_NAME; ?></label>:&nbsp;</td>
-            <td><input name="update_<?php echo $address_name; ?>_name" size="45" value="<?php echo zen_output_string_protected($address_fields['name']); ?>" <?php echo $max_name_length; ?> id="update_<?php echo $address_name; ?>_name"></td>
-        </tr>
-
-        <tr>
-            <td class="eo-label"><label for="update_<?php echo $address_name; ?>_company"><?php echo ENTRY_CUSTOMER_COMPANY; ?></label>:&nbsp;</td>
-            <td><input name="update_<?php echo $address_name; ?>_company" size="45" value="<?php echo zen_output_string_protected($address_fields['company']); ?>" <?php echo $max_company_length; ?> id="update_<?php echo $address_name; ?>_company"></td>
+            <td class="eo-label"><label for="update_<?= $address_name ?>_name"><?= ENTRY_CUSTOMER_NAME ?></label>:&nbsp;</td>
+            <td><input name="update_<?= $address_name ?>_name" size="45" value="<?= zen_output_string_protected($address_fields['name']) ?>" <?= $max_name_length ?> id="update_<?= $address_name ?>_name"></td>
         </tr>
 
         <tr>
-            <td class="eo-label"><label for="update_<?php echo $address_name; ?>_address"><?php echo ENTRY_CUSTOMER_ADDRESS; ?></label>:&nbsp;</td>
-            <td><input name="update_<?php echo $address_name; ?>_street_address" size="45" value="<?php echo zen_output_string_protected($address_fields['street_address']); ?>" <?php echo $max_street_address_length; ?> id="update_<?php echo $address_name; ?>_address"></td>
+            <td class="eo-label"><label for="update_<?= $address_name ?>_company"><?= ENTRY_CUSTOMER_COMPANY ?></label>:&nbsp;</td>
+            <td><input name="update_<?= $address_name ?>_company" size="45" value="<?= zen_output_string_protected($address_fields['company']) ?>" <?= $max_company_length ?> id="update_<?= $address_name ?>_company"></td>
         </tr>
 
         <tr>
-            <td class="eo-label"><label for="update_<?php echo $address_name; ?>_suburb"><?php echo ENTRY_CUSTOMER_SUBURB; ?></label>:&nbsp;</td>
-            <td><input name="update_<?php echo $address_name; ?>_suburb" size="45" value="<?php echo zen_output_string_protected($address_fields['suburb']); ?>" <?php echo $max_suburb_length; ?> id="update_<?php echo $address_name; ?>_suburb"></td>
+            <td class="eo-label"><label for="update_<?= $address_name ?>_address"><?= ENTRY_CUSTOMER_ADDRESS ?></label>:&nbsp;</td>
+            <td><input name="update_<?= $address_name ?>_street_address" size="45" value="<?= zen_output_string_protected($address_fields['street_address']) ?>" <?= $max_street_address_length ?> id="update_<?= $address_name ?>_address"></td>
         </tr>
 
         <tr>
-            <td class="eo-label"><label for="update_<?php echo $address_name; ?>_city"><?php echo ENTRY_CUSTOMER_CITY; ?></label>:&nbsp;</td>
-            <td><input name="update_<?php echo $address_name; ?>_city" size="45" value="<?php echo zen_output_string_protected($address_fields['city']); ?>" <?php echo $max_city_length; ?> id="update_<?php echo $address_name; ?>_city"></td>
+            <td class="eo-label"><label for="update_<?= $address_name ?>_suburb"><?= ENTRY_CUSTOMER_SUBURB ?></label>:&nbsp;</td>
+            <td><input name="update_<?= $address_name ?>_suburb" size="45" value="<?= zen_output_string_protected($address_fields['suburb']) ?>" <?= $max_suburb_length ?> id="update_<?= $address_name ?>_suburb"></td>
         </tr>
 
         <tr>
-            <td class="eo-label"><label for="update_<?php echo $address_name; ?>_state"><?php echo ENTRY_CUSTOMER_STATE; ?></label>:&nbsp;</td>
-            <td><input name="update_<?php echo $address_name; ?>_state" size="45" value="<?php echo zen_output_string_protected($address_fields['state']); ?>" <?php echo $max_state_length; ?> id="update_<?php echo $address_name; ?>_state"></td>
+            <td class="eo-label"><label for="update_<?= $address_name ?>_city"><?= ENTRY_CUSTOMER_CITY ?></label>:&nbsp;</td>
+            <td><input name="update_<?= $address_name ?>_city" size="45" value="<?= zen_output_string_protected($address_fields['city']) ?>" <?= $max_city_length ?> id="update_<?= $address_name ?>_city"></td>
         </tr>
 
         <tr>
-            <td class="eo-label"><label for="update_<?php echo $address_name; ?>_postcode"><?php echo ENTRY_CUSTOMER_POSTCODE; ?></label>:&nbsp;</td>
-            <td><input name="update_<?php echo $address_name; ?>_postcode" size="45" value="<?php echo zen_output_string_protected($address_fields['postcode']); ?>" <?php echo $max_postcode_length; ?> id="update_<?php echo $address_name; ?>_postcode"></td>
+            <td class="eo-label"><label for="update_<?= $address_name ?>_state"><?= ENTRY_CUSTOMER_STATE ?></label>:&nbsp;</td>
+            <td><input name="update_<?= $address_name ?>_state" size="45" value="<?= zen_output_string_protected($address_fields['state']) ?>" <?= $max_state_length ?> id="update_<?= $address_name ?>_state"></td>
         </tr>
 
         <tr>
-            <td class="eo-label"><label for="update_<?php echo $address_name; ?>_country"><?php echo ENTRY_CUSTOMER_COUNTRY; ?></label>:&nbsp;</td>
+            <td class="eo-label"><label for="update_<?= $address_name ?>_postcode"><?= ENTRY_CUSTOMER_POSTCODE ?></label>:&nbsp;</td>
+            <td><input name="update_<?= $address_name ?>_postcode" size="45" value="<?= zen_output_string_protected($address_fields['postcode']) ?>" <?= $max_postcode_length ?> id="update_<?= $address_name ?>_postcode"></td>
+        </tr>
+
+        <tr>
+            <td class="eo-label"><label for="update_<?= $address_name ?>_country"><?= ENTRY_CUSTOMER_COUNTRY ?></label>:&nbsp;</td>
             <td>
 <?php
 if (is_array($address_fields['country']) && isset($address_fields['country']['id'])) {
@@ -98,8 +98,8 @@ if (!empty($additional_rows)) {
     foreach ($additional_rows as $next_row) {
 ?>
         <tr>
-            <td class="eo-label"><?php echo $next_row['label']; ?></label>:&nbsp;</td>
-            <td><?php echo $next_row['value']; ?></td>
+            <td class="eo-label"><?= $next_row['label'] ?></label>:&nbsp;</td>
+            <td><?= $next_row['value'] ?></td>
         </tr>
 <?php
     }
