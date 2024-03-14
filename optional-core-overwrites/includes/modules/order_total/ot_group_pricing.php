@@ -10,7 +10,7 @@
 // -----
 // Distributed with Edit Orders v4.7.1
 //
-class ot_group_pricing
+class ot_group_pricing extends base
 {
     /**
      * $_check is used to check the configuration key set up
@@ -173,7 +173,12 @@ class ot_group_pricing
             }
         }
 
-        return [
+        // -----
+        // Let an observer "know" the order- and configuration-related elements
+        // used in this discount calculation, giving the opportunity to
+        // override the to-be-returned value.
+        //
+        $discounts = [
             'total' => $discount_total * $discount_percentage,
             'tax' => $discount_tax * $discount_percentage,
             'tax_groups' => $discount_tax_groups,
@@ -181,6 +186,17 @@ class ot_group_pricing
             'shipping_tax' => $discount_shipping_tax * $discount_percentage,
             'discount_percentage' => $group_discount->fields['group_percentage'],
         ];
+        $this->notify('NOTIFY_OT_GROUP_PRICING_DEDUCTIONS',
+            [
+                'order_info' => $order->info,
+                'discount_percentage' => $discount_percentage,
+                'include_shipping' => $this->include_shipping,
+                'include_taxes' => $this->include_tax,
+                'shipping_tax_description' => $shipping_tax_description,
+            ],
+            $discounts
+        );
+        return $discounts;
     }
 
     public function credit_selection()
