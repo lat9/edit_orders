@@ -7,9 +7,11 @@
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  * @version $Id: Scott C Wilson 2022 Oct 16 Modified in v1.5.8a $
  */
-
-class ot_group_pricing {
-
+// -----
+// Distributed with Edit Orders v4.7.1
+//
+class ot_group_pricing
+{
     /**
      * $_check is used to check the configuration key set up
      * @var int
@@ -20,11 +22,6 @@ class ot_group_pricing {
      * @var string
      */
     public $code;
-    /**
-     * $calculate_tax determines how tax should be applied to coupon Standard, Credit Note, None
-     * @var string
-     */
-    public $calculate_tax;
     /**
      * $credit_class flag to indicate order totals method is a credit class
      * @var boolean
@@ -98,20 +95,17 @@ class ot_group_pricing {
         $this->deduction = $deductions['total'] ?? 0;
         if ($this->deduction > 0) {
             foreach ($order->info['tax_groups'] as $key => $value) {
-                if (isset($deductions['tax_groups'][$key])) {
-                    $order->info['tax_groups'][$key] -= $deductions['tax_groups'][$key];
-                }
+                $order->info['tax_groups'][$key] -= $deductions['tax_groups'][$key];
             }
-            $order->info['total'] -= (zen_round($deductions['total'], $currencies->get_decimal_places($_SESSION['currency'])) + $deductions['tax']);
+            $order->info['total'] -= $deductions['total'] + $deductions['tax'];
             $order->info['tax'] -= $deductions['tax'];
             $order->info['shipping_cost'] -= $deductions['shipping_cost'];
             $order->info['shipping_tax'] -= $deductions['shipping_tax'];
-            $shipping_status = ($this->include_shipping === true) ?
-                MODULE_ORDER_TOTAL_GROUP_PRICING_SHIPPING_INCL_TEXT : MODULE_ORDER_TOTAL_GROUP_PRICING_SHIPPING_EXCL_TEXT;
-            $tax_status = ($this->include_tax === true) ?
-                MODULE_ORDER_TOTAL_GROUP_PRICING_TAX_INCL_TEXT : MODULE_ORDER_TOTAL_GROUP_PRICING_TAX_EXCL_TEXT;
+            $shipping_status = ($this->include_shipping === true) ? MODULE_ORDER_TOTAL_GROUP_PRICING_SHIPPING_TEXT : '';
+            $tax_status = ($this->include_tax === true) ? MODULE_ORDER_TOTAL_GROUP_PRICING_TAX_REDUCED_TEXT : '';
+            $whats_included = MODULE_ORDER_TOTAL_GROUP_PRICING_SUBTOTAL_TEXT . $shipping_status . MODULE_ORDER_TOTAL_GROUP_PRICING_INCL_TEXT;
             $this->output[] = [
-                'title' => $this->title . ' (' . $deductions['discount_percentage'] . '%' . $shipping_status . $tax_status . '):',
+                'title' => $this->title . ' (' . $deductions['discount_percentage'] . '%' . $whats_included . $tax_status . '):',
                 'text' => '-' . $currencies->format($deductions['total'], true, $order->info['currency'], $order->info['currency_value']),
                 'value' => $deductions['total']
             ];
@@ -123,7 +117,7 @@ class ot_group_pricing {
         global $db, $order;
 
         $group_discount = $db->Execute(
-            "SELECT gp.group_name, gp.group_percentage
+            "SELECT gp.group_percentage
                FROM " . TABLE_GROUP_PRICING . " gp
                     INNER JOIN " . TABLE_CUSTOMERS . " c
                         ON gp.group_id = c.customers_group_pricing
@@ -132,20 +126,46 @@ class ot_group_pricing {
               LIMIT 1"
         );
         if ($group_discount->EOF) {
+            $GLOBALS['group_pricing_return'] = [];
             return [];
         }
+
         $discount_percentage = $group_discount->fields['group_percentage'] / 100;
 
-        $gift_vouchers = $_SESSION['cart']->gv_only();
+        $discount_total = $order->info['subtotal'] - $_SESSION['cart']->gv_only();
 
-        $discount_total = $order->info['total'] - $gift_vouchers;
-        $discount_tax = $order->info['tax'];
+        // -----
+        // Noting that, like ot_coupon, checks here for a match on the shipping
+        // tax-description fails if a tax-class has *multiple* tax components!
+        //
+        // Taxes, at this point in the order's construction are **presumed** to contain
+        // only those for the products' and shipping taxes!
+        //
+        $shipping_tax_description = $_SESSION['shipping_tax_description'] ?? '';
         $discount_tax_groups = $order->info['tax_groups'];
-        $discount_shipping_cost = $order->info['shipping_cost'];
-        $discount_shipping_tax = $order->info['shipping_tax'];
-        $discount_total -= ($discount_tax + $discount_shipping_cost);
+        $discount_tax = $order->info['tax'];
 
-        if ($this->include_tax === false) {
+        if ($this->include_shipping === true) { 
+            $discount_total += $order->info['shipping_cost'];
+            $discount_shipping_cost = $order->info['shipping_cost'];
+            $discount_shipping_tax = $order->info['shipping_tax'];
+        } else {
+            $discount_shipping_cost = 0;
+            $discount_shipping_tax = 0;
+            $discount_tax -= $order->info['shipping_tax'];
+            foreach ($discount_tax_groups as $key => $value) {
+                if ($key === $shipping_tax_description) {
+                    $discount_tax_groups[$key] = $value - $order->info['shipping_tax'];
+                    break;
+                }
+            }
+        }
+
+        if ($this->include_tax === true) {
+            foreach ($discount_tax_groups as $key => $value) {
+                $discount_tax_groups[$key] = $value * $discount_percentage;
+            }
+        } else {
             $discount_tax = 0;
             $discount_shipping_tax = 0;
             foreach ($discount_tax_groups as $key => $value) {
@@ -153,26 +173,8 @@ class ot_group_pricing {
             }
         }
 
-        if ($this->include_shipping === false) {
-            $discount_shipping_cost = 0;
-            $discount_shipping_tax = 0;
-            if ($this->include_tax === true) {
-                $discount_tax -= $order->info['shipping_tax'];
-                foreach ($discount_tax_groups as $key => $value) {
-                    if (isset($_SESSION['shipping_tax_description']) && $_SESSION['shipping_tax_description'] === $key) {
-                        $discount_tax_groups[$key] -= $order->info['shipping_tax'];
-                        break;
-                    }
-                }
-            }
-        }
-
-        foreach ($discount_tax_groups as $key => $value) {
-            $discount_tax_groups[$key] *= $discount_percentage;
-        }
-
         return [
-            'total' => ($discount_total + $discount_shipping_cost) * $discount_percentage,
+            'total' => $discount_total * $discount_percentage,
             'tax' => $discount_tax * $discount_percentage,
             'tax_groups' => $discount_tax_groups,
             'shipping_cost' => $discount_shipping_cost * $discount_percentage,
