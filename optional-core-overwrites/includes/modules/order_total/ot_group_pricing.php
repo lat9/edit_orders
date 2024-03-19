@@ -188,7 +188,7 @@ class ot_group_pricing extends base
         ];
         $this->notify('NOTIFY_OT_GROUP_PRICING_DEDUCTIONS',
             [
-                'order_info' => $order->info,
+                'order' => $order,
                 'discount_percentage' => $discount_percentage,
                 'include_shipping' => $this->include_shipping,
                 'include_taxes' => $this->include_tax,
