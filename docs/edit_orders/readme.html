@@ -111,7 +111,7 @@ ul li ul { padding-left: 0; }
     <p>If your site uses either <em>Coupons</em> (<code>ot_coupon</code>) or <em>Customer Group Pricing</em> (<code>ot_group_pricing</code>), you have a higher probability of orders with &quot;penny-off rounding&quot; issues.  That is, where an order's total value doesn't equal the sum of its individual order-total elements.</p>
     <p>EO v4.7.0 (and later) provides <em>optional</em> updates to each of those order-total modules in an attempt to alleviate those situations. Please note:</p>
     <ol>
-        <li>The change-basis for each module is that currently present in the <code>v158</code> branch of Zen Cart's <a href="https://github.com/zencart/zencart" target="_blank">GitHub repository</a>.</li>
+        <li>The change-basis for each module is that currently present in the <code>master</code> branch of Zen Cart's <a href="https://github.com/zencart/zencart" target="_blank">GitHub repository</a>.</li>
         <li>There are no change-related comments in either of these modules.</li>
         <li>I have not tested these changes on a site that &quot;displays prices with tax&quot;.</li>
     </ol>
@@ -129,14 +129,14 @@ ul li ul { padding-left: 0; }
     <h2>Change History</h3>
     <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
     <ul>
-        <li>v4.7.1-beta3, 2024-03-14 (lat9)<ul>
+        <li>v4.7.1, 2024-03-19 (lat9)<ul>
             <li>BUGFIX: Correct &quot;naggy&quot; status-history messages when an address has html-special-characters.</li>
             <li>BUGFIX: FA icons don't display on zc158a installation.</li>
-            <li>BUGFIX: Correct <em>optional</em> <code>ot_group_pricing</code> overrides' calculations; include updated language file.</li>
+            <li>BUGFIX: Correct <em>optional</em> <code>ot_group_pricing</code> override's calculations; include updated language file.</li>
             <li>INTROP: Add a notification once the 'base' <em>Group Pricing</em> deduction is calculated, giving the opportunity for override.</li>
             <li>The following files were changed or <span class="added">added</span>:<ol>
                 <li><span class="added">/optional-core-overwrites/includes/languages/english/modules/order_total/lang.ot_group_pricing.php</span></li>
-                <li>/optional-core-overwrites/includes/mobules/order_total/ot_group_pricing.php</li>
+                <li>/optional-core-overwrites/includes/modules/order_total/ot_group_pricing.php</li>
                 <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
                 <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_common_address_format.php</li>
                 <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_addresses_display.php</li>
