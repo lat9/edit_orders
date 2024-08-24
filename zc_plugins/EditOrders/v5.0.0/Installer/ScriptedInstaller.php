@@ -93,16 +93,66 @@ class ScriptedInstaller extends ScriptedInstallBase
 
     protected function nonEncapsulatedVersionPresent(): bool
     {
-        $encapsulated_version_present = false;
-        $defines_to_check = [
-            'FILENAME_EDIT_ORDERS',
+        $log_messages = [];
+        if (defined('FILENAME_EDIT_ORDERS')) {
+            $log_messages[] = "'FILENAME_EDIT_ORDERS' definition is present";
+        }
+
+        $file_found_message = 'Non-encapsulated admin file (%s) must be removed before this plugin can be installed.';
+        if (file_exists(DIR_FS_ADMIN . 'edit_orders.php')) {
+            $log_messages[] = sprintf($file_found_message, 'edit_orders.php');
+        }
+
+        $files_to_check = [
+            'includes/auto_loaders/' => [
+                'config.eo.php',
+                'config.eo_cautions.php',
+            ],
+            'includes/classes/' => [
+                'attributes.php',
+                'editOrders.php',
+                'EditOrdersOtShippingStub.php',
+                'EditOrdersQueryCache.php',
+                'mock_cart.php',
+                'observers/EditOrdersAdminObserver.php',
+            ],
+            'includes/extra_datafiles/' => [
+                'edit_orders_defines.php',
+                'eo_sanitization.php',
+            ],
+            'includes/functions/extra_functions/' => [
+                'edit_orders_functions.php',
+            ],
+            'includes/init_includes/' => [
+                'edit_orders_cautions.php',
+                'init_eo_config.php',
+            ],
+            'includes/modules/edit_orders/' => [
+                'eo_add_prdct_action_display.php',
+                'eo_add_prdct_action_processing.php',
+                'eo_common_address_format.php',
+                'eo_edit_action_addresses_display.php',
+                'eo_edit_action_display.php',
+                'eo_edit_action_osh_table_display.php',
+                'eo_edit_action_ot_table_display.php',
+                'eo_update_order_action_processing.php',
+                'eo_navigation.php',
+            ],
         ];
-        foreach ($defines_to_check as $next_define) {
-            if (defined($next_define)) {
-                $encapsulated_version_present = true;
+        foreach ($files_to_check as $dir => $files) {
+            $current_dir = DIR_FS_ADMIN . $dir;
+            foreach ($files as $next_file) {
+                if (file_exists($current_dir . $next_file)) {
+                    $log_messages[] = sprintf($file_found_message, $dir . $next_file);
+                }
             }
         }
-        return $encapsulated_version_present;
+
+        if (count($log_messages) !== 0) {
+            trigger_error(implode("\n", $log_messages), E_USER_NOTICE);
+            return true;
+        }
+        return false;
     }
 
     // -----
