@@ -2,7 +2,7 @@
 // -----
 // Admin-level auto-loader for the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Last updated 20210305-lat9 for EO v4.6.0
+// Last updated: v5.0.0
 // 
 if (!defined ('IS_ADMIN_FLAG')) { 
     die ('Illegal Access'); 
@@ -11,7 +11,7 @@ if (!defined ('IS_ADMIN_FLAG')) {
 $autoLoadConfig[0][] = [
     'autoType' => 'class',
     'loadFile' => 'mock_cart.php',
-    'classPath' => DIR_FS_ADMIN . DIR_WS_CLASSES
+    'classPath' => DIR_WS_CLASSES
 ];
 
 $autoLoadConfig[200][] = [
