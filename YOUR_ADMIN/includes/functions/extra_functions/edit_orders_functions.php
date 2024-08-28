@@ -353,7 +353,7 @@ function eo_get_new_product($product_id, $product_qty, $product_tax, $product_op
                     break;
             }
 
-            if ($add_attribute === true) {
+            if ($add_attribute === true && !empty($attr)) {
                 $retval['attributes'][] = $attr;
                 $GLOBALS['eo']->eoLog('eo_get_new_product, adding attribute: ' . json_encode($details) . ', ' . json_encode($attr));
                 if (!$query->EOF) {
@@ -378,8 +378,8 @@ function eo_get_product_attribute_weight($product_id, $option_id, $option_value_
         "SELECT products_attributes_weight, products_attributes_weight_prefix
            FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
           WHERE products_id = $product_id
-            AND options_id = $option_id
-            AND options_values_id = $option_value_id
+            AND options_id = " . (int)$option_id . "
+            AND options_values_id = " . (int)$option_value_id . "
           LIMIT 1"
     );
     $attribute_weight = 0;
