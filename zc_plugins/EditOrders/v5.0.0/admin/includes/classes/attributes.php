@@ -2,7 +2,7 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-//-Last modified: EO v4.7.0
+//-Last modified: EO v5.0.0
 //
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
@@ -16,9 +16,8 @@ if (!defined('IS_ADMIN_FLAG')) {
  */
 class attributes extends base
 {
-    protected
-        $options_order_by,
-        $options_values_order_by;
+    protected string $options_order_by,
+    protected string $options_values_order_by;
 
     /**
      * Constructs an Attributes class for accessing product attributes, options,
@@ -30,7 +29,7 @@ class attributes extends base
         // Preset the "ORDER BY" clause for the products' options.
         //
         if (PRODUCTS_OPTIONS_SORT_ORDER === '0') {
-            $this->options_order_by = 'LPAD(po.products_options_sort_order,11,"0"), po.products_options_name';
+            $this->options_order_by = "LPAD(po.products_options_sort_order, 11, '0'), po.products_options_name";
         } else {
             $this->options_order_by = 'po.products_options_name';
         }
@@ -39,9 +38,9 @@ class attributes extends base
         // Preset the "ORDER BY" clause for the products' options' values.
         //
        if (PRODUCTS_OPTIONS_SORT_BY_PRICE === '1') {
-            $this->options_values_order_by = 'LPAD(pa.products_options_sort_order,11,"0"), pov.products_options_values_name';
+            $this->options_values_order_by = "LPAD(pa.products_options_sort_order, 11, '0'), pov.products_options_values_name";
         } else {
-            $this->options_values_order_by = 'LPAD(pa.products_options_sort_order,11,"0"), pa.options_values_price';
+            $this->options_values_order_by = "LPAD(pa.products_options_sort_order, 11, '0'), pa.options_values_price";
         }
     }
 
@@ -58,7 +57,7 @@ class attributes extends base
         global $db;
         $query =
             "SELECT pa.products_attributes_id, pa.options_id AS `id`,
-                    po.products_options_name AS `name`, po.products_options_type AS `type`, 
+                    po.products_options_name AS `name`, po.products_options_type AS `type`,
                     po.products_options_size AS `size`, po.products_options_rows AS `rows`,
                     po.products_options_length AS `length`, pov.products_options_values_name as `value`
                FROM " . TABLE_PRODUCTS_ATTRIBUTES . " AS pa
@@ -130,7 +129,7 @@ class attributes extends base
      * @param string $key_format the specified key format for the array
      * @return array
      */
-    public function get_attribute_by_id($zf_attribute_id, $key_format = 'database') 
+    public function get_attribute_by_id($zf_attribute_id, $key_format = 'database')
     {
         global $db;
         $query =
