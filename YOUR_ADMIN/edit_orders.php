@@ -56,24 +56,9 @@ $queryCache = new EditOrdersQueryCache();
 require DIR_WS_CLASSES . 'editOrders.php';
 $eo = new editOrders($oID);
 
-$orders_statuses = [];
-$orders_status_array = [];
-$order_by_field = ($sniffer->field_exists(TABLE_ORDERS_STATUS, 'sort_order')) ? 'sort_order' : 'orders_status_id';
-$orders_status_query = $db->Execute(
-    "SELECT orders_status_id, orders_status_name
-       FROM " . TABLE_ORDERS_STATUS . "
-      WHERE language_id = " . (int)$_SESSION['languages_id'] . "
-  ORDER BY $order_by_field ASC"
-);
-foreach ($orders_status_query as $orders_status) {
-    $status_id = $orders_status['orders_status_id'];
-    $status_name = $orders_status['orders_status_name'];
-    $orders_statuses[] = [
-        'id' => $status_id,
-        'text' => "$status_name [$status_id]"
-    ];
-    $orders_status_array[$status_id] = $status_name;
-}
+$ordersStatus = zen_getOrdersStatuses();
+$orders_status_array = $ordersStatus['orders_status_array'];
+$orders_statuses = $ordersStatus['orders_statuses'];
 
 $action = $_GET['action'] ?? 'edit';
 $eo->eoLog(PHP_EOL . date('Y-m-d H:i:s') . ", Edit Orders entered (" . EO_VERSION . ") action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
