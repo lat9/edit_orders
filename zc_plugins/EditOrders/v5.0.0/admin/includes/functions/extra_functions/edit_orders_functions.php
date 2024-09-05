@@ -2,13 +2,16 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-// Last updated: EO v4.7.0, 20240228, lat9
+// Last updated: EO v5.0.0
 //
 // -----
 // Since other plugins (like "Admin New Order") also provide some of these functions,
 // continue this function-file "load" only if the current page-load is on
 // behalf of "Edit Orders" processing.
 //
+// Note: $PHP_SELF needs to be globalized since this is now loaded via a class.
+//
+global $PHP_SELF;
 if (basename($PHP_SELF, '.php') !== FILENAME_EDIT_ORDERS) {
     return;
 }
