@@ -32,7 +32,7 @@ $address_label = ENTRY_CUSTOMER;
 $address_name = 'customer';
 $address_fields = $order->customer;
 $address_notifier = 'EDIT_ORDERS_ADDL_CUSTOMER_ADDRESS_ROWS';
-require DIR_WS_MODULES . 'edit_orders/eo_common_address_format.php';
+require 'eo_common_address_format.php';
 ?>
     </div>
 
@@ -54,7 +54,7 @@ if (EO_ADDRESSES_DISPLAY_ORDER === 'CBS') {
     $address_fields = $order->delivery;
     $address_notifier = 'EDIT_ORDERS_ADDL_SHIPPING_ADDRESS_ROWS';
 }
-require DIR_WS_MODULES . 'edit_orders/eo_common_address_format.php';
+require 'eo_common_address_format.php';
 ?>
     </div>
 
@@ -76,7 +76,7 @@ if (EO_ADDRESSES_DISPLAY_ORDER === 'CBS') {
     $address_fields = $order->billing;
     $address_notifier = 'EDIT_ORDERS_ADDL_BILLING_ADDRESS_ROWS';
 }
-require DIR_WS_MODULES . 'edit_orders/eo_common_address_format.php';
+require 'eo_common_address_format.php';
 ?>
     </div>
 </div>

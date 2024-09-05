@@ -19,7 +19,7 @@ if (!empty($order->info['payment_module_code'])) {
 }
 
 // BEGIN - Add Super Orders Order Navigation Functionality
-require DIR_WS_MODULES . 'edit_orders/eo_navigation.php';
+require 'eo_navigation.php';
 // END - Add Super Orders Order Navigation Functionality
 ?>
 <!-- body //-->
@@ -44,7 +44,7 @@ require DIR_WS_MODULES . 'edit_orders/eo_navigation.php';
             <tr>
                 <td><?php echo zen_draw_form('edit_order', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'paycc']) . 'action=update_order'); ?><table width="100%" border="0">
                     <tr>
-                        <td><?php require DIR_WS_MODULES . 'edit_orders/eo_edit_action_addresses_display.php'; ?></td>
+                        <td><?php require 'eo_edit_action_addresses_display.php'; ?></td>
                     </tr>
 
 <!-- End Addresses Block -->
@@ -553,7 +553,7 @@ for ($i = 0, $i2 = count($order->products); $i < $i2; $i++) {
 
 <!-- Begin Order Total Block -->
 <?php
-require DIR_WS_MODULES . 'edit_orders/eo_edit_action_ot_table_display.php';
+require 'eo_edit_action_ot_table_display.php';
 ?>
 <!-- End Order Total Block -->
                         </table></td>
@@ -578,7 +578,7 @@ require DIR_WS_MODULES . 'edit_orders/eo_edit_action_ot_table_display.php';
 
                     <tr>
                         <td class="main">
-                            <?php require DIR_WS_MODULES . 'edit_orders/eo_edit_action_osh_table_display.php'; ?>
+                            <?php require 'eo_edit_action_osh_table_display.php'; ?>
                         </td>
                     </tr>
 
