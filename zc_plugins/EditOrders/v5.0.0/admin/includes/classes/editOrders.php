@@ -72,20 +72,6 @@ class editOrders extends base
         }
     }
 
-    public function loadModuleLanguageFile(string $module_type, string $module_file_name): bool
-    {
-        global $languageLoader;
-
-        $language_file_loaded = false;
-        if (file_exists(DIR_FS_CATALOG_MODULES . $module_type . '/' . $module_file_name)) {
-            if ($languageLoader->hasLanguageFile(DIR_FS_CATALOG . DIR_WS_LANGUAGES, $_SESSION['language'], $module_file_name, '/modules/' . $module_type)) {
-                $languageLoader->loadExtraLanguageFiles(DIR_FS_CATALOG . DIR_WS_LANGUAGES, $_SESSION['language'], $module_file_name, '/modules/' . $module_type);
-                $language_file_loaded = true;
-            }
-        }
-        return $language_file_loaded;
-    }
-
     public function arrayImplode($array_fields, $output_string = '')
     {
         foreach ($array_fields as $key => $value) {
@@ -672,15 +658,24 @@ class editOrders extends base
         zen_update_orders_history($oID, $message);
     }
 
+    public function loadModuleLanguageFile(string $module_name, string $module_type): bool
+    {
+        global $languageLoader;
+
+        return $languageLoader->loadModuleLanguageFile($module_name, $module_type);
+    }
+
     // -----
     // This method determines the specified order-total's defined sort-order.
     //
     public function eoGetOrderTotalSortOrder(string $order_total_code)
     {
+        global $languageLoader;
+
         $sort_order = false;
         $module_file = $order_total_code . '.php';
 
-        if ($this->loadModuleLanguageFile('order_total', $module_file) === true) {
+        if ($this->loadModuleLanguageFile($module_file, 'order_total') === true) {
             require_once DIR_FS_CATALOG_MODULES . 'order_total/' . $module_file;
             $order_total = new $order_total_code();
             $sort_order = $order_total->sort_order;

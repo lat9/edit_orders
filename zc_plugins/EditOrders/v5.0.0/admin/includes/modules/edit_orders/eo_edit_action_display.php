@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified v4.7.0
+// Last modified v5.0.0
 //
 // -----
 // Prior to EO v4.6.0, this code was in-line in the main /admin/edit_orders.php script.  Now required by
@@ -12,7 +12,7 @@
 //
 if (!empty($order->info['payment_module_code'])) {
     $payment_module_file = $order->info['payment_module_code'] . '.php';
-    if ($eo->loadModuleLanguageFile('payment', $payment_module_file) === true) {
+    if ($eo->loadModuleLanguageFile($payment_module_file, 'payment') === true) {
         require DIR_FS_CATALOG_MODULES . 'payment/' . $payment_module_file;
         $module = new $order->info['payment_module_code']();
     }

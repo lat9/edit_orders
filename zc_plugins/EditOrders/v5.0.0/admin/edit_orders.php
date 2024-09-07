@@ -76,7 +76,7 @@ foreach ($orders_status_query as $orders_status) {
 }
 
 $action = $_GET['action'] ?? 'edit';
-$eo->eoLog(PHP_EOL . date('Y-m-d H:i:s') . ", Edit Orders entered (" . EO_VERSION . ") action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
+$eo->eoLog(PHP_EOL . date('Y-m-d H:i:s') . ", Edit Orders entered action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
 $zco_notifier->notify('EDIT_ORDERS_START_ACTION_PROCESSING');
 switch ($action) {
     // Update Order
