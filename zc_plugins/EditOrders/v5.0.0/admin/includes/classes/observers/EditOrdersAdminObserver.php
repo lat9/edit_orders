@@ -1,7 +1,7 @@
 <?php
 // -----
 // Admin-level observer class, adds "Edit Orders" buttons and links to Customers->Orders processing.
-// Copyright (C) 2017-2023, Vinos de Frutas Tropicales.
+// Copyright (C) 2017-2024, Vinos de Frutas Tropicales.
 //
 // Last updated for EO v5.0.0
 //
