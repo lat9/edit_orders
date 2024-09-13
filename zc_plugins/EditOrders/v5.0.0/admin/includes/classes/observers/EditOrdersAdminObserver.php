@@ -41,9 +41,6 @@ class EditOrdersAdminObserver extends base
             $this->attach(
                 $this,
                 [
-                    /* From /includes/classes/order.php */
-                    'NOTIFY_ORDER_AFTER_QUERY',
-
                     /* From /includes/functions/functions_taxes.php */
                     'ZEN_GET_TAX_LOCATIONS',
 
@@ -136,34 +133,6 @@ class EditOrdersAdminObserver extends base
         }
     }
 
-    // -----
-    // Issued at the end of an order's recreation (watched during EO processing only). Change introduced 
-    // in zc156b now sets the order's shipping information to (bool)false when the order's shipping is 'storepickup'.
-    //
-    // If the order's shipping method *is* 'storepickup, we'll gather and restore the delivery-address
-    // information for Edit Orders' display.
-    //
-    protected function notify_order_after_query(&$order, string $e, $x, &$orders_id): void
-    {
-        if ($order->info['shipping_module_code'] !== 'storepickup' || $order->delivery !== false) {
-            return;
-        }
-
-        global $db;
-        $delivery_address = $db->Execute(
-            "SELECT delivery_name AS `name`, delivery_company AS `company`, delivery_street_address AS street_address,
-                    delivery_suburb AS suburb, delivery_city AS city, delivery_postcode AS postcode, delivery_state as `state`,
-                    delivery_country AS country, delivery_address_format_id AS format_id
-               FROM " . TABLE_ORDERS . "
-              WHERE orders_id = " . (int)$orders_id . "
-              LIMIT 1"
-        );
-        if ($delivery_address->EOF) {
-            return;
-        }
-        $order->delivery = $delivery_address->fields;
-    }
-
     protected function update(&$class, $eventID, $p1, &$p2, &$p3, &$p4, &$p5)
     {
         switch ($eventID) {
@@ -185,7 +154,6 @@ class EditOrdersAdminObserver extends base
                     $_SESSION['customer_id'] = $order->customer['id'];
 
                     if (STORE_PRODUCT_TAX_BASIS === 'Shipping') {
-                        global $eo;
                         if ($eo->eoOrderIsVirtual($order)) {
                             if (is_array($order->billing['country'])) {
                                 $customer_country_id = $order->billing['country']['id'];

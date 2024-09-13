@@ -1,59 +1,31 @@
 <?php
 // -----
-// Part of the Edit Orders plugin (v4.1.6 and later) by lat9 (lat9@vinosdefrutastropicales.com).
-// Copyright (C) 2016-2023, Vinos de Frutas Tropicales
+// Part of the Edit Orders plugin by lat9 (lat9@vinosdefrutastropicales.com).
+// Copyright (C) 2016-2024, Vinos de Frutas Tropicales
 //
-// Last updated: EO v4.7.0
+// Last updated: EO v5.0.0
 //
-zen_define_default('EO_DEBUG_TAXES_ONLY', 'false');  //-Either 'true' or 'false'
-class editOrders extends base
+class EditOrders extends base
 {
-    public
-        $eo_action_level,
-        $logfile_name,
-        $orders_id,
-        $tax_updated,
-        $product_tax_descriptions,
-        $currency,
-        $currency_value,
-        $order_currency,
-        $shipping_tax_rate,
-        $shipping_tax_description,
-        $ot_sort_default;
+    protected int $eo_action_level;
+    protected string $logfile_name;
+    protected int $orders_id;
+    public bool $tax_updated;
+    protected array $product_tax_descriptions;
+    protected $shipping_tax_rate;
+    protected $shipping_tax_description;
+    protected int $ot_sort_default;
 
-    public function __construct($orders_id)
+    protected bool $orderHasShipping;
+
+    protected \order $order;
+
+    public function __construct(int $orders_id)
     {
-        global $db, $currencies;
-
-        // -----
-        // Save the current value for the session-stored currency (in case the order was
-        // placed in a different one).  The value will be restored EO's initialization routine
-        // is run.
-        $_SESSION['eo_saved_currency'] = $_SESSION['currency'] ?? false;
-
         $this->eo_action_level = (int)EO_DEBUG_ACTION_LEVEL;
         $this->orders_id = (int)$orders_id;
         $this->tax_updated = false;
         $this->product_tax_descriptions = [];
-
-        $currency_info = $db->Execute(
-            "SELECT currency, currency_value
-               FROM " . TABLE_ORDERS . " 
-              WHERE orders_id = " . $this->orders_id . " 
-              LIMIT 1"
-        );
-        $this->currency = $currency_info->fields['currency'];
-        $this->currency_value = $currency_info->fields['currency_value'];
-        unset($currency_info);
-
-        if (!isset($currencies)) {
-            if (!class_exists('currencies')) {
-                require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
-            }
-            $currencies = new currencies();
-        }
-        $_SESSION['currency'] = $this->currency;
-        $this->order_currency = $currencies->currencies[$this->currency];
 
         // -----
         // Create the edit_orders directory, if not already present.
@@ -61,14 +33,503 @@ class editOrders extends base
         if ($this->eo_action_level !== 0) {
             $this->logfile_name = DIR_FS_LOGS . '/eo_debug_' . $orders_id . '.log';
         }
+
+        // -----
+        // Load the order-information currently recorded for the order.
+        //
+        $this->order = new \order($this->orders_id);
+        $this->eoLog("queryOrder, initial\n" . json_encode($this->order, JSON_PRETTY_PRINT));
+
+        // -----
+        // Save the current value for the session-stored currency (in case the order was
+        // placed in a different one).  The value will be restored EO's initialization routine
+        // is run.
+        $_SESSION['eo_saved_currency'] = $_SESSION['currency'] ?? false;
+        $_SESSION['currency'] = $this->order->info['currency'];
     }
 
-    public function eoLog($message, $message_type = 'general')
+    public function isOrderFound(): bool
     {
-        if ($this->eo_action_level !== 0) {
-            if (!(EO_DEBUG_TAXES_ONLY === 'true' && $message_type !== 'tax')) {
-                error_log($message . PHP_EOL, 3, $this->logfile_name);
+        return !empty($this->order->info);
+    }
+
+    // -----
+    // Called close to the start of the main edit_orders page processing. For
+    // EO versions prior to 5.0.0, the majority of these checks were in
+    // the eo_checks_and_warnings function.
+    //
+    public function checkEnvironment(): void
+    {
+        global $db, $messageStack;
+
+        // -----
+        // Ensure that some 'base' hidden configuration elements are present; they've been removed at times
+        // by plugins' uninstall SQL scripts.
+        //
+        $reload = (!defined('PRODUCTS_OPTIONS_TYPE_SELECT') || !defined('UPLOAD_PREFIX') || !defined('TEXT_PREFIX'));
+        if ($reload === true) {
+            $db->Execute(
+                "INSERT IGNORE INTO " . TABLE_CONFIGURATION . "
+                    (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, date_added)
+                 VALUES
+                    ('Product option type Select', 'PRODUCTS_OPTIONS_TYPE_SELECT', '0', 'The number representing the Select type of product option.', 6, now()),
+                    ('Upload prefix', 'UPLOAD_PREFIX', 'upload_', 'Prefix used to differentiate between upload options and other options', 6, now()),
+                    ('Text prefix', 'TEXT_PREFIX', 'txt_', 'Prefix used to differentiate between text option values and other options', 6, now())"
+            );
+            zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params()));
+        }
+
+        // -----
+        // Check to be sure that the admin's zen_add_tax function has been updated to remove
+        // the unwanted pre-rounding that affects EO's calculations, denying
+        // the usage of Edit Orders until the issue is resolved.
+        //
+        $value = zen_add_tax(5.1111, 0);
+        if ($value != 5.1111) {
+            $messageStack->add_session(ERROR_ZEN_ADD_TAX_ROUNDING, 'error');
+            zen_redirect(zen_href_link(FILENAME_ORDERS, zen_get_all_get_params()));
+        }
+
+        // -----
+        // The site's display of prices with/without tax must be the same on the
+        // admin and storefront; otherwise, any update to the order's information
+        // would be suspect.
+        //
+        if (DISPLAY_PRICE_WITH_TAX_ADMIN !== DISPLAY_PRICE_WITH_TAX) {
+            $messageStack->add_session(ERROR_DISPLAY_PRICE_WITH_TAX, 'error');
+        }
+
+        // -----
+        // Issue a notification, allowing other add-ons to add any warnings they might have.
+        //
+        $this->notify('EDIT_ORDERS_CHECKS_AND_WARNINGS');
+
+        // Check for the installation of "Absolute's Product Attribute Grid"
+        if (!defined('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID')) {
+            if (defined('CONFIG_ATTRIBUTE_OPTION_GRID_INSTALLED')) {
+                define('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID', '23997');
+                $messageStack->add(WARNING_ATTRIBUTE_OPTION_GRID, 'warning');
+            } else {
+                define('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID', '-1');
             }
+        }
+
+        // Check for the installation of "Potteryhouse's/mc12345678's Stock By Attributes"
+        zen_define_default('PRODUCTS_OPTIONS_TYPE_SELECT_SBA', '-1');
+
+        // -----
+        // Check for the installation of lat9's "Attribute Image Swapper".
+        //
+        zen_define_default('PRODUCTS_OPTIONS_TYPE_IMAGE_SWATCH', -1);
+    }
+
+    public function getOrder(): \order
+    {
+        return $this->order;
+    }
+
+    public function queryOrder(): bool
+    {
+        // -----
+        // The base order-class' 'query' method processing sets the order's delivery address to
+        // (bool)false if the shipping module is 'storepickup'. If that's the case,
+        // restore the delivery-address information from the database.
+        //
+        if ($this->order->delivery === false) {
+            global $db;
+            $delivery_address = $db->Execute(
+                "SELECT delivery_name AS `name`, delivery_company AS `company`, delivery_street_address AS street_address,
+                        delivery_suburb AS suburb, delivery_city AS city, delivery_postcode AS postcode, delivery_state as `state`,
+                        delivery_country AS country, delivery_address_format_id AS format_id
+                   FROM " . TABLE_ORDERS . "
+                  WHERE orders_id = " . $this->orders_id . "
+                  LIMIT 1"
+            );
+            if ($delivery_address->EOF) {
+                $this->order->delivery = [];
+            } else {
+                $this->order->delivery = $delivery_address->fields;
+            }
+        }
+
+        // -----
+        // While the addresses in the storefront instance of an 'order' object, created by the
+        // order-class' 'cart' method, contain 'state_code', 'zone_id' and 'country_id' elements,
+        // the 'query' method doesn't.
+        //
+        $this->order->customer = $this->orderAddressFixup($this->order->customer);
+        $this->order->delivery = $this->orderAddressFixup($this->order->delivery);
+        $this->order->billing = $this->orderAddressFixup($this->order->billing);
+
+        // -----
+        // The storefront order's processing contains various pricing and flags in a float/int
+        // format, while the order's query from the database has these as their string
+        // representation.
+        //
+        // There are also some fields in a storefront order's 'info' array that aren't present
+        // in an order's query.
+        //
+        $this->addOrConvertOrderFields();
+
+        // -----
+        // Set the content type for this order.
+        //
+        $this->setContentType();
+
+        // -----
+        // An order's query (as pulled from the database) doesn't match the storefront
+        // signature when created from the cart.  Specifically, the order-object's tax_groups
+        // aren't filled in for either the info nor products elements.
+        //
+        $tax_groups_created = $this->createOrderTaxGroups();
+
+        $this->eoLog("queryOrder, on exit\n" . json_encode($this->order, JSON_PRETTY_PRINT));
+
+        return $tax_groups_created;
+    }
+
+    // -----
+    // For a given order-address, add the elements to the order that are
+    // present during checkout processing, but not when the order is queried.
+    //
+    protected function orderAddressFixup(array $address_info): array
+    {
+        if (empty($address_info)) {
+            return [];
+        }
+
+        $country_id = (int)$address_info['country']['id'];
+        $address_info['country_id'] = $country_id;
+
+        global $db;
+        $state = zen_db_input($address_info['state']);
+        $zone_query = $db->Execute(
+            "SELECT * 
+               FROM " . TABLE_ZONES . " 
+              WHERE zone_country_id = $country_id 
+                AND (zone_name = '$state' OR zone_code = '$state')
+              LIMIT 1"
+        );
+        if ($zone_query->EOF) {
+            $address_info['state_code'] = '';
+            $address_info['zone_id'] = '0';
+        } else {
+            $address_info['state_code'] = $zone_query->fields['zone_code'];
+            $address_info['zone_id'] = $zone_query->fields['zone_id'];
+        }
+
+        $address_info['format_id'] = (int)$address_info['format_id'];
+
+        return $address_info;
+    }
+
+    // -----
+    // Add fields that aren't present in a queried order and convert others
+    // to align with their value-type during the checkout processing.
+    //
+    protected function addOrConvertOrderFields(): void
+    {
+        // -----
+        // Add the 'info' array elements that aren't present in an order's query.
+        //
+        $this->order->info['subtotal'] = $this->getOrderTotalValue('ot_subtotal');
+
+        // -----
+        // Update various pricing elements within the order's info array
+        // to match a storefront cart-created order's layout.
+        //
+        $this->order->info['total'] = (float)$this->order->info['total'];
+        $this->order->info['tax'] = (float)$this->order->info['tax'];
+
+        // -----
+        // Update various fields within the order's products' array to match the
+        // format used in the storefront.
+        //
+        foreach ($this->order->products as &$next_product) {
+            $next_product['qty'] = $this->convertToIntOrFloat($next_product['qty']);
+            $next_product['tax'] = (float)$next_product['tax'];
+            $next_product['final_price'] = (float)$next_product['final_price'];
+            $next_product['onetime_charges'] = $this->convertToIntOrFloat($next_product['onetime_charges']);
+            $next_product['weight'] = $this->convertToIntOrFloat($next_product['products_weight']);
+            $next_product['products_weight'] = (float)$next_product['products_weight'];
+            $next_product['products_virtual'] = (int)$next_product['products_virtual'];
+            $next_product['product_is_always_free_shipping'] = (int)$next_product['product_is_always_free_shipping'];
+            $next_product['products_quantity_order_min'] = (float)$next_product['products_quantity_order_min'];
+            $next_product['products_quantity_order_units'] = (float)$next_product['products_quantity_order_units'];
+            $next_product['products_quantity_order_max'] = (float)$next_product['products_quantity_order_max'];
+            $next_product['products_quantity_mixed'] = (int)$next_product['products_quantity_mixed'];
+            $next_product['products_mixed_discount_quantity'] = (int)$next_product['products_mixed_discount_quantity'];
+
+            if (!isset($next_product['attributes'])) {
+                continue;
+            }
+
+            for ($i = 0, $n = count($next_product['attributes']); $i < $n; $i++) {
+                $next_product['attributes'][$i]['option_id'] = (int)$next_product['attributes'][$i]['option_id'];
+            }
+        }
+    }
+
+    // -----
+    // Retrieve an order-total's value for the order.
+    //
+    protected function getOrderTotalValue(string $class): int|float|null
+    {
+        foreach ($this->order->totals as $next_total) {
+            if ($next_total['class'] === $class) {
+                return $this->convertToIntOrFloat($next_total['value']);
+            }
+        }
+        return null;
+    }
+
+    // -----
+    // Convert a string value to either an int or float, depending on
+    // the presence of a '.' in the value.
+    //
+    protected function convertToIntOrFloat(string $value): int|float
+    {
+        if (strpos($value, '.') === false) {
+            return (int)$value;
+        }
+        return (float)$value;
+    }
+
+    // -----
+    // Set the order's 'content_type', checking whether each product is virtual, is
+    // a gift-certificate or includes a downloadable product.
+    //
+    protected function setContentType(): void
+    {
+        global $db;
+
+        $virtual_products = 0;
+        foreach ($this->order->products as $current_product) {
+            $products_id = (int)$current_product['id'];
+            if ($current_product['products_virtual'] === 1 || strpos($current_product['model'], 'GIFT') === 0) {
+                $virtual_products++;
+            } elseif (isset($current_product['attributes'])) {
+                foreach ($current_product['attributes'] as $current_attribute) {
+                    $download_check = $db->Execute(
+                        "SELECT opa.products_id
+                           FROM " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . " opa
+                                INNER JOIN " . TABLE_ORDERS_PRODUCTS_DOWNLOAD . " opd
+                                    ON opd.products_attributes_id = opa.orders_products_attributes_id
+                          WHERE opa.orders_products_id = $products_id
+                            AND opa.orders_id = " . (int)$this->orders_id . "
+                            AND opa.products_options_values_id = " . (int)$current_attribute['value_id'] . "
+                            AND opa.products_options_id = " . (int)$current_attribute['option_id'] . "
+                          LIMIT 1"
+                    );
+                    $this->eoLog("\tChecking whether the product's attribute is a download, option_id = " . $current_attribute['option_id'] . ", value_id = " . $current_attribute['value_id'] . ": (" . $download_check->EOF . ")");
+                    if (!$download_check->EOF) {
+                        $virtual_products++;
+                        break;  //-Out of foreach attributes loop
+                    }
+                }
+            }
+        }
+
+        $product_count = count($this->order->products);
+        $this->eoLog("\nsetContentType: Order contains $product_count unique products, $virtual_products of those are virtual");
+
+        if ($virtual_products === 0) {
+            $this->order->content_type = 'physical';
+        } elseif ($virtual_products === $product_count) {
+            $this->order->content_type = 'virtual';
+        } else {
+            $this->order->content_type = 'mixed';
+        }
+    }
+
+    // -----
+    // Attempt to recreate the order's tax-groups, based on the information
+    // stored in the order's 'ot_tax' records.
+    //
+    protected function createOrderTaxGroups(): bool
+    {
+        // -----
+        // First, traverse the recorded 'ot_tax' entries for the order,
+        // attempting to reconstruct the storefront 'tax_groups' array.
+        //
+        if ($this->addTaxGroups() === false) {
+            return false;
+        }
+
+        // -----
+        // Next, determine which (if any) of the tax_group entries is associated
+        // with the order's shipping.
+        //
+        if ($this->addShippingTaxGroup() === false) {
+            return false;
+        }
+
+        // -----
+        // Finally, traverse the products in the order, adding each product's cost to
+        // its associated tax-groups.
+        //
+        foreach ($this->order->products as $product) {
+            $tax_description = $this->findTaxGroupNameFromValue($product['tax']);
+            if ($tax_description === '') {
+                $messageStack->add_session(sprintf(ERROR_NO_PRODUCT_TAX_DESCRIPTION, zen_output_string_protected($product['name']), (string)$product['tax']), 'error');
+                return false;
+            }
+
+            $this->addCostToTaxGroup($tax_description, ($product['final_price'] * $product['qty']) + $product['onetime_charges']);
+        }
+        return true;
+    }
+
+    // -----
+    // Add the tax_groups and tax_subtotals arrays to the order. If the tax groups
+    // for the order can't be reliably reconstructed, (bool)false is returned.
+    //
+    // Notes:
+    //
+    // 1. If an order includes multiple tax-rates, the order's ot_tax can be recorded
+    //    as a single entry (each description separated by ' + ') or as multiple entries,
+    //    depending on the setting for 'Configuration :: My Store :: Show Split Tax Lines'.
+    // 2. An order might not have any tax recorded, depending on the order's taxation and the
+    //    setting for 'Configuration :: My Store :: Sales Tax Display Status'.
+    // 3. If an order has multiple tax-groups recorded, each **must** include a textual indication
+    //    of the associated tax-rate, e.g. FL Sales Tax (7%).
+    //
+    protected function addTaxGroups(): bool
+    {
+        $this->order->info['tax_groups'] = [];
+        $this->order->info['tax_subtotals'] = [];
+
+        foreach ($this->order->totals as $next_total) {
+            if ($next_total['class'] !== 'ot_tax') {
+                continue;
+            }
+
+            $tax_location_names = explode(' + ', $next_total['title']);
+            foreach ($tax_location_names as $next_name) {
+                $next_name = rtrim($next_name, ':');
+                $this->order->info['tax_groups'][$next_name] = 0.0;
+                if (preg_match('/(\d+\.?\d*%)/', $next_name, $matches) === 1) {
+                    $tax_rate = $this->convertToIntOrFloat(rtrim($matches[1], '%'));
+                }
+                $this->order->info['tax_subtotals'][$next_name] = [
+                    'tax_rate' => $tax_rate ?? false,
+                    'subtotal' => 0.0,
+                ];
+            }
+        }
+        
+        // -----
+        // If no tax was recorded for the order or if a single tax-type was recorded,
+        // the taxes are processable and no further action needs to be done here.
+        //
+        if (count($this->order->info['tax_groups']) <= 1) {
+            return true;
+        }
+
+        // -----
+        // Create combinations of the now-exploded tax-groups, inspired by
+        // https://www.oreilly.com/library/view/php-cookbook/1565926811/ch04s25.html
+        //
+        $combinations = [[]];
+        foreach (array_keys($this->order->info['tax_subtotals']) as $next_tax_group) {
+            foreach ($combinations as $combination) {
+                array_push($combinations, array_merge([$element], $combination));
+            }
+        }
+
+        global $messageStack;
+        foreach ($combinations as $tax_groups) {
+            if (count($tax_groups) <= 1) {
+                continue;
+            }
+            $tax_subtotal = [
+                'tax_rate' => 0,
+                'subtotal' => 0.0,
+                'parent_groups' => [],
+            ];
+            foreach ($tax_groups as $next_tax_group) {
+                if ($this->order->info['tax_subtotals'][$next_tax_group]['tax_rate'] === false) {
+                    $messageStack->add_session(ERROR_CANT_DETERMINE_TAX_RATES, 'error');
+                    return false;
+                }
+                $tax_subtotal['tax_rate'] += $this->order->info['tax_subtotals'][$next_tax_group]['tax_rate'];
+                $tax_subtotal['parent_groups'][$next_tax_group] = $this->order->info['tax_subtotals'][$next_tax_group];
+            }
+            $tax_groups_combined = implode(' + ', $tax_groups);
+            $this->order->info['tax_subtotals'][$tax_groups_combined] = $tax_subtotal;
+        }
+
+        return true;
+    }
+
+    // -----
+    // Attempts to reconstruct the order's shipping cost and tax-group.
+    //
+    // Side-effects:
+    //
+    // - Sets orderHasShipping, depending on whether/not an ot_shipping order-total is present.
+    // - Sets the order's shipping_cost, shipping_tax and shipping_tax_description.
+    //
+    protected function addShippingTaxGroup(): bool
+    {
+        global $messageStack;
+
+        // -----
+        // Determine the shipping cost associated with the order. If the order has no shipping
+        // component, just note that fact and indicate that, thus far, the order's OK.
+        //
+        $shipping_cost = $this->getOrderTotalValue('ot_shipping');
+        $this->orderHasShipping = ($shipping_cost !== null);
+        if ($shipping_cost === null) {
+            return true;
+        }
+
+        // -----
+        // For the order to be reconstructed, its shipping_tax_rate **must** have been recorded
+        // when the order was created.
+        //
+        if ($this->order->info['shipping_tax_rate'] === null) {
+            $messageStack->add_session(ERROR_SHIPPING_TAX_RATE_MISSING, 'error');
+            return false;
+        }
+
+        $shipping_tax_rate = $this->convertToIntOrFloat($this->order->info['shipping_tax_rate']);
+        $shipping_tax_description = $this->findTaxGroupNameFromValue($shipping_tax_rate);
+        if ($shipping_tax_description === '') {
+            $messageStack->add_session(sprintf(ERROR_NO_SHIPPING_TAX_DESCRIPTION, $this->order->info['shipping_tax_rate']), 'error');
+            return false;
+        }
+
+        $this->order->info['shipping_tax_rate'] = $shipping_tax_rate;
+        $this->order->info['shipping_cost'] = $shipping_cost;
+        $this->order->info['shipping_tax'] = zen_calculate_tax($shipping_cost, $shipping_tax_rate);
+        $this->order->info['shipping_tax_description'] = $shipping_tax_description;
+
+        $this->addCostToTaxGroup($shipping_tax_description, $shipping_cost);
+
+        return true;
+    }
+    protected function findTaxGroupNameFromValue(int|float $value): string
+    {
+        $num_tax_groups = count($this->order->info['tax_subtotals']);
+        foreach ($this->order->info['tax_subtotals'] as $group_name => $tax_info) {
+            if ($num_tax_groups === 1 || ($tax_info['tax_rate'] !== false && $tax_info['tax_rate'] == $value)) {
+                return $group_name;
+            }
+        }
+        return '';
+    }
+    protected function addCostToTaxGroup(string $tax_group_description, int|float $value): void
+    {
+        $this->order->info['tax_subtotals'][$tax_group_description]['subtotal'] += $value;
+
+        if (!isset($this->order->info['tax_subtotals'][$tax_group_description]['parent_groups'])) {
+            return;
+        }
+
+        foreach ($this->order->info['tax_subtotals'][$tax_group_description]['parent_groups'] as $group_name => $subtotals) {
+            $parent_group_shipping_tax = zen_add_tax($value, $sub_totals['tax_rate']);
+            $this->order->info['tax_subtotals'][$tax_group_description]['parent_groups'][$group_name]['subtotal'] += $parent_group_shipping_tax;
         }
     }
 
@@ -84,113 +545,35 @@ class editOrders extends base
         return $output_string;
     }
 
-    public function getZoneId(int $country_id, string $zone_name): int
-    {
-        global $db;
-
-        $zone_id_query = $db->Execute(
-            "SELECT * 
-               FROM " . TABLE_ZONES . " 
-              WHERE zone_country_id = $country_id 
-                AND zone_name = '". zen_db_input($zone_name) . "'
-              LIMIT 1"
-        );
-        return ($zone_id_query->EOF) ? 0 : (int)$zone_id_query->fields['zone_id'];
-    }
-
-    public function getCountryId(string $country_name): int
-    {
-        global $db;
-
-        $country_info = $db->Execute(
-            "SELECT *
-               FROM " . TABLE_COUNTRIES . "
-              WHERE countries_name = '" . zen_db_input($country_name) . "'
-              LIMIT 1"
-        );
-        return ($country_info->EOF) ? 0 : (int)$country_info->fields['countries_id'];
-    }
-
     public function getOrderInfo($action)
     {
-        // -----
-        // Note: The order-object is declared global, allowing the various functions to
-        // have access to the just-created information.
-        //
-        global $order;
-        $oID = $this->orders_id;
-
-        // -----
-        // Retrieve the formatted order, via the storefront order.php class.
-        //
-        $order = new order($oID);
-        $this->eoLog("getOrderInfo($action), on entry:" .  $this->eoFormatTaxInfoForLog(true), 'tax');
-
-        // -----
-        // Add some required customer information for tax calculation.
-        // The next method has been modified to add required info to the
-        // session and global variables.
-        //
-        zen_get_tax_locations();
-
         // -----
         // Cleanup tax_groups in the order (broken code in order.php)
         // Shipping module will automatically add tax if needed.
         //
-        $order->info['tax_groups'] = [];
-        foreach ($order->products as $product) {
+        $this->order->info['tax_groups'] = [];
+        foreach ($this->order->products as $product) {
             $this->getProductTaxes($product);
         }
 
         // -----
         // Correctly add the running subtotal (broken code in older versions of order.php).
         //
-        if (!isset($order->info['subtotal'])) {
-            $query = $GLOBALS['db']->Execute(
-                "SELECT `value` 
-                   FROM " . TABLE_ORDERS_TOTAL . "
-                  WHERE orders_id = $oID
-                    AND `class` = 'ot_subtotal'
-                  LIMIT 1"
-            );
-            if (!$query->EOF) {
-                $order->info['subtotal'] = $this->eoRoundCurrencyValue($query->fields['value']);
+        if (!isset($this->order->info['subtotal'])) {
+            foreach ($this->order->totals as $next_total) {
+                if ($next_total['class'] === 'ot_subtotal') {
+                    $this->order->info['subtotal'] = $next_total['value'];
+                    break;
+                }
             }
         }
-
-        // Convert country portion of addresses to same format used in catalog side
-        if (isset($order->customer['country'])) {
-            $country = eo_get_country($order->customer['country']);
-            if ($country !== null) {
-                $order->customer['country'] = $country;
-                $order->customer['country_id'] = $country['id'];
-                $order->customer['zone_id'] = $this->getZoneId((int)$order->customer['country']['id'], $order->customer['state']);
-            }
-        }
-        if (is_array($order->delivery) && isset($order->delivery['country'])) { //-20150811-lat9-Add is_array since virtual products don't have a delivery address
-            $country = eo_get_country($order->delivery['country']);
-            if ($country !== null) {
-                $order->delivery['country'] = $country;
-                $order->delivery['country_id'] = $country['id'];
-                $order->delivery['zone_id'] = $this->getZoneId((int)$order->delivery['country']['id'], $order->delivery['state']);
-            }
-        }
-        if (isset($order->billing['country'])) {
-            $country = eo_get_country($order->billing['country']);
-            if ($country !== null) {
-                $order->billing['country'] = $country;
-                $order->billing['country_id'] = $country['id'];
-                $order->billing['zone_id'] = $this->getZoneId((int)$order->billing['country']['id'], $order->billing['state']);
-            }
-        }
-        unset($country);
 
         // -----
         // Some order-totals (notably ot_cod_fee) rely on the payment-module code being present in the session ...
         //
-        $_SESSION['payment'] = $order->info['payment_module_code'];
+        $_SESSION['payment'] = $this->order->info['payment_module_code'];
  
-        $this->eoLog("getOrderInfo($action), on exit:" . PHP_EOL . $this->eoFormatTaxInfoForLog(), 'tax');
+        $this->eoLog("getOrderInfo($action), on exit:\n" . $this->eoFormatTaxInfoForLog(), 'tax');
         return $order;
     }
 
@@ -236,14 +619,14 @@ class editOrders extends base
               LIMIT 1"
         );
         if (!$query->EOF) {
-            $order->info['shipping_cost'] = $query->fields['value'];
+            $this->order->info['shipping_cost'] = $query->fields['value'];
             $_SESSION['shipping'] = [
                 'title' => $order->info['shipping_method'],
                 'id' => $order->info['shipping_module_code'] . '_',
                 'cost' => $order->info['shipping_cost']
             ];
         } else {
-            $order->info['shipping_cost'] = 0;
+            $this->order->info['shipping_cost'] = 0;
             $_SESSION['shipping'] = [
                 'title' => EO_FREE_SHIPPING,
                 'id' => 'free_free',
@@ -288,7 +671,7 @@ class editOrders extends base
         return $order;
     }
 
-    protected function initializeOrderShippingTax($oID, $action)
+    protected function initializeOrderShippingTax($oID, $action): void
     {
         global $order;
 
@@ -307,7 +690,8 @@ class editOrders extends base
         }
         switch ($action) {
             case 'update_order':
-                $this->shipping_tax_rate = is_numeric($_POST['shipping_tax']) ? $_POST['shipping_tax'] : 0;
+                $shipping_tax = $_POST['shipping_tax'] ?? 0;
+                $this->shipping_tax_rate = is_numeric($shipping_tax) ? $shipping_tax : 0;
                 $order->info['shipping_tax'] = $this->calculateOrderShippingTax(true);
                 break;
 
@@ -334,7 +718,7 @@ class editOrders extends base
     // Determine the tax-rate and associated tax for the order's shipping, giving a watching
     // observer the opportunity to override the calculations.
     //
-    protected function calculateOrderShippingTax($use_saved_tax_rate = false)
+    protected function calculateOrderShippingTax(bool $use_saved_tax_rate = false)
     {
         global $order;
 
@@ -362,7 +746,7 @@ class editOrders extends base
             }
         }
         $this->shipping_tax_rate = $tax_rate;
-        $shipping_tax = $this->eoRoundCurrencyValue(zen_calculate_tax($order->info['shipping_cost'], $tax_rate));
+        $shipping_tax = $this->eoRoundCurrencyValue(zen_calculate_tax((float)$order->info['shipping_cost'], (float)$tax_rate));
         $this->eoLog("calculateOrderShippingTax returning $shipping_tax, rate = " . var_export($tax_rate, true) . ", cost = {$order->info['shipping_cost']}.");
         return $shipping_tax;
     }
@@ -371,7 +755,7 @@ class editOrders extends base
     // Invoked by EO's admin observer-class to override the tax to be applied to any
     // shipping cost, as offered by the ot_shipping module's processing.
     //
-    public function eoUpdateOrderShippingTax($tax_updated, &$shipping_tax_rate, &$shipping_tax_description)
+    public function eoUpdateOrderShippingTax(bool $tax_updated, &$shipping_tax_rate, &$shipping_tax_description): void
     {
         if ($tax_updated === false) {
             $shipping_tax_rate = $this->shipping_tax_rate ?? 0;
@@ -411,151 +795,43 @@ class editOrders extends base
         return (empty($tax_rate)) ? 0 : $tax_rate;
     }
 
-    public function getProductTaxes($product, $shown_price = -1, $add = true)
+    public function eoFormatTaxInfoForLog(bool $include_caller = false): string
     {
-        global $order;
+        $log_info = "\n";
 
-        $products_tax = $product['tax'];
-        $product_final_price = $product['final_price'];
-        $product_onetime = $product['onetime_charges'];
-        $product_qty = $product['qty'];
-        $shown_price = zen_add_tax(($product_final_price * $product_qty) + $product_onetime, $products_tax);
-
-        $query = false;
-        if (isset($product['tax_description'])) {
-            $products_tax_description = $product['tax_description'];
-        } else {
-            $query = $GLOBALS['db']->Execute(
-                "SELECT products_tax_class_id 
-                   FROM " . TABLE_PRODUCTS . "
-                  WHERE products_id = " . (int)$product['id'] . "
-                  LIMIT 1"
-            );
-            if (!$query->EOF) {
-                $products_tax_description = zen_get_tax_description($query->fields['products_tax_class_id']);
-            } else {
-                $products_tax_description = TEXT_UNKNOWN_TAX_RATE . ' (' . zen_display_tax_value($products_tax) . '%)';
-            }
-        }
-
-        // -----
-        // Save the association of the current product's tax-rate to its description for possible use by the
-        // eoUpdateOrderShippingTax method.  If the order's shipping tax-rate is the same as a product's tax-rate,
-        // the shipping tax value will be added to that product-based tax description.
-        //
-        $this->product_tax_descriptions[(string)$this->eoRoundCurrencyValue($products_tax)] = $products_tax_description;
-
-        // -----
-        // Product's description not needed for the log.
-        //
-        unset($product['products_description']);
-        $this->eoLog(PHP_EOL . "getProductTaxes($products_tax_description)\n" . (($query === false) ? 'false' : (($query->EOF) ? 'EOF' : json_encode($query->fields))) . json_encode($product), 'tax');
-
-        $totalTaxAdd = 0;
-        if (!empty($products_tax_description)) {
-            $taxAdd = 0;
-
-            if (DISPLAY_PRICE_WITH_TAX === 'true') {
-                $taxAdd = $this->eoRoundCurrencyValue($shown_price / (100 + $products_tax) * $products_tax);
-            } else {
-                $taxAdd = $this->eoRoundCurrencyValue(zen_calculate_tax($this->eoRoundCurrencyValue(($product_final_price * $product_qty) + $product_onetime), $products_tax));
-            }
-            $taxAdd = $this->eoRoundCurrencyValue($taxAdd);
-            if (isset($order->info['tax_groups'][$products_tax_description])) {
-                if ($add) {
-                    $order->info['tax_groups'][$products_tax_description] += $taxAdd;
-                } else {
-                    $order->info['tax_groups'][$products_tax_description] -= $taxAdd;
-                }
-            } elseif ($add) {
-                $order->info['tax_groups'][$products_tax_description] = $taxAdd;
-            }
-            $totalTaxAdd += $taxAdd;
-            unset($taxAdd);
-        }
-        $this->eoLog("getProductTaxes, returning $totalTaxAdd." . PHP_EOL);
-        return $totalTaxAdd;
-    }
-
-    public function eoFormatTaxInfoForLog($include_caller = false)
-    {
-        global $order;
-        $log_info = PHP_EOL;
-
-        if ($include_caller) {
+        if ($include_caller === true) {
             $trace = debug_backtrace();
-            $log_info = ' Called by ' . $trace[1]['file'] . ' on line #' . $trace[1]['line'] . PHP_EOL;
+            $log_info = ' Called by ' . $trace[1]['file'] . ' on line #' . $trace[1]['line'] . "\n";
         }
 
-        if (!is_object($order)) {
-            $log_info .= "\t" . 'Order-object is not set.' . PHP_EOL;
-        } else {
-            $log_info .= "\t" .
-                'Subtotal: ' . ($order->info['subtotal'] ?? '(not set)') . ', ' .
-                'Shipping: ' . ($order->info['shipping_cost'] ?? '(not set)') . ', ' .
-                'Shipping Tax-Rate: ' . ($this->shipping_tax_rate ?? ' (not set)') . ', ' .
-                'Shipping Tax-Description: ' . ($this->shipping_tax_description ?? ' (not set)') . ', ' .
-                'Shipping Tax: ' . ($order->info['shipping_tax'] ?? '(not set)') . ', ' .
-                'Tax: ' . $order->info['tax'] . ', ' .
-                'Total: ' . $order->info['total'] . ', ' .
-                'Tax Groups: ' . (!empty($order->info['tax_groups']) ? json_encode($order->info['tax_groups']) : 'None') . PHP_EOL;
+        $log_info .= "\t" .
+            'Subtotal: ' . ($this->order->info['subtotal'] ?? '(not set)') . ', ' .
+            'Shipping: ' . ($this->order->info['shipping_cost'] ?? '(not set)') . ', ' .
+            'Shipping Tax-Rate: ' . ($this->order->info['shipping_tax_rate'] ?? ' (not set)') . ', ' .
+            'Shipping Tax-Description: ' . ($this->shipping_tax_description ?? ' (not set)') . ', ' .
+            'Shipping Tax: ' . ($this->order->info['shipping_tax'] ?? '(not set)') . ', ' .
+            'Tax: ' . $this->order->info['tax'] . ', ' .
+            'Total: ' . $this->order->info['total'] . ', ' .
+            'Tax Groups: ' . (!empty($this->order->info['tax_groups']) ? json_encode($this->order->info['tax_groups'], JSON_PRETTY_PRINT) : 'None') . "\n";
 
-            $log_info .= "\t" .
-                '$_SESSION[\'shipping\']: ' . ((isset($_SESSION['shipping'])) ? json_encode($_SESSION['shipping'], true) : '(not set)') . PHP_EOL;
+        $log_info .= "\t" .
+            '$_SESSION[\'shipping\']: ' . ((isset($_SESSION['shipping'])) ? json_encode($_SESSION['shipping'], JSON_PRETTY_PRINT) : '(not set)') . "\n";
 
-            $log_info .= $this->eoFormatOrderTotalsForLog($order);
-        }
+        $log_info .= $this->eoFormatOrderTotalsForLog();
+
         return $log_info;
     }
 
-    public function eoFormatOrderTotalsForLog($order, $title = '')
+    public function eoFormatOrderTotalsForLog(string $title = ''): string
     {
-        $log_info = ($title === '') ? (PHP_EOL . 'Order Totals' . PHP_EOL) : $title;
-        foreach ($order->totals as $current_total) {
-            $log_info .= "\t\t" . $current_total['class'] . '. Text: ' . $current_total['text'] . ', Value: ' . ($current_total['value'] ?? '(not set)') . PHP_EOL;
-        }
+        $log_info = ($title === '') ? ("\nOrder Totals\n") : $title;
+        $log_info .= json_encode($this->order->totals, JSON_PRETTY_PRINT);
         return $log_info;
     }
 
-    public function eoOrderIsVirtual($order)
+    public function eoOrderIsVirtual(): bool
     {
-        $virtual_products = 0;
-        foreach ($order->products as $current_product) {
-            $products_id = (int)$current_product['id'];
-            $virtual_check = $GLOBALS['db']->Execute(
-                "SELECT products_virtual, products_model
-                   FROM " . TABLE_PRODUCTS . " 
-                  WHERE products_id = $products_id 
-                  LIMIT 1"
-            );
-            if (!$virtual_check->EOF) {
-                if ($virtual_check->fields['products_virtual'] === '1' || strpos($virtual_check->fields['products_model'], 'GIFT') === 0) {
-                    $virtual_products++;
-                } elseif (isset($current_product['attributes'])) {
-                    foreach ($current_product['attributes'] as $current_attribute) {
-                        $download_check = $GLOBALS['db']->Execute(
-                            "SELECT pa.products_id FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
-                                    INNER JOIN " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
-                                        ON pad.products_attributes_id = pa.products_attributes_id
-                              WHERE pa.products_id = $products_id
-                                AND pa.options_values_id = " . (int)$current_attribute['value_id'] . "
-                                AND pa.options_id = " . (int)$current_attribute['option_id'] . "
-                              LIMIT 1"
-                        );
-                        $this->eoLog("\tChecking whether the product's attribute is a download, option_id = " . $current_attribute['option_id'] . ", value_id = " . $current_attribute['value_id'] . ": (" . $download_check->EOF . ")");
-                        if (!$download_check->EOF) {
-                            $virtual_products++;
-                            break;  //-Out of foreach attributes loop
-                        }
-                    }
-                }
-            }
-        }
-
-        $product_count = count($order->products);
-        $this->eoLog(PHP_EOL . "Checking order for virtual status.  Order contains $product_count unique products, $virtual_products of those are virtual");
-        
-        return ($virtual_products === $product_count);
+        return ($this->order->content_type === 'virtual');
     }
 
     // -----
@@ -563,7 +839,7 @@ class editOrders extends base
     // the shipping tax.  This function, called when an EO order is created, backs that tax quantity out of the shipping
     // cost since the order-totals processing will re-calculate that value.
     //
-    public function removeTaxFromShippingCost(&$order)
+    public function removeTaxFromShippingCost(&$order): void
     {
         $shipping_tax_processed = false;
         $this->notify('NOTIFY_EO_REMOVE_SHIPPING_TAX', [], $order, $shipping_tax_processed);
@@ -596,13 +872,13 @@ class editOrders extends base
 
     public function eoFormatCurrencyValue($value)
     {
-        return $GLOBALS['currencies']->format($this->eoRoundCurrencyValue($value), true, $this->currency, $this->currency_value);
+        return $GLOBALS['currencies']->format($this->eoRoundCurrencyValue($value), true, $this->info['currency'], $this->info['currency_value']);
     }
 
     // -----
     // Format an array for output to the debug log.
     //
-    public function eoFormatArray($a)
+    public function eoFormatArray(array $a): string
     {
         return json_encode($a, JSON_PRETTY_PRINT);
     }
@@ -632,7 +908,7 @@ class editOrders extends base
     // with the order into the session, so that the coupon is processed during that
     // addition.
     //
-    public function eoSetCouponForOrder($oID)
+    public function eoSetCouponForOrder($oID): void
     {
         unset($_SESSION['cc_id']);
         $oID = (int)$oID;
@@ -653,7 +929,7 @@ class editOrders extends base
     // -----
     // This method creates a hidden record in the order's status history.
     //
-    public function eoRecordStatusHistory($oID, $message)
+    public function eoRecordStatusHistory($oID, $message): void
     {
         zen_update_orders_history($oID, $message);
     }
@@ -668,7 +944,7 @@ class editOrders extends base
     // -----
     // This method determines the specified order-total's defined sort-order.
     //
-    public function eoGetOrderTotalSortOrder(string $order_total_code)
+    public function eoGetOrderTotalSortOrder(string $order_total_code): int
     {
         global $languageLoader;
 
@@ -678,7 +954,7 @@ class editOrders extends base
         if ($this->loadModuleLanguageFile($module_file, 'order_total') === true) {
             require_once DIR_FS_CATALOG_MODULES . 'order_total/' . $module_file;
             $order_total = new $order_total_code();
-            $sort_order = $order_total->sort_order;
+            $sort_order = (int)$order_total->sort_order;
         }
 
         if ($sort_order === false) {
@@ -689,5 +965,14 @@ class editOrders extends base
             $this->ot_sort_default++;
         }
         return $sort_order;
+    }
+
+    public function eoLog($message, $message_type = 'general')
+    {
+        if ($this->eo_action_level !== 0) {
+            if (!(EO_DEBUG_TAXES_ONLY === 'true' && $message_type !== 'tax')) {
+                error_log("$message\n", 3, $this->logfile_name);
+            }
+        }
     }
 }

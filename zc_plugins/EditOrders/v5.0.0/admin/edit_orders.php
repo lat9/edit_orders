@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified v4.7.0
+//-Last modified v5.0.0
 //
 require 'includes/application_top.php';
 
@@ -12,22 +12,16 @@ require 'includes/application_top.php';
 // If the to-be-edited order's ID isn't supplied, quietly redirect back to the
 // admin's orders-listing, as this condition "shouldn't happen".
 //
-if (empty($_GET['oID'])) {
+$oID = (int)($_GET['oID'] ?? '0');
+if ($oID === 0) {
     zen_redirect(zen_href_link(FILENAME_ORDERS));
 }
-$oID = (int)$_GET['oID'];
-
-// Check for commonly broken attribute related items
-eo_checks_and_warnings();
 
 // Start the currencies code
 if (!class_exists('currencies')) {
     require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
 }
 $currencies = new currencies();
-
-// Use the normal order class instead of the admin one
-require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
 
 $step = (isset($_POST['step'])) ? (int)$_POST['step'] : 0;
 if (isset($_POST['add_product_categories_id'])) {
@@ -49,21 +43,56 @@ if (isset($_POST['add_product_quantity'])) {
 unset($queryCache);
 require DIR_WS_CLASSES . 'EditOrdersQueryCache.php';
 $queryCache = new EditOrdersQueryCache();
-  
+
 // -----
-// Include and instantiate the editOrders class.
+// Include and instantiate the EditOrders class, which now also manipulates and
+// instantiates the 'base' order-class.
 //
-require DIR_WS_CLASSES . 'editOrders.php';
-$eo = new editOrders($oID);
+zen_define_default('EO_DEBUG_TAXES_ONLY', 'false');  //-Either 'true' or 'false'
+
+require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
+require DIR_WS_CLASSES . 'EditOrders.php';
+$eo = new EditOrders($oID);
+
+// -----
+// Check, first, to see that the submitted order was found. If not, silently redirect
+// back to the orders' listing.
+//
+if ($eo->isOrderFound() === false) {
+    zen_redirect(zen_href_link(FILENAME_ORDERS));
+}
+
+// -----
+// Now, make sure that the 'environment' in which EO is running supports
+// its order-update calculations. If any critical issues are found, the
+// method will redirect back to the base orders' processing.
+//
+$eo->checkEnvironment();
+
+// -----
+// Make the modifications needed to coerce the recorded/queried order into
+// its storefront format. The method returns an indication as to whether/not
+// it could successfully 'divine' that information.
+//
+// When the method returns false, its processing has set any messages to be displayed
+// to the admin on the subsequent redirect back to the order's listing.
+//
+if ($eo->queryOrder() === false) {
+    zen_redirect(zen_href_link(FILENAME_ORDERS, zen_get_all_get_params()));
+}
+
+// -----
+// Check to see if any warning messages were detected by the EO class. TBD what to do if present!
+//
+$eo_messages_exist = $eo->checkEnvironment();
 
 $orders_statuses = [];
 $orders_status_array = [];
-$order_by_field = ($sniffer->field_exists(TABLE_ORDERS_STATUS, 'sort_order')) ? 'sort_order' : 'orders_status_id';
 $orders_status_query = $db->Execute(
     "SELECT orders_status_id, orders_status_name
        FROM " . TABLE_ORDERS_STATUS . "
       WHERE language_id = " . (int)$_SESSION['languages_id'] . "
-  ORDER BY $order_by_field ASC"
+  ORDER BY sort_order ASC"
 );
 foreach ($orders_status_query as $orders_status) {
     $status_id = $orders_status['orders_status_id'];
@@ -74,9 +103,10 @@ foreach ($orders_status_query as $orders_status) {
     ];
     $orders_status_array[$status_id] = $status_name;
 }
+unset($orders_status_query);
 
 $action = $_GET['action'] ?? 'edit';
-$eo->eoLog(PHP_EOL . date('Y-m-d H:i:s') . ", Edit Orders entered action ($action)" . PHP_EOL . 'Enabled Order Totals: ' . MODULE_ORDER_TOTAL_INSTALLED, 1);
+$eo->eoLog("\n" . date('Y-m-d H:i:s') . ", Edit Orders entered action ($action)\nEnabled Order Totals: " . MODULE_ORDER_TOTAL_INSTALLED);
 $zco_notifier->notify('EDIT_ORDERS_START_ACTION_PROCESSING');
 switch ($action) {
     // Update Order
@@ -94,34 +124,21 @@ switch ($action) {
 
     default:
         $action = 'edit';
-        $orders_query = $db->Execute(
-            "SELECT orders_id FROM " . TABLE_ORDERS . " 
-              WHERE orders_id = $oID
-              LIMIT 1"
-        );
-        if ($orders_query->EOF) {
-            $messageStack->add_session(sprintf(ERROR_ORDER_DOES_NOT_EXIST, $oID), 'error');
-            zen_redirect(zen_href_link(FILENAME_ORDERS));
-        }
         break; 
 }
 
-if ($action === 'edit' || ($action === 'update_order' && empty($allow_update))) {
-    $action = 'edit';
+$order = $eo->getOrder();
 
-    $order = $eo->getOrderInfo($action);
+// -----
+// Initialize the shipping cost, tax-rate and tax-value.
+//
+$eo->eoInitializeShipping($oID, $action);
 
-    // -----
-    // Initialize the shipping cost, tax-rate and tax-value.
-    //
-    $eo->eoInitializeShipping($oID, $action);
-
-    if (!$eo->eoOrderIsVirtual($order) &&
-           (!is_array($order->customer['country']) || !isset($order->customer['country']['id']) ||
-            !is_array($order->billing['country']) || !isset($order->billing['country']['id']) ||
-            !is_array($order->delivery['country']) || !isset($order->delivery['country']['id']))) {
-        $messageStack->add(WARNING_ADDRESS_COUNTRY_NOT_FOUND, 'warning');
-    }
+if (!$eo->eoOrderIsVirtual($order) &&
+       (!is_array($order->customer['country']) || !isset($order->customer['country']['id']) ||
+        !is_array($order->billing['country']) || !isset($order->billing['country']['id']) ||
+        !is_array($order->delivery['country']) || !isset($order->delivery['country']['id']))) {
+    $messageStack->add(WARNING_ADDRESS_COUNTRY_NOT_FOUND, 'warning');
 }
 ?>
 <!doctype html>

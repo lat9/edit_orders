@@ -2,7 +2,7 @@
 // -----
 // Language constants used by the /admin/edit_orders.php processing (Edit Orders).
 //
-//-Last modified Edit Orders v4.7.0.  Now using zc158+ language array
+// Last modified v5.0.0
 //
 $define = [
 // Page / Section Headings
@@ -74,12 +74,17 @@ $define = [
 // Success, Warning, and Error Messages
     'ERROR_ORDER_DOES_NOT_EXIST' => 'Error: Order does not exist.',
     'SUCCESS_ORDER_UPDATED' => 'Success: Order has been successfully updated.',
-    'WARNING_DISPLAY_PRICE_WITH_TAX' => 'Warning: You have configured Zen Cart to display prices with' . (DISPLAY_PRICE_WITH_TAX_ADMIN !== 'true' ? 'out ' : ' ') . 'tax. This page is currently displaying prices with' . (DISPLAY_PRICE_WITH_TAX !== 'true' ? 'out ' : ' ') . 'tax.',
-    'WARNING_ADDRESS_COUNTRY_NOT_FOUND' => 'Warning: One or more of the customer address fields contains a country name unknown to Zen Cart (&quot;Locations / Taxes&quot;-&gt;&quot;Countries&quot;).<br />Taxes and some shipping modules may not function correctly until the issue has been resolved.<br /><br />This typically occurs if someone deletes or renames a country&#39;s name from Zen Cart (&quot;Locations / Taxes&quot;-&gt;&quot;Countries&quot;). You can fix the issue by doing one of the following: <ul><li>Add the country (and name) back to the Zen Cart database.</li><li>Adjust the country name to match one of the country names in the Zen Cart database.</li></ul>',
+    'ERROR_DISPLAY_PRICE_WITH_TAX' => 'You have configured Zen Cart to display prices with' . (DISPLAY_PRICE_WITH_TAX_ADMIN !== 'true' ? 'out ' : ' ') . 'tax. This page is currently displaying prices with' . (DISPLAY_PRICE_WITH_TAX !== 'true' ? 'out ' : ' ') . 'tax. Orders cannot be edited until the two settings are the same.',
+    'WARNING_ADDRESS_COUNTRY_NOT_FOUND' => 'Warning: One or more of the customer address fields contains a country name unknown to Zen Cart (&quot;Locations / Taxes :: Countries&quot;).<br>Taxes and some shipping modules may not function correctly until the issue has been resolved.<br><br>This typically occurs if someone deletes or renames a country&#39;s name from Zen Cart (&quot;Locations / Taxes :: Countries&quot;). You can fix the issue by doing one of the following: <ul><li>Add the country (and name) back to the Zen Cart database.</li><li>Adjust the country name to match one of the country names in the Zen Cart database.</li></ul>',
     'WARNING_ORDER_NOT_UPDATED' => 'Warning: Nothing to change. The order was not updated.',
     'WARNING_ORDER_QTY_OVER_MAX' => 'Warning: The quantity requested exceeded the maximum allowed for an order. The quantity added was reduced to the maximum allowed per order.',
     'WARNING_ORDER_COUPON_BAD' => 'Warning: The coupon code was not found in the database. Note: the title / text of a coupon is usually formatted like &quot;Discount Coupon : coupon_code :&quot;. ',
     'WARNING_INSUFFICIENT_PRODUCT_STOCK' => 'Insufficient stock for <em>%1$s</em>, requested %2$s with %3$s available.',
+
+    'ERROR_CANT_DETERMINE_TAX_RATES' => 'The order cannot be edited, since its tax-rates cannot be determined.',
+    'ERROR_SHIPPING_TAX_RATE_MISSING' => 'The order cannot be edited. Its <code>shipping_tax_rate</code> was not previously recorded.',
+    'ERROR_NO_SHIPPING_TAX_DESCRIPTION' => 'The order cannot be edited. No tax description could be found for the shipping tax-rate (%s%%).',
+    'ERROR_NO_PRODUCT_TAX_DESCRIPTION' => 'The order cannot be edited. No tax description could be found for <em>%1$s</em> tax-rate (%2$s%%).',
 
     'ERROR_ZEN_ADD_TAX_ROUNDING' => "The store's <code>zen_add_tax</code> function must be updated to enable <em>Edit Orders</em>' use.",
 
@@ -118,7 +123,7 @@ $define = [
     'DETAILS' => 'Details',
 
 // Required for various added zen_cart functions
-    'TEXT_UNKNOWN_TAX_RATE' => 'Tax',
+    'TEXT_UNKNOWN_TAX_RATE' => 'Sales Tax',
     'PULL_DOWN_DEFAULT' => 'Please Choose Your Country',
 
 // Absolute's Product Attribute Grid

@@ -4,17 +4,6 @@
 //
 // Last updated: EO v5.0.0
 //
-// -----
-// Since other plugins (like "Admin New Order") also provide some of these functions,
-// continue this function-file "load" only if the current page-load is on
-// behalf of "Edit Orders" processing.
-//
-// Note: $PHP_SELF needs to be globalized since this is now loaded via a class.
-//
-global $PHP_SELF;
-if (basename($PHP_SELF, '.php') !== FILENAME_EDIT_ORDERS) {
-    return;
-}
 
 // -----
 // Present in the storefront version of the html_output.php functions.
@@ -90,80 +79,6 @@ function eo_debug_action_level_list($level)
 }
 
 // Start Edit Orders functions
-
-/**
- * Retrieves the country id, name, iso_code_2, and iso_code_3 from the database
- * for the requested country.
- *
- * Note: Future-proofing for zc157's addition of multi-lingual Country Names.
- *
- * @param string $country the name, or iso code for the country.
- * @return NULL|array the country if one is found, otherwise NULL
- */
-function eo_get_country($country) 
-{
-    global $eo;
-
-    // -----
-    // If the $country input is already an array, then an observer has already manipulated an
-    // element of the 'order' class' addresses and the value will be simply returned, noting
-    // the processing via an EO log.
-    //
-    if (is_array($country)) {
-        global $eo;
-        $eo->eoLog('eo_get_country, returning modified country array: ' . json_encode($country));
-        return $country;
-    }
-
-    $country = (string)$country;
-    $country_data = null;
-
-    // -----
-    // First, try to locate the country's ID assuming that the supplied input is the
-    // country's name.
-    //
-    $countries_id = $eo->getCountryId($country);
-
-    // -----
-    // If the country was located by name, gather the additional fields for the country.
-    //
-    if ($countries_id != 0) {
-        $country_info = $GLOBALS['db']->Execute(
-            "SELECT *
-               FROM " . TABLE_COUNTRIES . "
-              WHERE countries_id = $countries_id
-              LIMIT 1"
-        );
-        if (!$country_info->EOF) {
-            $country_data = [
-                'id' => $countries_id,
-                'name' => $country,
-                'iso_code_2' => $country_info->fields['countries_iso_code_2'],
-                'iso_code_3' => $country_info->fields['countries_iso_code_3'],
-            ];
-        }
-    // -----
-    // Otherwise, see if a matching entry can be found for the country's ISO-code-2 or -3.
-    //
-    } else {
-        $country_info = $GLOBALS['db']->Execute(
-            "SELECT *
-               FROM " . TABLE_COUNTRIES . "
-              WHERE countries_iso_code_2 = '$country'
-                 OR countries_iso_code_3 = '$country'
-              LIMIT 1"
-        );
-        if (!$country_info->EOF) {
-            $country_data = [
-                'id' => $country_info->fields['countries_id'],
-                'name' => zen_get_country_name($country_info->fields['countries_id']),
-                'iso_code_2' => $country_info->fields['countries_iso_code_2'],
-                'iso_code_3' => $country_info->fields['countries_iso_code_3'],
-            ];
-        }
-    }
-    return $country_data;
-}
 
 function eo_get_product_attributes_options($products_id)
 {
@@ -791,7 +706,7 @@ function eo_update_order_subtotal($order_id, $product, $add = true)
     if (DISPLAY_PRICE_WITH_TAX === 'true') {
         $order->info['total'] = $order->info['subtotal'] + $order->info['shipping_cost'];
     } else {
-        $order->info['total'] = $order->info['subtotal'] + $order->info['tax'] + $order->info['shipping_cost'];
+        $order->info['total'] = $order->info['subtotal'] + $order->info['tax'] + (string)$order->info['shipping_cost'];
     }
 
     // Update the order totals (if present)
@@ -1045,7 +960,7 @@ function eo_update_database_order_totals($oID)
         if (DISPLAY_PRICE_WITH_TAX == 'true') {
             $order->info['total'] = $order->info['subtotal'] + $order->info['shipping_cost'];
         } else {
-            $order->info['total'] = $order->info['subtotal'] + $order->info['tax'] + $order->info['shipping_cost'];
+            $order->info['total'] = (float)$order->info['subtotal'] + (float)$order->info['tax'] + (float)$order->info['shipping_cost'];
         }
 
         $eo->eoLog('eo_update_database_order_totals, after adjustments: ' . $eo->eoFormatArray($order->info) . PHP_EOL . $eo->eoFormatArray($order->totals), 'tax');
@@ -1354,79 +1269,4 @@ function eo_display_customers_notifications_icon($customer_notified)
             break;
     }
     return '<i class="fa-lg ' . $status_icon . ' ' . $icon_color . '" title="' . $icon_alt_text . '"></i>';
-}
-
-function eo_checks_and_warnings()
-{
-    global $db, $messageStack;
-
-    // -----
-    // Ensure that some 'base' hidden configuration elements are present; they've been removed at times
-    // by plugins' uninstall SQL scripts.
-    //
-    $reload = (!defined('PRODUCTS_OPTIONS_TYPE_SELECT') || !defined('UPLOAD_PREFIX') || !defined('TEXT_PREFIX'));
-    if ($reload) {
-        $db->Execute(
-            "INSERT IGNORE INTO " . TABLE_CONFIGURATION . "
-                (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, date_added)
-             VALUES
-                ('Product option type Select', 'PRODUCTS_OPTIONS_TYPE_SELECT', '0', 'The number representing the Select type of product option.', '6', now()),
-                ('Upload prefix', 'UPLOAD_PREFIX', 'upload_', 'Prefix used to differentiate between upload options and other options', '6', now()),
-                ('Text prefix', 'TEXT_PREFIX', 'txt_', 'Prefix used to differentiate between text option values and other options', '6', now())"
-        );
-        zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
-    }
-
-    // -----
-    // Check to be sure that the admin's zen_add_tax function has been updated to remove
-    // the unwanted pre-rounding that affects EO's calculations, denying
-    // the usage of Edit Orders until the issue is resolved.
-    //
-    $value = zen_add_tax(5.1111, 0);
-    if ($value != 5.1111) {
-        $messageStack->add_session(ERROR_ZEN_ADD_TAX_ROUNDING, 'error');
-        zen_redirect(zen_href_link(FILENAME_ORDERS, (isset($_GET['oID'])) ? ('action=edit&amp;oID=' . (int)$_GET['oID']) : ''));
-    }
-    
-    // -----
-    // Issue a notification, allowing other add-ons to add any warnings they might have.
-    //
-    $GLOBALS['zco_notifier']->notify('EDIT_ORDERS_CHECKS_AND_WARNINGS');
-
-    // Warn user about subtotal calculations
-    if (DISPLAY_PRICE_WITH_TAX_ADMIN !== DISPLAY_PRICE_WITH_TAX) {
-        $messageStack->add(WARNING_DISPLAY_PRICE_WITH_TAX, 'warning');
-    }
-
-    // Warn user about potential issues with subtotal / total calculations
-    $module_list = explode(';', (str_replace('.php', '', MODULE_ORDER_TOTAL_INSTALLED)));
-    if (!in_array('ot_subtotal', $module_list)) {
-        $messageStack->add(WARNING_ORDER_TOTAL_SUBTOTAL, 'warning');
-    }
-    if (!in_array('ot_total', $module_list)) {
-        $messageStack->add(WARNING_ORDER_TOTAL_TOTAL, 'warning');
-    }
-    unset($module_list);
-
-    // Check for the installation of "Absolute's Product Attribute Grid"
-    if (!defined('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID')) {
-        if (defined('CONFIG_ATTRIBUTE_OPTION_GRID_INSTALLED')) {
-            define('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID', '23997');
-            $messageStack->add(WARNING_ATTRIBUTE_OPTION_GRID, 'warning');
-        } else {
-            define('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID', '-1');
-        }
-    }
-    
-    // Check for the installation of "Potteryhouse's/mc12345678's Stock By Attributes"
-    if (!defined('PRODUCTS_OPTIONS_TYPE_SELECT_SBA')) {
-        define('PRODUCTS_OPTIONS_TYPE_SELECT_SBA', '-1');
-    }
-    
-    // -----
-    // Check for the installation of lat9's "Attribute Image Swapper".
-    //
-    if (!defined('PRODUCTS_OPTIONS_TYPE_IMAGE_SWATCH')) {
-        define('PRODUCTS_OPTIONS_TYPE_IMAGE_SWATCH', -1);
-    }
 }
