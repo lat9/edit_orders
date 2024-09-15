@@ -4,32 +4,16 @@
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified v4.7.0
-//
-// -----
-// Prior to EO v4.6.0, this code was in-line in the main /admin/edit_orders.php script.  Now required by
-// /admin/includes/modules/edit_orders/eo_edit_action_display.php in global context for the rendering of the
-// current order's orders-status-history table.
+// Last modified v5.0.0
 //
 ?>
-<table id="osh" border="1" cellspacing="0" cellpadding="5">
-<?php 
-// -----
-// Gather the order's status-history records, sorting based on the configuration setting added in v4.4.0.
-//
-$osh_order_by = (EO_STATUS_HISTORY_DISPLAY_ORDER === 'Desc') ? 'date_added DESC, orders_status_history_id DESC' : 'date_added ASC, orders_status_history_id ASC';
-$orders_history = $db->Execute(
-    "SELECT *
-       FROM " . TABLE_ORDERS_STATUS_HISTORY . "
-      WHERE orders_id = $oID
-      ORDER BY $osh_order_by"
-);
-
-if ($orders_history->EOF) {
+<hr class="my-2">
+<div class="row">
+    <h2><i class="fa fa-comments fa-lg"></i>&nbsp;<?= TABLE_HEADING_STATUS_HISTORY; ?></h2>
+<?php
+if (empty($order->statuses)) {
 ?>
-    <tr>
-        <td class="smallText no-osh"><?php echo TEXT_NO_ORDER_HISTORY; ?></td>
-    </tr>
+    <div class="text-center h2"><?= TEXT_NO_ORDER_HISTORY ?></div>
 <?php
 } else {
     // -----
@@ -57,82 +41,93 @@ if ($orders_history->EOF) {
         'date_added' => [
             'title' => TABLE_HEADING_DATE_ADDED,
             'show_function' => 'zen_datetime_short',
-            'include_field_name' => false
+            'include_field_name' => false,
         ],
         'customer_notified' => [
             'title' => TABLE_HEADING_CUSTOMER_NOTIFIED,
             'show_function' => 'eo_display_customers_notifications_icon',
             'align' => 'center',
-            'include_field_name' => false
+            'include_field_name' => false,
         ],
         'orders_status_id' => [
             'title' => TABLE_HEADING_STATUS,
-            'show_function' => 'built-in'
+            'show_function' => 'built-in',
         ],
         'comments' => [
             'title' => TABLE_HEADING_COMMENTS,
-            'show_function' => 'built-in'
+            'show_function' => 'built-in',
         ],
         'updated_by' => [
             'title' => TABLE_HEADING_UPDATED_BY,
             'align' => 'center',
-            'show_function' => 'built-in'
+            'show_function' => 'built-in',
         ],
     ];
 
     $zco_notifier->notify('EDIT_ORDERS_STATUS_DISPLAY_ARRAY_INIT', $oID, $table_elements);
-    if (!is_array($table_elements) || count($table_elements) == 0) {
-        trigger_error('Non-array value returned from EDIT_ORDERS_STATUS_DISPLAY_ARRAY_INIT: ' . json_encode($table_elements), E_USER_ERROR);
-        exit();
+    if (!is_array($table_elements) || count($table_elements) === 0) {
+        trigger_error('Non-array value returned from EDIT_ORDERS_STATUS_DISPLAY_ARRAY_INIT: ' . json_encode($table_elements), E_USER_WARNING);
+        global $messageStack;
+        $messageStack->add_session('An issue was detected by <em>Edit Orders</em>; see generated log for details.', 'error');
+        zen_redirect(zen_href_link(FILENAME_ORDERS));
     }
 
     $eo->eoLog('Preparing to display status history: ' . $eo->eoFormatArray($table_elements));
-
+?>
+    <table class="table-condensed table-striped table-bordered">
+        <thead>
+<?php
     // -----
     // Create the table's header, based on the current table-elements ...
     //
 ?>
-    <tr class="dataTableHeadingRow v-top">
+            <tr class="dataTableHeadingRow">
 <?php
     foreach ($table_elements as $field_name => $field_values) {
         if (empty($field_values['title'])) {
             continue;
         }
-        
+
         $align_class = '';
         if (isset($field_values['align'])) {
             switch ($field_values['align']) {
                 case 'right':
-                    $align_class = ' a-r';
+                    $align_class = ' text-right';
                     break;
                 case 'center':
-                    $align_class = ' a-c';
+                    $align_class = ' text-center';
                     break;
                 default:
-                    $align_class = ' a-l';
+                    $align_class = '';
                     break;
             }
         }
         $table_elements[$field_name]['align_class'] = $align_class;
 ?>
-        <td class="dataTableHeadingContent smallText<?php echo $align_class; ?>"><?php echo $field_values['title']; ?></td>
+                    <th class="dataTableHeadingContent<?php echo $align_class; ?>">
+                        <?php echo $field_values['title']; ?>
+                    </th>
 <?php
     }
 ?>
-    </tr>
+            </tr>
+        </thead>
+        <tbody>
 <?php
     // -----
     // Loop through each of the order's history records, displaying the columns as
-    // identified in the current table elements.
+    // identified in the current table elements, sorting based on the configuration setting added in v4.4.0.
     //
-    foreach ($orders_history as $osh) {
+    $order->statuses[0]['protected_record'] = true;
+    $order_statuses = (EO_STATUS_HISTORY_DISPLAY_ORDER === 'Desc') ? array_reverse($order->statuses) : $order->statuses;
+    foreach ($order_statuses as $osh) {
 ?>
-    <tr class="v-top">
+            <tr>
 <?php
         foreach ($table_elements as $field_name => $field_values) {
             // -----
-            // If the current field name is not present in the orders_status_history
-            // table, there's nothing to do.
+            // If the current field name is not present in the order's recorded
+            // status-history table, nothing further to do.
             //
             if (!array_key_exists($field_name, $osh)) {
                 continue;
@@ -160,27 +155,28 @@ if ($orders_history->EOF) {
                         case 'orders_status_id':
                             $display_value = $orders_status_array[$field_value];
                             break;
+
                         case 'comments':
-                            $display_value = nl2br(zen_output_string_protected($field_value));
+                            if (isset($osh['protected_record'])) {
+                                $display_value = nl2br(zen_output_string_protected($field_value ?? ''));
+                            } else {
+                                $display_value = nl2br($field_value ?? '');
+                            }
                             break;
+
                         case 'updated_by':
                             $display_value = $field_value;
                             break;
+
                         default:
-                            trigger_error("Unknown field ($field_name) for built-in function display.", E_USER_ERROR);
-                            exit();
                             break;
                     }
                 // -----
-                // Otherwise, it's a 'specified' show_function.  Make sure it exists and then pass either one or
+                // Otherwise, it's a 'specified' show_function, pass either one or
                 // two arguments, depending on the table's configuration.
                 //
                 } else {
                     $show_function = $field_values['show_function'];
-                    if (!function_exists($show_function)) {
-                        trigger_error("Function ($show_function) to display '$field_name' does not exist.", E_USER_ERROR);
-                        exit();
-                    }
                     if (!empty($field_values['include_field_name']) && $field_values['include_field_name'] === true) {
                         $display_value = $show_function($field_value, $field_name);
                     } else {
@@ -194,14 +190,110 @@ if ($orders_history->EOF) {
             //
             if (!empty($field_values['title'])) {
 ?>
-        <td class="smallText<?php echo $field_values['align_class']; ?>"><?php echo $display_value; ?></td>
+                <td class="<?php echo $field_values['align_class']; ?>"><?php echo $display_value; ?></td>
 <?php
             }
         }
 ?>
-    </tr>
+            </tr>
+<?php
+    }
+?>
+        </tbody>
+    </table>
+<?php
+}
+?>
+    <div class="row mt-4">
+        <button id="add-comment" class="btn btn-warning" data-toggle="modal" data-target="#comment-modal" title="<?= BUTTON_ADD_COMMENT_ALT ?>">
+            <?= BUTTON_ADD_COMMENT ?>
+        </button>
+    </div>
+
+    <div id="comment-modal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title text-center"><?= BUTTON_ADD_COMMENT_ALT ?></h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="comments"><?= TABLE_HEADING_COMMENTS ?></label>
+                        <?= zen_draw_textarea_field('comments', 'soft', '60', '5', '', 'id="comments" class="form-control"') ?>
+                    </div>
+<?php
+// -----
+// Give an observer the opportunity to add additional content to the status-history form.
+//
+// The additional-content array is numerically-indexed and provides the HTML to be included.
+//
+$additional_osh_content = [];
+$zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_OSH_CONTENT', $order, $additional_osh_content);
+if (is_array($additional_osh_content) && count($additional_osh_content) !== 0) {
+    foreach ($additional_osh_content as $osh_content) {
+?>
+                    <div><?= $osh_content ?></div>
 <?php
     }
 }
 ?>
-</table>
+                    <div><?= ENTRY_CURRENT_STATUS . ' ' . $orders_status_array[$order->info['orders_status']] ?></div>
+
+                    <div class="form-group">
+                        <label for="new-status"><?= ENTRY_STATUS ?></label>
+                        <?= zen_draw_pull_down_menu('status', $orders_statuses, $order->info['orders_status'], 'class="form-control"') ?>
+                    </div>
+<?php
+// -----
+// Determine the default setting for the customer notification, based on the configuration
+// setting added in v4.4.0.
+//
+switch (EO_CUSTOMER_NOTIFICATION_DEFAULT) {
+    case 'Hidden':
+        $notify_email = false;
+        $notify_no_email = false;
+        $notify_hidden = true;
+        break;
+    case 'No Email':
+        $notify_email = false;
+        $notify_no_email = true;
+        $notify_hidden = false;
+        break;
+    default:
+        $notify_email = true;
+        $notify_no_email = false;
+        $notify_hidden = false;
+        break;
+}
+?>
+                    <div class="form-group">
+                        <div class="control-label font-weight-bold"><?php echo ENTRY_NOTIFY_CUSTOMER; ?></div>
+                        <label class="radio-inline"><?php echo zen_draw_radio_field('notify', '1', $notify_email) . TEXT_EMAIL; ?></label>
+                        <label class="radio-inline"><?php echo zen_draw_radio_field('notify', '0', $notify_no_email) . TEXT_NOEMAIL; ?></label>
+                        <label class="radio-inline"><?php echo zen_draw_radio_field('notify', '-1', $notify_hidden) . TEXT_HIDE; ?></label>
+                    </div>
+
+                    <div class="checkbox">
+                        <label>
+                            <?= zen_draw_checkbox_field('notify_comments', '', true) . '&nbsp;' . ENTRY_NOTIFY_COMMENTS ?>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <div class="btn-group btn-group-justified">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default" data-dismiss="modal"><?= IMAGE_CANCEL ?></button>
+                        </div>
+                        <div class="btn-group">
+                            <button id="comment-submit" type="button" class="btn btn-danger ms-2"><?= IMAGE_CONFIRM ?></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<hr>

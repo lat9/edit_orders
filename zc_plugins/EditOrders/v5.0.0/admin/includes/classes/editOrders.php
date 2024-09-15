@@ -242,6 +242,22 @@ class EditOrders extends base
         $this->order->info['tax'] = (float)$this->order->info['tax'];
 
         // -----
+        // The order-class' query of an order doesn't include each product's unique
+        // id (the products_prid). Gather that information for use in rebuilding
+        // each product's record.
+        //
+        global $db;
+        $uprids_from_db = $db->Execute(
+            "SELECT orders_products_id, products_prid
+               FROM " . TABLE_ORDERS_PRODUCTS . "
+              WHERE orders_id = " . $this->orders_id
+        );
+        $uprids = [];
+        foreach ($uprids_from_db as $next_record) {
+            $uprids[$next_record['orders_products_id']] = $next_record['products_prid'];
+        }
+
+        // -----
         // Update various fields within the order's products' array to match the
         // format used in the storefront.
         //
@@ -259,6 +275,7 @@ class EditOrders extends base
             $next_product['products_quantity_order_max'] = (float)$next_product['products_quantity_order_max'];
             $next_product['products_quantity_mixed'] = (int)$next_product['products_quantity_mixed'];
             $next_product['products_mixed_discount_quantity'] = (int)$next_product['products_mixed_discount_quantity'];
+            $next_product['uprid'] = $uprids[$next_product['orders_products_id']];
 
             if (!isset($next_product['attributes'])) {
                 continue;
@@ -311,7 +328,7 @@ class EditOrders extends base
             } elseif (isset($current_product['attributes'])) {
                 foreach ($current_product['attributes'] as $current_attribute) {
                     $download_check = $db->Execute(
-                        "SELECT opa.products_id
+                        "SELECT opa.orders_products_id
                            FROM " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . " opa
                                 INNER JOIN " . TABLE_ORDERS_PRODUCTS_DOWNLOAD . " opd
                                     ON opd.products_attributes_id = opa.orders_products_attributes_id

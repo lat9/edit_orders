@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified v4.7.0
+// Last modified v5.0.0
 //
 // -----
 // Prior to EO v4.6.0, this code was in-line in the main /admin/edit_orders.php script.  Now required by
@@ -39,24 +39,26 @@ if (!empty($display_only_totals_list)) {
 //
 $columns = ((DISPLAY_PRICE_WITH_TAX === 'true') ? 7 : 6) - 2;
 
+$add_product_button = '<button id="add-product" class="btn btn-sm btn-warning">' . TEXT_ADD_NEW_PRODUCT . '</button>';
+
 // Iterate over the order totals.
-for ($i = 0, $index = 0, $n = count($order->totals); $i < $n; $i++) {
-    $update_total = "update_total[$index]";
-    $update_total_code = $update_total . '[code]';
+foreach ($order->totals as $next_total) {
+    $ot_class = $next_total['class'];
+
+    $update_total = "update_total[$ot_class]";
     $update_total_title = $update_total . '[title]';
     $update_total_value = $update_total . '[value]';
-    
+
     $index_update_needed = true;
 ?>
 <tr>
-    <td class="dataTableContent" colspan="3"><?php echo ($i == 0) ? $eo_add_button_link : '&nbsp;'; ?></td>
+    <td class="dataTableContent" colspan="3"><?= $add_product_button ?></td>
 <?php
-    $total = $order->totals[$i];
-    $trimmed_title = strip_tags(trim($total['title']));
-    
-    $order_total_info = eo_get_order_total_by_order((int)$oID, $total['class']);
-    $details = array_shift($order_total_info);
-    $total_class = (in_array($total['class'], $display_only_totals)) ? 'display-only' : $total['class'];
+    $add_product_button = '';
+
+    $trimmed_title = strip_tags(trim($next_total['title']));
+
+    $total_class = (in_array($ot_class, $display_only_totals)) ? 'display-only' : $ot_class;
     switch ($total_class) {
         case 'ot_purchaseorder':
             $index_update_needed = false;
@@ -70,9 +72,9 @@ for ($i = 0, $index = 0, $n = count($order->totals); $i < $n; $i++) {
         case 'display-only':
             $index_update_needed = false;
 ?>
-    <td colspan="<?php echo $columns - 2; ?>">&nbsp;</td>
-    <td class="main a-r eo-label"><?php echo $total['title']; ?></td>
-    <td class="main a-r eo-label"><?php echo $total['text']; ?></td>
+    <td colspan="<?= $columns - 2 ?>">&nbsp;</td>
+    <td class="text-right eo-label"><?= $trimmed_title ?></td>
+    <td class="text-right eo-label"><?= $next_total['text'] ?></td>
 <?php
             break;
 
@@ -81,9 +83,9 @@ for ($i = 0, $index = 0, $n = count($order->totals); $i < $n; $i++) {
         case 'ot_cod_fee':
         case 'ot_loworderfee':
 ?>
-    <td colspan="<?php echo $columns - 2; ?>"><?php echo zen_draw_hidden_field($update_total_code, $total['class']); ?></td>
-    <td class="main a-r"><?php echo strip_tags($total['title']) . zen_draw_hidden_field($update_total_title, $trimmed_title); ?></td>
-    <td class="main a-r"><?php echo $total['text'] . zen_draw_hidden_field($update_total_value, $details['value']); ?></td>
+    <td colspan="<?= $columns - 2 ?>">&nbsp;</td>
+    <td class="text-right"><?= strip_tags($next_total['title']) . zen_draw_hidden_field($update_total_title, $trimmed_title) ?></td>
+    <td class="text-right"><?= $next_total['text'] . zen_draw_hidden_field($update_total_value, $next_total['value']) ?></td>
 <?php
             break;
 
@@ -91,9 +93,9 @@ for ($i = 0, $index = 0, $n = count($order->totals); $i < $n; $i++) {
         // for order total modules which handle the value based upon another condition
         case 'ot_coupon': 
 ?>
-    <td colspan="<?php echo $columns - 2; ?>"><?php echo zen_draw_hidden_field($update_total_code, $total['class']); ?></td>
-    <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount eo-entry"'); ?></td>
-    <td class="main a-r"><?php echo $total['text'] . zen_draw_hidden_field($update_total_value, $details['value']); ?></td>
+    <td colspan="<?= $columns - 2 ?>">&nbsp;</td>
+    <td class="smallText text-right"><?= zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount eo-entry"') ?></td>
+    <td class="text-right"><?= $next_total['text'] . zen_draw_hidden_field($update_total_value, $next_total['value']) ?></td>
 <?php
             break;
 
@@ -101,34 +103,44 @@ for ($i = 0, $index = 0, $n = count($order->totals); $i < $n; $i++) {
             $shipping_tax_rate = $eo->eoGetShippingTaxRate($order);
             $shipping_title_max = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'shipping_method') . '"';
 ?>
-    <td class="a-r"><?php echo zen_draw_hidden_field($update_total_code, $total['class']) . zen_draw_pull_down_menu($update_total . '[shipping_module]', eo_get_available_shipping_modules(), $order->info['shipping_module_code']) . '&nbsp;&nbsp;' . zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount eo-entry" ' . $shipping_title_max); ?></td>
-    
-    <td class="a-r"><?php echo zen_draw_input_field('shipping_tax', (string)$shipping_tax_rate, 'class="amount" id="s-t"' . $input_tax_parms, false, $input_field_type); ?>&nbsp;%</td>
+    <td class="text-right">
+        <?= zen_draw_pull_down_menu($update_total . '[shipping_module]', eo_get_available_shipping_modules(), $order->info['shipping_module_code'], 'class="form-control me-2"') ?>
+        <?= zen_draw_input_field($update_total_title, $trimmed_title, 'id="ship-title" class="form-control" ' . $shipping_title_max) ?>
+    </td>
+
+    <td class="text-right">
+        <div class="tax-percentage">&nbsp;%</div>
+        <?= zen_draw_input_field('shipping_tax', (string)$shipping_tax_rate, 'id="ship-tax" class="amount form-control"' . $input_tax_params, false, $input_field_type) ?>
+    </td>
 <?php
             if (DISPLAY_PRICE_WITH_TAX === 'true') {
-                $shipping_net = $details['value'] / (1 + ($shipping_tax_rate / 100));
+                $shipping_net = $next_total['value'] / (1 + ($shipping_tax_rate / 100));
 ?>
-    <td class="a-r"><?php echo zen_draw_input_field($update_total_value, (string)$shipping_net, 'class="amount" id="s-n"' . $input_value_parms, false, $input_field_type); ?></td>
+    <td class="text-right">
+        <?= zen_draw_input_field($update_total_value, (string)$shipping_net, 'id="ship-net" class="amount form-control"' . $input_value_params, false, $input_field_type) ?>
+    </td>
 <?php
                 $update_total_value = 'shipping_gross';
             }
 ?>
     <td>&nbsp;</td>
-    <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" id="s-g"' . $input_value_parms, false, $input_field_type); ?></td>
+    <td class="text-right">
+        <?= zen_draw_input_field($update_total_value, $next_total['value'], 'id="ship-gross" class="amount form-control"' . $input_value_params, false, $input_field_type) ?>
+    </td>
 <?php
             break;
 
         case 'ot_gv':
         case 'ot_voucher': 
 ?>
-    <td colspan="<?php echo $columns - 2; ?>"><?php echo zen_draw_hidden_field($update_total_code, $total['class']); ?></td>
-    <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount eo-entry"'); ?></td>
-    <td class="smallText a-r">
-<?php                 
-            if ($details['value'] > 0) {
-                $details['value'] *= -1;
+    <td colspan="<?= $columns - 2 ?>">&nbsp;</td>
+    <td class="smallText text-right"><?= zen_draw_input_field($update_total_title, $trimmed_title, 'class="form-control eo-entry"') ?></td>
+    <td class="smallText text-right">
+<?php
+            if ($next_total['value'] > 0) {
+                $next_total['value'] *= -1;
             }
-            echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount" step="any"', false, $input_field_type);
+            echo zen_draw_input_field($update_total_value, $next_total['value'], 'class="amount form-control" step="any"', false, $input_field_type);
 ?>
     </td>
 <?php
@@ -136,35 +148,37 @@ for ($i = 0, $index = 0, $n = count($order->totals); $i < $n; $i++) {
 
         default: 
 ?>
-    <td colspan="<?php echo $columns - 2; ?>"><?php echo zen_draw_hidden_field($update_total_code, $total['class']); ?></td>
-    <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount eo-entry"'); ?></td>
-    <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, $details['value'], 'class="amount"'); ?></td>
+    <td colspan="<?= $columns - 2 ?>">&nbsp;</td>
+    <td class="smallText text-right"><?= zen_draw_input_field($update_total_title, $trimmed_title, 'class="form-control eo-entry"') ?></td>
+    <td class="smallText text-right"><?= zen_draw_input_field($update_total_value, $next_total['value'], 'class="amount form-control"') ?></td>
 <?php
             break;
     }
 ?>
 </tr>
 <?php
-    if ($index_update_needed) {
-        $index++;
-    }
 }
 
 $additional_totals_displayed = false;
-if (count(eo_get_available_order_totals_class_values($oID)) > 0) {
+$available_order_totals = eo_get_available_order_totals_class_values($oID);
+if (count($available_order_totals) > 0) {
     $additional_totals_displayed = true;
 ?>
 <tr>
-    <td colspan="<?php echo $columns; ?>">&nbsp;</td>
-    <td class="smallText a-r"><?php echo TEXT_ADD_ORDER_TOTAL . zen_draw_pull_down_menu($update_total_code, eo_get_available_order_totals_class_values($oID), '', 'id="update_total_code"'); ?></td>
-    <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_title, '', 'class="amount eo-entry"'); ?></td>
-    <td class="smallText a-r"><?php echo zen_draw_input_field($update_total_value, '', 'class="amount" step="any"', false, $input_field_type); ?></td>
-</tr>
-<tr>
-    <td colspan="<?php echo $columns + 3; ?>" class="smallText a-l" id="update_total_shipping" style="display: none">
-        <?php echo TEXT_CHOOSE_SHIPPING_MODULE . zen_draw_pull_down_menu('update_total[' . $index . '][shipping_module]', eo_get_available_shipping_modules()); ?>
-    </td>
+    <td colspan="<?= $columns ?>">&nbsp;</td>
+    <td><?= TEXT_ADD_ORDER_TOTAL . zen_draw_pull_down_menu('update_total[new_total][code]', $available_order_totals, '', 'id="update_total_code" class="form-control d-inline"') ?></td>
+    <td><?= zen_draw_input_field('update_total[new_total][title]', '', 'class="form-control eo-entry"') ?></td>
+    <td><?= zen_draw_input_field('update_total[new_total][value]', '', 'class="amount form-control" step="any"', false, $input_field_type) ?></td>
 </tr>
 <?php
+/* Not sure what this block is supposed to do, commented out for now [FIXME]
+<tr>
+    <td colspan="<?= $columns + 3 ?>" class="d-none" id="update_total_shipping">
+        <?= TEXT_CHOOSE_SHIPPING_MODULE . zen_draw_pull_down_menu('update_total[new_shipping][shipping_module]', eo_get_available_shipping_modules()) ?>
+    </td>
+</tr>
+*/
+?>
+<?php
 }
-unset($i, $index, $n, $total, $details);
+unset($total, $details);

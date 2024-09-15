@@ -1,10 +1,10 @@
 <?php
 // -----
-// Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
+// Part of the Edit Orders encapsulated plugin for Zen Cart, provided by lat9 and others.
 //
 // Copyright (c) 2003 The zen-cart developers
 //
-//-Last modified v5.0.0
+// Last modified v5.0.0
 //
 require 'includes/application_top.php';
 
@@ -129,15 +129,7 @@ switch ($action) {
 
 $order = $eo->getOrder();
 
-// -----
-// Initialize the shipping cost, tax-rate and tax-value.
-//
-$eo->eoInitializeShipping($oID, $action);
-
-if (!$eo->eoOrderIsVirtual($order) &&
-       (!is_array($order->customer['country']) || !isset($order->customer['country']['id']) ||
-        !is_array($order->billing['country']) || !isset($order->billing['country']['id']) ||
-        !is_array($order->delivery['country']) || !isset($order->delivery['country']['id']))) {
+if (!$eo->eoOrderIsVirtual($order) && (!isset($order->customer['country']['id']) || !isset($order->billing['country']['id']) || !isset($order->delivery['country']['id']))) {
     $messageStack->add(WARNING_ADDRESS_COUNTRY_NOT_FOUND, 'warning');
 }
 ?>
@@ -166,16 +158,16 @@ if (!$eo->eoOrderIsVirtual($order) &&
 //
 zen_define_default('EDIT_ORDERS_USE_NUMERIC_FIELDS', '1');
 if (EDIT_ORDERS_USE_NUMERIC_FIELDS !== '1') {
-    $input_value_parms = '';
-    $input_tax_parms = '';
-    $value_parms = '';
-    $tax_parms = '';
+    $input_value_params = '';
+    $input_tax_params = '';
+    $value_params = '';
+    $tax_params = '';
     $input_field_type = 'text';
 } else {
-    $input_value_parms = ' min="0" step="any"';
-    $input_tax_parms = ' min="0" max="100" step="any"';
-    $value_parms = $input_value_parms . ' type="number"';
-    $tax_parms = $input_tax_parms . ' type="number"';
+    $input_value_params = ' min="0" step="any"';
+    $input_tax_params = ' min="0" max="100" step="any"';
+    $value_params = $input_value_params . ' type="number"';
+    $tax_params = $input_tax_params . ' type="number"';
     $input_field_type = 'number';
 }
 
@@ -195,7 +187,6 @@ if (!empty($additional_totals_displayed)) {
 ?>
 <!-- body_text_eof //-->
 <script>
-    <!--
     handleShipping();
     function handleShipping() {
         if (document.getElementById('update_total_code') != undefined && document.getElementById('update_total_code').value == 'ot_shipping') {
@@ -205,124 +196,9 @@ if (!empty($additional_totals_displayed)) {
         }
     }
     document.getElementById('update_total_code').onchange = function(){handleShipping();};
-    // -->
 </script>
 <!-- body_eof //-->
 <?php
-}
-
-if (DISPLAY_PRICE_WITH_TAX === 'true') {
-?>
-<script>
-$(document).ready(function() {
-    $('.p-n, .p-t').on('keyup', function(e) {
-        var opi = $(this).attr('data-opi');
-        updateProductGross(opi);
-    });
-
-    $('.p-g').on('keyup', function(e) {
-        var opi = $(this).attr('data-opi');
-        updateProductNet(opi);
-    });
-
-    function doRound(x, places)
-    {
-        return Math.round(x * Math.pow(10, places)) / Math.pow(10, places);
-    }
-
-    function getProductTaxRate(opi)
-    {
-        return getValidatedTaxRate($('input[name="update_products['+opi+'][tax]"]').val());
-    }
-    function getValidatedTaxRate(taxRate)
-    {
-        var regex = /(?:\d*\.\d{1,2}|\d+)$/;
-        return (regex.test(taxRate)) ? taxRate : 0;
-    }
-
-    function updateProductGross(opi)
-    {
-        var taxRate = getProductTaxRate(opi);
-        var gross = $('input[name="update_products['+opi+'][final_price]"]').val();
-
-        if (taxRate > 0) {
-            gross = gross * ((taxRate / 100) + 1);
-        }
-        $('input[name="update_products['+opi+'][gross]"]').val(doRound(gross, 4));
-    }
-
-    function updateProductNet(opi)
-    {
-        var taxRate = getProductTaxRate(opi);
-        var net = $('input[name="update_products['+opi+'][gross]"]').val();
-
-        if (taxRate > 0) {
-            net = net / ((taxRate / 100) + 1);
-        }
-        $('input[name="update_products['+opi+'][final_price]"]').val(doRound(net, 4));
-    }
-    
-    $('#s-t, #s-n').on('keyup', function(e) {
-        updateShippingGross();
-    });
-    $('#s-g').on('keyup', function(e) {
-        updateShippingNet();
-    });
-
-    function getShippingTaxRate()
-    {
-        return getValidatedTaxRate($('#s-t').val());
-    }
-
-    function updateShippingGross()
-    {
-        var taxRate = getShippingTaxRate();
-        var gross = $('#s-n').val();
-        if (taxRate > 0) {
-            gross = gross * ((taxRate / 100) + 1);
-        }
-        $('#s-g').val(doRound(gross, 4));
-    }
-
-    function updateShippingNet()
-    {
-        var taxRate = getShippingTaxRate();
-        var net = $('#s-g').val();
-        if (taxRate > 0) {
-            net = net / ((taxRate / 100) + 1);
-        }
-        $('#s-n').val(doRound(net, 4));
-    }
-});
-</script>
-<?php
-}
-
-// -----
-// Give a watching observer the opportunity to identify additional .js files, present
-// in the /admin/includes/javascript sub-directory, for inclusion in EO's display
-// processing.
-//
-// The observer sets the $addl_js_files value passed to be a comma-separated list
-// of file names to be included.
-//
-// Observer note:  Be sure to add a leading ', ' to any updates if, on receipt of the
-// notification, the $addl_js_files (i.e. $p2) is not empty!
-//
-$addl_js_files = '';
-$zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_JS', '', $addl_js_files);
-if (!empty($addl_js_files)) {
-    $js_files = explode(',', str_replace(' ', '', (string)$addl_js_files));
-    foreach ($js_files as $js_filename) {
-        if (!preg_match('/^[a-zA-Z]+[a-zA-Z0-9\.\-_]*$/', $js_filename)) {
-            $eo->eoLog("Additional javascript file ($js_filename) not included, due to filename character mismatch.");
-        } else {
-            $js_file = DIR_WS_INCLUDES . 'javascript' . DIRECTORY_SEPARATOR . "$js_filename.js";
-?>
-<script src="<?php echo $js_file; ?>"></script>
-<?php
-        }
-    }
 }
 ?>
 <!-- footer //-->

@@ -3,7 +3,7 @@
 // Part of the Edit Orders plugin, v4.5.0 and later, provided by lat9.
 // Copyright 2019-2024, Vinos de Frutas Tropicales.
 //
-//-Last modified v4.7.1
+// Last modified v5.0.0
 //
 // This module is loaded in global scope by /admin/edit_orders.php.
 //
@@ -20,8 +20,10 @@ $max_city_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_cit
 $max_state_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_state') . '"';
 $max_postcode_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_postcode') . '"';
 $max_country_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_country') . '"';
+$max_telephone_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_telephone') . '"';
+$max_email_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_email_address') . '"';
 ?>
-<div class="row" id="c-form">
+<div id="addr-form" class="row">
     <div class="col-sm-12 col-lg-4">
 <?php
 // -----

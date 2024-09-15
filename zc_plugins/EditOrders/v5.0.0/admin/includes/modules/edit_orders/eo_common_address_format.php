@@ -3,7 +3,7 @@
 // Part of the Edit Orders plugin, v4.5.0 and later, provided by lat9.
 // Copyright 2019-2024, Vinos de Frutas Tropicales.
 //
-//-Last modified v4.7.1
+// Last modified v5.0.0
 //
 // This module is loaded in global scope by /admin/includes/modules/edit_orders/eo_edit_action_display.php.
 //
@@ -17,68 +17,180 @@
 //                     contains the to-be-rendered field values.
 // $address_notifier . The notification to be raised at the end of EO's standard address elements.
 //
+$input_prefix = 'update_' . $address_name;
+$modal_id = $address_name . '-modal';
+$google_map_address = urlencode($address_fields['street_address'] . ',' . $address_fields['city'] . ',' . $address_fields['state'] . ',' . $address_fields['postcode']);
 ?>
-<div role="group" aria-labelledby="sr-<?= $address_name ?>">
+<div class="row my-2">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <i class="fa-2x <?= $address_icon ?>"></i> <span class="h3"><?= rtrim($address_label, ':') ?></span>
+        </div>
+        <div class="panel-body">
+            <div class="col-md-6">
+                <div class="btn-group btn-group-sm mt-2">
+                    <a href="https://maps.google.com/maps/search/?api=1&amp;query=<?= $google_map_address ?>" rel="noreferrer" target="map" role="button" class="btn btn-default me-2">
+                        <i class="fa-regular fa-map"></i>&nbsp;<?= BUTTON_MAP_ADDRESS ?>
+                    </a>
+                    <br>
+                    <button type="button" class="btn btn-info mt-1" data-toggle="modal" data-target="#<?= $modal_id ?>">
+                        <?= TEXT_BUTTON_CHANGE ?>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <address class="mb-0">
+                    <?= zen_address_format($address_fields['format_id'], $address_fields, 1, '', '<br>') ?>
+                    <br><br>
+                    <?= $address_fields['telephone'] ?? '&nbsp;' ?>
+                    <br>
+                    <?= $address_fields['email_address'] ?? '&nbsp;' ?>
+                </address>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="<?= $modal_id ?>" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">
+                    <?= sprintf(TEXT_MODAL_ADDRESS_HEADER, rtrim($address_label, ':')) ?>
+                </h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row my-2">
+                    <div class="col-sm-3 control-label">
+                        <label for="<?= $input_prefix ?>_company"><?= ENTRY_CUSTOMER_COMPANY ?></label>:&nbsp;
+                    </div>
+                    <div class="col-sm-9">
+                        <?= zen_draw_input_field(
+                            $input_prefix . '_company',
+                            zen_output_string_protected($address_fields['company']),
+                            $max_company_length . ' id="' . $input_prefix . '_company" class="form-control"'
+                        ) ?>
+                    </div>
+                </div>
+
+                <div class="row my-2">
+                    <div class="col-sm-3 control-label">
+                        <label for="<?= $input_prefix ?>_address"><?= ENTRY_CUSTOMER_ADDRESS ?></label>:&nbsp;
+                    </div>
+                    <div class="col-sm-9">
+                        <?= zen_draw_input_field(
+                            $input_prefix . '_street_address',
+                            zen_output_string_protected($address_fields['street_address']),
+                            $max_street_address_length . ' id="' . $input_prefix . '_street_address" class="form-control"'
+                        ) ?>
+                    </div>
+                </div>
+
+                <div class="row my-2">
+                    <div class="col-sm-3 control-label">
+                        <label for="<?= $input_prefix ?>_suburb"><?= ENTRY_CUSTOMER_SUBURB ?></label>:&nbsp;
+                    </div>
+                    <div class="col-sm-9">
+                        <?= zen_draw_input_field(
+                            $input_prefix . '_suburb',
+                            zen_output_string_protected($address_fields['suburb']),
+                            $max_suburb_length . ' id="' . $input_prefix . '_suburb" class="form-control"'
+                        ) ?>
+                    </div>
+                </div>
+
+                <div class="row my-2">
+                    <div class="col-sm-3 control-label">
+                        <label for="<?= $input_prefix ?>_city"><?= ENTRY_CUSTOMER_CITY ?></label>:&nbsp;
+                    </div>
+                    <div class="col-sm-9">
+                        <?= zen_draw_input_field(
+                            $input_prefix . '_city',
+                            zen_output_string_protected($address_fields['city']),
+                            $max_city_length . ' id="' . $input_prefix . '_city" class="form-control"'
+                        ) ?>
+                    </div>
+                </div>
+
+                <div class="row my-2">
+                    <div class="col-sm-3 control-label">
+                        <label for="<?= $input_prefix ?>_state"><?= ENTRY_CUSTOMER_STATE ?></label>:&nbsp;
+                    </div>
+                    <div class="col-sm-9">
+                        <?= zen_draw_input_field(
+                            $input_prefix . '_state',
+                            zen_output_string_protected($address_fields['state']),
+                            $max_state_length . ' id="' . $input_prefix . '_state" class="form-control"'
+                        ) ?>
+                    </div>
+                </div>
+
+                <div class="row my-2">
+                    <div class="col-sm-3 control-label">
+                        <label for="<?= $input_prefix ?>_postcode"><?= ENTRY_CUSTOMER_POSTCODE ?></label>:&nbsp;
+                    </div>
+                    <div class="col-sm-9">
+                        <?= zen_draw_input_field(
+                            $input_prefix . '_postcode',
+                            zen_output_string_protected($address_fields['postcode']),
+                            $max_postcode_length . ' id="' . $input_prefix . '_postcode" class="form-control"'
+                        ) ?>
+                    </div>
+                </div>
+
+                <div class="row my-2">
+                    <div class="col-sm-3 control-label">
+                        <label for="<?= $input_prefix ?>_country"><?= ENTRY_CUSTOMER_COUNTRY ?></label>:&nbsp;
+                    </div>
+                    <div class="col-sm-9">
 <?php
-// -----
-// Add a hidden field containing the JSON-encoded version of the currently-displayed address.  Used
-// on an update_order action to see if any of the addresses have changed.
-//
-echo zen_draw_hidden_field('existing-' . $address_name, $eo->arrayImplode($address_fields));
-?>
-    <table class="table">
-        <tr>
-            <td aria-hidden="true"><i class="fa-2x <?= $address_icon ?>"></i></td>
-            <td class="eo-label" id="sr-<?= $address_name ?>" role="heading" aria-level="2"><?= $address_label ?></td>
-        </tr>
-        <tr>
-            <td class="eo-label"><label for="update_<?= $address_name ?>_name"><?= ENTRY_CUSTOMER_NAME ?></label>:&nbsp;</td>
-            <td><input name="update_<?= $address_name ?>_name" size="45" value="<?= zen_output_string_protected($address_fields['name']) ?>" <?= $max_name_length ?> id="update_<?= $address_name ?>_name"></td>
-        </tr>
-
-        <tr>
-            <td class="eo-label"><label for="update_<?= $address_name ?>_company"><?= ENTRY_CUSTOMER_COMPANY ?></label>:&nbsp;</td>
-            <td><input name="update_<?= $address_name ?>_company" size="45" value="<?= zen_output_string_protected($address_fields['company']) ?>" <?= $max_company_length ?> id="update_<?= $address_name ?>_company"></td>
-        </tr>
-
-        <tr>
-            <td class="eo-label"><label for="update_<?= $address_name ?>_address"><?= ENTRY_CUSTOMER_ADDRESS ?></label>:&nbsp;</td>
-            <td><input name="update_<?= $address_name ?>_street_address" size="45" value="<?= zen_output_string_protected($address_fields['street_address']) ?>" <?= $max_street_address_length ?> id="update_<?= $address_name ?>_address"></td>
-        </tr>
-
-        <tr>
-            <td class="eo-label"><label for="update_<?= $address_name ?>_suburb"><?= ENTRY_CUSTOMER_SUBURB ?></label>:&nbsp;</td>
-            <td><input name="update_<?= $address_name ?>_suburb" size="45" value="<?= zen_output_string_protected($address_fields['suburb']) ?>" <?= $max_suburb_length ?> id="update_<?= $address_name ?>_suburb"></td>
-        </tr>
-
-        <tr>
-            <td class="eo-label"><label for="update_<?= $address_name ?>_city"><?= ENTRY_CUSTOMER_CITY ?></label>:&nbsp;</td>
-            <td><input name="update_<?= $address_name ?>_city" size="45" value="<?= zen_output_string_protected($address_fields['city']) ?>" <?= $max_city_length ?> id="update_<?= $address_name ?>_city"></td>
-        </tr>
-
-        <tr>
-            <td class="eo-label"><label for="update_<?= $address_name ?>_state"><?= ENTRY_CUSTOMER_STATE ?></label>:&nbsp;</td>
-            <td><input name="update_<?= $address_name ?>_state" size="45" value="<?= zen_output_string_protected($address_fields['state']) ?>" <?= $max_state_length ?> id="update_<?= $address_name ?>_state"></td>
-        </tr>
-
-        <tr>
-            <td class="eo-label"><label for="update_<?= $address_name ?>_postcode"><?= ENTRY_CUSTOMER_POSTCODE ?></label>:&nbsp;</td>
-            <td><input name="update_<?= $address_name ?>_postcode" size="45" value="<?= zen_output_string_protected($address_fields['postcode']) ?>" <?= $max_postcode_length ?> id="update_<?= $address_name ?>_postcode"></td>
-        </tr>
-
-        <tr>
-            <td class="eo-label"><label for="update_<?= $address_name ?>_country"><?= ENTRY_CUSTOMER_COUNTRY ?></label>:&nbsp;</td>
-            <td>
-<?php
-if (is_array($address_fields['country']) && isset($address_fields['country']['id'])) {
-    echo zen_get_country_list('update_' . $address_name . '_country', $address_fields['country']['id'], 'id="update_' . $address_name . '_country"');
+if (isset($address_fields['country']['id'])) {
+    echo zen_get_country_list('update_' . $address_name . '_country', $address_fields['country']['id'], 'id="update_' . $address_name . '_country" class="form-control"');
 } else {
-    echo '<input name="update_' . $address_name . '_country" size="45" value="' . zen_output_string_protected($address_fields['country']) . '"' . $max_country_length . '" id="update_"' . $address_name . '_country">';
-} 
+    echo zen_draw_input_field($input_prefix . '_country', zen_output_string_protected($address_fields['country']), $max_country_length . ' id="' . $input_prefix . '_country" class="form-control"');
+}
 ?>
-            </td>
-        </tr>
+                    </div>
+                </div>
 <?php
+if (isset($address_fields['telephone'])) {
+?>
+
+                <div class="row my-2">
+                    <div class="col-sm-3 control-label">
+                        <label for="<?= $input_prefix ?>_telephone"><?= rtrim(ENTRY_TELEPHONE_NUMBER, ':') ?></label>:&nbsp;
+                    </div>
+                    <div class="col-sm-9">
+                        <?= zen_draw_input_field(
+                            $input_prefix . '_telephone',
+                            zen_output_string_protected($address_fields['telephone']),
+                            $max_telephone_length . ' id="' . $input_prefix . '_telephone" class="form-control"'
+                        ) ?>
+                    </div>
+                </div>
+<?php
+}
+
+if (isset($address_fields['email_address'])) {
+?>
+
+                <div class="row my-2">
+                    <div class="col-sm-3 control-label">
+                        <label for="<?= $input_prefix ?>_email_address"><?= rtrim(ENTRY_EMAIL_ADDRESS, ':') ?></label>:&nbsp;
+                    </div>
+                    <div class="col-sm-9">
+                        <?= zen_draw_input_field(
+                            $input_prefix . '_email_address',
+                            zen_output_string_protected($address_fields['email_address']),
+                            $max_email_length . ' id="' . $input_prefix . '_email_address" class="form-control"'
+                        ) ?>
+                    </div>
+                </div>
+<?php
+}
+
 // -----
 // Now, issue the address-specific notification to allow other plugins to add fields to the
 // associated address.
@@ -97,13 +209,19 @@ $zco_notifier->notify($address_notifier, $address_fields, $additional_rows);
 if (!empty($additional_rows)) {
     foreach ($additional_rows as $next_row) {
 ?>
-        <tr>
-            <td class="eo-label"><?= $next_row['label'] ?></label>:&nbsp;</td>
-            <td><?= $next_row['value'] ?></td>
-        </tr>
+                <div class="row my-2">
+                    <div class="col-sm-3 control-label"><?= $next_row['label'] ?></label>:&nbsp;</div>
+                    <div class="col-sm-9"><?= $next_row['value'] ?></div>
+                </div>
 <?php
     }
 }
 ?>
-    </table>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>

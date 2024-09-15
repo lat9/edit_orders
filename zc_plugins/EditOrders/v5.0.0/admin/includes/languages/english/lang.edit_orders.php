@@ -5,11 +5,13 @@
 // Last modified v5.0.0
 //
 $define = [
-// Page / Section Headings
+// Page / Section Headings and common button names
     'HEADING_TITLE' => 'Editing Order',
     'HEADING_TITLE_SEARCH' => 'Order ID:',
     'HEADING_TITLE_STATUS' => 'Status:',
     'HEADING_TITLE_ADD_PRODUCT' => 'Adding a Product to Order',
+    'TEXT_BUTTON_CHANGE' => 'Change',
+    'TEXT_BUTTON_CHANGE_ATTRIBS_ALT' => 'Change the attributes for this product',
 
 // Table Headings
     'TABLE_HEADING_STATUS_HISTORY' => 'Order Status History &amp; Comments',
@@ -32,7 +34,8 @@ $define = [
     'TABLE_HEADING_UPDATED_BY' => 'Updated By',
 
 // Order Address Entries
-    'ENTRY_CUSTOMER' => 'Customer Address:',
+    'BUTTON_MAP_ADDRESS' => 'Map Address',
+    'ENTRY_CUSTOMER' => 'Customer Information',
     'ENTRY_CUSTOMER_NAME' => 'Name',
     'ENTRY_CUSTOMER_COMPANY' => 'Company',
     'ENTRY_CUSTOMER_ADDRESS' => 'Address',
@@ -43,8 +46,11 @@ $define = [
     'ENTRY_CUSTOMER_COUNTRY' => 'Country',
     'ENTRY_SHIPPING_ADDRESS' => 'Shipping Address:',
     'ENTRY_BILLING_ADDRESS' => 'Billing Address:',
+    'ENTRY_TELEPHONE_NUMBER' => 'Telephone:',       //- Shortening for modal-display; default is 'Telephone Number:'
+    'TEXT_MODAL_ADDRESS_HEADER' => 'Modifying the Order\'s %s', //- %s is filled in with one the the 'xxx Address:' values, above
 
-// Order Payment Entries
+// Order Payment Entries and Additional Infomation
+    'ENTRY_CURRENCY_VALUE' => 'Currency Value (%s):',   //- %s is filled in with the order's currency-code
     'ENTRY_PAYMENT_METHOD' => 'Payment Method:',
     'ENTRY_CREDIT_CARD_TYPE' => 'Credit Card Type:',
     'ENTRY_CREDIT_CARD_OWNER' => 'Credit Card Owner:',
@@ -53,8 +59,11 @@ $define = [
     'ENTRY_UPDATE_TO_CC' => 'Enter <strong>Credit Card</strong> to view CC fields.',
     'ENTRY_UPDATE_TO_CK' => 'Enter the payment method used for this order to hide CC fields. (<strong>PayPal, Check/Money Order, Western Union, etc</strong>)',
     'ENTRY_PURCHASE_ORDER_NUMBER' => 'Purchase Order:',
+    'TEXT_PANEL_HEADER_ADDL_INFO' => 'Additional Information',
 
 // Order Status Entries
+    'BUTTON_ADD_COMMENT' => 'Add Comment',
+    'BUTTON_ADD_COMMENT_ALT' => 'Add a Comment to This Order',  //- Also used for the modal entry's heading!
     'ENTRY_STATUS' => 'Status:',
     'ENTRY_CURRENT_STATUS' => 'Current Status: ',
     'ENTRY_NOTIFY_CUSTOMER' => 'Notify Customer:',
