@@ -2,7 +2,7 @@
 // -----
 // Part of the Edit Orders encapsulated plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2003 The zen-cart developers
+// Copyright (c) 2003, 2024 The zen-cart developers
 //
 // Last modified v5.0.0
 //
@@ -82,29 +82,18 @@ if ($eo->queryOrder() === false) {
 }
 
 // -----
-// Check to see if any warning messages were detected by the EO class. TBD what to do if present!
+// Check to see if any warning messages were detected by the EO class. [FIXME] what to do if present!
 //
 $eo_messages_exist = $eo->checkEnvironment();
 
-$orders_statuses = [];
-$orders_status_array = [];
-$orders_status_query = $db->Execute(
-    "SELECT orders_status_id, orders_status_name
-       FROM " . TABLE_ORDERS_STATUS . "
-      WHERE language_id = " . (int)$_SESSION['languages_id'] . "
-  ORDER BY sort_order ASC"
-);
-foreach ($orders_status_query as $orders_status) {
-    $status_id = $orders_status['orders_status_id'];
-    $status_name = $orders_status['orders_status_name'];
-    $orders_statuses[] = [
-        'id' => $status_id,
-        'text' => "$status_name [$status_id]"
-    ];
-    $orders_status_array[$status_id] = $status_name;
-}
-unset($orders_status_query);
+// -----
+// Gather the two arrays for the order's status display.
+//
+['orders_statuses' => $orders_statuses, 'orders_status_array' => $orders_status_array] = zen_getOrdersStatuses();
 
+// -----
+// Start action-related processing.
+//
 $action = $_GET['action'] ?? 'edit';
 $eo->eoLog("\n" . date('Y-m-d H:i:s') . ", Edit Orders entered action ($action)\nEnabled Order Totals: " . MODULE_ORDER_TOTAL_INSTALLED);
 $zco_notifier->notify('EDIT_ORDERS_START_ACTION_PROCESSING');
