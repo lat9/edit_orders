@@ -149,6 +149,24 @@ class EditOrders extends base
                 $this->order->delivery = [];
             } else {
                 $this->order->delivery = $delivery_address->fields;
+                $sql =
+                    "SELECT countries_id AS `id`, countries_name AS `title`, countries_iso_code_2 AS iso_code_2, countries_iso_code_3 AS iso_code_3
+                       FROM " . TABLE_COUNTRIES . "
+                      WHERE countries_name = :country:
+                        AND status = 1
+                      LIMIT 1";
+                $sql = $db->bindVars($sql, ':country:', $this->order->delivery['country'], 'string');
+                $country_info = $db->Execute($sql);
+                if (!$country_info->EOF) {
+                    $this->order->delivery['country'] = $country_info->fields;
+                } else {
+                    $this->order->delivery['country'] = [
+                        'id' => 0,
+                        'title' => $order->delivery['country'],
+                        'iso_code_2' => '',
+                        'iso_code_3' => '',
+                    ];
+                }
             }
         }
 
@@ -198,10 +216,23 @@ class EditOrders extends base
             return [];
         }
 
-        $country_id = (int)$address_info['country']['id'];
+        global $db;
+
+        $country_id = (int)($address_info['country']['id'] ?? 0);
         $address_info['country_id'] = $country_id;
 
-        global $db;
+        $country_query = $db->Execute(
+            "SELECT countries_id
+               FROM " . TABLE_COUNTRIES . "
+              WHERE countries_id = $country_id
+                AND status = 1
+              LIMIT 1"
+        );
+        if ($country_query->EOF) {
+            $address_info['country_id'] = 0;
+            return $address_info;
+        }
+
         $state = zen_db_input($address_info['state']);
         $zone_query = $db->Execute(
             "SELECT * 
@@ -322,7 +353,7 @@ class EditOrders extends base
 
         $virtual_products = 0;
         foreach ($this->order->products as $current_product) {
-            $products_id = (int)$current_product['id'];
+            $products_id = (int)$current_product['orders_products_id'];
             if ($current_product['products_virtual'] === 1 || strpos($current_product['model'], 'GIFT') === 0) {
                 $virtual_products++;
             } elseif (isset($current_product['attributes'])) {
@@ -338,7 +369,7 @@ class EditOrders extends base
                             AND opa.products_options_id = " . (int)$current_attribute['option_id'] . "
                           LIMIT 1"
                     );
-                    $this->eoLog("\tChecking whether the product's attribute is a download, option_id = " . $current_attribute['option_id'] . ", value_id = " . $current_attribute['value_id'] . ": (" . $download_check->EOF . ")");
+                    $this->eoLog("Checking whether the product's attribute is a download, option_id = " . $current_attribute['option_id'] . ", value_id = " . $current_attribute['value_id'] . ": (" . $download_check->EOF . ")");
                     if (!$download_check->EOF) {
                         $virtual_products++;
                         break;  //-Out of foreach attributes loop
@@ -388,7 +419,14 @@ class EditOrders extends base
         foreach ($this->order->products as $product) {
             $tax_description = $this->findTaxGroupNameFromValue($product['tax']);
             if ($tax_description === '') {
-                $messageStack->add_session(sprintf(ERROR_NO_PRODUCT_TAX_DESCRIPTION, zen_output_string_protected($product['name']), (string)$product['tax']), 'error');
+                $messageStack->add_session(
+                    sprintf(ERROR_NO_PRODUCT_TAX_DESCRIPTION,
+                        $this->orders_id,
+                        zen_output_string_protected($product['name']),
+                        (string)$product['tax']
+                    ),
+                    'error'
+                );
                 return false;
             }
 
@@ -466,7 +504,7 @@ class EditOrders extends base
             ];
             foreach ($tax_groups as $next_tax_group) {
                 if ($this->order->info['tax_subtotals'][$next_tax_group]['tax_rate'] === false) {
-                    $messageStack->add_session(ERROR_CANT_DETERMINE_TAX_RATES, 'error');
+                    $messageStack->add_session(sprintf(ERROR_CANT_DETERMINE_TAX_RATES, $this->orders_id), 'error');
                     return false;
                 }
                 $tax_subtotal['tax_rate'] += $this->order->info['tax_subtotals'][$next_tax_group]['tax_rate'];
@@ -502,18 +540,26 @@ class EditOrders extends base
         }
 
         // -----
+        // The storefront free-shipping determination doesn't set the order's shipping_tax_rate; if that's
+        // the case, set the tax-rate to 0.
+        //
+        if ($this->order->info['shipping_module_code'] === 'free') {
+            $this->order->info['shipping_tax_rate'] = 0;
+        }
+
+        // -----
         // For the order to be reconstructed, its shipping_tax_rate **must** have been recorded
         // when the order was created.
         //
         if ($this->order->info['shipping_tax_rate'] === null) {
-            $messageStack->add_session(ERROR_SHIPPING_TAX_RATE_MISSING, 'error');
+            $messageStack->add_session(sprintf(ERROR_SHIPPING_TAX_RATE_MISSING, $this->orders_id), 'error');
             return false;
         }
 
         $shipping_tax_rate = $this->convertToIntOrFloat($this->order->info['shipping_tax_rate']);
         $shipping_tax_description = $this->findTaxGroupNameFromValue($shipping_tax_rate);
         if ($shipping_tax_description === '') {
-            $messageStack->add_session(sprintf(ERROR_NO_SHIPPING_TAX_DESCRIPTION, $this->order->info['shipping_tax_rate']), 'error');
+            $messageStack->add_session(sprintf(ERROR_NO_SHIPPING_TAX_DESCRIPTION, $this->orders_id, $this->order->info['shipping_tax_rate']), 'error');
             return false;
         }
 

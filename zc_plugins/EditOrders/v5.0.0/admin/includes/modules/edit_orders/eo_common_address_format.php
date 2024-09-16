@@ -11,7 +11,7 @@
 //
 // $address_icon ..... The name of the FA icon associated with the address' information.
 // $address_label .... The label, e.g. "Customer" to associate with the address information.
-// $address_name ..... The specific address, e.g. 'customer' or 'billing', that is being displayed.  This is
+// $address_name ..... The specific address, one of 'customer', 'billing' or 'delivery', that is being displayed.  This is
 //                     used to create unique form-field names for the three variants of addresses.
 // $address_fields ... An array of information, presumedly from the order-object (e.g. $address_fields), that
 //                     contains the to-be-rendered field values.
@@ -27,6 +27,14 @@ $google_map_address = urlencode($address_fields['street_address'] . ',' . $addre
             <i class="fa-2x <?= $address_icon ?>"></i> <span class="h3"><?= rtrim($address_label, ':') ?></span>
         </div>
         <div class="panel-body">
+<?php
+if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 'storepickup' || $order->content_type === 'virtual')) {
+    $no_shipping_text = ($order->content_type === 'virtual') ? TEXT_VIRTUAL_NO_SHIP_ADDR : TEXT_STOREPICKUP_NO_SHIP_ADDR;
+?>
+            <p class="text-center"><?= $no_shipping_text ?></p>
+<?php
+} else {
+?>
             <div class="col-md-6">
                 <div class="btn-group btn-group-sm mt-2">
                     <a href="https://maps.google.com/maps/search/?api=1&amp;query=<?= $google_map_address ?>" rel="noreferrer" target="map" role="button" class="btn btn-default me-2">
@@ -47,6 +55,9 @@ $google_map_address = urlencode($address_fields['street_address'] . ',' . $addre
                     <?= $address_fields['email_address'] ?? '&nbsp;' ?>
                 </address>
             </div>
+<?php
+}
+?>
         </div>
     </div>
 </div>
@@ -175,7 +186,6 @@ if (isset($address_fields['telephone'])) {
 
 if (isset($address_fields['email_address'])) {
 ?>
-
                 <div class="row my-2">
                     <div class="col-sm-3 control-label">
                         <label for="<?= $input_prefix ?>_email_address"><?= rtrim(ENTRY_EMAIL_ADDRESS, ':') ?></label>:&nbsp;

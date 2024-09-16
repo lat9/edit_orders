@@ -116,10 +116,19 @@ switch ($action) {
         break; 
 }
 
+// -----
+// Create an instance of the to-be-edited order.
+//
 $order = $eo->getOrder();
 
-if (!$eo->eoOrderIsVirtual($order) && (!isset($order->customer['country']['id']) || !isset($order->billing['country']['id']) || !isset($order->delivery['country']['id']))) {
-    $messageStack->add(WARNING_ADDRESS_COUNTRY_NOT_FOUND, 'warning');
+// -----
+// If a country referenced in the order's addresses is no longer present (or enabled)
+// in the site, the order can't be edited since many of the tax- and shipping-related
+// processing will result in invalid values for the order.
+//
+if (empty($order->customer['country_id']) || empty($order->billing['country_id']) || (!$eo->eoOrderIsVirtual($order) && empty($order->delivery['country_id']))) {
+    $messageStack->add_session(sprintf(ERROR_ADDRESS_COUNTRY_NOT_FOUND, $oID), 'error');
+    zen_redirect(zen_href_link(FILENAME_ORDERS, zen_get_all_get_params()));
 }
 ?>
 <!doctype html>
@@ -174,8 +183,8 @@ if ($action === 'edit') {
 //
 if (!empty($additional_totals_displayed)) {
 ?>
-<!-- body_text_eof //-->
 <script>
+/*
     handleShipping();
     function handleShipping() {
         if (document.getElementById('update_total_code') != undefined && document.getElementById('update_total_code').value == 'ot_shipping') {
@@ -185,6 +194,7 @@ if (!empty($additional_totals_displayed)) {
         }
     }
     document.getElementById('update_total_code').onchange = function(){handleShipping();};
+*/
 </script>
 <!-- body_eof //-->
 <?php

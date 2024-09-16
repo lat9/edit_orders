@@ -2,7 +2,7 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2003 The zen-cart developers
+// Copyright (c) 2003-2024 The zen-cart developers
 //
 // Last modified v5.0.0
 //
@@ -212,17 +212,18 @@ if (empty($order->statuses)) {
 
     <div id="comment-modal" class="modal fade" role="dialog">
         <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title text-center"><?= BUTTON_ADD_COMMENT_ALT ?></h4>
-                </div>
-
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="comments"><?= TABLE_HEADING_COMMENTS ?></label>
-                        <?= zen_draw_textarea_field('comments', 'soft', '60', '5', '', 'id="comments" class="form-control"') ?>
+            <form id="comment-form">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title text-center"><?= BUTTON_ADD_COMMENT_ALT ?></h4>
                     </div>
+
+                    <div id="comment-form" class="modal-body">
+                        <div class="form-group">
+                            <label for="comments"><?= TABLE_HEADING_COMMENTS ?></label>
+                            <?= zen_draw_textarea_field('comments', 'soft', '60', '5', '', 'id="comments" class="form-control"') ?>
+                        </div>
 <?php
 // -----
 // Give an observer the opportunity to add additional content to the status-history form.
@@ -234,17 +235,17 @@ $zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_OSH_CONTENT', $order, $additional_
 if (is_array($additional_osh_content) && count($additional_osh_content) !== 0) {
     foreach ($additional_osh_content as $osh_content) {
 ?>
-                    <div><?= $osh_content ?></div>
+                        <div><?= $osh_content ?></div>
 <?php
     }
 }
 ?>
-                    <div><?= ENTRY_CURRENT_STATUS . ' ' . $orders_status_array[$order->info['orders_status']] ?></div>
+                        <div><?= ENTRY_CURRENT_STATUS . ' ' . $orders_status_array[$order->info['orders_status']] ?></div>
 
-                    <div class="form-group">
-                        <label for="new-status"><?= ENTRY_STATUS ?></label>
-                        <?= zen_draw_pull_down_menu('status', $orders_statuses, $order->info['orders_status'], 'class="form-control"') ?>
-                    </div>
+                        <div class="form-group">
+                            <label for="new-status"><?= ENTRY_STATUS ?></label>
+                            <?= zen_draw_pull_down_menu('status', $orders_statuses, $order->info['orders_status'], 'class="form-control"') ?>
+                        </div>
 <?php
 // -----
 // Determine the default setting for the customer notification, based on the configuration
@@ -268,30 +269,31 @@ switch (EO_CUSTOMER_NOTIFICATION_DEFAULT) {
         break;
 }
 ?>
-                    <div class="form-group">
-                        <div class="control-label font-weight-bold"><?php echo ENTRY_NOTIFY_CUSTOMER; ?></div>
-                        <label class="radio-inline"><?php echo zen_draw_radio_field('notify', '1', $notify_email) . TEXT_EMAIL; ?></label>
-                        <label class="radio-inline"><?php echo zen_draw_radio_field('notify', '0', $notify_no_email) . TEXT_NOEMAIL; ?></label>
-                        <label class="radio-inline"><?php echo zen_draw_radio_field('notify', '-1', $notify_hidden) . TEXT_HIDE; ?></label>
-                    </div>
-
-                    <div class="checkbox">
-                        <label>
-                            <?= zen_draw_checkbox_field('notify_comments', '', true) . '&nbsp;' . ENTRY_NOTIFY_COMMENTS ?>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <div class="btn-group btn-group-justified">
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-default" data-dismiss="modal"><?= IMAGE_CANCEL ?></button>
+                        <div class="form-group">
+                            <div class="control-label font-weight-bold"><?php echo ENTRY_NOTIFY_CUSTOMER; ?></div>
+                            <label class="radio-inline"><?php echo zen_draw_radio_field('notify', '1', $notify_email) . TEXT_EMAIL; ?></label>
+                            <label class="radio-inline"><?php echo zen_draw_radio_field('notify', '0', $notify_no_email) . TEXT_NOEMAIL; ?></label>
+                            <label class="radio-inline"><?php echo zen_draw_radio_field('notify', '-1', $notify_hidden) . TEXT_HIDE; ?></label>
                         </div>
-                        <div class="btn-group">
-                            <button id="comment-submit" type="button" class="btn btn-danger ms-2"><?= IMAGE_CONFIRM ?></button>
+
+                        <div class="checkbox">
+                            <label>
+                                <?= zen_draw_checkbox_field('notify_comments', '', true) . '&nbsp;' . ENTRY_NOTIFY_COMMENTS ?>
+                            </label>
                         </div>
                     </div>
-                </div>
+
+                    <div class="modal-footer">
+                        <div class="btn-group btn-group-justified">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-default" data-dismiss="modal"><?= IMAGE_CANCEL ?></button>
+                            </div>
+                            <div class="btn-group">
+                                <button id="comment-submit" type="button" class="btn btn-danger ms-2"><?= IMAGE_CONFIRM ?></button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

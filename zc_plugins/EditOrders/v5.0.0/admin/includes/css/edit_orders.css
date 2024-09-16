@@ -21,6 +21,9 @@
 .text-nowrap {
     white-space: nowrap;
 }
+.w-auto {
+    width: auto;
+}
 
 .attribs-list {
     font-size: smaller;
@@ -60,5 +63,3 @@ input.amount-onetime, input.prod-qty {
 }
 
 #order-select { width: auto; margin: 0 auto; }
-
-.no-osh { min-width: 50%; text-align: center; }

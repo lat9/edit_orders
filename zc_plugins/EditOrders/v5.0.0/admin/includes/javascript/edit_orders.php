@@ -2,7 +2,7 @@
 // -----
 // Part of the Edit Orders encapsulated plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2003 The zen-cart developers
+// Copyright (c) 2003-2024 The zen-cart developers
 //
 // Last modified v5.0.0
 //
@@ -12,7 +12,7 @@
 if (DISPLAY_PRICE_WITH_TAX === 'true') {
 ?>
 <script>
-$(document).ready(function() {
+$(function() {
     $('.price-net, .price-tax').on('keyup', function(e) {
         var opi = $(this).attr('data-opi');
         updateProductGross(opi);
@@ -59,7 +59,7 @@ $(document).ready(function() {
         }
         $('input[name="update_products['+opi+'][final_price]"]').val(doRound(net, 4));
     }
-    
+
     $('#ship-tax, #ship-net').on('keyup', function(e) {
         updateShippingGross();
     });
@@ -96,6 +96,26 @@ $(document).ready(function() {
 <?php
 }
 
+//- Comparing an array of objects: https://stackoverflow.com/questions/27030/comparing-arrays-of-objects-in-javascript
+?>
+<script>
+$(function() {
+    $('#comment-submit').on('click', function() {
+        console.log($('#comment-form').serializeArray());
+    });
+
+    $('#payment-method').on('change', function() {
+        if ($('#payment-method').val() === '<?= TEXT_CREDIT_CARD ?>') {
+            $('.cc-field').show();
+        } else {
+            $('.cc-field').hide();
+        }
+    });
+
+    console.log($('#eo-addl-info form').serializeArray());
+});
+</script>
+<?php
 // -----
 // Give a watching observer the opportunity to identify additional .js files, present
 // in the /admin/includes/javascript sub-directory, for inclusion in EO's display

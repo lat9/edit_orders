@@ -31,12 +31,13 @@
     <?php require 'eo_edit_action_addresses_display.php'; ?>
 
     <div class="row">
-        <div class="col-md-4">
+        <div id="eo-addl-info" class="col-md-4">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <span class="h3"><?= TEXT_PANEL_HEADER_ADDL_INFO ?></span>
                 </div>
                 <div class="panel-body">
+                    <form class="form-horizontal">
 <?php
 // -----
 // Give a watching observer the opportunity to supply additional contact-information for the order.
@@ -53,14 +54,14 @@ if (is_array($additional_contact_info) && count($additional_contact_info) !== 0)
     foreach ($additional_contact_info as $contact_info) {
         if (!empty($contact_info['label']) && !empty($contact_info['content'])) {
 ?>
-                    <div class="row my-2">
-                        <div class="col-sm-3 control-label">
-                            <?= $contact_info['label'] ?>
+                        <div class="row my-2">
+                            <div class="col-sm-4 control-label">
+                                <?= $contact_info['label'] ?>
+                            </div>
+                            <div class="col-sm-8">
+                                <?= $contact_info['content'] ?>
+                            </div>
                         </div>
-                        <div class="col-sm-9">
-                            <?= $contact_info['content'] ?>
-                        </div>
-                    </div>
 <?php
         }
     }
@@ -73,155 +74,153 @@ if (is_array($additional_contact_info) && count($additional_contact_info) !== 0)
 //
 if ($order->info['currency_value'] != 1) {
 ?>
-                    <div class="row my-2">
-                        <div class="col-sm-3 control-label">
-                            <?= sprintf(ENTRY_CURRENCY_VALUE, $order->info['currency']) ?>
+                        <div class="row my-2">
+                            <div class="col-sm-4 control-label">
+                                <?= sprintf(ENTRY_CURRENCY_VALUE, $order->info['currency']) ?>
+                            </div>
+                            <div class="col-sm-8">
+                                <?= $order->info['currency_value'] ?>
+                            </div>
                         </div>
-                        <div class="col-sm-9">
-                            <?= $order->info['currency_value'] ?>
-                        </div>
-                    </div>
 <?php
 }
 
 $max_payment_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'payment_method') . '"';
 ?>
-                    <div class="row my-2">
-                        <div class="col-sm-3 control-label">
-                            <?= ENTRY_PAYMENT_METHOD ?>
+                        <div class="row my-2">
+                            <div class="form-group">
+                                <label for="payment-method" class="col-sm-4 control-label">
+                                    <?= ENTRY_PAYMENT_METHOD ?>
+                                </label>
+                                <div class="col-sm-8">
+                                    <?= zen_draw_input_field(
+                                        'update_info_payment_method',
+                                        zen_output_string_protected($order->info['payment_method']),
+                                        $max_payment_length . ' id="payment-method" class="form-control"'
+                                    ) ?>
+                                    <?= ($order->info['payment_method'] !== TEXT_CREDIT_CARD) ? ENTRY_UPDATE_TO_CC : ENTRY_UPDATE_TO_CK ?>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-sm-9">
-                            <?= zen_draw_input_field(
-                                'update_info_payment_method',
-                                zen_output_string_protected($order->info['payment_method']),
-                                $max_payment_length . ' class="form-control"'
-                            ) ?>
-                            <?= ($order->info['payment_method'] !== 'Credit Card') ? ENTRY_UPDATE_TO_CC : ENTRY_UPDATE_TO_CK ?>
-                        </div>
-                    </div>
 <?php 
-if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $order->info['payment_method'] === "Credit Card" || !empty($order->info['cc_number'])) {
-    $max_type_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_type') . '"';
-    $max_owner_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_owner') . '"';
-    $max_number_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_number') . '"';
-    $max_expires_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_expires') . '"';
-?>
-                    <div class="row my-2">
-                        <div class="col-sm-3 control-label">
-                            <?= ENTRY_CREDIT_CARD_TYPE ?>
-                        </div>
-                        <div class="col-sm-9">
-                            <?= zen_draw_input_field(
-                                'update_info_cc_type',
-                                zen_output_string_protected($order->info['cc_type']),
-                                $max_type_length . ' class="form-control"'
-                            ) ?>
-                        </div>
-                    </div>
-                    <div class="row my-2">
-                        <div class="col-sm-3 control-label">
-                            <?= ENTRY_CREDIT_CARD_OWNER ?>
-                        </div>
-                        <div class="col-sm-9">
-                            <?= zen_draw_input_field(
-                                'update_info_cc_owner',
-                                zen_output_string_protected($order->info['cc_owner']),
-                                $max_owner_length . ' class="form-control"'
-                            ) ?>
-                        </div>
-                    </div>
-                    <div class="row my-2">
-                        <div class="col-sm-3 control-label">
-                            <?= ENTRY_CREDIT_CARD_NUMBER ?>
-                        </div>
-                        <div class="col-sm-9">
-                            <?= zen_draw_input_field(
-                                'update_info_cc_number',
-                                zen_output_string_protected($order->info['cc_number']),
-                                $max_number_length . ' class="form-control"'
-                            ) ?>
-                        </div>
-                    </div>
-                    <div class="row my-2">
-                        <div class="col-sm-3 control-label">
-                            <?= ENTRY_CREDIT_CARD_EXPIRES ?>
-                        </div>
-                        <div class="col-sm-9">
-                            <?= zen_draw_input_field(
-                                'update_info_cc_expires',
-                                zen_output_string_protected($order->info['cc_expires']),
-                                $max_expires_length . ' class="form-control"'
-                            ) ?>
-                        </div>
-                    </div>
-<?php
-}
+$max_type_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_type') . '"';
+$max_owner_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_owner') . '"';
+$max_number_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_number') . '"';
+$max_expires_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_expires') . '"';
 
+$cc_fields_display = 'd-none';
+if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $order->info['payment_method'] === TEXT_CREDIT_CARD || !empty($order->info['cc_number'])) {
+    $cc_fields_display = '';
+}
+?>
+                        <div class="row cc-field my-2 <?= $cc_fields_display ?>">
+                            <div class="form-group">
+                                <label for="cc-type" class="col-sm-4 control-label">
+                                    <?= ENTRY_CREDIT_CARD_TYPE ?>
+                                </label>
+                                <div class="col-sm-8">
+                                    <?= zen_draw_input_field(
+                                        'update_info_cc_type',
+                                        zen_output_string_protected((string)$order->info['cc_type']),
+                                        $max_type_length . ' id="cc-type" class="form-control"'
+                                    ) ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row cc-field my-2 <?= $cc_fields_display ?>">
+                            <div class="form-group">
+                                <label for="cc-owner" class="col-sm-4 control-label">
+                                    <?= ENTRY_CREDIT_CARD_OWNER ?>
+                                </label>
+                                <div class="col-sm-8">
+                                    <?= zen_draw_input_field(
+                                        'update_info_cc_owner',
+                                        zen_output_string_protected((string)$order->info['cc_owner']),
+                                        $max_owner_length . ' id="cc-owner" class="form-control"'
+                                    ) ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row cc-field my-2 <?= $cc_fields_display ?>">
+                            <div class="form-group">
+                                <label for="cc-number" class="col-sm-4 control-label">
+                                    <?= ENTRY_CREDIT_CARD_NUMBER ?>
+                                </label>
+                                <div class="col-sm-8">
+                                    <?= zen_draw_input_field(
+                                        'update_info_cc_number',
+                                        zen_output_string_protected((string)$order->info['cc_number']),
+                                        $max_number_length . ' id="cc-number" class="form-control"'
+                                    ) ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row cc-field my-2 <?= $cc_fields_display ?>">
+                            <div class="form-group">
+                                <label for="cc-expires" class="col-sm-4 control-label">
+                                    <?= ENTRY_CREDIT_CARD_EXPIRES ?>
+                                </label>
+                                <div class="col-sm-8">
+                                    <?= zen_draw_input_field(
+                                        'update_info_cc_expires',
+                                        zen_output_string_protected((string)$order->info['cc_expires']),
+                                        $max_expires_length . ' id="cc-expires" class="form-control"'
+                                    ) ?>
+                                </div>
+                            </div>
+                        </div>
+<?php
 // -----
 // NOTE: No maximum lengths provided for these non-standard fields, since there's no way to know what database table
 // the information is stored in!
 //
 if (isset($order->info['account_name']) || isset($order->info['account_number']) || isset($order->info['po_number'])) {
 ?>
-                            <tr>
-                                <td colspan="2"><?= zen_draw_separator('pixel_trans.gif', '1', '10') ?></td>
-                            </tr>
+                        <hr>
 <?php
     if (isset($order->info['account_name'])) {
 ?>
-                    <div class="row my-2">
-                        <div class="col-sm-3 control-label">
-                            <?= ENTRY_ACCOUNT_NAME ?>
+                        <div class="row my-2">
+                            <div class="col-sm-4 control-label">
+                                <?= ENTRY_ACCOUNT_NAME ?>
+                            </div>
+                            <div class="col-sm-8">
+                                <?= zen_output_string_protected($order->info['account_name']) ?>
+                            </div>
                         </div>
-                        <div class="col-sm-9">
-                            <?= zen_output_string_protected($order->info['account_name']) ?>
-                        </div>
-                    </div>
 <?php
     }
     if (isset($order->info['account_number'])) {
 ?>
-                    <div class="row my-2">
-                        <div class="col-sm-3 control-label">
-                            <?= ENTRY_ACCOUNT_NUMBER ?>
+                        <div class="row my-4">
+                            <div class="col-sm-3 control-label">
+                                <?= ENTRY_ACCOUNT_NUMBER ?>
+                            </div>
+                            <div class="col-sm-8">
+                                <?= zen_output_string_protected($order->info['account_number']) ?>
+                            </div>
                         </div>
-                        <div class="col-sm-9">
-                            <?= zen_output_string_protected($order->info['account_number']) ?>
-                        </div>
-                    </div>
 <?php
     }
     if (isset($order->info['po_number'])) {
 ?>
-                    <div class="row my-2">
-                        <div class="col-sm-3 control-label">
-                            <?= ENTRY_PURCHASE_ORDER_NUMBER ?>
+                        <div class="row my-2">
+                            <div class="col-sm-4 control-label">
+                                <?= ENTRY_PURCHASE_ORDER_NUMBER ?>
+                            </div>
+                            <div class="col-sm-8">
+                                <?= zen_output_string_protected($order->info['po_number']) ?>
+                            </div>
                         </div>
-                        <div class="col-sm-9">
-                            <?= zen_output_string_protected($order->info['po_number']) ?>
-                        </div>
-                    </div>
 <?php
     }
 }
 ?>
-                </div>
-                <div class="panel-footer text-right">
-                    <button type="button" class="btn btn-info mt-1">
-                        <?= TEXT_BUTTON_CHANGE ?>
-                    </button>
+                    </form>
                 </div>
             </div>
         </div>
-    </div>
 <?php
-$reset_totals_block =
-    '<div class="checkbox">' .
-        '<label>' .
-            zen_draw_checkbox_field('reset_totals', '', EO_TOTAL_RESET_DEFAULT === 'on') .
-            '&nbsp;' . RESET_TOTALS .
-        '</label>' .
-    '</div>';
 $payment_calc_choice = '';
 $price_is_hidden = '';
 $priceMessage = '';
@@ -245,11 +244,7 @@ if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
     if (isset($_SESSION['eo_price_calculations']) && $_SESSION['eo_price_calculations'] >= 1 && $_SESSION['eo_price_calculations'] <= 3) {
         $default = $_SESSION['eo_price_calculations'];
     }
-    $payment_calc_choice =
-        '<div class="form-group">' .
-            '<label for="calc-method">' . PAYMENT_CALC_METHOD . '&nbsp;</label>' .
-            zen_draw_pull_down_menu('payment_calc_method', $choices, $default, 'id="calc-method" class="form-control"') .
-        '</div>';
+    $payment_calc_choice = zen_draw_pull_down_menu('payment_calc_method', $choices, $default, 'id="calc-method" class="form-control w-auto"');
 } else {
     switch (EO_PRODUCT_PRICE_CALC_METHOD) {
         case 'AutoSpecials':
@@ -266,16 +261,45 @@ if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
             $payment_calc_choice = PRODUCT_PRICES_CALC_MANUAL;
             break;
     }
+    $payment_calc_choice = zen_draw_input_field('payment_calc_method', $payment_calc_choice, 'id="calc-method" class="form-control w-auto" disabled');
 }
 
 $additional_inputs = '';
 $zco_notifier->notify('EDIT_ORDERS_FORM_ADDITIONAL_INPUTS', $order, $additional_inputs);
+
+$reset_totals_block =
+    '<div class="checkbox">' .
+        '<label>' .
+            zen_draw_checkbox_field('reset_totals', '', EO_TOTAL_RESET_DEFAULT === 'on') .
+            '&nbsp;' . RESET_TOTALS .
+        '</label>' .
+    '</div>';
 ?>
-    <div id="update-form" class="row mb-4 py-3 text-center dataTableRow">
-        <?= zen_draw_form('edit_order', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'paycc']) . 'action=update_order', 'post', 'class="form-inline"') ?>
-            <button type="submit" class="btn btn-danger"><?= IMAGE_UPDATE ?></button>
-            <?= "&nbsp;$reset_totals_block&nbsp;$payment_calc_choice$additional_inputs" ?>
-        <?= '</form>' ?>
+        <div id="eo-update-info" class="col-md-8">
+            <div class="panel panel-warning">
+                <div class="panel-heading text-center">
+                    <span class="h3"><?= TEXT_PANEL_HEADER_UPDATE_INFO ?></span>
+                </div>
+                <div class="panel-body">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label for="calc-method" class="col-sm-3 control-label"><?= PAYMENT_CALC_METHOD ?>&nbsp;</label>
+                            <div class="col-sm-9">
+                                <?= $payment_calc_choice ?>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div id="update-form" class="panel-footer text-center d-none">
+                    <div>
+                        <?= zen_draw_form('edit_order', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'paycc']) . 'action=update_order', 'post', 'class="form-inline"') ?>
+                            <button id="update-submit" type="button" class="btn btn-danger"><?= IMAGE_UPDATE ?></button>
+                            <?= "&nbsp;$reset_totals_block&nbsp;$additional_inputs" ?>
+                        <?= '</form>' ?>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
 <!-- Begin Products Listing Block -->

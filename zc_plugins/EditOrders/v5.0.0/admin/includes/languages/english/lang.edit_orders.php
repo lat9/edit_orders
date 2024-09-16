@@ -48,6 +48,8 @@ $define = [
     'ENTRY_BILLING_ADDRESS' => 'Billing Address:',
     'ENTRY_TELEPHONE_NUMBER' => 'Telephone:',       //- Shortening for modal-display; default is 'Telephone Number:'
     'TEXT_MODAL_ADDRESS_HEADER' => 'Modifying the Order\'s %s', //- %s is filled in with one the the 'xxx Address:' values, above
+    'TEXT_STOREPICKUP_NO_SHIP_ADDR' => 'The order is to be picked up at the store, no shipping address.',
+    'TEXT_VIRTUAL_NO_SHIP_ADDR' => 'The order contains only <code>virtual</code> products, no shipping address.',
 
 // Order Payment Entries and Additional Infomation
     'ENTRY_CURRENCY_VALUE' => 'Currency Value (%s):',   //- %s is filled in with the order's currency-code
@@ -57,8 +59,9 @@ $define = [
     'ENTRY_CREDIT_CARD_NUMBER' => 'Credit Card Number:',
     'ENTRY_CREDIT_CARD_EXPIRES' => 'Credit Card Expires:',
     'ENTRY_UPDATE_TO_CC' => 'Enter <strong>Credit Card</strong> to view CC fields.',
-    'ENTRY_UPDATE_TO_CK' => 'Enter the payment method used for this order to hide CC fields. (<strong>PayPal, Check/Money Order, Western Union, etc</strong>)',
+    'ENTRY_UPDATE_TO_CK' => 'Enter the payment method used for this order to hide CC fields. (<strong>PayPal, Check/Money Order, etc.</strong>)',
     'ENTRY_PURCHASE_ORDER_NUMBER' => 'Purchase Order:',
+    'TEXT_CREDIT_CARD' => 'Credit Card',
     'TEXT_PANEL_HEADER_ADDL_INFO' => 'Additional Information',
 
 // Order Status Entries
@@ -84,16 +87,16 @@ $define = [
     'ERROR_ORDER_DOES_NOT_EXIST' => 'Error: Order does not exist.',
     'SUCCESS_ORDER_UPDATED' => 'Success: Order has been successfully updated.',
     'ERROR_DISPLAY_PRICE_WITH_TAX' => 'You have configured Zen Cart to display prices with' . (DISPLAY_PRICE_WITH_TAX_ADMIN !== 'true' ? 'out ' : ' ') . 'tax. This page is currently displaying prices with' . (DISPLAY_PRICE_WITH_TAX !== 'true' ? 'out ' : ' ') . 'tax. Orders cannot be edited until the two settings are the same.',
-    'WARNING_ADDRESS_COUNTRY_NOT_FOUND' => 'Warning: One or more of the customer address fields contains a country name unknown to Zen Cart (&quot;Locations / Taxes :: Countries&quot;).<br>Taxes and some shipping modules may not function correctly until the issue has been resolved.<br><br>This typically occurs if someone deletes or renames a country&#39;s name from Zen Cart (&quot;Locations / Taxes :: Countries&quot;). You can fix the issue by doing one of the following: <ul><li>Add the country (and name) back to the Zen Cart database.</li><li>Adjust the country name to match one of the country names in the Zen Cart database.</li></ul>',
+    'ERROR_ADDRESS_COUNTRY_NOT_FOUND' => 'Order #%u cannot be edited. One or more of the addresses in the order uses a country unknown to your store; taxes and some shipping modules will likely not function correctly until the issue has been resolved.<br><br>This typically occurs if an admin deletes, renames or disables a country using the <b>Locations / Taxes :: Countries</b> tool. The issue can be corrected by doing one of the following:<ul><li>Add the country (and name) back to your Zen Cart database.</li><li>Re-enable the country temporarily to enable the order to be edited.</li></ul>',
     'WARNING_ORDER_NOT_UPDATED' => 'Warning: Nothing to change. The order was not updated.',
     'WARNING_ORDER_QTY_OVER_MAX' => 'Warning: The quantity requested exceeded the maximum allowed for an order. The quantity added was reduced to the maximum allowed per order.',
     'WARNING_ORDER_COUPON_BAD' => 'Warning: The coupon code was not found in the database. Note: the title / text of a coupon is usually formatted like &quot;Discount Coupon : coupon_code :&quot;. ',
     'WARNING_INSUFFICIENT_PRODUCT_STOCK' => 'Insufficient stock for <em>%1$s</em>, requested %2$s with %3$s available.',
 
-    'ERROR_CANT_DETERMINE_TAX_RATES' => 'The order cannot be edited, since its tax-rates cannot be determined.',
-    'ERROR_SHIPPING_TAX_RATE_MISSING' => 'The order cannot be edited. Its <code>shipping_tax_rate</code> was not previously recorded.',
-    'ERROR_NO_SHIPPING_TAX_DESCRIPTION' => 'The order cannot be edited. No tax description could be found for the shipping tax-rate (%s%%).',
-    'ERROR_NO_PRODUCT_TAX_DESCRIPTION' => 'The order cannot be edited. No tax description could be found for <em>%1$s</em> tax-rate (%2$s%%).',
+    'ERROR_CANT_DETERMINE_TAX_RATES' => 'Order #%u cannot be edited, since its tax-rates cannot be determined.',
+    'ERROR_SHIPPING_TAX_RATE_MISSING' => 'Order #%u cannot be edited. Its <code>shipping_tax_rate</code> was not previously recorded.',
+    'ERROR_NO_SHIPPING_TAX_DESCRIPTION' => 'Order #%1$u cannot be edited. No tax description could be found for the shipping tax-rate (%2$s%%).',
+    'ERROR_NO_PRODUCT_TAX_DESCRIPTION' => 'Order #%1$u cannot be edited. No tax description could be found for <em>%2$s</em> tax-rate (%3$s%%).',
 
     'ERROR_ZEN_ADD_TAX_ROUNDING' => "The store's <code>zen_add_tax</code> function must be updated to enable <em>Edit Orders</em>' use.",
 
@@ -162,6 +165,8 @@ $define = [
 
     'EO_SHIPPING_TAX_DESCRIPTION' => 'Shipping Tax (%s%%)',
     'EO_FREE_SHIPPING' => 'Free Shipping',
+
+    'TEXT_PANEL_HEADER_UPDATE_INFO' => 'Order-Update Information',
 ];
 
 return $define;

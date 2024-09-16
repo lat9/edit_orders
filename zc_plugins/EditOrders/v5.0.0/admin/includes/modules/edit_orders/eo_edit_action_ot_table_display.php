@@ -108,7 +108,7 @@ foreach ($order->totals as $next_total) {
         <?= zen_draw_input_field($update_total_title, $trimmed_title, 'id="ship-title" class="form-control" ' . $shipping_title_max) ?>
     </td>
 
-    <td class="text-right">
+    <td>
         <div class="tax-percentage">&nbsp;%</div>
         <?= zen_draw_input_field('shipping_tax', (string)$shipping_tax_rate, 'id="ship-tax" class="amount form-control"' . $input_tax_params, false, $input_field_type) ?>
     </td>
@@ -116,7 +116,7 @@ foreach ($order->totals as $next_total) {
             if (DISPLAY_PRICE_WITH_TAX === 'true') {
                 $shipping_net = $next_total['value'] / (1 + ($shipping_tax_rate / 100));
 ?>
-    <td class="text-right">
+    <td>
         <?= zen_draw_input_field($update_total_value, (string)$shipping_net, 'id="ship-net" class="amount form-control"' . $input_value_params, false, $input_field_type) ?>
     </td>
 <?php
@@ -124,7 +124,7 @@ foreach ($order->totals as $next_total) {
             }
 ?>
     <td>&nbsp;</td>
-    <td class="text-right">
+    <td>
         <?= zen_draw_input_field($update_total_value, $next_total['value'], 'id="ship-gross" class="amount form-control"' . $input_value_params, false, $input_field_type) ?>
     </td>
 <?php
