@@ -46,6 +46,9 @@ class EditOrdersAdminObserver extends base
 
                     /* From /includes/modules/order_total/ot_shipping.php */
                     'NOTIFY_OT_SHIPPING_TAX_CALCS',
+
+                    /* From admin/includes/functions/functions_help.php */
+                    'NOTIFIER_PLUGIN_HELP_PAGE_URL_LOOKUP',
                 ]
             );
         }
@@ -174,6 +177,14 @@ class EditOrdersAdminObserver extends base
                     'zone_id' => $customer_zone_id,
                     'country_id' => $customer_country_id,
                 ];
+                break;
+
+            // -----
+            // Hooked only on the "Edit Orders" page, allows the insertion of a help-link
+            // back to EO's GitHub wiki.
+            //
+            case 'NOTIFIER_PLUGIN_HELP_PAGE_URL_LOOKUP':
+                $p2 = 'https://github.com/lat9/edit_orders/wiki';
                 break;
 
             default:
