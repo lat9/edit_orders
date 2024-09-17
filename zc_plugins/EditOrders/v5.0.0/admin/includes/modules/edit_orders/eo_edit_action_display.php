@@ -221,9 +221,6 @@ if (isset($order->info['account_name']) || isset($order->info['account_number'])
             </div>
         </div>
 <?php
-$payment_calc_choice = '';
-$price_is_hidden = '';
-$priceMessage = '';
 if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
     $choices = [
         ['id' => 1, 'text' => PAYMENT_CALC_AUTOSPECIALS],
@@ -244,24 +241,28 @@ if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
     if (isset($_SESSION['eo_price_calculations']) && $_SESSION['eo_price_calculations'] >= 1 && $_SESSION['eo_price_calculations'] <= 3) {
         $default = $_SESSION['eo_price_calculations'];
     }
+    $_SESSION['eo_price_calculations'] = $default;
+    $price_is_manual = ($default === 3);
+
+    $display_payment_calc_label = true;
     $payment_calc_choice = zen_draw_pull_down_menu('payment_calc_method', $choices, $default, 'id="calc-method" class="form-control w-auto"');
 } else {
     switch (EO_PRODUCT_PRICE_CALC_METHOD) {
         case 'AutoSpecials':
             $payment_calc_choice = PRODUCT_PRICES_CALC_AUTOSPECIALS;
-            $price_is_hidden = ' d-none';
-            $priceMessage = EO_PRICE_AUTO_GRID_MESSAGE;
+            $price_is_manual = false;
             break;
         case 'Auto':
             $payment_calc_choice = PRODUCT_PRICES_CALC_AUTO;
-            $price_is_hidden = ' d-none';
-            $priceMessage = EO_PRICE_AUTO_GRID_MESSAGE;
+            $price_is_manual = false;
             break;
         default:
             $payment_calc_choice = PRODUCT_PRICES_CALC_MANUAL;
+            $price_is_manual = true;
             break;
     }
-    $payment_calc_choice = zen_draw_input_field('payment_calc_method', $payment_calc_choice, 'id="calc-method" class="form-control w-auto" disabled');
+    $display_payment_calc_label = false;
+    $payment_calc_choice = '<p class="text-center">' . $payment_calc_choice . '</p>';
 }
 
 $additional_inputs = '';
@@ -283,10 +284,20 @@ $reset_totals_block =
                 <div class="panel-body">
                     <form class="form-horizontal">
                         <div class="form-group">
+<?php
+if ($display_payment_calc_label === false) {
+?>
+                            <?= $payment_calc_choice ?>
+<?php
+} else {
+?>
                             <label for="calc-method" class="col-sm-3 control-label"><?= PAYMENT_CALC_METHOD ?>&nbsp;</label>
                             <div class="col-sm-9">
                                 <?= $payment_calc_choice ?>
                             </div>
+<?php
+}
+?>
                         </div>
                     </form>
                 </div>
@@ -421,6 +432,7 @@ foreach ($order->products as $next_product) {
     $orders_products_id = $next_product['orders_products_id'];
     $base_var_name = 'update_products[' . $orders_products_id . ']';
     $data_index = ' data-opi="' . $orders_products_id . '"';
+    $price_entry_disabled = ($price_is_manual === true) ? '' : 'disabled';
 ?>
                 <td class="dataTableContent text-center">
                     <?= zen_draw_input_field($base_var_name . '[qty]', $next_product['qty'], 'class="mx-auto prod-qty form-control"' . $input_value_params, false, $input_field_type) ?>
@@ -444,7 +456,11 @@ foreach ($order->products as $next_product) {
 ?>
                     <div class="row">
                         <small>&nbsp;<i><?= TEXT_ATTRIBUTES_ONE_TIME_CHARGE ?></i></small>
-                        <?= zen_draw_input_field($base_var_name . '[onetime_charges]', $next_product['onetime_charges'], 'class="form-control form-control-sm amount-onetime d-inline"') ?>
+                        <?= zen_draw_input_field(
+                            $base_var_name . '[onetime_charges]',
+                            $next_product['onetime_charges'],
+                            'class="form-control form-control-sm amount-onetime d-inline" ' . $price_entry_disabled
+                        ) ?>
                     </div>
 
                     <ul class="attribs-list">
@@ -488,8 +504,10 @@ foreach ($order->products as $next_product) {
                 </td>
 
                 <td class="dataTableContent text-right">
-                    <?= zen_draw_input_field($base_var_name . '[final_price]', $final_price, $value_params . ' class="form-control amount price-net' . $price_is_hidden . '"' . $data_index) ?>
-                    <?= $priceMessage ?>
+                    <?= zen_draw_input_field(
+                        $base_var_name . '[final_price]',
+                        $final_price,
+                        $value_params . ' class="form-control amount price-net" ' . $price_entry_disabled . $data_index) ?>
                 </td>
 <?php
     if (DISPLAY_PRICE_WITH_TAX === 'true') {
@@ -497,7 +515,11 @@ foreach ($order->products as $next_product) {
         $final_price = $gross_price;
 ?>
                 <td class="dataTableContent text-right">
-                    <?= zen_draw_input_field($base_var_name . '[gross]', $gross_price, $value_params . ' class="amount form-control"' . $data_index) ?>
+                    <?= zen_draw_input_field(
+                        $base_var_name . '[gross]',
+                        $gross_price,
+                        $value_params . ' class="form-control amount price-gross" ' . $price_entry_disabled . $data_index
+                    ) ?>
                 </td>
 <?php
     }
