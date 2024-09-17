@@ -46,9 +46,13 @@ $define = [
     'ENTRY_SHIPPING_ADDRESS' => 'Shipping Address:',
     'ENTRY_BILLING_ADDRESS' => 'Billing Address:',
     'ENTRY_TELEPHONE_NUMBER' => 'Telephone:',       //- Shortening for modal-display; default is 'Telephone Number:'
+
     'TEXT_MODAL_ADDRESS_HEADER' => 'Modifying the Order\'s %s', //- %s is filled in with one the the 'xxx Address:' values, above
     'TEXT_STOREPICKUP_NO_SHIP_ADDR' => 'The order is to be picked up at the store, no shipping address.',
     'TEXT_VIRTUAL_NO_SHIP_ADDR' => 'The order contains only <code>virtual</code> products, no shipping address.',
+
+    'PLEASE_SELECT' => 'Please select',
+    'TYPE_BELOW' => 'Type a choice below ...',
 
 // Order Payment Entries and Additional Infomation
     'ENTRY_CURRENCY_VALUE' => 'Currency Value (%s):',   //- %s is filled in with the order's currency-code

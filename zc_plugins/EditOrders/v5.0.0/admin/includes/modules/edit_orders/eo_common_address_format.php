@@ -62,8 +62,8 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
     </div>
 </div>
 
-<div id="<?= $modal_id ?>" class="modal fade" role="dialog">
-    <div class="modal-dialog">
+<div id="<?= $modal_id ?>" class="modal fade address-modal" role="dialog">
+    <div class="modal-dialog"><form>
         <div class="modal-content">
             <div class="modal-header text-center">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -112,6 +112,41 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
                     </div>
                 </div>
 
+                <div class="row my-2 country-wrapper">
+                    <div class="col-sm-3 control-label">
+                        <label for="<?= $input_prefix ?>_country"><?= ENTRY_CUSTOMER_COUNTRY ?></label>:&nbsp;
+                    </div>
+                    <div class="col-sm-9">
+                        <?= zen_get_country_list(
+                            'update_' . $address_name . '_country',
+                            $address_fields['country']['id'],
+                            'id="update_' . $address_name . '_country" class="form-control address-country"'
+                        ) ?>
+                    </div>
+                </div>
+<?php
+if (ACCOUNT_STATE === 'true') {
+?>
+                <div class="row my-2 state-wrapper">
+                    <div class="col-sm-3 control-label">
+                        <label for="<?= $input_prefix ?>_state"><?= ENTRY_CUSTOMER_STATE ?></label>:&nbsp;
+                    </div>
+                    <div class="col-sm-9">
+                        <?= zen_draw_pull_down_menu(
+                            $input_prefix . '_zone_id',
+                            zen_prepare_country_zones_pull_down($address_fields['country_id']),
+                            $address_fields['zone_id'], 'id="' . $input_prefix . '_zone" class="form-control state-select"'
+                        ) ?>
+                        <?= zen_draw_input_field(
+                            $input_prefix . '_state',
+                            zen_output_string_protected($address_fields['state']),
+                            $max_state_length . ' id="' . $input_prefix . '_state" class="form-control state-input"'
+                        ) ?>
+                    </div>
+                </div>
+<?php
+}
+?>
                 <div class="row my-2">
                     <div class="col-sm-3 control-label">
                         <label for="<?= $input_prefix ?>_city"><?= ENTRY_CUSTOMER_CITY ?></label>:&nbsp;
@@ -127,19 +162,6 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
 
                 <div class="row my-2">
                     <div class="col-sm-3 control-label">
-                        <label for="<?= $input_prefix ?>_state"><?= ENTRY_CUSTOMER_STATE ?></label>:&nbsp;
-                    </div>
-                    <div class="col-sm-9">
-                        <?= zen_draw_input_field(
-                            $input_prefix . '_state',
-                            zen_output_string_protected($address_fields['state']),
-                            $max_state_length . ' id="' . $input_prefix . '_state" class="form-control"'
-                        ) ?>
-                    </div>
-                </div>
-
-                <div class="row my-2">
-                    <div class="col-sm-3 control-label">
                         <label for="<?= $input_prefix ?>_postcode"><?= ENTRY_CUSTOMER_POSTCODE ?></label>:&nbsp;
                     </div>
                     <div class="col-sm-9">
@@ -148,21 +170,6 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
                             zen_output_string_protected($address_fields['postcode']),
                             $max_postcode_length . ' id="' . $input_prefix . '_postcode" class="form-control"'
                         ) ?>
-                    </div>
-                </div>
-
-                <div class="row my-2">
-                    <div class="col-sm-3 control-label">
-                        <label for="<?= $input_prefix ?>_country"><?= ENTRY_CUSTOMER_COUNTRY ?></label>:&nbsp;
-                    </div>
-                    <div class="col-sm-9">
-<?php
-if (isset($address_fields['country']['id'])) {
-    echo zen_get_country_list('update_' . $address_name . '_country', $address_fields['country']['id'], 'id="update_' . $address_name . '_country" class="form-control"');
-} else {
-    echo zen_draw_input_field($input_prefix . '_country', zen_output_string_protected($address_fields['country']), $max_country_length . ' id="' . $input_prefix . '_country" class="form-control"');
-}
-?>
                     </div>
                 </div>
 <?php
@@ -233,5 +240,5 @@ if (!empty($additional_rows)) {
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
-    </div>
+    </form></div>
 </div>

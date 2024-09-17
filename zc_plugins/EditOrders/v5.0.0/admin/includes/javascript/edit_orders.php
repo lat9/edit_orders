@@ -112,7 +112,91 @@ $(function() {
         }
     });
 
-    console.log($('#eo-addl-info form').serializeArray());
+    $('#calc-method').on('change', function() {
+        if (this.value === '3') {
+            $('.price-net, .price-gross').removeAttr('disabled');
+        } else {
+            $('.price-net, .price-gross').attr('disabled', 'disabled');
+        }
+    });
+
+//    console.log($('#eo-addl-info form').serializeArray());
+<?php
+// -----
+// If the site uses states in its addresses, EO **always** provides dropdown
+// states in its various address displays.
+//
+if (ACCOUNT_STATE === 'true') {
+    // -----
+    // Create the array that identifies the various zones for the currently-active countries.
+    //
+    // Derived from the storefront's /jscript/zen_addr_pulldowns.php.
+    //
+    $c2z = [];
+
+    // -----
+    // If the current site has at least one country enabled that uses zones, a JSON-encoded array of
+    // countries-to-zones will be created for use by the jQuery section.
+    //
+    $countries = $db->Execute(
+        "SELECT DISTINCT zone_country_id
+           FROM " . TABLE_ZONES . "
+                INNER JOIN " . TABLE_COUNTRIES . "
+                    ON countries_id = zone_country_id
+                   AND status = 1
+       ORDER BY zone_country_id"
+    );
+    foreach ($countries as $next_country) {
+        $current_country_id = $next_country['zone_country_id'];
+        $c2z[$current_country_id] = [];
+
+        $states = zen_get_country_zones($current_country_id);
+        foreach ($states as $next_state) {
+            $c2z[$current_country_id][$next_state['id']] = $next_state['text'];
+        }
+    }
+?>
+    const country_zones = '<?= addslashes(json_encode($c2z)) ?>';
+
+    $('.address-modal').on('shown.bs.modal', function() {
+        if ($(this).find('.state-select > option').length > 1) {
+            $(this).find('.state-input').hide();
+            $(this).find('.state-select').show();
+        } else {
+            $(this).find('.state-input').show();
+            $(this).find('.state-select').hide();
+        }
+    });
+
+    $('.address-country').on('change', function() {
+        var countryHasZones = false;
+        var countryZones = '';
+        var selected_country = $('option:selected', this).val();
+        $.each(JSON.parse(country_zones), function(country_id, country_zones) {
+            if (selected_country === country_id) {
+                countryHasZones = true;
+                $.each(country_zones, function(zone_id, zone_name) {
+                    countryZones += '<option label ="' + zone_name + '" value="' + zone_id + '">' + zone_name + '<' + '/option>';
+                });
+            }
+        });
+
+        if (countryHasZones) {
+            var split = countryZones.split('<option').filter(function(el) {
+                return el.length != 0
+            });
+            var sorted = split.sort();
+            countryZones = '<option selected="selected" value="0"><?php echo addslashes(PLEASE_SELECT); ?><' + '/option><option' + sorted.join('<option');
+            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-input').hide();
+            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-select').html(countryZones).show();
+        } else {
+            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-input').show();
+            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-select').hide();
+        }
+    });
+<?php
+}
+?>
 });
 </script>
 <?php
