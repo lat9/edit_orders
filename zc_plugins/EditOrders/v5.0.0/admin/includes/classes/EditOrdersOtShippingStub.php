@@ -3,7 +3,9 @@
 // Part of the 'Edit Orders' plugin, providing a 'stub' class for the order's shipping-method to
 // prevent PHP Notices being issued from the ot_shipping.php class' constructor.
 //
-// Copyright (C) 2020, Vinos de Frutas Tropicales.
+// Copyright (C) 2020-2024, Vinos de Frutas Tropicales.
+//
+// Last updated: EO v5.0.0
 //
 if (!defined('IS_ADMIN_FLAG') || IS_ADMIN_FLAG !== true) {
     die('Illegal Access');
@@ -16,7 +18,7 @@ if (!defined('IS_ADMIN_FLAG') || IS_ADMIN_FLAG !== true) {
 //
 // The class is instantiated by EO's admin observer (EditOrdersAdminObserver.php).
 //
-class EditOrdersOtShippingStub extends base
+class EditOrdersOtShippingStub
 {
     public $tax_class = 0;
     public function __construct()

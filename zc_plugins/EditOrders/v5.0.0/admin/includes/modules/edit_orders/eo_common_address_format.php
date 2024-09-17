@@ -42,7 +42,7 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
                     </a>
                     <br>
                     <button type="button" class="btn btn-info mt-1" data-toggle="modal" data-target="#<?= $modal_id ?>">
-                        <?= TEXT_BUTTON_CHANGE ?>
+                        <?= ICON_EDIT ?>
                     </button>
                 </div>
             </div>

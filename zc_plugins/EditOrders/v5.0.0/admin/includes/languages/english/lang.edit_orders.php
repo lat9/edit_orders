@@ -10,7 +10,6 @@ $define = [
     'HEADING_TITLE_SEARCH' => 'Order ID:',
     'HEADING_TITLE_STATUS' => 'Status:',
     'HEADING_TITLE_ADD_PRODUCT' => 'Adding a Product to Order',
-    'TEXT_BUTTON_CHANGE' => 'Change',
     'TEXT_BUTTON_CHANGE_ATTRIBS_ALT' => 'Change the attributes for this product',
 
 // Table Headings

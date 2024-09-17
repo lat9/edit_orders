@@ -3,7 +3,7 @@
 // Admin-level observer class, adds "Edit Orders" buttons and links to Customers->Orders processing.
 // Copyright (C) 2017-2024, Vinos de Frutas Tropicales.
 //
-// Last updated for EO v5.0.0
+// Last updated: EO v5.0.0
 //
 if (!defined('IS_ADMIN_FLAG') || IS_ADMIN_FLAG !== true) {
     die('Illegal Access');
@@ -122,7 +122,9 @@ class EditOrdersAdminObserver extends base
     //
     protected function notify_ot_shipping_tax_calcs(&$class, string $e, $x, bool &$external_shipping_tax_handler, &$shipping_tax, string &$shipping_tax_description): void
     {
-        $GLOBALS['eo']->eoUpdateOrderShippingTax($external_shipping_tax_handler, $shipping_tax, $shipping_tax_description);
+        global $eo;
+
+        $eo->eoUpdateOrderShippingTax($external_shipping_tax_handler, $shipping_tax, $shipping_tax_description);
         $external_shipping_tax_handler = true;
         $this->detach($this, ['NOTIFY_OT_SHIPPING_TAX_CALCS']);
 
@@ -139,6 +141,10 @@ class EditOrdersAdminObserver extends base
             // -----
             // Added v4.7.0, replacing function override on EO page.
             //
+            // Note: For EO v5.0.0 and later, the order's initialization has
+            // guaranteed that each of the billing/shipping addresses' 'country'
+            // elements are arrays and that the addresses' 'zone_id' is set.
+            //
             // On entry:
             //
             // $p1 ... (r/o) An associative array containing the 'store_country' and 'store_zone'.
@@ -150,34 +156,17 @@ class EditOrdersAdminObserver extends base
                 if (STORE_PRODUCT_TAX_BASIS === 'Store') {
                     $customer_country_id = STORE_COUNTRY;
                     $customer_zone_id = STORE_ZONE;
+                } elseif (STORE_PRODUCT_TAX_BASIS === 'Billing') {
+                    $customer_country_id = $order->billing['country']['id'];
+                    $customer_zone_id = $order->billing['zone_id'];
+                } elseif ($eo->eoOrderIsVirtual()) {
+                    $customer_country_id = $order->billing['country']['id'];
+                    $customer_zone_id = $order->billing['zone_id'];
                 } else {
-                    $_SESSION['customer_id'] = $order->customer['id'];
-
-                    if (STORE_PRODUCT_TAX_BASIS === 'Shipping') {
-                        if ($eo->eoOrderIsVirtual($order)) {
-                            if (is_array($order->billing['country'])) {
-                                $customer_country_id = $order->billing['country']['id'];
-                            } else {
-                                $customer_country_id = $eo->getCountryId($order->billing['country']);
-                            }
-                            $customer_zone_id = $eo->getZoneId((int)$customer_country_id, $order->billing['state']);
-                        } else {
-                            if (is_array($order->delivery['country'])) {
-                                $customer_country_id = $order->delivery['country']['id'];
-                            } else {
-                                $customer_country_id = $eo->getCountryId($order->delivery['country']);
-                            }
-                            $customer_zone_id = $eo->getZoneId((int)$customer_country_id, $order->delivery['state']);
-                        }
-                    } elseif (STORE_PRODUCT_TAX_BASIS === 'Billing') {
-                        if (is_array ($order->billing['country'])) {
-                            $customer_country_id = $order->billing['country']['id'];
-                        } else {
-                            $customer_country_id = $eo->getCountryId($order->billing['country']);
-                        }
-                        $customer_zone_id = $eo->getZoneId((int)$customer_country_id, $order->billing['state']);
-                    }
+                    $customer_country_id = $order->delivery['country']['id'];
+                    $customer_zone_id = $order->delivery['zone_id'];
                 }
+
                 $_SESSION['customer_country_id'] = $customer_country_id;
                 $_SESSION['customer_zone_id'] = $customer_zone_id;
 

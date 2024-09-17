@@ -428,7 +428,7 @@ foreach ($order->products as $next_product) {
     if (isset($next_product['attributes'])) {
 ?>
                     <button class="update-attributes btn btn-sm btn-warning mt-2"<?= $data_index ?> title="<?= TEXT_BUTTON_CHANGE_ATTRIBS_ALT ?>">
-                        <?= TEXT_BUTTON_CHANGE ?>
+                        <?= ICON_EDIT ?>
                     </button>
 <?php
     }
