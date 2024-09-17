@@ -454,10 +454,13 @@ class EditOrders extends base
         $this->order->info['tax_groups'] = [];
         $this->order->info['tax_subtotals'] = [];
 
+        $ot_tax_count = 0;
         foreach ($this->order->totals as $next_total) {
             if ($next_total['class'] !== 'ot_tax') {
                 continue;
             }
+
+            $ot_tax_count++;
 
             $tax_location_names = explode(' + ', $next_total['title']);
             foreach ($tax_location_names as $next_name) {
@@ -472,7 +475,20 @@ class EditOrders extends base
                 ];
             }
         }
-        
+
+        // -----
+        // If no ot_tax records were found and the order's tax is 0 (using a
+        // loose comparison!), then the order falls under Note 2 above. Set
+        // a default 0-value tax rate tax-group for follow-on processing.
+        //
+        if ($ot_tax_count === 0 && $this->order->info['tax'] == 0) {
+            $this->order->info['tax_groups'][TEXT_UNKNOWN_TAX_RATE] = 0.0;
+            $this->order->info['tax_subtotals'][TEXT_UNKNOWN_TAX_RATE] = [
+                'tax_rate' => 0,
+                'subtotal' => 0.0,
+            ];
+        }
+
         // -----
         // If no tax was recorded for the order or if a single tax-type was recorded,
         // the taxes are processable and no further action needs to be done here.
