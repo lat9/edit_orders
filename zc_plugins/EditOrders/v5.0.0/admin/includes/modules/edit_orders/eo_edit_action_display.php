@@ -75,7 +75,7 @@ if (is_array($additional_contact_info) && count($additional_contact_info) !== 0)
 if ($order->info['currency_value'] != 1) {
 ?>
                         <div class="row my-2">
-                            <div class="col-sm-4 control-label">
+                            <div class="col-sm-4 eo-label">
                                 <?= sprintf(ENTRY_CURRENCY_VALUE, $order->info['currency']) ?>
                             </div>
                             <div class="col-sm-8">
@@ -181,7 +181,7 @@ if (isset($order->info['account_name']) || isset($order->info['account_number'])
     if (isset($order->info['account_name'])) {
 ?>
                         <div class="row my-2">
-                            <div class="col-sm-4 control-label">
+                            <div class="col-sm-4 eo-label">
                                 <?= ENTRY_ACCOUNT_NAME ?>
                             </div>
                             <div class="col-sm-8">
@@ -193,7 +193,7 @@ if (isset($order->info['account_name']) || isset($order->info['account_number'])
     if (isset($order->info['account_number'])) {
 ?>
                         <div class="row my-4">
-                            <div class="col-sm-3 control-label">
+                            <div class="col-sm-3 eo-label">
                                 <?= ENTRY_ACCOUNT_NUMBER ?>
                             </div>
                             <div class="col-sm-8">
@@ -205,7 +205,7 @@ if (isset($order->info['account_name']) || isset($order->info['account_number'])
     if (isset($order->info['po_number'])) {
 ?>
                         <div class="row my-2">
-                            <div class="col-sm-4 control-label">
+                            <div class="col-sm-4 eo-label">
                                 <?= ENTRY_PURCHASE_ORDER_NUMBER ?>
                             </div>
                             <div class="col-sm-8">
