@@ -6,6 +6,7 @@
 //
 $define = [
 // Page / Section Headings and common button names
+    'BUTTON_CLOSE' => 'Close',
     'HEADING_TITLE' => 'Editing Order',
     'HEADING_TITLE_SEARCH' => 'Order ID:',
     'HEADING_TITLE_STATUS' => 'Status:',

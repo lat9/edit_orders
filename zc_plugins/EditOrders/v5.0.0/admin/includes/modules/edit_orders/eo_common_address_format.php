@@ -20,6 +20,7 @@
 $input_prefix = 'update_' . $address_name;
 $modal_id = $address_name . '-modal';
 $google_map_address = urlencode($address_fields['street_address'] . ',' . $address_fields['city'] . ',' . $address_fields['state'] . ',' . $address_fields['postcode']);
+$google_map_link = 'https://maps.google.com/maps/search/?api=1&amp;query=' . $google_map_address;
 ?>
 <div class="row my-2">
     <div class="panel panel-default">
@@ -37,7 +38,7 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
 ?>
             <div class="col-md-6">
                 <div class="btn-group btn-group-sm mt-2">
-                    <a href="https://maps.google.com/maps/search/?api=1&amp;query=<?= $google_map_address ?>" rel="noreferrer" target="map" role="button" class="btn btn-default me-2">
+                    <a id="google-map-link-<?= $address_name ?>" href="<?= $google_map_link ?>" rel="noreferrer" target="map" role="button" class="btn btn-default me-2">
                         <i class="fa-regular fa-map"></i>&nbsp;<?= BUTTON_MAP_ADDRESS ?>
                     </a>
                     <br>
@@ -48,11 +49,14 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
             </div>
             <div class="col-md-6">
                 <address class="mb-0">
-                    <?= zen_address_format($address_fields['format_id'], $address_fields, 1, '', '<br>') ?>
-                    <br><br>
-                    <?= $address_fields['telephone'] ?? '&nbsp;' ?>
-                    <br>
-                    <?= $address_fields['email_address'] ?? '&nbsp;' ?>
+                    <div id="address-<?= $address_name ?>" class="eo-address p-2">
+                        <?= zen_address_format($address_fields['format_id'], $address_fields, 1, '', '<br>') ?>
+                    </div>
+                    <div class="mt-2">
+                        <?= $address_fields['telephone'] ?? '&nbsp;' ?>
+                        <br>
+                        <?= $address_fields['email_address'] ?? '&nbsp;' ?>
+                    </div>
                 </address>
             </div>
 <?php
@@ -64,6 +68,8 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
 
 <div id="<?= $modal_id ?>" class="modal fade address-modal" role="dialog">
     <div class="modal-dialog"><form>
+        <?= zen_draw_hidden_field($input_prefix . '_changed', '0', 'class="eo-changed"') ?>
+        <?= zen_draw_hidden_field('address_type', $address_name, 'class="eo-addr-type"') ?>
         <div class="modal-content">
             <div class="modal-header text-center">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -82,6 +88,19 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
                             $input_prefix . '_company',
                             zen_output_string_protected($address_fields['company']),
                             $max_company_length . ' id="' . $input_prefix . '_company" class="form-control"'
+                        ) ?>
+                    </div>
+                </div>
+
+                <div class="row my-2">
+                    <div class="col-sm-3 control-label">
+                        <label for="<?= $input_prefix ?>_name"><?= ENTRY_CUSTOMER_NAME ?></label>:&nbsp;
+                    </div>
+                    <div class="col-sm-9">
+                        <?= zen_draw_input_field(
+                            $input_prefix . '_name',
+                            zen_output_string_protected($address_fields['name']),
+                            $max_name_length . ' id="' . $input_prefix . '_name" class="form-control"'
                         ) ?>
                     </div>
                 </div>
@@ -137,6 +156,7 @@ if (ACCOUNT_STATE === 'true') {
                             zen_prepare_country_zones_pull_down($address_fields['country_id']),
                             $address_fields['zone_id'], 'id="' . $input_prefix . '_zone" class="form-control state-select"'
                         ) ?>
+
                         <?= zen_draw_input_field(
                             $input_prefix . '_state',
                             zen_output_string_protected($address_fields['state']),
@@ -237,7 +257,8 @@ if (!empty($additional_rows)) {
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning btn-save d-none me-2"><?= IMAGE_SAVE ?></button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><?= BUTTON_CLOSE ?></button>
             </div>
         </div>
     </form></div>
