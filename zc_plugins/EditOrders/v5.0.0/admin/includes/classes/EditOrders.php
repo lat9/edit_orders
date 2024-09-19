@@ -468,6 +468,8 @@ class EditOrders extends base
                 $this->order->info['tax_groups'][$next_name] = 0.0;
                 if (preg_match('/(\d+\.?\d*%)/', $next_name, $matches) === 1) {
                     $tax_rate = $this->convertToIntOrFloat(rtrim($matches[1], '%'));
+                } elseif ($next_total['value'] == 0) {
+                    $tax_rate = 0;
                 }
                 $this->order->info['tax_subtotals'][$next_name] = [
                     'tax_rate' => $tax_rate ?? false,
@@ -504,7 +506,7 @@ class EditOrders extends base
         $combinations = [[]];
         foreach (array_keys($this->order->info['tax_subtotals']) as $next_tax_group) {
             foreach ($combinations as $combination) {
-                array_push($combinations, array_merge([$element], $combination));
+                array_push($combinations, array_merge([$next_tax_group], $combination));
             }
         }
 
@@ -607,7 +609,7 @@ class EditOrders extends base
         }
 
         foreach ($this->order->info['tax_subtotals'][$tax_group_description]['parent_groups'] as $group_name => $subtotals) {
-            $parent_group_shipping_tax = zen_add_tax($value, $sub_totals['tax_rate']);
+            $parent_group_shipping_tax = zen_add_tax($value, $subtotals['tax_rate']);
             $this->order->info['tax_subtotals'][$tax_group_description]['parent_groups'][$group_name]['subtotal'] += $parent_group_shipping_tax;
         }
     }
