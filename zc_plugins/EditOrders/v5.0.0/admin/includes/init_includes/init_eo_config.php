@@ -3,8 +3,22 @@
 // Admin-level initialization script for the Edit Orders plugin for Zen Cart, by lat9.
 // Copyright (C) 2018-2024, Vinos de Frutas Tropicales.
 //
+// Last updated: v5.0.0
+//
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
+}
+
+global $PHP_SELF;
+
+// -----
+// Now loaded prior to language-loading to identify the current page
+// as 'edit_orders' for EO's AJAX processing, so that the associated language
+// constants will be pulled in for EO during its AJAX processing.
+//
+if ($PHP_SELF === 'ajax.php' && ($_GET['act'] ?? '') === 'ajaxEditOrdersAdmin') {
+    $PHP_SELF = 'edit_orders.php';
+    return;
 }
 
 // -----

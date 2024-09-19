@@ -89,7 +89,7 @@ $(function() {
         if (taxRate > 0) {
             net = net / ((taxRate / 100) + 1);
         }
-        $('#s-n').val(doRound(net, 4));
+        $('#ship-net').val(doRound(net, 4));
     }
 });
 </script>
@@ -122,9 +122,15 @@ $(function() {
 
 //    console.log($('#eo-addl-info form').serializeArray());
 <?php
+// --------------------
+// START ADDRESS-RELATED HANDLING
+// --------------------
+
 // -----
-// If the site uses states in its addresses, EO **always** provides dropdown
-// states in its various address displays.
+// EO **always** provides dropdown states in its various address displays.
+//
+// Note: The HTML structure that these jQuery methods are 'working with' is
+// created by the eo_common_address_format.php module.
 //
 if (ACCOUNT_STATE === 'true') {
     // -----
@@ -161,10 +167,10 @@ if (ACCOUNT_STATE === 'true') {
     $('.address-modal').on('shown.bs.modal', function() {
         if ($(this).find('.state-select > option').length > 1) {
             $(this).find('.state-input').hide();
-            $(this).find('.state-select').show();
+            $(this).find('.state-select').prop('disabled', false).show();
         } else {
             $(this).find('.state-input').show();
-            $(this).find('.state-select').hide();
+            $(this).find('.state-select').prop('disabled', true).hide();
         }
     });
 
@@ -187,17 +193,48 @@ if (ACCOUNT_STATE === 'true') {
             });
             var sorted = split.sort();
             countryZones = '<option selected="selected" value="0"><?php echo addslashes(PLEASE_SELECT); ?><' + '/option><option' + sorted.join('<option');
-            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-input').hide();
-            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-select').html(countryZones).show();
+            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-input').val('').hide();
+            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-select').html(countryZones).prop('disabled', false).show();
         } else {
             $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-input').show();
-            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-select').hide();
+            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-select').prop('disabled', true).hide();
         }
     });
 <?php
 }
 ?>
+    $('.address-modal').on('shown.bs.modal', function() {
+        $(this).find('input:not(:hidden), select').on('change', function() {
+            $(this).addClass('border-warning');
+            $(this).parents('form').first().find('.btn-save').show();
+        });
+    });
+
+    $('.address-modal').on('hidden.bs.modal', function() {
+        if ($(this).find('.eo_changed').first().val() === '0') {
+            $(this).find('input, select').removeClass('border-warning');
+        }
+    });
+
+    $('.address-modal .btn-save').on('click', function() {
+        let theButton = $(this);
+        let addressType = theButton.parents('form').first().find('.eo-addr-type').first().val();
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=updateAddress',
+            data: theButton.parents('form').first().serializeArray(),
+         }).done(function(response) {
+            theButton.parents('form').first().find('.eo-changed').first().val('1');
+            $('#address-'+addressType).html(response.address).addClass('border border-warning');
+            $('#google-map-link-'+addressType).attr('href', response.google_map_link);
+            theButton.parents('.address-modal').modal('hide');
+        });
+    });
 });
+<?php
+// --------------------
+// END ADDRESS-RELATED HANDLING
+// --------------------
+?>
 </script>
 <?php
 // -----

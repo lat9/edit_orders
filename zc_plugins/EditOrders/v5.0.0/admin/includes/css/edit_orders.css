@@ -24,6 +24,12 @@
 .w-auto {
     width: auto;
 }
+.border {
+    border: 1px solid #dee2e6;
+}
+.border-warning {
+    border-color: #ffc107;
+}
 
 .attribs-list {
     font-size: smaller;

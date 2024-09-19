@@ -117,9 +117,13 @@ switch ($action) {
 }
 
 // -----
-// Create an instance of the to-be-edited order.
+// Create an instance of the to-be-edited order and record its contents
+// in the session-based class through which the various AJAX methods
+// communicate the admin's changes.
 //
 $order = $eo->getOrder();
+require DIR_WS_CLASSES . 'EoOrderChanges.php';
+$_SESSION['eoChanges'] = new EoOrderChanges($order);
 
 // -----
 // If a country referenced in the order's addresses is no longer present (or enabled)
