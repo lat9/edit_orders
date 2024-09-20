@@ -5,6 +5,8 @@
 //
 // Last updated: v5.0.0 (new)
 //
+use Zencart\Plugins\Admin\EditOrders\EoOrderChanges;
+
 class zcAjaxEditOrdersAdmin
 {
     // -----
@@ -16,14 +18,22 @@ class zcAjaxEditOrdersAdmin
     {
         $status = 'ok';
         $address = [];
+        $non_builtin_address_fields = 0;
         foreach ($_POST as $varname => $value) {
+            // -----
+            // Check for EO's built-in address elements ...
+            //
+            if ($varname === 'address_type' || str_ends_with($varname, '_changed')) {
+                continue;
+            }
+
             if (str_ends_with($varname, '_company')) {
-                $address['company'] = $value;
+                $address['company'] = trim($value);
                 continue;
             }
 
             if (str_ends_with($varname, '_name')) {
-                $first_last = explode(' ', $value);
+                $first_last = explode(' ', trim($value));
                 $address['firstname'] = $first_last[0];
                 unset($first_last[0]);
                 $address['lastname'] = implode(' ', $first_last);
@@ -36,17 +46,17 @@ class zcAjaxEditOrdersAdmin
             }
 
             if (str_ends_with($varname, '_suburb')) {
-                $address['suburb'] = $value;
+                $address['suburb'] = trim($value);
                 continue;
             }
 
             if (str_ends_with($varname, '_city')) {
-                $address['city'] = $value;
+                $address['city'] = trim($value);
                 continue;
             }
 
             if (str_ends_with($varname, '_state')) {
-                $address['state'] = $value;
+                $address['state'] = trim($value);
                 continue;
             }
 
@@ -56,7 +66,7 @@ class zcAjaxEditOrdersAdmin
             }
 
             if (str_ends_with($varname, '_postcode')) {
-                $address['postcode'] = $value;
+                $address['postcode'] = trim($value);
                 continue;
             }
 
@@ -64,8 +74,22 @@ class zcAjaxEditOrdersAdmin
                 $address['country_id'] = (int)$value;
                 continue;
             }
+
+            // -----
+            // Still here? An observer has added fields to the current address.
+            // Count them up here for determination as to whether a notification
+            // needs to be issued.
+            //
+            $non_builtin_address_fields++;
         }
 
+        // -----
+        // If observers have added fields to the address, issue a notification to let
+        // them validate those fields and supply any to-be-recorded updates to the
+        // order itself.
+        //
+        if ($non_builtin_address_fields !== 0) {
+        }
 
         $zone_id = (int)($address['zone_id'] ?? 0);
         $state = ($zone_id === 0) ? ($address['state'] ?? '') : zen_get_zone_name((int)$address['country_id'], $zone_id);
@@ -76,6 +100,7 @@ class zcAjaxEditOrdersAdmin
             'status' => $status,
             'address' => zen_address_format($address_format_id, $address, false, '', '<br>'),
             'google_map_link' => 'https://maps.google.com/maps/search/?api=1&amp;query=' . $google_map_address,
+            'address_changes' => $_SESSION['eoChanges']->updateAddressInfo($_POST['address_type'], $address),
         ];
     }
 }

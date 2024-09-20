@@ -6,6 +6,10 @@
 //
 // Last modified v5.0.0
 //
+use Zencart\Plugins\Admin\EditOrders\EditOrders;
+use Zencart\Plugins\Admin\EditOrders\EditOrdersQueryCache;
+use Zencart\Plugins\Admin\EditOrders\EoOrderChanges;
+
 require 'includes/application_top.php';
 
 // -----
@@ -41,7 +45,6 @@ if (isset($_POST['add_product_quantity'])) {
 // for the EO processing.
 //
 unset($queryCache);
-require DIR_WS_CLASSES . 'EditOrdersQueryCache.php';
 $queryCache = new EditOrdersQueryCache();
 
 // -----
@@ -51,7 +54,6 @@ $queryCache = new EditOrdersQueryCache();
 zen_define_default('EO_DEBUG_TAXES_ONLY', 'false');  //-Either 'true' or 'false'
 
 require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
-require DIR_WS_CLASSES . 'EditOrders.php';
 $eo = new EditOrders($oID);
 
 // -----
@@ -115,7 +117,6 @@ switch ($action) {
 // communicate the admin's changes.
 //
 $order = $eo->getOrder();
-require DIR_WS_CLASSES . 'EoOrderChanges.php';
 $_SESSION['eoChanges'] = new EoOrderChanges($order);
 
 // -----
@@ -207,14 +208,24 @@ define('DIR_WS_EO_MODULES', DIR_WS_MODULES . 'edit_orders/');
 // The $additional_contact_info (supplied as the notification's 2nd parameter), if supplied, is a
 // numerically-indexed array of arrays containing each label and associated content, e.g.:
 //
-// $additional_contact_info[] = ['label' => LABEL_TEXT, 'content' => $field_content];
+// $additional_contact_info[] = [
+//     'label' => LABEL_TEXT,
+//     'for' => 'input-field-id',   //- Optional, see below
+//     'content' => $field_content,
+// ];
+//
+// Note: If the 'for' element is not supplied, the 'label' and 'content' will be displayed
+// as 'simple' form elements.
+//
+// For EO versions prior to 5.0.0, this notification was 'EDIT_ORDERS_ADDITIONAL_CONTACT_INFORMATION'.
 //
 $additional_contact_info = [];
-$zco_notifier->notify('EDIT_ORDERS_ADDITIONAL_CONTACT_INFORMATION', $order, $additional_contact_info);
+$zco_notifier->notify('NOTIFY_EO_ADDL_CONTACT_INFO', $order, $additional_contact_info);
 
 if (is_array($additional_contact_info) && count($additional_contact_info) !== 0) {
     foreach ($additional_contact_info as $contact_info) {
         if (!empty($contact_info['label']) && !empty($contact_info['content'])) {
+            if (!isset($contact_info['for'])) {
 ?>
                         <div class="row my-2">
                             <div class="col-sm-4 control-label">
@@ -222,6 +233,20 @@ if (is_array($additional_contact_info) && count($additional_contact_info) !== 0)
                             </div>
                             <div class="col-sm-8">
                                 <?= $contact_info['content'] ?>
+                            </div>
+                        </div>
+<?php
+                continue;
+            }
+?>
+                        <div class="row my-2">
+                            <div class="form-group">
+                                <label for="<?= $contact_info['for'] ?>" class="col-sm-4 control-label">
+                                    <?= $contact_info['label'] ?>
+                                </label>
+                                <div class="col-sm-8">
+                                    <?= $contact_info['content'] ?>
+                                </div>
                             </div>
                         </div>
 <?php
@@ -427,8 +452,11 @@ if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
     $payment_calc_choice = '<p class="text-center">' . $payment_calc_choice . '</p>';
 }
 
+// -----
+// Note: For EO versions prior to 5.0.0, this notification was 'EDIT_ORDERS_FORM_ADDITIONAL_INPUTS'.
+//
 $additional_inputs = '';
-$zco_notifier->notify('EDIT_ORDERS_FORM_ADDITIONAL_INPUTS', $order, $additional_inputs);
+$zco_notifier->notify('NOTIFY_EO_UPDATE_FORM_ADDL_INPUTS', $order, $additional_inputs);
 
 $reset_totals_block =
     '<div class="checkbox">' .

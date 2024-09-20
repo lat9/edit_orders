@@ -5,6 +5,8 @@
 //
 // Last updated: EO v5.0.0
 //
+use Zencart\Plugins\Admin\EditOrders\EditOrdersOtShippingStub;
+
 if (!defined('IS_ADMIN_FLAG') || IS_ADMIN_FLAG !== true) {
     die('Illegal Access');
 }
@@ -133,7 +135,6 @@ class EditOrdersAdminObserver extends base
 
         $module = (isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
         if ($module !== '' && $module !== 'free') {
-            require DIR_WS_CLASSES . 'EditOrdersOtShippingStub.php';
             $GLOBALS[$module] = new EditOrdersOtShippingStub();
         }
     }

@@ -5,6 +5,8 @@
 //
 // Last updated: EO v5.0.0 (new)
 //
+namespace Zencart\Plugins\Admin\EditOrders;
+
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
@@ -13,7 +15,7 @@ if (!defined('IS_ADMIN_FLAG')) {
  * This class extends the storefront shopping-cart class and reuses methods
  * where possible.
  */
-class EoCart extends shoppingCart
+class EoCart extends \shoppingCart
 {
     public function __construct()
     {

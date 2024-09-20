@@ -5,6 +5,8 @@
 //
 // Last updated: EO v5.0.0 (new)
 //
+namespace Zencart\Plugins\Admin\EditOrders;
+
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
@@ -21,7 +23,7 @@ class EoOrderChanges
 
     public function __construct(\order $original_order)
     {
-        $this->original = new stdClass();
+        $this->original = new \stdClass();
         $this->original->content_type = $original_order->content_type;
         $this->original->info = $original_order->info;
         $this->original->customer = $original_order->customer;
@@ -31,12 +33,12 @@ class EoOrderChanges
         $this->original->statuses = $original_order->statuses;
         $this->original->totals = $original_order->totals;
 
-        $this->updated = new stdClass();
+        $this->updated = new \stdClass();
         $this->updated = $this->original;
     }
 
-    public function updateAddressInfo(string $address_type, array $address_info): bool
+    public function updateAddressInfo(string $address_type, array $address_info): array
     {
-        return true;
+        return [];
     }
 }

@@ -1,10 +1,12 @@
 <?php
 // -----
-// Part of the Edit Orders plugin (v4.1.7 and later) by lat9 (lat9@vinosdefrutastropicales.com).
-// Copyright (C) 2016-2021, Vinos de Frutas Tropicales
+// Part of the Edit Orders plugin by lat9 (lat9@vinosdefrutastropicales.com).
+// Copyright (C) 2016-2024, Vinos de Frutas Tropicales
 //
-// Last updated 20210305-lat9 for EO v4.6.0
-// 
+// Last updated: v5.0.0
+//
+namespace Zencart\Plugins\Admin\EditOrders;
+
 class EditOrdersQueryCache
 {
     protected

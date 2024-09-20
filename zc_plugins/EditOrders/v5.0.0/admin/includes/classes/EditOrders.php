@@ -5,7 +5,9 @@
 //
 // Last updated: EO v5.0.0
 //
-class EditOrders extends base
+namespace Zencart\Plugins\Admin\EditOrders;
+
+class EditOrders extends \base
 {
     protected int $eo_action_level;
     protected string $logfile_name;
@@ -817,7 +819,7 @@ class EditOrders extends base
         } else {
             eo_shopping_cart();
             require_once DIR_FS_CATALOG . DIR_WS_CLASSES . 'shipping.php';
-            $shipping_modules = new shipping();
+            $shipping_modules = new \shipping();
 
             $tax_rate = 0;
             $shipping_module = $order->info['shipping_module_code'];
