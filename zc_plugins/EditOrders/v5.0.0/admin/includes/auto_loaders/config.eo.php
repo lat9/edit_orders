@@ -14,7 +14,15 @@ $autoLoadConfig[0][] = [
     'classPath' => DIR_WS_CLASSES
 ];
 
-$autoLoadConfig[200][] = [
+// -----
+// Load point 63 is after the session's initialization [60] but before the
+// languages are loaded [65].
+//
+// That gives EO's configuration script a chance to identify the current page
+// as 'edit_orders' for EO's AJAX processing, so that the associated language
+// constants will be pulled in for EO during that AJAX processing.
+//
+$autoLoadConfig[63][] = [
     'autoType' => 'init_script',
     'loadFile' => 'init_eo_config.php'
 ];

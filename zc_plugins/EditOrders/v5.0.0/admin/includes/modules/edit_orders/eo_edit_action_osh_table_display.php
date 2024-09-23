@@ -219,7 +219,7 @@ if (empty($order->statuses)) {
                         <h4 class="modal-title text-center"><?= BUTTON_ADD_COMMENT_ALT ?></h4>
                     </div>
 
-                    <div id="comment-form" class="modal-body">
+                    <div class="modal-body">
                         <div class="form-group">
                             <label for="comments"><?= TABLE_HEADING_COMMENTS ?></label>
                             <?= zen_draw_textarea_field('comments', 'soft', '60', '5', '', 'id="comments" class="form-control"') ?>
@@ -293,8 +293,8 @@ switch (EO_CUSTOMER_NOTIFICATION_DEFAULT) {
                             </div>
                         </div>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>

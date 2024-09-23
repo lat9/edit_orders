@@ -104,7 +104,12 @@ foreach ($order->totals as $next_total) {
             $shipping_title_max = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'shipping_method') . '"';
 ?>
     <td class="text-right">
-        <?= zen_draw_pull_down_menu($update_total . '[shipping_module]', eo_get_available_shipping_modules(), $order->info['shipping_module_code'], 'class="form-control me-2"') ?>
+        <?= zen_draw_pull_down_menu(
+            $update_total . '[shipping_module]',
+            eo_get_available_shipping_modules(),
+            $order->info['shipping_module_code'],
+            'id="shipping-select" class="form-control me-2"'
+        ) ?>
         <?= zen_draw_input_field($update_total_title, $trimmed_title, 'id="ship-title" class="form-control" ' . $shipping_title_max) ?>
     </td>
 

@@ -7,6 +7,8 @@
 //
 // Last updated: EO v5.0.0
 //
+namespace Zencart\Plugins\Admin\EditOrders;
+
 if (!defined('IS_ADMIN_FLAG') || IS_ADMIN_FLAG !== true) {
     die('Illegal Access');
 }

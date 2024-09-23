@@ -6,6 +6,10 @@
 //
 // Last modified v5.0.0
 //
+use Zencart\Plugins\Admin\EditOrders\EditOrders;
+use Zencart\Plugins\Admin\EditOrders\EditOrdersQueryCache;
+use Zencart\Plugins\Admin\EditOrders\EoOrderChanges;
+
 require 'includes/application_top.php';
 
 // -----
@@ -23,17 +27,6 @@ if (!class_exists('currencies')) {
 }
 $currencies = new currencies();
 
-$step = (isset($_POST['step'])) ? (int)$_POST['step'] : 0;
-if (isset($_POST['add_product_categories_id'])) {
-    $add_product_categories_id = zen_db_prepare_input($_POST['add_product_categories_id']);
-}
-if (isset($_POST['add_product_products_id'])) {
-    $add_product_products_id = zen_db_prepare_input($_POST['add_product_products_id']);
-}
-if (isset($_POST['add_product_quantity'])) {
-    $add_product_quantity = zen_db_prepare_input($_POST['add_product_quantity']);
-}
-  
 // -----
 // The "queryCache" functionality present in the Zen Cart core can get in the way of
 // Edit Orders due to the amount of database manipulation.  Remove the default instance
@@ -41,7 +34,6 @@ if (isset($_POST['add_product_quantity'])) {
 // for the EO processing.
 //
 unset($queryCache);
-require DIR_WS_CLASSES . 'EditOrdersQueryCache.php';
 $queryCache = new EditOrdersQueryCache();
 
 // -----
@@ -51,7 +43,6 @@ $queryCache = new EditOrdersQueryCache();
 zen_define_default('EO_DEBUG_TAXES_ONLY', 'false');  //-Either 'true' or 'false'
 
 require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
-require DIR_WS_CLASSES . 'EditOrders.php';
 $eo = new EditOrders($oID);
 
 // -----
@@ -100,15 +91,73 @@ $zco_notifier->notify('EDIT_ORDERS_START_ACTION_PROCESSING');
 switch ($action) {
     // Update Order
     case 'update_order':
-        require DIR_WS_MODULES . 'edit_orders/eo_update_order_action_processing.php';
-        zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit', 'NONSSL'));
-        break;
-
-    case 'add_prdct':
-        require DIR_WS_MODULES . 'edit_orders/eo_add_prdct_action_processing.php';
-        if ($redirect_required) {
+        if (!isset($_SESSION['eoChanges'])) {
+            $messageStack->add_session(WARNING_NO_UPDATES_TO_ORDER, 'warning');
             zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
         }
+
+        $changed_values = $_SESSION['eoChanges']->getChangedValues();
+        if (count($changed_values) === 0) {
+            $messageStack->add_session(WARNING_NO_UPDATES_TO_ORDER, 'warning');
+            zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
+        }
+
+        $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
+        $original_order = $_SESSION['eoChanges']->getOriginalOrder();
+
+        $oID = $original_order->info['order_id'];
+        $order_table_updates = [];
+        if (!empty($updated_order->info['changes'])) {
+        }
+        if (!empty($updated_order->customer['changes'])) {
+            $order_table_updates += $eo->getAddressUpdateSql('customer_', $original_order->customer, $updated_order->customer);
+        }
+        if (!empty($updated_order->delivery['changes'])) {
+            $order_table_updates += $eo->getAddressUpdateSql('delivery_', $original_order->delivery, $updated_order->delivery);
+        }
+        if (!empty($updated_order->billing['changes'])) {
+            $order_table_updates += $eo->getAddressUpdateSql('billing_', $original_order->billing, $updated_order->billing);
+        }
+        if (count($order_table_updates) !== 0) {
+            $order_table_updates[] = [
+                'fieldName' => 'last_modified',
+                'value' => 'now()',
+                'type' => 'passthru',
+            ];
+        }
+        $db->perform(
+            TABLE_ORDERS,
+            $order_table_updates,
+            'update',
+            'orders_id = ' . (int)$oID . " LIMIT 1"
+        );
+
+        if (!empty($updated_order->products['changes'])) {      //- FIXME,
+        }
+        if (!empty($updated_order->totals['changes'])) {
+        }
+
+        $order_changed_message = TEXT_OSH_CHANGED_VALUES . "\n";
+        $order_changed_message .= '<ol>';
+        foreach ($changed_values as $title => $changes) {
+            $order_changed_message .= '<li>' . $title . '</li>';
+            $order_changed_message .= '<ol type="a">';
+            foreach ($changes as $next_change) {
+                $original_value = '"' . $next_change['original'] . '"';
+                $updated_value = '"' . $next_change['updated'] . '"';
+                $label = rtrim($next_change['label'], ':');
+                $order_changed_message .= '<li>' . sprintf(TEXT_VALUE_CHANGED, $label, $original_value, $updated_value) . '</li>';
+            }
+            $order_changed_message .= '</ol>';
+        }
+        $order_changed_message .= '</ol>';
+        zen_update_orders_history((int)$oID, $order_changed_message);
+
+        if (!empty($updated_order->statuses['changes'])) {
+        }
+
+        $messageStack->add_session(sprintf(SUCCESS_ORDER_UPDATED, (int)$oID), 'success');
+        zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
         break;
 
     default:
@@ -117,9 +166,12 @@ switch ($action) {
 }
 
 // -----
-// Create an instance of the to-be-edited order.
+// Create an instance of the to-be-edited order and record its contents
+// in the session-based class through which the various AJAX methods
+// communicate the admin's changes.
 //
 $order = $eo->getOrder();
+$_SESSION['eoChanges'] = new EoOrderChanges($order);
 
 // -----
 // If a country referenced in the order's addresses is no longer present (or enabled)
@@ -169,15 +221,574 @@ if (EDIT_ORDERS_USE_NUMERIC_FIELDS !== '1') {
     $input_field_type = 'number';
 }
 
+
 // -----
-// Start action-based rendering ...
+// Since EO's order-updating is now AJAX-driven, pull the initial order-display
+// from the previous eo_edit_action_display.php.
 //
-if ($action === 'edit') {
-    require DIR_WS_MODULES . 'edit_orders/eo_edit_action_display.php';
-} elseif ($action === 'add_prdct') { 
-    require DIR_WS_MODULES . 'edit_orders/eo_add_prdct_action_display.php';
+define('DIR_WS_EO_MODULES', DIR_WS_MODULES . 'edit_orders/');
+?>
+<div id="eo-main" class="container-fluid">
+    <?php require DIR_WS_EO_MODULES . 'eo_navigation.php'; ?>
+
+    <div class="row">
+        <div class="col-sm-6">
+            <h1><?= HEADING_TITLE . ' #' . $oID ?></h1>
+        </div>
+        <div class="col-sm-6 text-right">
+            <a href="<?= zen_href_link(FILENAME_ORDERS, zen_get_all_get_params()) ?>" class="btn btn-default" role="button">
+                <?= IMAGE_BACK ?>
+            </a>
+            <a href="<?= zen_href_link(FILENAME_ORDERS, zen_get_all_get_params(['action']) . '&action=edit') ?>" class="btn btn-primary" role="button">
+                <?= DETAILS ?>
+            </a>
+        </div>
+    </div>
+
+    <?php require DIR_WS_EO_MODULES . 'eo_edit_action_addresses_display.php'; ?>
+
+    <div class="row">
+        <div id="eo-addl-info" class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <span class="h3"><?= TEXT_PANEL_HEADER_ADDL_INFO ?></span>
+                </div>
+                <div class="panel-body">
+                    <form class="form-horizontal">
+<?php
+// -----
+// Give a watching observer the opportunity to supply additional contact-information for the order.
+//
+// The $additional_contact_info (supplied as the notification's 2nd parameter), if supplied, is a
+// numerically-indexed array of arrays containing each label and associated content, e.g.:
+//
+// $additional_contact_info[] = [
+//     'label' => LABEL_TEXT,
+//     'for' => 'input-field-id',   //- Optional, see below
+//     'content' => $field_content,
+// ];
+//
+// Note: If the 'for' element is not supplied, the 'label' and 'content' will be displayed
+// as 'simple' form elements.
+//
+// For EO versions prior to 5.0.0, this notification was 'EDIT_ORDERS_ADDITIONAL_CONTACT_INFORMATION'.
+//
+$additional_contact_info = [];
+$zco_notifier->notify('NOTIFY_EO_ADDL_CONTACT_INFO', $order, $additional_contact_info);
+
+if (is_array($additional_contact_info) && count($additional_contact_info) !== 0) {
+    foreach ($additional_contact_info as $contact_info) {
+        if (!empty($contact_info['label']) && !empty($contact_info['content'])) {
+            if (!isset($contact_info['for'])) {
+?>
+                        <div class="row my-2">
+                            <div class="col-sm-4 control-label">
+                                <?= $contact_info['label'] ?>
+                            </div>
+                            <div class="col-sm-8">
+                                <?= $contact_info['content'] ?>
+                            </div>
+                        </div>
+<?php
+                continue;
+            }
+?>
+                        <div class="row my-2">
+                            <div class="form-group">
+                                <label for="<?= $contact_info['for'] ?>" class="col-sm-4 control-label">
+                                    <?= $contact_info['label'] ?>
+                                </label>
+                                <div class="col-sm-8">
+                                    <?= $contact_info['content'] ?>
+                                </div>
+                            </div>
+                        </div>
+<?php
+        }
+    }
 }
 
+// -----
+// Note: Using loose comparison since the value is recorded (currently) as decimal(14,6)
+// and shows up in the order as (string)1.000000 if the order's placed in the store's
+// default currency.
+//
+if ($order->info['currency_value'] != 1) {
+?>
+                        <div class="row my-2">
+                            <div class="col-sm-4 eo-label">
+                                <?= sprintf(ENTRY_CURRENCY_VALUE, $order->info['currency']) ?>
+                            </div>
+                            <div class="col-sm-8">
+                                <?= $order->info['currency_value'] ?>
+                            </div>
+                        </div>
+<?php
+}
+
+$max_payment_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'payment_method') . '"';
+?>
+                        <div class="row my-2">
+                            <div class="form-group">
+                                <label for="payment-method" class="col-sm-4 control-label">
+                                    <?= ENTRY_PAYMENT_METHOD ?>
+                                </label>
+                                <div class="col-sm-8">
+                                    <?= zen_draw_input_field(
+                                        'update_info_payment_method',
+                                        zen_output_string_protected($order->info['payment_method']),
+                                        $max_payment_length . ' id="payment-method" class="form-control"'
+                                    ) ?>
+                                    <?= ($order->info['payment_method'] !== TEXT_CREDIT_CARD) ? ENTRY_UPDATE_TO_CC : ENTRY_UPDATE_TO_CK ?>
+                                </div>
+                            </div>
+                        </div>
+<?php 
+$max_type_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_type') . '"';
+$max_owner_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_owner') . '"';
+$max_number_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_number') . '"';
+$max_expires_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_expires') . '"';
+
+$cc_fields_display = 'd-none';
+if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $order->info['payment_method'] === TEXT_CREDIT_CARD || !empty($order->info['cc_number'])) {
+    $cc_fields_display = '';
+}
+?>
+                        <div class="row cc-field my-2 <?= $cc_fields_display ?>">
+                            <div class="form-group">
+                                <label for="cc-type" class="col-sm-4 control-label">
+                                    <?= ENTRY_CREDIT_CARD_TYPE ?>
+                                </label>
+                                <div class="col-sm-8">
+                                    <?= zen_draw_input_field(
+                                        'update_info_cc_type',
+                                        zen_output_string_protected((string)$order->info['cc_type']),
+                                        $max_type_length . ' id="cc-type" class="form-control"'
+                                    ) ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row cc-field my-2 <?= $cc_fields_display ?>">
+                            <div class="form-group">
+                                <label for="cc-owner" class="col-sm-4 control-label">
+                                    <?= ENTRY_CREDIT_CARD_OWNER ?>
+                                </label>
+                                <div class="col-sm-8">
+                                    <?= zen_draw_input_field(
+                                        'update_info_cc_owner',
+                                        zen_output_string_protected((string)$order->info['cc_owner']),
+                                        $max_owner_length . ' id="cc-owner" class="form-control"'
+                                    ) ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row cc-field my-2 <?= $cc_fields_display ?>">
+                            <div class="form-group">
+                                <label for="cc-number" class="col-sm-4 control-label">
+                                    <?= ENTRY_CREDIT_CARD_NUMBER ?>
+                                </label>
+                                <div class="col-sm-8">
+                                    <?= zen_draw_input_field(
+                                        'update_info_cc_number',
+                                        zen_output_string_protected((string)$order->info['cc_number']),
+                                        $max_number_length . ' id="cc-number" class="form-control"'
+                                    ) ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row cc-field my-2 <?= $cc_fields_display ?>">
+                            <div class="form-group">
+                                <label for="cc-expires" class="col-sm-4 control-label">
+                                    <?= ENTRY_CREDIT_CARD_EXPIRES ?>
+                                </label>
+                                <div class="col-sm-8">
+                                    <?= zen_draw_input_field(
+                                        'update_info_cc_expires',
+                                        zen_output_string_protected((string)$order->info['cc_expires']),
+                                        $max_expires_length . ' id="cc-expires" class="form-control"'
+                                    ) ?>
+                                </div>
+                            </div>
+                        </div>
+<?php
+// -----
+// NOTE: No maximum lengths provided for these non-standard fields, since there's no way to know what database table
+// the information is stored in!
+//
+if (isset($order->info['account_name']) || isset($order->info['account_number']) || isset($order->info['po_number'])) {
+?>
+                        <hr>
+<?php
+    if (isset($order->info['account_name'])) {
+?>
+                        <div class="row my-2">
+                            <div class="col-sm-4 eo-label">
+                                <?= ENTRY_ACCOUNT_NAME ?>
+                            </div>
+                            <div class="col-sm-8">
+                                <?= zen_output_string_protected($order->info['account_name']) ?>
+                            </div>
+                        </div>
+<?php
+    }
+    if (isset($order->info['account_number'])) {
+?>
+                        <div class="row my-4">
+                            <div class="col-sm-3 eo-label">
+                                <?= ENTRY_ACCOUNT_NUMBER ?>
+                            </div>
+                            <div class="col-sm-8">
+                                <?= zen_output_string_protected($order->info['account_number']) ?>
+                            </div>
+                        </div>
+<?php
+    }
+    if (isset($order->info['po_number'])) {
+?>
+                        <div class="row my-2">
+                            <div class="col-sm-4 eo-label">
+                                <?= ENTRY_PURCHASE_ORDER_NUMBER ?>
+                            </div>
+                            <div class="col-sm-8">
+                                <?= zen_output_string_protected($order->info['po_number']) ?>
+                            </div>
+                        </div>
+<?php
+    }
+}
+?>
+                    </form>
+                </div>
+            </div>
+        </div>
+<?php
+if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
+    $choices = [
+        ['id' => 1, 'text' => PAYMENT_CALC_AUTOSPECIALS],
+        ['id' => 2, 'text' => PAYMENT_CALC_AUTO],
+        ['id' => 3, 'text' => PAYMENT_CALC_MANUAL]
+    ];
+    switch (EO_PRODUCT_PRICE_CALC_DEFAULT) {
+        case 'AutoSpecials':
+            $default = 1;
+            break;
+        case 'Auto':
+            $default = 2;
+            break;
+        default:
+            $default = 3;
+            break;
+    }
+    if (isset($_SESSION['eo_price_calculations']) && $_SESSION['eo_price_calculations'] >= 1 && $_SESSION['eo_price_calculations'] <= 3) {
+        $default = $_SESSION['eo_price_calculations'];
+    }
+    $_SESSION['eo_price_calculations'] = $default;
+    $price_is_manual = ($default === 3);
+
+    $display_payment_calc_label = true;
+    $payment_calc_choice = zen_draw_pull_down_menu('payment_calc_method', $choices, $default, 'id="calc-method" class="form-control w-auto"');
+} else {
+    switch (EO_PRODUCT_PRICE_CALC_METHOD) {
+        case 'AutoSpecials':
+            $payment_calc_choice = PRODUCT_PRICES_CALC_AUTOSPECIALS;
+            $price_is_manual = false;
+            break;
+        case 'Auto':
+            $payment_calc_choice = PRODUCT_PRICES_CALC_AUTO;
+            $price_is_manual = false;
+            break;
+        default:
+            $payment_calc_choice = PRODUCT_PRICES_CALC_MANUAL;
+            $price_is_manual = true;
+            break;
+    }
+    $display_payment_calc_label = false;
+    $payment_calc_choice = '<p class="text-center">' . $payment_calc_choice . '</p>';
+}
+
+// -----
+// Note: For EO versions prior to 5.0.0, this notification was 'EDIT_ORDERS_FORM_ADDITIONAL_INPUTS'.
+//
+$additional_inputs = '';
+$zco_notifier->notify('NOTIFY_EO_UPDATE_FORM_ADDL_INPUTS', $order, $additional_inputs);
+
+$reset_totals_block =
+    '<div class="checkbox">' .
+        '<label>' .
+            zen_draw_checkbox_field('reset_totals', '', EO_TOTAL_RESET_DEFAULT === 'on') .
+            '&nbsp;' . RESET_TOTALS .
+        '</label>' .
+    '</div>';
+?>
+        <div id="eo-update-info" class="col-md-8">
+            <div class="panel panel-warning">
+                <div class="panel-heading text-center">
+                    <span class="h3"><?= TEXT_PANEL_HEADER_UPDATE_INFO ?></span>
+                </div>
+                <div class="panel-body">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+<?php
+if ($display_payment_calc_label === false) {
+?>
+                            <?= $payment_calc_choice ?>
+<?php
+} else {
+?>
+                            <label for="calc-method" class="col-sm-3 control-label"><?= PAYMENT_CALC_METHOD ?>&nbsp;</label>
+                            <div class="col-sm-9">
+                                <?= $payment_calc_choice ?>
+                            </div>
+<?php
+}
+?>
+                        </div>
+                    </form>
+                </div>
+                <div id="update-form-wrapper" class="panel-footer text-center d-none">
+                    <div>
+                        <?= zen_draw_form('edit_order', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'paycc']) . 'action=update_order', 'post', 'id="update-form" class="form-inline"') ?>
+                            <button id="update-verify" type="button" class="btn btn-danger"><?= IMAGE_UPDATE ?></button>
+                            <?= "&nbsp;$reset_totals_block&nbsp;$additional_inputs" ?>
+                        <?= '</form>' ?>
+                    </div>
+                    <div id="update-modal" class="modal fade address-modal" role="dialog"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Begin Products Listing Block -->
+    <div class="row">
+        <table id="products-listing" class="table table-striped mb-2">
+            <tr class="dataTableHeadingRow">
+<?php
+// -----
+// To add more columns at the beginning of the order's products' table, a
+// watching observer can provide an associative array in the form:
+//
+// $extra_headings = [
+//     [
+//       'align' => $alignment,    // One of 'center', 'right' or 'left' (optional)
+//       'text' => $value
+//     ],
+// ];
+//
+// Observer note:  Be sure to check that the $p2/$extra_headings value is specifically (bool)false before initializing, since
+// multiple observers might be injecting content!
+//
+$extra_headings = false;
+$zco_notifier->notify('EDIT_ORDERS_PRODUCTS_HEADING_1', [], $extra_headings);
+
+$base_orders_columns = 7;
+if (is_array($extra_headings)) {
+    foreach ($extra_headings as $heading_info) {
+        $base_orders_columns++;
+        $align = '';
+        if (isset($heading_info['align'])) {
+            switch ($heading_info['align']) {
+                case 'center':
+                    $align = ' text-center';
+                    break;
+                case 'right':
+                    $align = ' text-right';
+                    break;
+                default:
+                    $align = '';
+                    break;
+            }
+        }
+?>
+                <th class="dataTableHeadingContent<?= $align ?>"><?= $heading_info['text'] ?></th>
+<?php
+    }
+}
+?>
+                <th class="dataTableHeadingContent text-center" colspan="3"><?= TABLE_HEADING_PRODUCTS ?></th>
+                <th class="dataTableHeadingContent"><?= TABLE_HEADING_PRODUCTS_MODEL ?></th>
+                <th class="dataTableHeadingContent text-right"><?= TABLE_HEADING_TAX ?></th>
+<?php
+// -----
+// Starting with v4.4.0, show both the net and gross unit prices when the store is configured to display prices with tax.
+//
+if (DISPLAY_PRICE_WITH_TAX === 'true') {
+    $base_orders_columns++;
+?>
+                <th class="dataTableHeadingContent text-right"><?= TABLE_HEADING_UNIT_PRICE_NET ?></th>
+                <th class="dataTableHeadingContent text-right"><?= TABLE_HEADING_UNIT_PRICE_GROSS ?></th>
+<?php
+} else {
+?>
+                <th class="dataTableHeadingContent text-right"><?= TABLE_HEADING_UNIT_PRICE ?></th>
+<?php
+}
+?>
+                <th class="dataTableHeadingContent text-right"><?= TABLE_HEADING_TOTAL_PRICE ?></th>
+            </tr>
+<?php
+// -----
+// Initialize (outside of the loop, for performance) the attributes for the various product-related
+// input fields.
+//
+$name_params = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_name') . '"';
+$model_params = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_model') . '"';
+foreach ($order->products as $next_product) {
+?>
+            <tr class="dataTableRow">
+<?php
+    // -----
+    // To add more columns at the beginning of the order's products' table, a
+    // watching observer can provide an associative array in the form:
+    //
+    // $extra_data = [
+    //     [
+    //       'align' => $alignment,    // One of 'center', 'right' or 'left' (optional)
+    //       'text' => $value
+    //     ],
+    // ];
+    //
+    // Observer note:  Be sure to check that the $p2/$extra_data value is specifically (bool)false before initializing, since
+    // multiple observers might be injecting content!
+    //
+    $extra_data = false;
+    $zco_notifier->notify('EDIT_ORDERS_PRODUCTS_DATA_1', $next_product, $extra_data);
+    if (is_array($extra_data)) {
+        foreach ($extra_data as $data) {
+            $align = '';
+            if (isset($data['align'])) {
+                switch ($data['align']) {
+                    case 'center':
+                        $align = ' text-center';
+                        break;
+                    case 'right':
+                        $align = ' text-right';
+                        break;
+                    default:
+                        $align = '';
+                        break;
+                }
+            }
+?>
+                <td class="dataTableContent<?= $align ?>"><?= $data['text'] ?></td>
+<?php
+        }
+    }
+
+    $orders_products_id = $next_product['orders_products_id'];
+    $base_var_name = 'update_products[' . $orders_products_id . ']';
+    $data_index = ' data-opi="' . $orders_products_id . '"';
+    $price_entry_disabled = ($price_is_manual === true) ? '' : 'disabled';
+?>
+                <td class="dataTableContent text-center">
+                    <?= zen_draw_input_field($base_var_name . '[qty]', $next_product['qty'], 'class="mx-auto prod-qty form-control"' . $input_value_params, false, $input_field_type) ?>
+<?php
+    if (isset($next_product['attributes'])) {
+?>
+                    <button class="update-attributes btn btn-sm btn-warning mt-2"<?= $data_index ?> title="<?= TEXT_BUTTON_CHANGE_ATTRIBS_ALT ?>">
+                        <?= ICON_EDIT ?>
+                    </button>
+<?php
+    }
+?>
+                </td>
+
+                <td>&nbsp;X&nbsp;</td>
+
+                <td class="dataTableContent">
+                    <?= zen_draw_input_field($base_var_name . '[name]', $next_product['name'], $name_params . ' class="form-control"') ?>
+<?php
+    if (isset($next_product['attributes'])) {
+?>
+                    <div class="row">
+                        <small>&nbsp;<i><?= TEXT_ATTRIBUTES_ONE_TIME_CHARGE ?></i></small>
+                        <?= zen_draw_input_field(
+                            $base_var_name . '[onetime_charges]',
+                            $next_product['onetime_charges'],
+                            'class="form-control form-control-sm amount-onetime d-inline" ' . $price_entry_disabled
+                        ) ?>
+                    </div>
+
+                    <ul class="attribs-list">
+<?php
+        foreach ($next_product['attributes'] as $next_attribute) {
+?>
+                        <li><?= $next_attribute['option'] . ': ' . nl2br(zen_output_string_protected($next_attribute['value'])) ?></li>
+<?php
+        }
+?>
+                    </ul>
+<?php
+    }
+?>
+                </td>
+
+                <td class="dataTableContent">
+                    <?= zen_draw_input_field($base_var_name . '[model]', $next_product['model'], $model_params . ' class="model form-control"') ?>
+                </td>
+<?php
+    // -----
+    // Starting with EO v4.4.0, both the net and gross prices are displayed when the store displays prices with tax.
+    //
+    if (DISPLAY_PRICE_WITH_TAX === 'true') {
+        $final_price = $next_product['final_price'];
+        $onetime_charges = $next_product['onetime_charges'];
+    } else {
+        $final_price = $next_product['final_price'];
+        $onetime_charges = $eo->eoRoundCurrencyValue($next_product['onetime_charges']);
+    }
+?>
+                <td class="dataTableContent text-right">
+                    <div class="tax-percentage">&nbsp;%</div>
+                    <?= zen_draw_input_field(
+                        $base_var_name . '[tax]',
+                        zen_display_tax_value($next_product['tax']),
+                        'class="amount form-control d-inline-block price-tax"' . $input_tax_params . $data_index,
+                        false,
+                        $input_field_type
+                    ) ?>
+                </td>
+
+                <td class="dataTableContent text-right">
+                    <?= zen_draw_input_field(
+                        $base_var_name . '[final_price]',
+                        $final_price,
+                        $value_params . ' class="form-control amount price-net" ' . $price_entry_disabled . $data_index) ?>
+                </td>
+<?php
+    if (DISPLAY_PRICE_WITH_TAX === 'true') {
+        $gross_price = zen_add_tax($final_price, $next_product['tax']);
+        $final_price = $gross_price;
+?>
+                <td class="dataTableContent text-right">
+                    <?= zen_draw_input_field(
+                        $base_var_name . '[gross]',
+                        $gross_price,
+                        $value_params . ' class="form-control amount price-gross" ' . $price_entry_disabled . $data_index
+                    ) ?>
+                </td>
+<?php
+    }
+?>
+                <td class="dataTableContent text-right">
+                    <?= $currencies->format($final_price * $next_product['qty'] + $onetime_charges, true, $order->info['currency'], $order->info['currency_value']) ?>
+                </td>
+            </tr>
+<?php
+}
+?>
+<!-- End Products Listings Block -->
+
+<!-- Begin Order Total Block -->
+            <?php require DIR_WS_EO_MODULES . 'eo_edit_action_ot_table_display.php'; ?>
+<!-- End Order Total Block -->
+        </table>
+    </div>
+
+<!-- Begin Status-History Block -->
+    <?php require DIR_WS_EO_MODULES . 'eo_edit_action_osh_table_display.php'; ?>
+<!-- End Status-History Block -->
+</div>
+<?php
 // -----
 // Include id-specific javascript only if the associated blocks have been rendered.
 //

@@ -89,7 +89,7 @@ $(function() {
         if (taxRate > 0) {
             net = net / ((taxRate / 100) + 1);
         }
-        $('#s-n').val(doRound(net, 4));
+        $('#ship-net').val(doRound(net, 4));
     }
 });
 </script>
@@ -100,6 +100,11 @@ $(function() {
 ?>
 <script>
 $(function() {
+    // -----
+    // Initialize the variout 'tooltip' elements.
+    //
+    $('[data-toggle="tooltip"]').tooltip();
+
     $('#comment-submit').on('click', function() {
         console.log($('#comment-form').serializeArray());
     });
@@ -119,12 +124,16 @@ $(function() {
             $('.price-net, .price-gross').attr('disabled', 'disabled');
         }
     });
-
-//    console.log($('#eo-addl-info form').serializeArray());
 <?php
+// --------------------
+// START ADDRESS-RELATED HANDLING
+// --------------------
+
 // -----
-// If the site uses states in its addresses, EO **always** provides dropdown
-// states in its various address displays.
+// EO **always** provides dropdown states in its various address displays.
+//
+// Note: The HTML structure that these jQuery methods are 'working with' is
+// created by the eo_common_address_format.php module.
 //
 if (ACCOUNT_STATE === 'true') {
     // -----
@@ -158,16 +167,6 @@ if (ACCOUNT_STATE === 'true') {
 ?>
     const country_zones = '<?= addslashes(json_encode($c2z)) ?>';
 
-    $('.address-modal').on('shown.bs.modal', function() {
-        if ($(this).find('.state-select > option').length > 1) {
-            $(this).find('.state-input').hide();
-            $(this).find('.state-select').show();
-        } else {
-            $(this).find('.state-input').show();
-            $(this).find('.state-select').hide();
-        }
-    });
-
     $('.address-country').on('change', function() {
         var countryHasZones = false;
         var countryZones = '';
@@ -187,15 +186,147 @@ if (ACCOUNT_STATE === 'true') {
             });
             var sorted = split.sort();
             countryZones = '<option selected="selected" value="0"><?php echo addslashes(PLEASE_SELECT); ?><' + '/option><option' + sorted.join('<option');
-            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-input').hide();
-            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-select').html(countryZones).show();
+            $(this).parents('form').first().find('.state-input').val('').parent().hide();
+            $(this).parents('form').first().find('.state-select').html(countryZones).prop('disabled', false).parent().show();
         } else {
-            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-input').show();
-            $(this).parents('.country-wrapper').first().siblings('.state-wrapper').first().find('.state-select').hide();
+            $(this).parents('form').first().find('.state-input').parent().show();
+            $(this).parents('form').first().find('.state-select').prop('disabled', true).parent().hide();
         }
+    });
+
+    $('.state-select').on('change', function() {
+        let selectedOption = $(this).val();
+        $(this).find('option').prop('selected', false);
+        $(this).find('option[value="'+selectedOption+'"]').prop('selected', true);
     });
 <?php
 }
+?>
+    // -----
+    // When an address' modal is rendered, register for all changes to
+    // input and select tags therein.
+    //
+    // Upon any change to those fields, set a warning-color border on the
+    // field and display the form's "Save" button to enable recording
+    // the update into EO's session-based changes.
+    //
+    $('.address-modal').on('shown.bs.modal', function() {
+        if ($(this).find('.state-select > option').length > 1) {
+            $(this).find('.state-input').parent().hide();
+            $(this).find('.state-select').prop('disabled', false).parent().show();
+        } else {
+            $(this).find('.state-input').parent().show();
+            $(this).find('.state-select').prop('disabled', true).parent().hide();
+        }
+
+        $(this).find('input:not(:hidden), select').on('change', function() {
+            $(this).addClass('border-warning').removeClass('border-danger');
+            $(this).siblings('.eo-field-error').remove();
+            $(this).parents('form').first().find('.btn-save').show();
+        });
+
+        $(this).find('[data-toggle="tooltip"]').tooltip();
+    });
+
+    // -----
+    // When an address' modal is closed and there haven't been any
+    // changes to the associated address, remove all indication
+    // of field-changes.
+    //
+    $('.address-modal').on('hidden.bs.modal', function() {
+        if ($(this).find('.eo-changed').first().val() == 0) {
+            $(this).find('input, select').removeClass('border-warning');
+        }
+    });
+
+    // -----
+    // When an address' "Save" button is clicked, the admin has
+    // indicated that the changes associated with the address
+    // are to be saved for the future update to the order.
+    //
+    $('.address-modal .btn-save').on('click', function() {
+        let theButton = $(this);
+        let theForm = theButton.parents('form').first();
+        let addressType = theForm.find('.eo-addr-type').first().val();
+
+        let fieldNames = [];
+        theForm.find('select, input[type="text"]').each(function() {
+            fieldNames.push({
+                name: $(this).attr('name'),
+                value: $('label[for="'+ this.id +'"]').text()
+            });
+        });
+
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=updateAddress',
+            data: {
+                form_fields: JSON.stringify(theForm.serializeArray()),
+                form_labels: JSON.stringify(fieldNames)
+            }
+        }).done(function(response) {
+            if (response.status === 'ok') {
+                theForm.find('.eo-changed').first().val(response.address_changes).trigger('change');
+                $('#address-'+addressType).html(response.address);
+                if (response.address_changes != 0) {
+                    $('#address-'+addressType).addClass('border-warning');
+                } else {
+                    theForm.find('.border-warning, .border-danger').removeClass('border-warning border-danger');
+                    $('#address-'+addressType).removeClass('border-warning');
+                    theForm.find('span.eo-field-error').remove();
+                }
+                theForm.find('.btn-save').hide();
+                $('#google-map-link-'+addressType).attr('href', response.google_map_link);
+                theButton.parents('.address-modal').modal('hide');
+            } else {
+                $.each(response.error_messages, function(field_id, message) {
+                    $('#'+field_id).addClass('border-danger').after('<span class="eo-field-error text-danger">'+message+'</span>');
+                });
+            }
+        });
+    });
+<?php
+// --------------------
+// END ADDRESS-RELATED HANDLING
+// --------------------
+
+// --------------------
+// START OVERALL HANDLING
+// --------------------
+?>
+    // -----
+    // When values in any of the various sections have changed,
+    // count up the changes and display/hide the update form.
+    //
+    $('.eo-changed').on('change', function() {
+        let changeCount = 0;
+        $('.eo-changed').each(function() {
+            changeCount += parseInt(this.value);
+        });
+        if (changeCount !== 0) {
+            $('#update-form-wrapper').show();
+        } else {
+            $('#update-form-wrapper').hide();
+        }
+    });
+
+    $(document).on('click', '#update-verify', function() {
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=getChangesModal',
+            data: $('#update-form').serializeArray(),
+        }).done(function(response) {
+            if (response.status === 'ok') {
+                $('#update-modal').html(response.modal_html).modal('show');
+            }
+        });
+    });
+    
+    $(document).on('click', '#commit-changes', function() {
+        $('#update-form').submit();
+    });
+<?php
+// --------------------
+// END OVERALL HANDLING
+// --------------------
 ?>
 });
 </script>

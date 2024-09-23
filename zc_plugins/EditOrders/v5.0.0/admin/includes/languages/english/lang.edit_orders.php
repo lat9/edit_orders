@@ -7,11 +7,15 @@
 $define = [
 // Page / Section Headings and common button names
     'BUTTON_CLOSE' => 'Close',
+    'BUTTON_COMMIT_CHANGES' => 'Commit Changes',
     'HEADING_TITLE' => 'Editing Order',
     'HEADING_TITLE_SEARCH' => 'Order ID:',
     'HEADING_TITLE_STATUS' => 'Status:',
     'HEADING_TITLE_ADD_PRODUCT' => 'Adding a Product to Order',
     'TEXT_BUTTON_CHANGE_ATTRIBS_ALT' => 'Change the attributes for this product',
+    'TEXT_ORIGINAL_VALUE' => 'Original: <code>%s</code>',
+    'TEXT_OSH_CHANGED_VALUES' => 'These values were changed in the order:',
+    'TEXT_VALUE_CHANGED' => '%1$s was changed from %2$s to %3$s',   //- Used by the AJAX processing and for OSH record
 
 // Table Headings
     'TABLE_HEADING_STATUS_HISTORY' => 'Order Status History &amp; Comments',
@@ -89,7 +93,7 @@ $define = [
 
 // Success, Warning, and Error Messages
     'ERROR_ORDER_DOES_NOT_EXIST' => 'Error: Order does not exist.',
-    'SUCCESS_ORDER_UPDATED' => 'Success: Order has been successfully updated.',
+    'SUCCESS_ORDER_UPDATED' => 'Order #%u has been successfully updated.',
     'ERROR_DISPLAY_PRICE_WITH_TAX' => 'You have configured Zen Cart to display prices with' . (DISPLAY_PRICE_WITH_TAX_ADMIN !== 'true' ? 'out ' : ' ') . 'tax. This page is currently displaying prices with' . (DISPLAY_PRICE_WITH_TAX !== 'true' ? 'out ' : ' ') . 'tax. Orders cannot be edited until the two settings are the same.',
     'ERROR_ADDRESS_COUNTRY_NOT_FOUND' => 'Order #%u cannot be edited. One or more of the addresses in the order uses a country unknown to your store; taxes and some shipping modules will likely not function correctly until the issue has been resolved.<br><br>This typically occurs if an admin deletes, renames or disables a country using the <b>Locations / Taxes :: Countries</b> tool. The issue can be corrected by doing one of the following:<ul><li>Add the country (and name) back to your Zen Cart database.</li><li>Re-enable the country temporarily to enable the order to be edited.</li></ul>',
     'WARNING_ORDER_NOT_UPDATED' => 'Warning: Nothing to change. The order was not updated.',
@@ -101,6 +105,7 @@ $define = [
     'ERROR_SHIPPING_TAX_RATE_MISSING' => 'Order #%u cannot be edited. Its <code>shipping_tax_rate</code> was not previously recorded.',
     'ERROR_NO_SHIPPING_TAX_DESCRIPTION' => 'Order #%1$u cannot be edited. No tax description could be found for the shipping tax-rate (%2$s%%).',
     'ERROR_NO_PRODUCT_TAX_DESCRIPTION' => 'Order #%1$u cannot be edited. No tax description could be found for <em>%2$s</em> tax-rate (%3$s%%).',
+    'WARNING_NO_UPDATES_TO_ORDER' => 'Nothing to update; no changes to this order were recorded.',
 
     'ERROR_ZEN_ADD_TAX_ROUNDING' => "The store's <code>zen_add_tax</code> function must be updated to enable <em>Edit Orders</em>' use.",
 
