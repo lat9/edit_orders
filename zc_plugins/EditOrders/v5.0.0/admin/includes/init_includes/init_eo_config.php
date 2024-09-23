@@ -20,6 +20,9 @@ if ($PHP_SELF === 'ajax.php' && ($_GET['act'] ?? '') === 'ajaxEditOrdersAdmin') 
     $PHP_SELF = 'edit_orders.php';
     return;
 }
+if ($PHP_SELF === 'keepalive.php' || $PHP_SELF === FILENAME_EDIT_ORDERS . '.php') {
+    return;
+}
 
 // -----
 // If a previous 'run' of EO has saved a pre-existing currency into the session, restore
@@ -33,3 +36,5 @@ if (isset($_SESSION['eo_saved_currency'])) {
     }
     unset($_SESSION['eo_saved_currency']);
 }
+
+unset($_SESSION['eoChanges']);

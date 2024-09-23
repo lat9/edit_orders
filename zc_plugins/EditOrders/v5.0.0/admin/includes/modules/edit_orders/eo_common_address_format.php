@@ -49,13 +49,13 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
             </div>
             <div class="col-md-6">
                 <address class="mb-0">
-                    <div id="address-<?= $address_name ?>" class="eo-address p-2">
+                    <div id="address-<?= $address_name ?>" class="eo-address border p-2">
                         <?= zen_address_format($address_fields['format_id'], $address_fields, 1, '', '<br>') ?>
-                    </div>
-                    <div class="mt-2">
-                        <?= $address_fields['telephone'] ?? '&nbsp;' ?>
-                        <br>
-                        <?= $address_fields['email_address'] ?? '&nbsp;' ?>
+                        <div class="mt-2">
+                            <?= $address_fields['telephone'] ?? '&nbsp;' ?>
+                            <br>
+                            <?= $address_fields['email_address'] ?? '&nbsp;' ?>
+                        </div>
                     </div>
                 </address>
             </div>
@@ -67,7 +67,7 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
 </div>
 
 <div id="<?= $modal_id ?>" class="modal fade address-modal" role="dialog">
-    <div class="modal-dialog"><form>
+    <div class="modal-dialog"><form class="form-horizontal">
         <?= zen_draw_hidden_field($input_prefix . '_changed', '0', 'class="eo-changed"') ?>
         <?= zen_draw_hidden_field('address_type', $address_name, 'class="eo-addr-type"') ?>
         <div class="modal-content">
@@ -77,135 +77,184 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
                     <?= sprintf(TEXT_MODAL_ADDRESS_HEADER, rtrim($address_label, ':')) ?>
                 </h4>
             </div>
+<?php
+// -----
+// Ensure any special characters in strings are 'sanitized' for the display.
+//
+foreach ($address_fields as $key => $value) {
+    if (!is_array($value)) {
+        $address_fields[$key] = zen_output_string_protected($value);
+    }
+}
 
+// -----
+// Set the common parameters for the tooltip popups.
+//
+$tooltip_parameters = 'class="fa-solid fa-circle-info fa-lg" data-toggle="tooltip" data-trigger="click" data-html="true"';
+?>
             <div class="modal-body">
-                <div class="row my-2">
-                    <div class="col-sm-3 control-label">
-                        <label for="<?= $input_prefix ?>_company"><?= ENTRY_CUSTOMER_COMPANY ?></label>:&nbsp;
-                    </div>
+                <div class="form-group">
+                    <?= zen_draw_label(ENTRY_CUSTOMER_COMPANY, $input_prefix . '_company', 'class="col-sm-3 control-label"') ?>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field(
-                            $input_prefix . '_company',
-                            zen_output_string_protected($address_fields['company']),
-                            $max_company_length . ' id="' . $input_prefix . '_company" class="form-control"'
-                        ) ?>
+                        <div class="input-group">
+                            <?= zen_draw_input_field(
+                                $input_prefix . '_company',
+                                $address_fields['company'],
+                                $max_company_length . ' id="' . $input_prefix . '_company" class="form-control"'
+                            ) ?>
+                            <span class="input-group-addon">
+                                <i <?= $tooltip_parameters ?> title="<?= sprintf(TEXT_ORIGINAL_VALUE, $address_fields['company']) ?>"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row my-2">
-                    <div class="col-sm-3 control-label">
-                        <label for="<?= $input_prefix ?>_name"><?= ENTRY_CUSTOMER_NAME ?></label>:&nbsp;
-                    </div>
+                <div class="form-group">
+                    <?= zen_draw_label(ENTRY_CUSTOMER_NAME, $input_prefix . '_name', 'class="col-sm-3 control-label"') ?>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field(
-                            $input_prefix . '_name',
-                            zen_output_string_protected($address_fields['name']),
-                            $max_name_length . ' id="' . $input_prefix . '_name" class="form-control"'
-                        ) ?>
+                        <div class="input-group">
+                            <?= zen_draw_input_field(
+                                $input_prefix . '_name',
+                                zen_output_string_protected($address_fields['name']),
+                                $max_name_length . ' id="' . $input_prefix . '_name" class="form-control"'
+                            ) ?>
+                            <span class="input-group-addon">
+                                <i <?= $tooltip_parameters ?> title="<?= sprintf(TEXT_ORIGINAL_VALUE, $address_fields['name']) ?>"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row my-2">
-                    <div class="col-sm-3 control-label">
-                        <label for="<?= $input_prefix ?>_address"><?= ENTRY_CUSTOMER_ADDRESS ?></label>:&nbsp;
-                    </div>
+                <div class="form-group">
+                    <?= zen_draw_label(ENTRY_CUSTOMER_ADDRESS, $input_prefix . '_street_address', 'class="col-sm-3 control-label"') ?>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field(
-                            $input_prefix . '_street_address',
-                            zen_output_string_protected($address_fields['street_address']),
-                            $max_street_address_length . ' id="' . $input_prefix . '_street_address" class="form-control"'
-                        ) ?>
+                        <div class="input-group">
+                            <?= zen_draw_input_field(
+                                $input_prefix . '_street_address',
+                                zen_output_string_protected($address_fields['street_address']),
+                                $max_street_address_length . ' id="' . $input_prefix . '_street_address" class="form-control"'
+                            ) ?>
+                            <span class="input-group-addon">
+                                <i <?= $tooltip_parameters ?> title="<?= sprintf(TEXT_ORIGINAL_VALUE, $address_fields['street_address']) ?>"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row my-2">
-                    <div class="col-sm-3 control-label">
-                        <label for="<?= $input_prefix ?>_suburb"><?= ENTRY_CUSTOMER_SUBURB ?></label>:&nbsp;
-                    </div>
+                <div class="form-group">
+                    <?= zen_draw_label(ENTRY_CUSTOMER_SUBURB, $input_prefix . '_suburb', 'class="col-sm-3 control-label"') ?>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field(
-                            $input_prefix . '_suburb',
-                            zen_output_string_protected($address_fields['suburb']),
-                            $max_suburb_length . ' id="' . $input_prefix . '_suburb" class="form-control"'
-                        ) ?>
+                        <div class="input-group">
+                            <?= zen_draw_input_field(
+                                $input_prefix . '_suburb',
+                                zen_output_string_protected($address_fields['suburb']),
+                                $max_suburb_length . ' id="' . $input_prefix . '_suburb" class="form-control"'
+                            ) ?>
+                            <span class="input-group-addon">
+                                <i <?= $tooltip_parameters ?> title="<?= sprintf(TEXT_ORIGINAL_VALUE, $address_fields['suburb']) ?>"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row my-2 country-wrapper">
-                    <div class="col-sm-3 control-label">
-                        <label for="<?= $input_prefix ?>_country"><?= ENTRY_CUSTOMER_COUNTRY ?></label>:&nbsp;
-                    </div>
+                <div class="form-group country-wrapper">
+                    <?= zen_draw_label(ENTRY_CUSTOMER_COUNTRY, $input_prefix . '_country', 'class="col-sm-3 control-label"') ?>
                     <div class="col-sm-9">
-                        <?= zen_get_country_list(
-                            'update_' . $address_name . '_country',
-                            $address_fields['country']['id'],
-                            'id="update_' . $address_name . '_country" class="form-control address-country"'
-                        ) ?>
+                        <div class="input-group">
+                            <?= zen_get_country_list(
+                                'update_' . $address_name . '_country',
+                                $address_fields['country']['id'],
+                                'id="update_' . $address_name . '_country" class="form-control address-country"'
+                            ) ?>
+<?php
+$country_name = zen_get_country_name((int)$address_fields['country']['id']);
+?>
+                            <span class="input-group-addon">
+                                <i <?= $tooltip_parameters ?> title="<?= sprintf(TEXT_ORIGINAL_VALUE, $country_name) ?>"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
 <?php
 if (ACCOUNT_STATE === 'true') {
+    $zone_name = zen_get_zone_code((int)$address_fields['country_id'], (int)$address_fields['zone_id'], TEXT_UNKNOWN);
 ?>
-                <div class="row my-2 state-wrapper">
-                    <div class="col-sm-3 control-label">
-                        <label for="<?= $input_prefix ?>_state"><?= ENTRY_CUSTOMER_STATE ?></label>:&nbsp;
-                    </div>
+                <div class="form-group state-wrapper">
+                    <?= zen_draw_label(ENTRY_CUSTOMER_STATE, $input_prefix . '_state', 'class="col-sm-3 control-label"') ?>
                     <div class="col-sm-9">
-                        <?= zen_draw_pull_down_menu(
-                            $input_prefix . '_zone_id',
-                            zen_prepare_country_zones_pull_down($address_fields['country_id']),
-                            $address_fields['zone_id'], 'id="' . $input_prefix . '_zone" class="form-control state-select"'
-                        ) ?>
-
-                        <?= zen_draw_input_field(
-                            $input_prefix . '_state',
-                            zen_output_string_protected($address_fields['state']),
-                            $max_state_length . ' id="' . $input_prefix . '_state" class="form-control state-input"'
-                        ) ?>
+                        <div class="input-group">
+                            <?= zen_draw_pull_down_menu(
+                                $input_prefix . '_zone_id',
+                                zen_prepare_country_zones_pull_down($address_fields['country_id']),
+                                $address_fields['zone_id'],
+                                'id="' . $input_prefix . '_zone" class="form-control state-select"'
+                            ) ?>
+                            <span class="input-group-addon">
+                                <i <?= $tooltip_parameters ?> title="<?= sprintf(TEXT_ORIGINAL_VALUE, $zone_name) ?>"></i>
+                            </span>
+                        </div>
+                        <div class="input-group">
+                            <?= zen_draw_input_field(
+                                $input_prefix . '_state',
+                                zen_output_string_protected($address_fields['state']),
+                                $max_state_length . ' id="' . $input_prefix . '_state" class="form-control state-input"'
+                            ) ?>
+                            <span class="input-group-addon">
+                                <i <?= $tooltip_parameters ?> title="<?= sprintf(TEXT_ORIGINAL_VALUE, $address_fields['state']) ?>"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
 <?php
 }
 ?>
-                <div class="row my-2">
-                    <div class="col-sm-3 control-label">
-                        <label for="<?= $input_prefix ?>_city"><?= ENTRY_CUSTOMER_CITY ?></label>:&nbsp;
-                    </div>
+                <div class="form-group">
+                    <?= zen_draw_label(ENTRY_CUSTOMER_CITY, $input_prefix . '_city', 'class="col-sm-3 control-label"') ?>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field(
-                            $input_prefix . '_city',
-                            zen_output_string_protected($address_fields['city']),
-                            $max_city_length . ' id="' . $input_prefix . '_city" class="form-control"'
-                        ) ?>
+                        <div class="input-group">
+                            <?= zen_draw_input_field(
+                                $input_prefix . '_city',
+                                zen_output_string_protected($address_fields['city']),
+                                $max_city_length . ' id="' . $input_prefix . '_city" class="form-control"'
+                            ) ?>
+                            <span class="input-group-addon">
+                                <i <?= $tooltip_parameters ?> title="<?= sprintf(TEXT_ORIGINAL_VALUE, $address_fields['city']) ?>"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row my-2">
-                    <div class="col-sm-3 control-label">
-                        <label for="<?= $input_prefix ?>_postcode"><?= ENTRY_CUSTOMER_POSTCODE ?></label>:&nbsp;
-                    </div>
+                <div class="form-group">
+                    <?= zen_draw_label(ENTRY_CUSTOMER_POSTCODE, $input_prefix . '_postcode', 'class="col-sm-3 control-label"') ?>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field(
-                            $input_prefix . '_postcode',
-                            zen_output_string_protected($address_fields['postcode']),
-                            $max_postcode_length . ' id="' . $input_prefix . '_postcode" class="form-control"'
-                        ) ?>
+                        <div class="input-group">
+                            <?= zen_draw_input_field(
+                                $input_prefix . '_postcode',
+                                zen_output_string_protected($address_fields['postcode']),
+                                $max_postcode_length . ' id="' . $input_prefix . '_postcode" class="form-control"'
+                            ) ?>
+                            <span class="input-group-addon">
+                                <i <?= $tooltip_parameters ?> title="<?= sprintf(TEXT_ORIGINAL_VALUE, $address_fields['postcode']) ?>"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
 <?php
 if (isset($address_fields['telephone'])) {
 ?>
-
-                <div class="row my-2">
-                    <div class="col-sm-3 control-label">
-                        <label for="<?= $input_prefix ?>_telephone"><?= rtrim(ENTRY_TELEPHONE_NUMBER, ':') ?></label>:&nbsp;
-                    </div>
+                <div class="form-group">
+                    <?= zen_draw_label(rtrim(ENTRY_TELEPHONE_NUMBER, ':'), $input_prefix . '_telephone', 'class="col-sm-3 control-label"') ?>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field(
-                            $input_prefix . '_telephone',
-                            zen_output_string_protected($address_fields['telephone']),
-                            $max_telephone_length . ' id="' . $input_prefix . '_telephone" class="form-control"'
-                        ) ?>
+                        <div class="input-group">
+                            <?= zen_draw_input_field(
+                                $input_prefix . '_telephone',
+                                zen_output_string_protected($address_fields['telephone']),
+                                $max_telephone_length . ' id="' . $input_prefix . '_telephone" class="form-control"'
+                            ) ?>
+                            <span class="input-group-addon">
+                                <i <?= $tooltip_parameters ?> title="<?= sprintf(TEXT_ORIGINAL_VALUE, $address_fields['telephone']) ?>"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
 <?php
@@ -213,16 +262,19 @@ if (isset($address_fields['telephone'])) {
 
 if (isset($address_fields['email_address'])) {
 ?>
-                <div class="row my-2">
-                    <div class="col-sm-3 control-label">
-                        <label for="<?= $input_prefix ?>_email_address"><?= rtrim(ENTRY_EMAIL_ADDRESS, ':') ?></label>:&nbsp;
-                    </div>
+                <div class="form-group">
+                    <?= zen_draw_label(rtrim(ENTRY_EMAIL_ADDRESS, ':'), $input_prefix . '_email_address', 'class="col-sm-3 control-label"') ?>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field(
-                            $input_prefix . '_email_address',
-                            zen_output_string_protected($address_fields['email_address']),
-                            $max_email_length . ' id="' . $input_prefix . '_email_address" class="form-control"'
-                        ) ?>
+                        <div class="input-group">
+                           <?= zen_draw_input_field(
+                                $input_prefix . '_email_address',
+                                zen_output_string_protected($address_fields['email_address']),
+                                $max_email_length . ' id="' . $input_prefix . '_email_address" class="form-control"'
+                            ) ?>
+                            <span class="input-group-addon">
+                                <i <?= $tooltip_parameters ?> title="<?= sprintf(TEXT_ORIGINAL_VALUE, $address_fields['email_address']) ?>"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
 <?php
@@ -232,26 +284,77 @@ if (isset($address_fields['email_address'])) {
 // Now, issue the address-specific notification to allow other plugins to add fields to the
 // associated address.
 // 
-// A watching observer can provide an associative array in the form:
+// A watching observer can provide an associative array in the form, note that all fields are required:
 //
-// $extra_data = array(
-//     array(
-//       'label' => 'label_name',   //-No trailing ':', that will be added by EO.
-//       'value' => $value          //-This is the form-field to be added
-//     ),
-// );
+// $extra_data = [
+//     [
+//         'label' => 'The text to include for the field label',
+//         'fieldname' => 'label "for" attribute, must match id of input field'
+//         'input' => 'The form-related portion of the field',
+//     ],
+//     ...
+// ];
 //
 $additional_rows = [];
 $zco_notifier->notify($address_notifier, $address_fields, $additional_rows);
-if (!empty($additional_rows)) {
-    foreach ($additional_rows as $next_row) {
+foreach ($additional_rows as $next_row) {
+    // -----
+    // Try to locate the original value for the observer-supplied input.
+    //
+    // No tooltips for 'select' tags or checkbox-/radio-type inputs.
+    //
+    if (str_contains($next_row['input'], '<select ') || str_contains($next_row['input'], '"checkbox"') || str_contains($next_row['input'], '"radio"')) {
+        $show_tooltip = false;
+    // -----
+    // Otherwise, if the input contains a *single* input tag, grab the
+    // original value from the 'value=' attribute; no attribute, the default
+    // is an empty string.
+    //
+    } elseif (substr_count($next_row['input'], '<input ') === 1) {
+        $show_tooltip = true;
+        $original_value = '';
+        if (preg_match('/value="(.*)"/', $next_row['input'], $matches) === 1) {
+            $original_value = $matches[1];
+        }
+    // -----
+    // Finally, search through the input tags to locate the first one
+    // that isn't 'type="hidden"'. If one is found, the default is set as
+    // above for the single input tag.
+    //
+    } else {
+        $input_pieces = explode('<input', $next_row['input']);
+        $show_tooltip = false;
+        foreach ($input_pieces as $next_piece) {
+            if ($next_piece === '' || str_contains($next_piece, 'type="hidden"')) {
+                continue;
+            }
+            $show_tooltip = true;
+            $original_value = '';
+            if (preg_match('/value="(.*)"/', $next_piece, $matches) === 1) {
+                $original_value = $matches[1];
+            }
+            break;
+        }
+    }
 ?>
-                <div class="row my-2">
-                    <div class="col-sm-3 control-label"><?= $next_row['label'] ?></label>:&nbsp;</div>
-                    <div class="col-sm-9"><?= $next_row['value'] ?></div>
-                </div>
+                <div class="form-group">
+                    <?= zen_draw_label($next_row['label'], $next_row['fieldname'], 'class="col-sm-3 control-label"') ?>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <?= $next_row['input'] ?>
+<?php
+    if ($show_tooltip === true) {
+?>
+                            <span class="input-group-addon">
+                                <i <?= $tooltip_parameters ?> title="<?= sprintf(TEXT_ORIGINAL_VALUE, $original_value) ?>"></i>
+                            </span>
 <?php
     }
+?>
+                        </div>
+                    </div>
+                </div>
+<?php
 }
 ?>
             </div>

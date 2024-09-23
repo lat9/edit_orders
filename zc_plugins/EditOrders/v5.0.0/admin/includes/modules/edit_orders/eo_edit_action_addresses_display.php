@@ -33,7 +33,7 @@ $address_icon = 'fa-solid fa fa-user';
 $address_label = ENTRY_CUSTOMER;
 $address_name = 'customer';
 $address_fields = $order->customer;
-$address_notifier = 'EDIT_ORDERS_ADDL_CUSTOMER_ADDRESS_ROWS';
+$address_notifier = 'NOTIFY_EO_ADDL_CUSTOMER_ADDRESS_ROWS';
 require 'eo_common_address_format.php';
 ?>
     </div>
@@ -48,13 +48,13 @@ if (EO_ADDRESSES_DISPLAY_ORDER === 'CBS') {
     $address_label = ENTRY_BILLING_ADDRESS;
     $address_name = 'billing';
     $address_fields = $order->billing;
-    $address_notifier = 'EDIT_ORDERS_ADDL_BILLING_ADDRESS_ROWS';
+    $address_notifier = 'NOTIFY_EO_ADDL_BILLING_ADDRESS_ROWS';
 } else {
     $address_icon = 'fa-solid fa fa-truck';
     $address_label = ENTRY_SHIPPING_ADDRESS;
     $address_name = 'delivery';
     $address_fields = $order->delivery;
-    $address_notifier = 'EDIT_ORDERS_ADDL_SHIPPING_ADDRESS_ROWS';
+    $address_notifier = 'NOTIFY_EO_ADDL_SHIPPING_ADDRESS_ROWS';
 }
 require 'eo_common_address_format.php';
 ?>
@@ -70,13 +70,13 @@ if (EO_ADDRESSES_DISPLAY_ORDER === 'CBS') {
     $address_label = ENTRY_SHIPPING_ADDRESS;
     $address_name = 'delivery';
     $address_fields = $order->delivery;
-    $address_notifier = 'EDIT_ORDERS_ADDL_SHIPPING_ADDRESS_ROWS';
+    $address_notifier = 'NOTIFY_EO_ADDL_SHIPPING_ADDRESS_ROWS';
 } else {
     $address_icon = 'fa-regular fa fa-credit-card';
     $address_label = ENTRY_BILLING_ADDRESS;
     $address_name = 'billing';
     $address_fields = $order->billing;
-    $address_notifier = 'EDIT_ORDERS_ADDL_BILLING_ADDRESS_ROWS';
+    $address_notifier = 'NOTIFY_EO_ADDL_BILLING_ADDRESS_ROWS';
 }
 require 'eo_common_address_format.php';
 ?>

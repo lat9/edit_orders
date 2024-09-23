@@ -27,17 +27,6 @@ if (!class_exists('currencies')) {
 }
 $currencies = new currencies();
 
-$step = (isset($_POST['step'])) ? (int)$_POST['step'] : 0;
-if (isset($_POST['add_product_categories_id'])) {
-    $add_product_categories_id = zen_db_prepare_input($_POST['add_product_categories_id']);
-}
-if (isset($_POST['add_product_products_id'])) {
-    $add_product_products_id = zen_db_prepare_input($_POST['add_product_products_id']);
-}
-if (isset($_POST['add_product_quantity'])) {
-    $add_product_quantity = zen_db_prepare_input($_POST['add_product_quantity']);
-}
-  
 // -----
 // The "queryCache" functionality present in the Zen Cart core can get in the way of
 // Edit Orders due to the amount of database manipulation.  Remove the default instance
@@ -102,8 +91,73 @@ $zco_notifier->notify('EDIT_ORDERS_START_ACTION_PROCESSING');
 switch ($action) {
     // Update Order
     case 'update_order':
-        require DIR_WS_MODULES . 'edit_orders/eo_update_order_action_processing.php';
-        zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit', 'NONSSL'));
+        if (!isset($_SESSION['eoChanges'])) {
+            $messageStack->add_session(WARNING_NO_UPDATES_TO_ORDER, 'warning');
+            zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
+        }
+
+        $changed_values = $_SESSION['eoChanges']->getChangedValues();
+        if (count($changed_values) === 0) {
+            $messageStack->add_session(WARNING_NO_UPDATES_TO_ORDER, 'warning');
+            zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
+        }
+
+        $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
+        $original_order = $_SESSION['eoChanges']->getOriginalOrder();
+
+        $oID = $original_order->info['order_id'];
+        $order_table_updates = [];
+        if (!empty($updated_order->info['changes'])) {
+        }
+        if (!empty($updated_order->customer['changes'])) {
+            $order_table_updates += $eo->getAddressUpdateSql('customer_', $original_order->customer, $updated_order->customer);
+        }
+        if (!empty($updated_order->delivery['changes'])) {
+            $order_table_updates += $eo->getAddressUpdateSql('delivery_', $original_order->delivery, $updated_order->delivery);
+        }
+        if (!empty($updated_order->billing['changes'])) {
+            $order_table_updates += $eo->getAddressUpdateSql('billing_', $original_order->billing, $updated_order->billing);
+        }
+        if (count($order_table_updates) !== 0) {
+            $order_table_updates[] = [
+                'fieldName' => 'last_modified',
+                'value' => 'now()',
+                'type' => 'passthru',
+            ];
+        }
+        $db->perform(
+            TABLE_ORDERS,
+            $order_table_updates,
+            'update',
+            'orders_id = ' . (int)$oID . " LIMIT 1"
+        );
+
+        if (!empty($updated_order->products['changes'])) {      //- FIXME,
+        }
+        if (!empty($updated_order->totals['changes'])) {
+        }
+
+        $order_changed_message = TEXT_OSH_CHANGED_VALUES . "\n";
+        $order_changed_message .= '<ol>';
+        foreach ($changed_values as $title => $changes) {
+            $order_changed_message .= '<li>' . $title . '</li>';
+            $order_changed_message .= '<ol type="a">';
+            foreach ($changes as $next_change) {
+                $original_value = '"' . $next_change['original'] . '"';
+                $updated_value = '"' . $next_change['updated'] . '"';
+                $label = rtrim($next_change['label'], ':');
+                $order_changed_message .= '<li>' . sprintf(TEXT_VALUE_CHANGED, $label, $original_value, $updated_value) . '</li>';
+            }
+            $order_changed_message .= '</ol>';
+        }
+        $order_changed_message .= '</ol>';
+        zen_update_orders_history((int)$oID, $order_changed_message);
+
+        if (!empty($updated_order->statuses['changes'])) {
+        }
+
+        $messageStack->add_session(sprintf(SUCCESS_ORDER_UPDATED, (int)$oID), 'success');
+        zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
         break;
 
     default:
@@ -174,7 +228,7 @@ if (EDIT_ORDERS_USE_NUMERIC_FIELDS !== '1') {
 //
 define('DIR_WS_EO_MODULES', DIR_WS_MODULES . 'edit_orders/');
 ?>
-<div class="container-fluid">
+<div id="eo-main" class="container-fluid">
     <?php require DIR_WS_EO_MODULES . 'eo_navigation.php'; ?>
 
     <div class="row">
@@ -491,13 +545,14 @@ if ($display_payment_calc_label === false) {
                         </div>
                     </form>
                 </div>
-                <div id="update-form" class="panel-footer text-center d-none">
+                <div id="update-form-wrapper" class="panel-footer text-center d-none">
                     <div>
-                        <?= zen_draw_form('edit_order', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'paycc']) . 'action=update_order', 'post', 'class="form-inline"') ?>
-                            <button id="update-submit" type="button" class="btn btn-danger"><?= IMAGE_UPDATE ?></button>
+                        <?= zen_draw_form('edit_order', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'paycc']) . 'action=update_order', 'post', 'id="update-form" class="form-inline"') ?>
+                            <button id="update-verify" type="button" class="btn btn-danger"><?= IMAGE_UPDATE ?></button>
                             <?= "&nbsp;$reset_totals_block&nbsp;$additional_inputs" ?>
                         <?= '</form>' ?>
                     </div>
+                    <div id="update-modal" class="modal fade address-modal" role="dialog"></div>
                 </div>
             </div>
         </div>

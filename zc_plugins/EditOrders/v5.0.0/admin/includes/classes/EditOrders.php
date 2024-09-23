@@ -1050,6 +1050,65 @@ class EditOrders extends \base
         return $sort_order;
     }
 
+    public function getAddressUpdateSql(string $field_prefix, array $original_values, array $updated_values): array
+    {
+        $address_updates = [];
+        $updated_fields = array_keys($updated_values['changes']);
+        $country_change = false;
+        $state_zone_change = false;
+        foreach ($updated_fields as $key) {
+            switch ($key) {
+                case 'country_id':
+                    $country_change = true;
+                    $country_id = (int)$updated_values['country_id'];
+                    break;
+                case 'zone_id':
+                    $state_zone_change = true;
+                    $zone_id = (int)$updated_values['zone_id'];
+                    break;
+                case 'state':
+                    $state_zone_change = true;
+                    $state = $updated_values['state'];
+                    break;
+                default:
+                    $address_updates[] = [
+                        'fieldName' => $field_prefix . $key,
+                        'value' => $updated_values[$key],
+                        'type' => 'stringIgnoreNull',
+                    ];
+                    break;
+            }
+        }
+
+        if ($country_change === true) {
+            $address_updates[] = [
+                'fieldName' => $field_prefix . 'country',
+                'value' => zen_get_country_name($country_id),
+                'type' => 'stringIgnoreNull',
+            ];
+            $address_updates[] = [
+                'fieldName' => $field_prefix . 'address_format_id',
+                'value' => zen_get_address_format_id($country_id),
+                'type' => 'integer',
+            ];
+        }
+
+        if ($state_zone_change === true) {
+            $country_id ??= $original_values['country_id'];
+            $zone_name = zen_get_zone_name($country_id, $zone_id, 'no-zone');
+            if ($zone_name === 'no-zone') {
+                $zone_name = $state ?? '';
+            }
+            $address_updates[] = [
+                'fieldName' => $field_prefix . 'state',
+                'value' => $zone_name,
+                'type' => 'stringIgnoreNull',
+            ];
+        }
+
+        return $address_updates;
+    }
+
     public function eoLog($message, $message_type = 'general')
     {
         if ($this->eo_action_level !== 0) {

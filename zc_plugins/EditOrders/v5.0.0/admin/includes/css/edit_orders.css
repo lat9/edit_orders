@@ -30,6 +30,9 @@
 .border-warning {
     border-color: #ffc107;
 }
+.border-danger {
+    border-color: #dc3545;
+}
 
 .attribs-list {
     font-size: smaller;
@@ -67,5 +70,7 @@ input.amount-onetime, input.prod-qty {
 .eo-label {
     font-weight: bold;
 }
-
+.tooltip {
+    z-index: 10000000;
+}
 #order-select { width: auto; margin: 0 auto; }
