@@ -271,7 +271,7 @@ define('DIR_WS_EO_MODULES', DIR_WS_MODULES . 'edit_orders/');
                     <span class="h3"><?= TEXT_PANEL_HEADER_ADDL_INFO ?></span>
                 </div>
                 <div class="panel-body">
-                    <form class="form-horizontal">
+                    <form id="eo-addl-info" class="form-horizontal">
 <?php
 // -----
 // Give a watching observer the opportunity to supply additional contact-information for the order.
@@ -281,7 +281,7 @@ define('DIR_WS_EO_MODULES', DIR_WS_MODULES . 'edit_orders/');
 //
 // $additional_contact_info[] = [
 //     'label' => LABEL_TEXT,
-//     'for' => 'input-field-id',   //- Optional, see below
+//     'for' => 'input-field-id',
 //     'content' => $field_content,
 // ];
 //
@@ -296,19 +296,6 @@ $zco_notifier->notify('NOTIFY_EO_ADDL_CONTACT_INFO', $order, $additional_contact
 if (is_array($additional_contact_info) && count($additional_contact_info) !== 0) {
     foreach ($additional_contact_info as $contact_info) {
         if (!empty($contact_info['label']) && !empty($contact_info['content'])) {
-            if (!isset($contact_info['for'])) {
-?>
-                        <div class="row my-2">
-                            <div class="col-sm-4 control-label">
-                                <?= $contact_info['label'] ?>
-                            </div>
-                            <div class="col-sm-8">
-                                <?= $contact_info['content'] ?>
-                            </div>
-                        </div>
-<?php
-                continue;
-            }
 ?>
                         <div class="row my-2">
                             <div class="form-group">
@@ -650,8 +637,9 @@ if (DISPLAY_PRICE_WITH_TAX === 'true') {
 $name_params = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_name') . '"';
 $model_params = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_model') . '"';
 foreach ($order->products as $next_product) {
+    $orders_products_id = $next_product['orders_products_id'];
 ?>
-            <tr class="dataTableRow">
+            <tr class="dataTableRow" data-opi="<?= $orders_products_id ?>">
 <?php
     // -----
     // To add more columns at the beginning of the order's products' table, a
@@ -691,9 +679,7 @@ foreach ($order->products as $next_product) {
         }
     }
 
-    $orders_products_id = $next_product['orders_products_id'];
     $base_var_name = 'update_products[' . $orders_products_id . ']';
-    $data_index = ' data-opi="' . $orders_products_id . '"';
     $price_entry_disabled = ($price_is_manual === true) ? '' : 'disabled';
 ?>
                 <td class="dataTableContent text-center">
@@ -701,7 +687,7 @@ foreach ($order->products as $next_product) {
 <?php
     if (isset($next_product['attributes'])) {
 ?>
-                    <button class="update-attributes btn btn-sm btn-warning mt-2"<?= $data_index ?> title="<?= TEXT_BUTTON_CHANGE_ATTRIBS_ALT ?>">
+                    <button class="update-attributes btn btn-sm btn-warning mt-2" title="<?= TEXT_BUTTON_CHANGE_ATTRIBS_ALT ?>">
                         <?= ICON_EDIT ?>
                     </button>
 <?php
@@ -759,7 +745,7 @@ foreach ($order->products as $next_product) {
                     <?= zen_draw_input_field(
                         $base_var_name . '[tax]',
                         zen_display_tax_value($next_product['tax']),
-                        'class="amount form-control d-inline-block price-tax"' . $input_tax_params . $data_index,
+                        'class="amount form-control d-inline-block price-tax"' . $input_tax_params,
                         false,
                         $input_field_type
                     ) ?>
@@ -769,7 +755,7 @@ foreach ($order->products as $next_product) {
                     <?= zen_draw_input_field(
                         $base_var_name . '[final_price]',
                         $final_price,
-                        $value_params . ' class="form-control amount price-net" ' . $price_entry_disabled . $data_index) ?>
+                        $value_params . ' class="form-control amount price-net" ' . $price_entry_disabled) ?>
                 </td>
 <?php
     if (DISPLAY_PRICE_WITH_TAX === 'true') {
@@ -780,7 +766,7 @@ foreach ($order->products as $next_product) {
                     <?= zen_draw_input_field(
                         $base_var_name . '[gross]',
                         $gross_price,
-                        $value_params . ' class="form-control amount price-gross" ' . $price_entry_disabled . $data_index
+                        $value_params . ' class="form-control amount price-gross" ' . $price_entry_disabled
                     ) ?>
                 </td>
 <?php

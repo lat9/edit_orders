@@ -9,10 +9,12 @@
 ?>
 <hr class="my-2">
 <div class="row">
-    <h2><i class="fa fa-comments fa-lg"></i>&nbsp;<?= TABLE_HEADING_STATUS_HISTORY ?></h2>
-    <button id="add-comment" type="button" class="btn btn-info mb-2" data-toggle="modal" data-target="#comment-modal" title="<?= BUTTON_ADD_COMMENT_ALT ?>">
-        <?= BUTTON_ADD_COMMENT ?>
-    </button>
+    <div class="row">
+        <h2 class="d-inline"><i class="fa fa-comments fa-lg"></i>&nbsp;<?= TABLE_HEADING_STATUS_HISTORY ?></h2>
+        <button id="add-comment" type="button" class="btn btn-info mb-2 ms-4 d-inline" data-toggle="modal" data-target="#comment-modal" title="<?= BUTTON_ADD_COMMENT_ALT ?>">
+            <?= BUTTON_ADD_COMMENT ?>
+        </button>
+    </div>
 <?php
 if (empty($order->statuses)) {
 ?>
