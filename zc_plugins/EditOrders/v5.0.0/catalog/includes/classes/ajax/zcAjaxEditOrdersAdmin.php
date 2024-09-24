@@ -32,7 +32,6 @@ class zcAjaxEditOrdersAdmin
         $address_type_prefix = 'update_' . $form_fields['address_type'] . '_';
         foreach ($form_fields as $posted_varname => $value) {
             $varname = str_replace($address_type_prefix, '', $posted_varname);
-            $labels[$varname] = $form_labels[$posted_varname] ?? '--none--';
 
             // -----
             // Check for EO's built-in address elements ...
@@ -47,8 +46,10 @@ class zcAjaxEditOrdersAdmin
                     $labels['zone_id'] = $form_labels[$address_type_prefix . 'state'];
                 } elseif ($varname === 'country') {
                     $address['country_id'] = (int)$value;
+                    $labels['country_id'] = $form_labels[$address_type_prefix . 'country'];
                 } else {
                     $address[$varname] = trim($value);
+                    $labels[$varname] = $form_labels[$posted_varname];
                 }
                 continue;
             }
@@ -107,6 +108,9 @@ class zcAjaxEditOrdersAdmin
             foreach ($post_to_order_mapping as $key => $order_key) {
                 if ($order_key !== false) {
                     $address[$order_key] = $form_fields[$key];
+                    if (isset($form_labels[$key])) {
+                        $labels[$order_key] = $form_labels[$key];
+                    }
                 }
             }
         }
@@ -130,6 +134,22 @@ class zcAjaxEditOrdersAdmin
         ];
     }
 
+    public function addComment(): array
+    {
+        $_SESSION['eoChanges']->addComment($_POST);
+
+        return [
+            'status' => 'ok',
+        ];
+    }
+
+    public function removeComment(): array
+    {
+        $return = $_SESSION['eoChanges']->removeComment();
+        $return['status'] = 'ok';
+        return $return;
+    }
+
     public function getChangesModal(): array
     {
         $original_order = $_SESSION['eoChanges']->getOriginalOrder();
@@ -138,11 +158,38 @@ class zcAjaxEditOrdersAdmin
         
         $modal_html = '';
         foreach ($changes as $title => $fields_changed) {
+            if ($title === 'osh_info') {
+                $fields_changed = $fields_changed[0]['updated'];
+                switch ($fields_changed['notify']) {
+                    case 0:
+                        $customer_notified = TEXT_NO;
+                        break;
+                    case 1:
+                        $customer_notified = TEXT_YES;
+                        break;
+                    default:
+                        $customer_notified = TEXT_HIDDEN;
+                        break;
+                }
+                $modal_html .=
+                    '<div class="panel panel-default">' .
+                        '<div class="panel-heading">' . TEXT_COMMENT_ADDED . '</div>' .
+                        '<div class="panel-body">' .
+                            '<ul class="list-group my-0">' .
+                                '<li class="list-group-item">' .
+                                    '<strong>' . ENTRY_NOTIFY_CUSTOMER . '</strong> ' . $customer_notified . '<br><br><code>' . $fields_changed['message'] . '</code>' .
+                                '</li>' .
+                            '</ul>' .
+                        '</div>' .
+                    '</div>';
+                continue;
+            }
+
             $modal_html .=
                 '<div class="panel panel-default">' .
                     '<div class="panel-heading">' . $title . '</div>' .
                     '<div class="panel-body">' .
-                        '<ul class="list-group">' . "\n";
+                        '<ul class="list-group my-0">' . "\n";
 
             foreach ($fields_changed as $next_change) {
                 $original_value = '<code>' . $next_change['original'] . '</code>';

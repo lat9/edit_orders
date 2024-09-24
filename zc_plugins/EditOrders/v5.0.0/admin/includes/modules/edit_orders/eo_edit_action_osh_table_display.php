@@ -205,7 +205,7 @@ if (empty($order->statuses)) {
 }
 ?>
     <div class="row mt-4">
-        <button id="add-comment" class="btn btn-warning" data-toggle="modal" data-target="#comment-modal" title="<?= BUTTON_ADD_COMMENT_ALT ?>">
+        <button id="add-comment" type="button" class="btn btn-info" data-toggle="modal" data-target="#comment-modal" title="<?= BUTTON_ADD_COMMENT_ALT ?>">
             <?= BUTTON_ADD_COMMENT ?>
         </button>
     </div>
@@ -213,6 +213,7 @@ if (empty($order->statuses)) {
     <div id="comment-modal" class="modal fade" role="dialog">
         <div class="modal-dialog">
             <form id="comment-form">
+                <?= zen_draw_hidden_field('comment_added', '0', 'id="comment-added" class="eo-changed"') ?>
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -240,11 +241,11 @@ if (is_array($additional_osh_content) && count($additional_osh_content) !== 0) {
     }
 }
 ?>
-                        <div><?= ENTRY_CURRENT_STATUS . ' ' . $orders_status_array[$order->info['orders_status']] ?></div>
+                        <div class="mb-4"><strong><?= ENTRY_CURRENT_STATUS ?></strong>&nbsp;<?= $orders_status_array[$order->info['orders_status']] ?></div>
 
                         <div class="form-group">
                             <label for="new-status"><?= ENTRY_STATUS ?></label>
-                            <?= zen_draw_pull_down_menu('status', $orders_statuses, $order->info['orders_status'], 'class="form-control"') ?>
+                            <?= zen_draw_pull_down_menu('status', $orders_statuses, $order->info['orders_status'], 'id="new-status" class="form-control"') ?>
                         </div>
 <?php
 // -----
@@ -269,29 +270,25 @@ switch (EO_CUSTOMER_NOTIFICATION_DEFAULT) {
         break;
 }
 ?>
-                        <div class="form-group">
-                            <div class="control-label font-weight-bold"><?php echo ENTRY_NOTIFY_CUSTOMER; ?></div>
-                            <label class="radio-inline"><?php echo zen_draw_radio_field('notify', '1', $notify_email) . TEXT_EMAIL; ?></label>
-                            <label class="radio-inline"><?php echo zen_draw_radio_field('notify', '0', $notify_no_email) . TEXT_NOEMAIL; ?></label>
-                            <label class="radio-inline"><?php echo zen_draw_radio_field('notify', '-1', $notify_hidden) . TEXT_HIDE; ?></label>
+                        <div id="notify-customer" class="form-group">
+                            <div class="control-label font-weight-bold"><?= ENTRY_NOTIFY_CUSTOMER ?></div>
+                            <label class="radio-inline"><?= zen_draw_radio_field('notify', '1', $notify_email) . TEXT_EMAIL ?></label>
+                            <label class="radio-inline"><?= zen_draw_radio_field('notify', '0', $notify_no_email) . TEXT_NOEMAIL ?></label>
+                            <label class="radio-inline"><?= zen_draw_radio_field('notify', '-1', $notify_hidden) . TEXT_HIDE ?></label>
                         </div>
 
                         <div class="checkbox">
                             <label>
-                                <?= zen_draw_checkbox_field('notify_comments', '', true) . '&nbsp;' . ENTRY_NOTIFY_COMMENTS ?>
+                                <?= zen_draw_checkbox_field('notify_comments', '', true, '', 'id="notify-comments"') . '&nbsp;' . ENTRY_NOTIFY_COMMENTS ?>
                             </label>
                         </div>
                     </div>
 
                     <div class="modal-footer">
-                        <div class="btn-group btn-group-justified">
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-default" data-dismiss="modal"><?= IMAGE_CANCEL ?></button>
-                            </div>
-                            <div class="btn-group">
-                                <button id="comment-submit" type="button" class="btn btn-danger ms-2"><?= IMAGE_CONFIRM ?></button>
-                            </div>
-                        </div>
+
+                        <button id="comment-remove" type="button" class="btn btn-danger d-none"><?= BUTTON_REMOVE ?></button>
+                        <button id="comment-submit" type="button" class="btn btn-warning mx-2"><?= IMAGE_SAVE ?></button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal"><?= IMAGE_CANCEL ?></button>
                     </div>
                 </div>
             </form>

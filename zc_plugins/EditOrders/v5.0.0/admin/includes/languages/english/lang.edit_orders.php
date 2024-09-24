@@ -13,7 +13,7 @@ $define = [
     'HEADING_TITLE_STATUS' => 'Status:',
     'HEADING_TITLE_ADD_PRODUCT' => 'Adding a Product to Order',
     'TEXT_BUTTON_CHANGE_ATTRIBS_ALT' => 'Change the attributes for this product',
-    'TEXT_ORIGINAL_VALUE' => 'Original: <code>%s</code>',
+    'TEXT_ORIGINAL_VALUE' => 'Original: <code>%s</code>',           //- Tooltip string
     'TEXT_OSH_CHANGED_VALUES' => 'These values were changed in the order:',
     'TEXT_VALUE_CHANGED' => '%1$s was changed from %2$s to %3$s',   //- Used by the AJAX processing and for OSH record
 
@@ -73,12 +73,15 @@ $define = [
     'TEXT_PANEL_HEADER_ADDL_INFO' => 'Additional Information',
 
 // Order Status Entries
-    'BUTTON_ADD_COMMENT' => 'Add Comment',
-    'BUTTON_ADD_COMMENT_ALT' => 'Add a Comment to This Order',  //- Also used for the modal entry's heading!
+    'BUTTON_ADD_COMMENT' => 'New Comment',
+    'BUTTON_ADD_COMMENT_ALT' => 'Add or Review a Comment for This Order',  //- Also used for the modal form's heading!
+    'BUTTON_REMOVE' => 'Remove',
+    'BUTTON_REVIEW_COMMENT' => 'Review Comment',
     'ENTRY_STATUS' => 'Status:',
     'ENTRY_CURRENT_STATUS' => 'Current Status: ',
     'ENTRY_NOTIFY_CUSTOMER' => 'Notify Customer:',
     'ENTRY_NOTIFY_COMMENTS' => 'Append Comments:',
+    'TEXT_COMMENT_ADDED' => 'Comment for the Order',
 
 // Email Entries
     'EMAIL_SEPARATOR' => '------------------------------------------------------',

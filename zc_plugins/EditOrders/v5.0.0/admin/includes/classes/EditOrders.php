@@ -1050,6 +1050,32 @@ class EditOrders extends \base
         return $sort_order;
     }
 
+    public function getOrderInfoUpdateSql(array $original_values, array $updated_values): array
+    {
+        $order_info_updates = [];
+        $updated_fields = array_keys($updated_values['changes']);
+        foreach ($updated_fields as $key) {
+            switch ($key) {
+                case 'orders_status':
+                    $order_info_updates[] = [
+                        'fieldName' => $key,
+                        'value' => $updated_values[$key],
+                        'type' => 'integer',
+                    ];
+                    break;
+                default:
+                    $order_info_updates[] = [
+                        'fieldName' => $key,
+                        'value' => $updated_values[$key],
+                        'type' => 'stringIgnoreNull',
+                    ];
+                    break;
+            }
+        }
+
+        return $order_info_updates;
+    }
+
     public function getAddressUpdateSql(string $field_prefix, array $original_values, array $updated_values): array
     {
         $address_updates = [];
@@ -1070,9 +1096,20 @@ class EditOrders extends \base
                     $state_zone_change = true;
                     $state = $updated_values['state'];
                     break;
-                default:
+                case 'name':
+                case 'street_address':
+                case 'suburb':
+                case 'city':
+                case 'postcode':
                     $address_updates[] = [
                         'fieldName' => $field_prefix . $key,
+                        'value' => $updated_values[$key],
+                        'type' => 'stringIgnoreNull',
+                    ];
+                    break;
+                default:
+                    $address_updates[] = [
+                        'fieldName' => $key,
                         'value' => $updated_values[$key],
                         'type' => 'stringIgnoreNull',
                     ];
