@@ -20,6 +20,7 @@ class EoOrderChanges
 {
     protected \stdClass $original;
     protected \stdClass $updated;
+    protected array $ordersStatuses;
 
     public function __construct(\order $original_order)
     {
@@ -46,6 +47,11 @@ class EoOrderChanges
         return $this->updated;
     }
 
+    public function saveOrdersStatuses(array $status_array): void
+    {
+        $this->ordersStatuses = $status_array;
+    }
+
     public function updateAddressInfo(string $address_type, array $address_info, array $field_labels): int
     {
         if (!isset($this->updated->$address_type['changes'])) {
@@ -64,14 +70,64 @@ class EoOrderChanges
                 unset($this->updated->$address_type['changes'][$key]);
             }
         }
-
+//trigger_error(var_export($this->updated, true));
         return count($this->updated->$address_type['changes']);
+    }
+
+    public function addComment(array $posted_values): void
+    {
+        $status = (int)$posted_values['status'];
+        $this->updated->statuses['changes'] = [
+            'message' => $posted_values['comments'],
+            'status' => $status,
+            'notify' => (int)$posted_values['notify'],
+            'notify_customer' => isset($posted_values['notify_customer']),
+        ];
+        if ($status !== (int)$this->original->info['orders_status']) {
+            $this->updated->info['orders_status'] = $status;
+            $this->updated->info['changes']['orders_status'] = ENTRY_STATUS;
+        }
+    }
+
+    public function removeComment(): array
+    {
+        $this->updated->info['orders_status'] = $this->original->info['orders_status'];
+        unset($this->updated->statuses['changes'], $this->updated->info['changes']['orders_status']);
+        switch (EO_CUSTOMER_NOTIFICATION_DEFAULT) {
+            case 'Hidden':
+                $notify_default = '-1';
+                break;
+            case 'No Email':
+                $notify_default = '0';
+                break;
+            default:
+                $notify_default = '1';
+                break;
+        }
+        return [
+            'notify_default' => $notify_default,
+            'orders_status' => $this->original->info['orders_status'],
+        ];
     }
 
     public function getChangedValues(): array
     {
         $updated_order = $this->updated;
         $changes = [];
+        if (!empty($updated_order->info['changes'])) {
+            $changes[TEXT_PANEL_HEADER_ADDL_INFO] = $this->getOrderInfoChanges();
+        }
+
+        // -----
+        // A comment-addition is reported differently.
+        //
+        if (!empty($updated_order->statuses['changes'])) {
+            $changes['osh_info'][] = [
+                'label' => TEXT_COMMENT_ADDED,
+                'updated' => $this->updated->statuses['changes'],
+            ];
+        }
+
         if (!empty($updated_order->customer['changes'])) {
             $changes[ENTRY_CUSTOMER] = $this->getAddressChangedValues('customer');
         }
@@ -86,6 +142,29 @@ class EoOrderChanges
 
         return $changes;
     }
+
+    protected function getOrderInfoChanges(): array
+    {
+        $info_changes = [];
+        foreach ($this->updated->info['changes'] as $key => $label) {
+            switch ($key) {
+                case 'orders_status':
+                    $original_status = $this->original->info['orders_status'];
+                    $updated_status = $this->updated->info['orders_status'];
+                    $info_changes[] = [
+                        'label' => $label,
+                        'original' => $this->ordersStatuses[$original_status] ?? ('Unknown [' . $original_status . ']'),
+                        'updated' => $this->ordersStatuses[$updated_status] ?? ('Unknown [' . $updated_status . ']'),
+                    ];
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return $info_changes;
+    }
+
     protected function getAddressChangedValues(string $address_type): array
     {
         $address_changes = [];

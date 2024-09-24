@@ -108,15 +108,16 @@ switch ($action) {
         $oID = $original_order->info['order_id'];
         $order_table_updates = [];
         if (!empty($updated_order->info['changes'])) {
+            $order_table_updates = $eo->getOrderInfoUpdateSql($original_order->info, $updated_order->info);
         }
         if (!empty($updated_order->customer['changes'])) {
-            $order_table_updates += $eo->getAddressUpdateSql('customer_', $original_order->customer, $updated_order->customer);
+            $order_table_updates = array_merge($order_table_updates, $eo->getAddressUpdateSql('customer_', $original_order->customer, $updated_order->customer));
         }
         if (!empty($updated_order->delivery['changes'])) {
-            $order_table_updates += $eo->getAddressUpdateSql('delivery_', $original_order->delivery, $updated_order->delivery);
+            $order_table_updates = array_merge($eo->getAddressUpdateSql('delivery_', $original_order->delivery, $updated_order->delivery));
         }
         if (!empty($updated_order->billing['changes'])) {
-            $order_table_updates += $eo->getAddressUpdateSql('billing_', $original_order->billing, $updated_order->billing);
+            $order_table_updates = array_merge($eo->getAddressUpdateSql('billing_', $original_order->billing, $updated_order->billing));
         }
         if (count($order_table_updates) !== 0) {
             $order_table_updates[] = [
@@ -124,13 +125,13 @@ switch ($action) {
                 'value' => 'now()',
                 'type' => 'passthru',
             ];
+            $db->perform(
+                TABLE_ORDERS,
+                $order_table_updates,
+                'update',
+                'orders_id = ' . (int)$oID . " LIMIT 1"
+            );
         }
-        $db->perform(
-            TABLE_ORDERS,
-            $order_table_updates,
-            'update',
-            'orders_id = ' . (int)$oID . " LIMIT 1"
-        );
 
         if (!empty($updated_order->products['changes'])) {      //- FIXME,
         }
@@ -140,6 +141,9 @@ switch ($action) {
         $order_changed_message = TEXT_OSH_CHANGED_VALUES . "\n";
         $order_changed_message .= '<ol>';
         foreach ($changed_values as $title => $changes) {
+            if ($title === 'osh_info') {
+                continue;
+            }
             $order_changed_message .= '<li>' . $title . '</li>';
             $order_changed_message .= '<ol type="a">';
             foreach ($changes as $next_change) {
@@ -154,7 +158,11 @@ switch ($action) {
         zen_update_orders_history((int)$oID, $order_changed_message);
 
         if (!empty($updated_order->statuses['changes'])) {
+            $osh_info = $updated_order->statuses['changes'];
+            zen_update_orders_history((int)$oID, $osh_info['message'], null, $osh_info['status'], $osh_info['notify'], $osh_info['notify_customer']);
         }
+
+        unset($_SESSION['eoChanges']);
 
         $messageStack->add_session(sprintf(SUCCESS_ORDER_UPDATED, (int)$oID), 'success');
         zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
@@ -172,6 +180,7 @@ switch ($action) {
 //
 $order = $eo->getOrder();
 $_SESSION['eoChanges'] = new EoOrderChanges($order);
+$_SESSION['eoChanges']->saveOrdersStatuses($orders_status_array);
 
 // -----
 // If a country referenced in the order's addresses is no longer present (or enabled)
