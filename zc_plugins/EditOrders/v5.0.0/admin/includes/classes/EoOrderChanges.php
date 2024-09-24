@@ -70,19 +70,32 @@ class EoOrderChanges
                 unset($this->updated->$address_type['changes'][$key]);
             }
         }
-//trigger_error(var_export($this->updated, true));
+
         return count($this->updated->$address_type['changes']);
     }
 
     public function addComment(array $posted_values): void
     {
         $status = (int)$posted_values['status'];
-        $this->updated->statuses['changes'] = [
-            'message' => $posted_values['comments'],
-            'status' => $status,
-            'notify' => (int)$posted_values['notify'],
-            'notify_customer' => isset($posted_values['notify_customer']),
-        ];
+        $this->updated->statuses['changes'] = [];
+        foreach ($posted_values as $key => $value) {
+            switch ($key) {
+                case 'status':
+                    $this->updated->statuses['changes']['status'] = $status;
+                    break;
+                case 'notify':
+                    $this->updated->statuses['changes']['notify'] = (int)$value;
+                    break;
+                case 'comments':
+                    $this->updated->statuses['changes']['message'] = $value;
+                    break;
+                default:
+                    $this->updated->statuses['changes'][$key] = $value;
+                    break;
+            }
+        }
+        $this->updated->statuses['changes']['notify_comments'] = isset($posted_values['notify_comments']);
+
         if ($status !== (int)$this->original->info['orders_status']) {
             $this->updated->info['orders_status'] = $status;
             $this->updated->info['changes']['orders_status'] = ENTRY_STATUS;

@@ -155,29 +155,49 @@ class zcAjaxEditOrdersAdmin
         $original_order = $_SESSION['eoChanges']->getOriginalOrder();
         $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
         $changes = $_SESSION['eoChanges']->getChangedValues();
-        
+
         $modal_html = '';
         foreach ($changes as $title => $fields_changed) {
             if ($title === 'osh_info') {
-                $fields_changed = $fields_changed[0]['updated'];
-                switch ($fields_changed['notify']) {
-                    case 0:
-                        $customer_notified = TEXT_NO;
-                        break;
-                    case 1:
-                        $customer_notified = TEXT_YES;
-                        break;
-                    default:
-                        $customer_notified = TEXT_HIDDEN;
-                        break;
+                $additional_inputs = '';
+                foreach ($fields_changed[0]['updated'] as $key => $value) {
+                    if (in_array($key, ['comment_added', 'status', 'notify_comments'])) {
+                        continue;
+                    }
+                    switch ($key) {
+                        case 'notify':
+                            switch ($value) {
+                                case 0:
+                                    $customer_notified = TEXT_NO;
+                                    break;
+                                case 1:
+                                    $customer_notified = TEXT_YES;
+                                    break;
+                                default:
+                                    $customer_notified = TEXT_HIDDEN;
+                                    break;
+                            }
+                            break;
+                        case 'message':
+                            if (!empty($value)) {
+                                $message = '<br><br><code>' . $value . '</code>';
+                            }
+                            break;
+                        default:
+                            if (!empty($value)) {
+                                $additional_inputs .= '<br><br><code>' . $key . '</code>: <code>' . $value . '</code>';
+                            }
+                            break;
+                    }
                 }
+
                 $modal_html .=
                     '<div class="panel panel-default">' .
                         '<div class="panel-heading">' . TEXT_COMMENT_ADDED . '</div>' .
                         '<div class="panel-body">' .
                             '<ul class="list-group my-0">' .
                                 '<li class="list-group-item">' .
-                                    '<strong>' . ENTRY_NOTIFY_CUSTOMER . '</strong> ' . $customer_notified . '<br><br><code>' . $fields_changed['message'] . '</code>' .
+                                    '<strong>' . ENTRY_NOTIFY_CUSTOMER . '</strong> ' . $customer_notified . ($message ?? '') . $additional_inputs .
                                 '</li>' .
                             '</ul>' .
                         '</div>' .

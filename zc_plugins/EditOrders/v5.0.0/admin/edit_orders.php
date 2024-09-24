@@ -138,8 +138,19 @@ switch ($action) {
         if (!empty($updated_order->totals['changes'])) {
         }
 
-        $order_changed_message = TEXT_OSH_CHANGED_VALUES . "\n";
-        $order_changed_message .= '<ol>';
+        if (!empty($updated_order->statuses['changes'])) {
+            // -----
+            // Copy the added comment's variables into $_POST for use during
+            // the status-history record's creation.
+            //
+            $osh_info = $updated_order->statuses['changes'];
+            foreach ($osh_info as $key => $value) {
+                $_POST[$key] = $value;
+            }
+            zen_update_orders_history((int)$oID, $osh_info['message'], null, $osh_info['status'], $osh_info['notify'], $osh_info['notify_comments']);
+        }
+
+        $order_changed_message = '';
         foreach ($changed_values as $title => $changes) {
             if ($title === 'osh_info') {
                 continue;
@@ -154,12 +165,9 @@ switch ($action) {
             }
             $order_changed_message .= '</ol>';
         }
-        $order_changed_message .= '</ol>';
-        zen_update_orders_history((int)$oID, $order_changed_message);
-
-        if (!empty($updated_order->statuses['changes'])) {
-            $osh_info = $updated_order->statuses['changes'];
-            zen_update_orders_history((int)$oID, $osh_info['message'], null, $osh_info['status'], $osh_info['notify'], $osh_info['notify_customer']);
+        if ($order_changed_message !== '') {
+            $order_changed_message = TEXT_OSH_CHANGED_VALUES . "\n<ol>" . $order_changed_message . '</ol>';
+            zen_update_orders_history((int)$oID, $order_changed_message);
         }
 
         unset($_SESSION['eoChanges']);
