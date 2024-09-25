@@ -8,6 +8,7 @@
 //
 use Zencart\Plugins\Admin\EditOrders\EditOrders;
 use Zencart\Plugins\Admin\EditOrders\EditOrdersQueryCache;
+use Zencart\Plugins\Admin\EditOrders\EoCart;
 use Zencart\Plugins\Admin\EditOrders\EoOrderChanges;
 
 require 'includes/application_top.php';
@@ -170,7 +171,7 @@ switch ($action) {
             zen_update_orders_history((int)$oID, $order_changed_message);
         }
 
-        unset($_SESSION['eoChanges']);
+        unset($_SESSION['eoChanges'], $_SESSION['cart']);
 
         $messageStack->add_session(sprintf(SUCCESS_ORDER_UPDATED, (int)$oID), 'success');
         zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
@@ -189,6 +190,9 @@ switch ($action) {
 $order = $eo->getOrder();
 $_SESSION['eoChanges'] = new EoOrderChanges($order);
 $_SESSION['eoChanges']->saveOrdersStatuses($orders_status_array);
+
+$eoCart = new EoCart();
+$eoCart->loadFromOrder($order);
 
 // -----
 // If a country referenced in the order's addresses is no longer present (or enabled)
