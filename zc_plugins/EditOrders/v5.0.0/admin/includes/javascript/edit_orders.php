@@ -287,6 +287,10 @@ if (ACCOUNT_STATE === 'true') {
             $('.cc-field').hide().prop('disabled', true);
         }
     });
+    
+    $('#eo-addl-info .eo-entry').on('change', function() {
+        console.log($('#eo-addl-info :input').serializeArray());
+    });
 <?php
 // --------------------
 // END ADDITIONAL INFORMATION HANDLING
@@ -296,8 +300,25 @@ if (ACCOUNT_STATE === 'true') {
 // START PRODUCTS' AND ORDER-TOTALS' HANDLING
 // --------------------
 ?>
-    $('.eo-entry').on('change', function() {
-        console.log($(this).closest('tr').find(':input').serializeArray());
+    $('tr.eo-ot .eo-entry').on('change', function() {
+        let closestRow = $(this).closest('tr');
+        $.each(closestRow.attr('class').split(/\s+/), function(index, row_class) {
+            if (row_class !== 'eo-ot') {
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'ot_class',
+                    value: row_class
+                }).appendTo(closestRow);
+            }
+        });
+       $('<input>').attr({
+            type: 'hidden',
+            name: 'ot_changed',
+            value: $(this).attr('name')
+        }).appendTo(closestRow);
+        console.log(closestRow.find(':input').serializeArray());
+        $('input[type="hidden"][name="ot_class"], input[type="hidden"][name="ot_changed"').remove();
+        console.log(closestRow.find(':input').serializeArray());
     });
 
     $('#eo-no-shipping').parent().hide();
@@ -353,7 +374,7 @@ if (ACCOUNT_STATE === 'true') {
     // When values in any of the various sections have changed,
     // count up the changes and display/hide the update form.
     //
-    $('.eo-changed').on('change', function() {
+    $('#eo-main .eo-changed').on('change', function() {
         let changeCount = 0;
         $('.eo-changed').each(function() {
             changeCount += parseInt(this.value);

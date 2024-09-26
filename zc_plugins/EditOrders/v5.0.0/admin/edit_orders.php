@@ -342,7 +342,7 @@ $max_payment_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'payment_me
                                 </label>
                                 <div class="col-sm-8">
                                     <?= zen_draw_input_field(
-                                        'update_info_payment_method',
+                                        'payment_method',
                                         zen_output_string_protected($order->info['payment_method']),
                                         $max_payment_length . ' id="payment-method" class="eo-entry form-control"'
                                     ) ?>
@@ -368,9 +368,9 @@ if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $orde
                                 </label>
                                 <div class="col-sm-8">
                                     <?= zen_draw_input_field(
-                                        'update_info_cc_type',
+                                        'cc_type',
                                         zen_output_string_protected((string)$order->info['cc_type']),
-                                        $max_type_length . ' id="cc-type" class="eo-entry form-control"'
+                                        $max_type_length . ' class="eo-entry form-control"'
                                     ) ?>
                                 </div>
                             </div>
@@ -382,9 +382,9 @@ if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $orde
                                 </label>
                                 <div class="col-sm-8">
                                     <?= zen_draw_input_field(
-                                        'update_info_cc_owner',
+                                        'cc_owner',
                                         zen_output_string_protected((string)$order->info['cc_owner']),
-                                        $max_owner_length . ' id="cc-owner" class="eo-entry form-control"'
+                                        $max_owner_length . ' class="eo-entry form-control"'
                                     ) ?>
                                 </div>
                             </div>
@@ -396,9 +396,9 @@ if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $orde
                                 </label>
                                 <div class="col-sm-8">
                                     <?= zen_draw_input_field(
-                                        'update_info_cc_number',
+                                        'cc_number',
                                         zen_output_string_protected((string)$order->info['cc_number']),
-                                        $max_number_length . ' id="cc-number" class="eo-entry form-control"'
+                                        $max_number_length . ' class="eo-entry form-control"'
                                     ) ?>
                                 </div>
                             </div>
@@ -410,9 +410,9 @@ if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $orde
                                 </label>
                                 <div class="col-sm-8">
                                     <?= zen_draw_input_field(
-                                        'update_info_cc_expires',
+                                        'cc_expires',
                                         zen_output_string_protected((string)$order->info['cc_expires']),
-                                        $max_expires_length . ' id="cc-expires" class="eo-entry form-control"'
+                                        $max_expires_length . ' class="eo-entry form-control"'
                                     ) ?>
                                 </div>
                             </div>
@@ -567,7 +567,7 @@ if ($display_payment_calc_label === false) {
 
 <!-- Begin Products Listing Block -->
     <div class="row">
-        <table id="products-listing" class="table table-hover table-striped mb-2">
+        <table id="products-listing" class="table table-striped mb-2">
             <tr class="dataTableHeadingRow">
 <?php
 // -----
@@ -642,7 +642,7 @@ $model_params = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'product
 foreach ($order->products as $next_product) {
     $orders_products_id = $next_product['orders_products_id'];
 ?>
-            <tr class="dataTableRow" data-opi="<?= $orders_products_id ?>">
+            <tr class="eo-prod dataTableRow" data-opi="<?= $orders_products_id ?>">
 <?php
     // -----
     // To add more columns at the beginning of the order's products' table, a
@@ -686,7 +686,7 @@ foreach ($order->products as $next_product) {
     $price_entry_disabled = ($price_is_manual === true) ? '' : 'disabled';
 ?>
                 <td class="dataTableContent text-center">
-                    <?= zen_draw_input_field($base_var_name . '[qty]', $next_product['qty'], 'class="amount prod-qty mx-auto form-control"' . $input_value_params, false, $input_field_type) ?>
+                    <?= zen_draw_input_field('qty', $next_product['qty'], 'class="amount prod-qty mx-auto form-control"' . $input_value_params, false, $input_field_type) ?>
 <?php
     if (isset($next_product['attributes'])) {
 ?>
@@ -701,14 +701,14 @@ foreach ($order->products as $next_product) {
                 <td>&nbsp;X&nbsp;</td>
 
                 <td class="dataTableContent">
-                    <?= zen_draw_input_field($base_var_name . '[name]', $next_product['name'], $name_params . ' class="eo-entry form-control"') ?>
+                    <?= zen_draw_input_field('name', $next_product['name'], $name_params . ' class="eo-entry form-control"') ?>
 <?php
     if (isset($next_product['attributes'])) {
 ?>
                     <div class="row">
                         <small>&nbsp;<i><?= TEXT_ATTRIBUTES_ONE_TIME_CHARGE ?></i></small>
                         <?= zen_draw_input_field(
-                            $base_var_name . '[onetime_charges]',
+                            'onetime_charges',
                             $next_product['onetime_charges'],
                             'class=" amount-onetime form-control form-control-sm d-inline" ' . $price_entry_disabled
                         ) ?>
@@ -729,7 +729,7 @@ foreach ($order->products as $next_product) {
                 </td>
 
                 <td class="dataTableContent">
-                    <?= zen_draw_input_field($base_var_name . '[model]', $next_product['model'], $model_params . ' class="eo-entry form-control"') ?>
+                    <?= zen_draw_input_field('model', $next_product['model'], $model_params . ' class="eo-entry form-control"') ?>
                 </td>
 <?php
     // -----
@@ -746,7 +746,7 @@ foreach ($order->products as $next_product) {
                 <td class="dataTableContent text-right">
                     <div class="tax-percentage">&nbsp;%</div>
                     <?= zen_draw_input_field(
-                        $base_var_name . '[tax]',
+                        'tax',
                         zen_display_tax_value($next_product['tax']),
                         'class="amount price-tax form-control d-inline-block"' . $input_tax_params,
                         false,
@@ -756,7 +756,7 @@ foreach ($order->products as $next_product) {
 
                 <td class="dataTableContent text-right">
                     <?= zen_draw_input_field(
-                        $base_var_name . '[final_price]',
+                        'final_price',
                         $final_price,
                         $value_params . ' class="amount price-net form-control" ' . $price_entry_disabled) ?>
                 </td>
@@ -767,7 +767,7 @@ foreach ($order->products as $next_product) {
 ?>
                 <td class="dataTableContent text-right">
                     <?= zen_draw_input_field(
-                        $base_var_name . '[gross]',
+                        'gross',
                         $gross_price,
                         $value_params . ' class="amount price-gross form-control" ' . $price_entry_disabled
                     ) ?>
@@ -794,29 +794,6 @@ foreach ($order->products as $next_product) {
     <?php require DIR_WS_EO_MODULES . 'eo_edit_action_osh_table_display.php'; ?>
 <!-- End Status-History Block -->
 </div>
-<?php
-// -----
-// Include id-specific javascript only if the associated blocks have been rendered.
-//
-if (!empty($additional_totals_displayed)) {
-?>
-<script>
-/*
-    handleShipping();
-    function handleShipping() {
-        if (document.getElementById('update_total_code') != undefined && document.getElementById('update_total_code').value == 'ot_shipping') {
-            document.getElementById('update_total_shipping').style.display = 'table-cell';
-        } else {
-            document.getElementById('update_total_shipping').style.display = 'none';
-        }
-    }
-    document.getElementById('update_total_code').onchange = function(){handleShipping();};
-*/
-</script>
-<!-- body_eof //-->
-<?php
-}
-?>
 <!-- footer //-->
 <?php 
 require DIR_WS_INCLUDES . 'footer.php'; 

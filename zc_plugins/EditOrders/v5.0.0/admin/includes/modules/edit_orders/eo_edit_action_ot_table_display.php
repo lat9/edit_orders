@@ -36,12 +36,6 @@ $add_product_button = '<button id="add-product" class="btn btn-sm btn-warning">'
 // Iterate over the order totals.
 foreach ($order->totals as $next_total) {
     $ot_class = $next_total['class'];
-
-    $update_total = "update_total[$ot_class]";
-    $update_total_title = $update_total . '[title]';
-    $update_total_value = $update_total . '[value]';
-
-    $index_update_needed = true;
 ?>
 <tr class="eo-ot <?= $ot_class ?>">
     <td class="dataTableContent" colspan="3"><?= $add_product_button ?></td>
@@ -53,7 +47,6 @@ foreach ($order->totals as $next_total) {
     $total_class = (in_array($ot_class, $display_only_totals)) ? 'display-only' : $ot_class;
     switch ($total_class) {
         case 'ot_purchaseorder':
-            $index_update_needed = false;
             break;
 
         // Automatically generated fields, those should never be included
@@ -62,9 +55,8 @@ foreach ($order->totals as $next_total) {
         case 'ot_tax':
         case 'ot_local_sales_taxes':
         case 'display-only':
-            $index_update_needed = false;
 ?>
-    <td colspan="<?= $columns - 2 ?>">&nbsp;</td>
+    <td colspan="<?= $columns - 2 ?>"></td>
     <td class="text-right eo-label"><?= $trimmed_title ?></td>
     <td class="text-right eo-label"><?= $next_total['text'] ?></td>
 <?php
@@ -75,9 +67,9 @@ foreach ($order->totals as $next_total) {
         case 'ot_cod_fee':
         case 'ot_loworderfee':
 ?>
-    <td colspan="<?= $columns - 2 ?>">&nbsp;</td>
-    <td class="text-right"><?= strip_tags($next_total['title']) . zen_draw_hidden_field($update_total_title, $trimmed_title) ?></td>
-    <td class="text-right"><?= $next_total['text'] . zen_draw_hidden_field($update_total_value, $next_total['value']) ?></td>
+    <td colspan="<?= $columns - 2 ?>"></td>
+    <td class="text-right"><?= strip_tags($next_total['title']) ?></td>
+    <td class="text-right"><?= $next_total['text'] ?></td>
 <?php
             break;
 
@@ -85,9 +77,15 @@ foreach ($order->totals as $next_total) {
         // for order total modules which handle the value based upon another condition
         case 'ot_coupon': 
 ?>
-    <td colspan="<?= $columns - 2 ?>">&nbsp;</td>
-    <td class="text-right"><?= zen_draw_input_field($update_total_title, $trimmed_title, 'class="eo-entry"') ?></td>
-    <td class="text-right"><?= $next_total['text'] . zen_draw_hidden_field($update_total_value, $next_total['value']) ?></td>
+    <td colspan="<?= $columns - 2 ?>"></td>
+    <td class="text-right">
+        <?= zen_draw_input_field('title', $trimmed_title, 'class="eo-entry form-control"') ?>
+    </td>
+    <td class="text-right">
+        <?= $next_total['text'] .
+            zen_draw_hidden_field('value', $next_total['value'])
+        ?>
+    </td>
 <?php
             break;
 
@@ -113,12 +111,12 @@ foreach ($order->totals as $next_total) {
 ?>
     <td class="text-right">
         <?= zen_draw_pull_down_menu(
-            $update_total . '[shipping_module]',
+            'shipping_module',
             $available_modules,
             $order->info['shipping_module_code'],
             'id="shipping-select" class="eo-entry me-2 form-control"'
         ) ?>
-        <?= zen_draw_input_field($update_total_title, $trimmed_title, 'id="ship-title" class="eo-entry form-control" ' . $shipping_title_max) ?>
+        <?= zen_draw_input_field('title', $trimmed_title, 'id="ship-title" class="eo-entry form-control" ' . $shipping_title_max) ?>
     </td>
 
     <td>
@@ -126,19 +124,20 @@ foreach ($order->totals as $next_total) {
         <?= zen_draw_input_field('shipping_tax', (string)$shipping_tax_rate, 'id="ship-tax" class="amount form-control"' . $input_tax_params, false, $input_field_type) ?>
     </td>
 <?php
+            $value_name = 'value';
             if (DISPLAY_PRICE_WITH_TAX === 'true') {
                 $shipping_net = $next_total['value'] / (1 + ($shipping_tax_rate / 100));
 ?>
     <td>
-        <?= zen_draw_input_field($update_total_value, (string)$shipping_net, 'id="ship-net" class="amount form-control"' . $input_value_params, false, $input_field_type) ?>
+        <?= zen_draw_input_field('value', (string)$shipping_net, 'id="ship-net" class="amount form-control"' . $input_value_params, false, $input_field_type) ?>
     </td>
 <?php
-                $update_total_value = 'shipping_gross';
+                $value_name = 'gross';
             }
 ?>
-    <td>&nbsp;</td>
+    <td></td>
     <td>
-        <?= zen_draw_input_field($update_total_value, $next_total['value'], 'id="ship-gross" class="amount form-control"' . $input_value_params, false, $input_field_type) ?>
+        <?= zen_draw_input_field($value_name, $next_total['value'], 'id="ship-gross" class="amount form-control"' . $input_value_params, false, $input_field_type) ?>
     </td>
 <?php
             break;
@@ -146,24 +145,30 @@ foreach ($order->totals as $next_total) {
         case 'ot_gv':
         case 'ot_voucher': 
 ?>
-    <td colspan="<?= $columns - 2 ?>">&nbsp;</td>
-    <td class="smallText text-right"><?= zen_draw_input_field($update_total_title, $trimmed_title, 'class="eo-entry form-control"') ?></td>
+    <td colspan="<?= $columns - 2 ?>"></td>
+    <td class="smallText text-right">
+        <?= zen_draw_input_field('title', $trimmed_title, 'class="eo-entry form-control"') ?>
+    </td>
     <td class="smallText text-right">
 <?php
             if ($next_total['value'] > 0) {
                 $next_total['value'] *= -1;
             }
-            echo zen_draw_input_field($update_total_value, $next_total['value'], 'class="amount form-control" step="any"', false, $input_field_type);
+            echo zen_draw_input_field('value', $next_total['value'], 'class="amount form-control" step="any"', false, $input_field_type);
 ?>
     </td>
 <?php
             break;
 
-        default: 
+        default:
 ?>
-    <td colspan="<?= $columns - 2 ?>">&nbsp;</td>
-    <td class="smallText text-right"><?= zen_draw_input_field($update_total_title, $trimmed_title, 'class="eo-entry form-control"') ?></td>
-    <td class="smallText text-right"><?= zen_draw_input_field($update_total_value, $next_total['value'], 'class="amount form-control"') ?></td>
+    <td colspan="<?= $columns - 2 ?>"></td>
+    <td class="smallText text-right">
+        <?= zen_draw_input_field('title', $trimmed_title, 'class="eo-entry form-control"') ?>
+    </td>
+    <td class="smallText text-right">
+        <?= zen_draw_input_field('value', $next_total['value'], 'class="amount form-control"') ?>
+    </td>
 <?php
             break;
     }
@@ -172,25 +177,21 @@ foreach ($order->totals as $next_total) {
 <?php
 }
 
-$additional_totals_displayed = false;
 $unused_order_totals = $eo->getUnusedOrderTotalModules($order);
 if (count($unused_order_totals) !== 0) {
-    $additional_totals_displayed = true;
 ?>
-<tr>
+<tr id="add-ot-wrapper">
     <td colspan="<?= $columns ?>">&nbsp;</td>
-    <td><?= TEXT_ADD_ORDER_TOTAL . zen_draw_pull_down_menu('update_total[new_total][code]', $unused_order_totals, '', 'id="update_total_code" class="eo-entry form-control d-inline"') ?></td>
-    <td><?= zen_draw_input_field('update_total[new_total][title]', '', 'class="eo-enty form-control"') ?></td>
-    <td><?= zen_draw_input_field('update_total[new_total][value]', '', 'class="amount form-control" step="any"', false, $input_field_type) ?></td>
-</tr>
-<?php
-/* Not sure what this block is supposed to do, commented out for now [FIXME]
-<tr>
-    <td colspan="<?= $columns + 3 ?>" class="d-none" id="update_total_shipping">
-        <?= TEXT_CHOOSE_SHIPPING_MODULE . zen_draw_pull_down_menu('update_total[new_shipping][shipping_module]', eo_get_available_shipping_modules()) ?>
+    <td>
+        <button id="add-ot" class="btn btn-sm btn-warning me-2"><?= TEXT_ADD_ORDER_TOTAL ?></button>
+        <?= zen_draw_pull_down_menu('code', $unused_order_totals, '', 'class="form-control d-inline"') ?>
+    </td>
+    <td>
+        <?= zen_draw_input_field('title', '', 'class="form-control"') ?>
+    </td>
+    <td>
+        <?= zen_draw_input_field('value', '', 'id="add-ot-value" class="form-control" step="any"', false, $input_field_type) ?>
     </td>
 </tr>
-*/
-?>
 <?php
 }

@@ -37,11 +37,11 @@
 .attribs-list {
     font-size: smaller;
 }
+.eo-label {
+    font-weight: bold;
+}
 .model {
     width: auto;
-}
-td.ot-custom-Text {
-    font-weight: bold;
 }
 .smallText a {
     font-size: 9px;
@@ -50,11 +50,14 @@ td.ot-custom-Text {
 .tax-percentage {
     float: right;
 }
+.tooltip {
+    z-index: 10000000;
+}
 
 hr {
     border-top: 1px solid #ddd;
 }
-input.amount {
+input.amount, #add-ot-value {
     text-align: right;
     float: right;
     width: 10rem;
@@ -63,14 +66,8 @@ input.amount-onetime, input.prod-qty {
     text-align: right;
     width: 10rem;
 }
+
 #products-listing select, #ship-title {
     display: inherit;
     width: auto;
 }
-.eo-label {
-    font-weight: bold;
-}
-.tooltip {
-    z-index: 10000000;
-}
-#order-select { width: auto; margin: 0 auto; }
