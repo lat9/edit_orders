@@ -5,7 +5,7 @@
 // Last modified v5.0.0
 //
 $define = [
-// Page / Section Headings and common button names
+// Page / Section Headings and common button names and other constants.
     'BUTTON_CLOSE' => 'Close',
     'BUTTON_COMMIT_CHANGES' => 'Commit Changes',
     'HEADING_TITLE' => 'Editing Order',
@@ -16,6 +16,7 @@ $define = [
     'TEXT_ORIGINAL_VALUE' => 'Original: <code>%s</code>',           //- Tooltip string
     'TEXT_OSH_CHANGED_VALUES' => 'These values were changed in the order:',
     'TEXT_VALUE_CHANGED' => '%1$s was changed from %2$s to %3$s',   //- Used by the AJAX processing and for OSH record
+    'TEXT_VALUE_UNKNOWN' => 'Unknown [%s]',  //- %s is filled in with the unknown 'entity'
 
 // Table Headings
     'TABLE_HEADING_STATUS_HISTORY' => 'Order Status History &amp; Comments',
@@ -147,7 +148,7 @@ $define = [
     'DETAILS' => 'Details',
 
 // Required for various added zen_cart functions
-    'TEXT_UNKNOWN_TAX_RATE' => 'Sales Tax',
+    'TEXT_UNKNOWN_TAX_RATE' => 'Sales Tax (%s%%)',
     'PULL_DOWN_DEFAULT' => 'Please Choose Your Country',
 
 // Absolute's Product Attribute Grid

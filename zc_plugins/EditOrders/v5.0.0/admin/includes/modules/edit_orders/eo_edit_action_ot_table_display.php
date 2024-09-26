@@ -2,18 +2,10 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2003 The zen-cart developers
+// Copyright (c) 2003-2024 The zen-cart developers
 //
 // Last modified v5.0.0
 //
-// -----
-// Prior to EO v4.6.0, this code was in-line in the main /admin/edit_orders.php script.  Now required by
-// /admin/includes/modules/edit_orders/eo_edit_action_display.php in global context for the rendering of the
-// current order's orders-status-history table.
-//
-$eo_href_link = zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['oID', 'action']) . "oID=$oID&action=add_prdct");
-$eo_add_product_button = zen_image_button('button_add_product.gif', TEXT_ADD_NEW_PRODUCT);
-$eo_add_button_link = '<a href="' . $eo_href_link . '" class="btn btn-warning btn-xs" role="button">' . TEXT_ADD_NEW_PRODUCT . '</a>';
 
 // -----
 // Give a watching observer the chance to identify additional order-totals that should be considered display-only.
@@ -51,7 +43,7 @@ foreach ($order->totals as $next_total) {
 
     $index_update_needed = true;
 ?>
-<tr>
+<tr class="eo-ot <?= $ot_class ?>">
     <td class="dataTableContent" colspan="3"><?= $add_product_button ?></td>
 <?php
     $add_product_button = '';
@@ -94,7 +86,7 @@ foreach ($order->totals as $next_total) {
         case 'ot_coupon': 
 ?>
     <td colspan="<?= $columns - 2 ?>">&nbsp;</td>
-    <td class="smallText text-right"><?= zen_draw_input_field($update_total_title, $trimmed_title, 'class="amount eo-entry"') ?></td>
+    <td class="text-right"><?= zen_draw_input_field($update_total_title, $trimmed_title, 'class="eo-entry"') ?></td>
     <td class="text-right"><?= $next_total['text'] . zen_draw_hidden_field($update_total_value, $next_total['value']) ?></td>
 <?php
             break;
@@ -102,15 +94,31 @@ foreach ($order->totals as $next_total) {
         case 'ot_shipping':
             $shipping_tax_rate = $eo->eoGetShippingTaxRate($order);
             $shipping_title_max = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'shipping_method') . '"';
+            $available_modules = $eo->getAvailableShippingModules($order);
+
+            // -----
+            // If no available modules, just render an empty row; EO's jQuery
+            // will hide the entire row.
+            //
+            if (count($available_modules) === 0) {
+?>
+        <td id="eo-no-shipping" colspan="<?= $columns ?>"></td>
+<?php
+                break;
+            }
+
+            // -----
+            // Otherwise, display the shipping-module dropdown for selection.
+            //
 ?>
     <td class="text-right">
         <?= zen_draw_pull_down_menu(
             $update_total . '[shipping_module]',
-            eo_get_available_shipping_modules(),
+            $available_modules,
             $order->info['shipping_module_code'],
-            'id="shipping-select" class="form-control me-2"'
+            'id="shipping-select" class="eo-entry me-2 form-control"'
         ) ?>
-        <?= zen_draw_input_field($update_total_title, $trimmed_title, 'id="ship-title" class="form-control" ' . $shipping_title_max) ?>
+        <?= zen_draw_input_field($update_total_title, $trimmed_title, 'id="ship-title" class="eo-entry form-control" ' . $shipping_title_max) ?>
     </td>
 
     <td>
@@ -139,7 +147,7 @@ foreach ($order->totals as $next_total) {
         case 'ot_voucher': 
 ?>
     <td colspan="<?= $columns - 2 ?>">&nbsp;</td>
-    <td class="smallText text-right"><?= zen_draw_input_field($update_total_title, $trimmed_title, 'class="form-control eo-entry"') ?></td>
+    <td class="smallText text-right"><?= zen_draw_input_field($update_total_title, $trimmed_title, 'class="eo-entry form-control"') ?></td>
     <td class="smallText text-right">
 <?php
             if ($next_total['value'] > 0) {
@@ -154,7 +162,7 @@ foreach ($order->totals as $next_total) {
         default: 
 ?>
     <td colspan="<?= $columns - 2 ?>">&nbsp;</td>
-    <td class="smallText text-right"><?= zen_draw_input_field($update_total_title, $trimmed_title, 'class="form-control eo-entry"') ?></td>
+    <td class="smallText text-right"><?= zen_draw_input_field($update_total_title, $trimmed_title, 'class="eo-entry form-control"') ?></td>
     <td class="smallText text-right"><?= zen_draw_input_field($update_total_value, $next_total['value'], 'class="amount form-control"') ?></td>
 <?php
             break;
@@ -165,14 +173,14 @@ foreach ($order->totals as $next_total) {
 }
 
 $additional_totals_displayed = false;
-$available_order_totals = eo_get_available_order_totals_class_values($oID);
-if (count($available_order_totals) > 0) {
+$unused_order_totals = $eo->getUnusedOrderTotalModules($order);
+if (count($unused_order_totals) !== 0) {
     $additional_totals_displayed = true;
 ?>
 <tr>
     <td colspan="<?= $columns ?>">&nbsp;</td>
-    <td><?= TEXT_ADD_ORDER_TOTAL . zen_draw_pull_down_menu('update_total[new_total][code]', $available_order_totals, '', 'id="update_total_code" class="form-control d-inline"') ?></td>
-    <td><?= zen_draw_input_field('update_total[new_total][title]', '', 'class="form-control eo-entry"') ?></td>
+    <td><?= TEXT_ADD_ORDER_TOTAL . zen_draw_pull_down_menu('update_total[new_total][code]', $unused_order_totals, '', 'id="update_total_code" class="eo-entry form-control d-inline"') ?></td>
+    <td><?= zen_draw_input_field('update_total[new_total][title]', '', 'class="eo-enty form-control"') ?></td>
     <td><?= zen_draw_input_field('update_total[new_total][value]', '', 'class="amount form-control" step="any"', false, $input_field_type) ?></td>
 </tr>
 <?php
@@ -186,4 +194,3 @@ if (count($available_order_totals) > 0) {
 ?>
 <?php
 }
-unset($total, $details);

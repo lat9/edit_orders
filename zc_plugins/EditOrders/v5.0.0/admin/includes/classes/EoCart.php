@@ -53,6 +53,21 @@ class EoCart extends \shoppingCart
                 }
             }
         }
+
+        // -----
+        // Initialize the calculated values; EO's cart doesn't re-calculate
+        // unless there's a change to the order's products.
+        //
+        $this->initializeCalculatedValues($order->products);
+    }
+    protected function initializeCalculatedValues(array $ordered_products): void
+    {
+        $this->total = 0;
+        $this->weight = 0;
+        foreach ($ordered_products as $product) {
+            $this->total += ($product['qty'] * $product['final_price']) + $product['onetime_charges'];
+            $this->weight += $product['qty'] * $product['products_weight'];
+        }
     }
 
     public function restore_contents()
@@ -176,7 +191,7 @@ class EoCart extends \shoppingCart
      */
     public function calculate()
     {
-        return parent::calculate();
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
 
     /**
@@ -231,7 +246,7 @@ class EoCart extends \shoppingCart
      */
     public function show_total()
     {
-        return parent::show_total();
+        return $this->total;
     }
 
     /**
@@ -241,7 +256,8 @@ class EoCart extends \shoppingCart
      */
     public function show_total_before_discounts()
     {
-        return parent::show_total_before_discounts(); 
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        return $this->total;
     }
 
     /**
@@ -251,7 +267,7 @@ class EoCart extends \shoppingCart
      */
     public function show_weight()
     {
-        return parent::show_weight();
+        return $this->weight;
     }
 
     /**
@@ -326,15 +342,22 @@ class EoCart extends \shoppingCart
     }
 
     // -----
+    // Called by zen_get_shipping_enabled, which is called by "most"
+    // shipping modules to see if they should display. EO's cart
+    // **always** responds with a cost of 0.0, so that any currently-
+    // selected shipping modules' names will display in the dropdown
+    // on the main EO page.
+    //
+    public function free_shipping_items()
+    {
+        return 0.0;
+    }
+
+    // -----
     // This set of storefront cart functions are used **only** during
     // the shipping quote determination and "should not" be required
     // during an order's edit.
     //
-    public function free_shipping_items()
-    {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
-        return 0.0;
-    }
     public function free_shipping_prices()
     {
         trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);

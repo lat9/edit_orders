@@ -25,34 +25,11 @@ class EditOrders extends \base
     public function __construct(int $orders_id)
     {
         $this->eo_action_level = (int)EO_DEBUG_ACTION_LEVEL;
+        $this->logfile_name = DIR_FS_LOGS . '/eo_debug_' . $orders_id . '.log';
+
         $this->orders_id = (int)$orders_id;
         $this->tax_updated = false;
         $this->product_tax_descriptions = [];
-
-        // -----
-        // Create the edit_orders directory, if not already present.
-        //
-        if ($this->eo_action_level !== 0) {
-            $this->logfile_name = DIR_FS_LOGS . '/eo_debug_' . $orders_id . '.log';
-        }
-
-        // -----
-        // Load the order-information currently recorded for the order.
-        //
-        $this->order = new \order($this->orders_id);
-        $this->eoLog("queryOrder, initial\n" . json_encode($this->order, JSON_PRETTY_PRINT));
-
-        // -----
-        // Save the current value for the session-stored currency (in case the order was
-        // placed in a different one).  The value will be restored EO's initialization routine
-        // is run.
-        $_SESSION['eo_saved_currency'] = $_SESSION['currency'] ?? false;
-        $_SESSION['currency'] = $this->order->info['currency'];
-    }
-
-    public function isOrderFound(): bool
-    {
-        return !empty($this->order->info);
     }
 
     // -----
@@ -127,11 +104,20 @@ class EditOrders extends \base
 
     public function getOrder(): \order
     {
-        return $this->order;
+        $order = $this->order;
+        unset($this->order);
+        return $order;
     }
 
-    public function queryOrder(): bool
+    public function queryOrder(\order $order): bool
     {
+        // -----
+        // Register the order within a *temporary* copy in this class;
+        // it'll be removed on edit_orders.php's subsequent call to
+        // the getOrder method, above.
+        //
+        $this->order = $order;
+
         // -----
         // The base order-class' 'query' method processing sets the order's delivery address to
         // (bool)false if the shipping module is 'storepickup'. If that's the case,
@@ -421,6 +407,7 @@ class EditOrders extends \base
         foreach ($this->order->products as $product) {
             $tax_description = $this->findTaxGroupNameFromValue($product['tax']);
             if ($tax_description === '') {
+                global $messageStack;
                 $messageStack->add_session(
                     sprintf(ERROR_NO_PRODUCT_TAX_DESCRIPTION,
                         $this->orders_id,
@@ -600,6 +587,22 @@ class EditOrders extends \base
                 return $group_name;
             }
         }
+
+        // -----
+        // Special-case a tax rate of 0%, adding a record to the order's
+        // tax-groups and tax-subtotals into which these 0-value taxed
+        // products (or shipping) can be accumulated.
+        //
+        if ($value == 0) {
+            $group_name = sprintf(TEXT_UNKNOWN_TAX_RATE, '0');
+            $this->order->info['tax_groups'][$group_name] = 0;
+            $this->order->info['tax_subtotals'][$group_name] = [
+                'tax_rate' => 0,
+                'subtotal' => 0,
+            ];
+            return $group_name;
+        }
+
         return '';
     }
     protected function addCostToTaxGroup(string $tax_group_description, int|float $value): void
@@ -614,6 +617,76 @@ class EditOrders extends \base
             $parent_group_shipping_tax = zen_add_tax($value, $subtotals['tax_rate']);
             $this->order->info['tax_subtotals'][$tax_group_description]['parent_groups'][$group_name]['subtotal'] += $parent_group_shipping_tax;
         }
+    }
+
+    // -----
+    // For EO versions prior to 5.0.0, provided by the eo_get_available_shipping_modules
+    // function.
+    //
+    public function getAvailableShippingModules(\order $order): array
+    {
+        $order_shipping_module = $order->info['shipping_module_code'];
+        if ($order_shipping_module === '') {
+            $shipping_unknown = [];
+        } else {
+            $shipping_unknown = [
+                [
+                    'id' => $order_shipping_module,
+                    'text' => sprintf(TEXT_VALUE_UNKNOWN, $order_shipping_module),
+                ],
+            ];
+        }
+
+        if (!defined('MODULE_SHIPPING_INSTALLED') || empty(MODULE_SHIPPING_INSTALLED)) {
+            return $shipping_unknown;
+        }
+
+        $use_strip_tags = (defined('EO_SHIPPING_DROPDOWN_STRIP_TAGS') && EO_SHIPPING_DROPDOWN_STRIP_TAGS === 'true');
+        $module_selections = [];
+        $shipping_modules = new \shipping();
+        foreach ($shipping_modules->modules as $module) {
+            $class = pathinfo($module, PATHINFO_FILENAME);
+            if ($class === $order_shipping_module) {
+                $shipping_unknown = [];
+            }
+            if (isset($GLOBALS[$class])) {
+                $module_selections[] = [
+                    'id' => $GLOBALS[$class]->code,
+                    'text' => ($use_strip_tags === true) ? strip_tags($GLOBALS[$class]->title) : $GLOBALS[$class]->title,
+                ];
+            }
+        }
+
+        return array_merge($shipping_unknown, $module_selections);
+    }
+
+    // -----
+    // Processing based on eo_get_available_order_totals_class_values for EO versions
+    // prior to v5.0.0.
+    //
+    public function getUnusedOrderTotalModules(\order $order): array
+    {
+        $totals_to_skip = ['ot_group_pricing', 'ot_tax', 'ot_loworderfee', 'ot_purchaseorder'];
+        foreach ($order->totals as $next_ot) {
+            $totals_to_skip[] = $next_ot['class'];
+        }
+
+        $order_totals = new \order_total();
+
+        $module_list = explode(';', str_replace('.php', '', MODULE_ORDER_TOTAL_INSTALLED));
+        $unused_totals = [];
+        foreach ($module_list as $class) {
+            if (in_array($class, $totals_to_skip)) {
+                continue;
+            }
+
+            $unused_totals[] = [
+                'id' => $class,
+                'text' => $GLOBALS[$class]->title,
+            ];
+        }
+
+        return $unused_totals;
     }
 
     public function arrayImplode($array_fields, $output_string = '')

@@ -37,4 +37,4 @@ if (isset($_SESSION['eo_saved_currency'])) {
     unset($_SESSION['eo_saved_currency']);
 }
 
-unset($_SESSION['eoChanges']);
+unset($_SESSION['eoChanges'], $_SESSION['cart']);
