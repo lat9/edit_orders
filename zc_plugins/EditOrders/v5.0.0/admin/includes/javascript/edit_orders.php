@@ -228,20 +228,9 @@ if (ACCOUNT_STATE === 'true') {
         let theForm = theButton.parents('form').first();
         let addressType = theForm.find('.eo-addr-type').first().val();
 
-        let fieldNames = [];
-        theForm.find('select, input[type="text"]').each(function() {
-            fieldNames.push({
-                name: $(this).attr('name'),
-                value: $('label[for="'+ this.id +'"]').text()
-            });
-        });
-
         zcJS.ajax({
             url: 'ajax.php?act=ajaxEditOrdersAdmin&method=updateAddress',
-            data: {
-                form_fields: JSON.stringify(theForm.serializeArray()),
-                form_labels: JSON.stringify(fieldNames)
-            }
+            data: theForm.serializeArray()
         }).done(function(response) {
             if (response.status === 'ok') {
                 theForm.find('.eo-changed').first().val(response.address_changes).trigger('change');

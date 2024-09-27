@@ -19,17 +19,17 @@ class zcAjaxEditOrdersAdmin
     //
     public function updateAddress(): array
     {
-        $form_fields = $this->postedJsonToArray($_POST['form_fields']);
-        $form_labels = $this->postedJsonToArray($_POST['form_labels']);
+        $form_fields = $_POST;
 
-        $non_builtin_fields_in_address = 0;
-        $builtin_address_fields = $this->getBuiltInAddressFields();
+        $non_builtin_fields = [];
+        $builtin_names2labels = $this->getBuiltInAddressFields();
+        $builtin_address_names = array_keys($builtin_names2labels);
         $error = false;
         $builtin_errors = [];
 
         $address = [];
         $labels = [];
-        $address_type_prefix = 'update_' . $form_fields['address_type'] . '_';
+        $address_type_prefix = $form_fields['address_type'] . '_';
         foreach ($form_fields as $posted_varname => $value) {
             $varname = str_replace($address_type_prefix, '', $posted_varname);
 
@@ -40,26 +40,22 @@ class zcAjaxEditOrdersAdmin
                 continue;
             }
 
-            if (in_array($varname, $builtin_address_fields)) {
-                if ($varname === 'zone_id') {
-                    $address['zone_id'] = $value;
-                    $labels['zone_id'] = $form_labels[$address_type_prefix . 'state'];
-                } elseif ($varname === 'country') {
+            if (in_array($varname, $builtin_address_names)) {
+                if ($varname === 'country') {
                     $address['country_id'] = (int)$value;
-                    $labels['country_id'] = $form_labels[$address_type_prefix . 'country'];
+                    $labels['country_id'] = $builtin_names2labels['country'];
                 } else {
                     $address[$varname] = trim($value);
-                    $labels[$varname] = $form_labels[$posted_varname];
+                    $labels[$varname] = $builtin_names2labels[$varname];
                 }
                 continue;
             }
 
             // -----
             // Still here? An observer has added fields to the current address.
-            // Count them up here for determination as to whether a notification
-            // needs to be issued.
+            // Save the field's name for follow-on check for any label.
             //
-            $non_builtin_fields_in_address++;
+            $non_builtin_fields[] = $posted_varname;
         }
 
         // -----
@@ -80,37 +76,20 @@ class zcAjaxEditOrdersAdmin
         // - 'field_id' ... The HTML id= attribute associated with the errant field (no leading '#')
         // - 'message' .... The message to display for the field.
         //
-        // 3. An associative array that maps the name of a posted variable to its name when stored
-        //    in the database. The value-mapping is set to (bool)false if the field is not
-        //    stored in the order.
-        //
-        //    For example, VAT4EU uses 'vat_number' as the form-field that is stored in the
-        //    order as 'billing_vat_number' and includes a field named 'current_vat_number'
-        //    that is not stored in the order. Here's how that plugin returns that information:
-        //
-        // $post_to_order_mapping = [
-        //     'vat_number' => 'billing_vat_number',
-        //     'vat_number_override' => false,
-        //     'current_vat_number' => false,
-        //     'current_vat_validated' => false,
-        // ];
-        //
         $address_type = $form_fields['address_type'];
 
         $non_builtin_errors = [];
-        $post_to_order_mapping = [];
-        if ($non_builtin_fields_in_address !== 0) {
-            $this->notify('NOTIFY_EO_ADDRESS_SAVE', $form_fields, $non_builtin_errors, $post_to_order_mapping);
-         }
+        if (count($non_builtin_fields) !== 0) {
+            $this->notify('NOTIFY_EO_ADDRESS_SAVE', $form_fields, $non_builtin_errors);
+        }
 
-        $status = ($error === true|| count($non_builtin_errors) !== 0) ? 'error' : 'ok';
+        $status = ($error === true || count($non_builtin_errors) !== 0) ? 'error' : 'ok';
         if ($status === 'ok') {
-            foreach ($post_to_order_mapping as $key => $order_key) {
-                if ($order_key !== false) {
-                    $address[$order_key] = $form_fields[$key];
-                    if (isset($form_labels[$key])) {
-                        $labels[$order_key] = $form_labels[$key];
-                    }
+            $non_builtin_labels = $_SESSION['eoChanges']->getAdditionalAddressFieldLabels($address_type);
+            foreach ($non_builtin_fields as $next_field) {
+                if (!empty($non_builtin_labels[$next_field])) {
+                    $address[$next_field] = $form_fields[$next_field];
+                    $labels[$next_field] = $non_builtin_labels[$next_field];
                 }
             }
         }
@@ -255,17 +234,17 @@ class zcAjaxEditOrdersAdmin
     protected function getBuiltInAddressFields(): array
     {
         return [
-            'country',
-            'name',
-            'street_address',
-            'suburb',
-            'city',
-            'state',
-            'postcode',
-            'zone_id',
-            'country',
-            'telephone',
-            'email_address',
+            'company' => ENTRY_CUSTOMER_COMPANY,
+            'name' => ENTRY_CUSTOMER_NAME,
+            'street_address' => ENTRY_CUSTOMER_ADDRESS,
+            'suburb' => ENTRY_CUSTOMER_SUBURB,
+            'city' => ENTRY_CUSTOMER_CITY,
+            'postcode' => ENTRY_CUSTOMER_POSTCODE,
+            'country' => ENTRY_CUSTOMER_COUNTRY,
+            'zone_id' => ENTRY_CUSTOMER_STATE,
+            'state' => ENTRY_CUSTOMER_STATE,
+            'telephone' => ENTRY_TELEPHONE_NUMBER,
+            'email_address' => ENTRY_EMAIL_ADDRESS,
         ];
     }
 

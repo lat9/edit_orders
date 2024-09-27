@@ -6,9 +6,12 @@
 // Last updated: EO v5.0.0
 //
 namespace Zencart\Plugins\Admin\EditOrders;
+use Zencart\Traits\NotifierManager;
 
-class EditOrders extends \base
+class EditOrders
 {
+    use NotifierManager;
+
     protected int $eo_action_level;
     protected string $logfile_name;
     protected int $orders_id;
@@ -1161,14 +1164,18 @@ class EditOrders extends \base
                     $country_change = true;
                     $country_id = (int)$updated_values['country_id'];
                     break;
+
                 case 'zone_id':
                     $state_zone_change = true;
                     $zone_id = (int)$updated_values['zone_id'];
                     break;
+
                 case 'state':
                     $state_zone_change = true;
                     $state = $updated_values['state'];
                     break;
+
+                case 'company':
                 case 'name':
                 case 'street_address':
                 case 'suburb':
@@ -1180,11 +1187,25 @@ class EditOrders extends \base
                         'type' => 'stringIgnoreNull',
                     ];
                     break;
+
                 default:
+                    $key_change = null;
+                    $key_type = null;
+                    $this->notify(
+                        'NOTIFY_EO_UPDATING_ADDR_FIELD',
+                        [
+                            'original' => $original_values,
+                            'field_prefix' => $field_prefix,
+                            'field_name' => $key,
+                            'updated_value' => $updated_values[$key],
+                        ],
+                        $key_change,
+                        $key_type
+                    );
                     $address_updates[] = [
-                        'fieldName' => $key,
+                        'fieldName' => $key_change ?? $key,
                         'value' => $updated_values[$key],
-                        'type' => 'stringIgnoreNull',
+                        'type' => $key_type ?? 'stringIgnoreNull',
                     ];
                     break;
             }
