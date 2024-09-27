@@ -98,6 +98,16 @@ class EoOrderChanges
         $this->ordersStatuses = $status_array;
     }
 
+    public function saveAdditionalAddressFieldLabels(string $address_type, array $additional_labels): void
+    {
+        $this->original->$address_type['labels'] = $additional_labels;
+    }
+
+    public function getAdditionalAddressFieldLabels(string $address_type): array
+    {
+        return $this->original->$address_type['labels'];
+    }
+
     public function updateAddressInfo(string $address_type, array $address_info, array $field_labels): int
     {
         if (!isset($this->updated->$address_type['changes'])) {
