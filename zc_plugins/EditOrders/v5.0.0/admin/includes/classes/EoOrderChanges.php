@@ -20,7 +20,12 @@ class EoOrderChanges
 {
     protected \stdClass $original;
     protected \stdClass $updated;
+    protected array $upridMapping = [];
+    protected array $opIdMapping = [];
+    protected array $totalsMapping = [];
     protected array $ordersStatuses;
+
+    protected bool $isGuestCheckout;
 
     public function __construct(\order $original_order)
     {
@@ -33,8 +38,49 @@ class EoOrderChanges
         $this->original->products = $original_order->products;
         $this->original->statuses = $original_order->statuses;
         $this->original->totals = $original_order->totals;
+        $this->generateProductMappings();
+        $this->generateOrderTotalsMappings();
 
         $this->updated = clone $this->original;
+
+        global $sniffer, $db;
+        $this->isGuestCheckout = false;
+        if ($sniffer->field_exists(TABLE_ORDERS, 'is_guest_checkout')) {
+            $is_guest_checkout = $db->Execute(
+                "SELECT is_guest_checkout
+                   FROM " . TABLE_ORDERS . "
+                  WHERE orders_id = " . (int)$order->info['order_id'] . "
+                  LIMIT 1"
+            );
+            $this->isGuestCheckout = !empty($is_guest_checkout->fields['is_guest_checkout']);
+        }
+    }
+    protected function generateProductMappings(): void
+    {
+        for ($i = 0, $n = count($this->original->products); $i < $n; $i++) {
+            $this->upridMapping[$this->original->products[$i]['uprid']] = $i;
+            $this->opIdMapping[$this->original->products[$i]['orders_products_id']] = $i;
+        }
+    }
+
+    // -----
+    // Note: The totals' mappings are done as an array, since there can be multiple
+    // entries for ot_tax, depending on the setting for SHOW_SPLIT_TAX_CHECKOUT, i.e.
+    // My Store :: Show Split Tax Lines.
+    //
+    protected function generateOrderTotalsMappings(): void
+    {
+        for ($i = 0, $n = count($this->original->totals); $i < $n; $i++) {
+            $this->totalsMapping[$this->original->totals[$i]['class']][] = [
+                'index' => $i,
+                'title' => $this->original->totals[$i]['title'],
+            ];
+        }
+    }
+
+    public function isGuestCheckout(): bool
+    {
+        return $this->isGuestCheckout;
     }
 
     public function getOriginalOrder(): \stdClass

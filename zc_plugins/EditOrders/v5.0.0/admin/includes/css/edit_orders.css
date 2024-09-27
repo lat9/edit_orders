@@ -5,6 +5,15 @@
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  * @version $Id: edit_orders.css 5454 2006-12-29 20:10:17Z drbyte $
  */
+.border {
+    border: 1px solid #dee2e6;
+}
+.border-warning {
+    border-color: #ffc107;
+}
+.border-danger {
+    border-color: #dc3545;
+}
 .d-inline {
     display: inline;
 }
@@ -24,24 +33,15 @@
 .w-auto {
     width: auto;
 }
-.border {
-    border: 1px solid #dee2e6;
-}
-.border-warning {
-    border-color: #ffc107;
-}
-.border-danger {
-    border-color: #dc3545;
-}
 
 .attribs-list {
     font-size: smaller;
 }
+.eo-label {
+    font-weight: bold;
+}
 .model {
     width: auto;
-}
-td.ot-custom-Text {
-    font-weight: bold;
 }
 .smallText a {
     font-size: 9px;
@@ -50,11 +50,14 @@ td.ot-custom-Text {
 .tax-percentage {
     float: right;
 }
+.tooltip {
+    z-index: 10000000;
+}
 
 hr {
     border-top: 1px solid #ddd;
 }
-input.amount {
+input.amount, #add-ot-value {
     text-align: right;
     float: right;
     width: 10rem;
@@ -63,14 +66,8 @@ input.amount-onetime, input.prod-qty {
     text-align: right;
     width: 10rem;
 }
+
 #products-listing select, #ship-title {
     display: inherit;
     width: auto;
 }
-.eo-label {
-    font-weight: bold;
-}
-.tooltip {
-    z-index: 10000000;
-}
-#order-select { width: auto; margin: 0 auto; }

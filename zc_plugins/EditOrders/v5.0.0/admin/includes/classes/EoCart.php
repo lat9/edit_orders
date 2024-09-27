@@ -17,15 +17,62 @@ if (!defined('IS_ADMIN_FLAG')) {
  */
 class EoCart extends \shoppingCart
 {
+    const UNSUPPORTED_LOG_MESSAGE = 'Call to unsupported shopping-cart method during Edit Orders processing.';
+
+
     public function __construct()
     {
         parent::__construct();
     }
 
-    // Do Nothing
+    // -----
+    // Reconstruct the cart from the ordered products, for use during pricing/quantity
+    // updates.
+    //
+    public function loadFromOrder(\order $order): void
+    {
+        $this->content_type = $order->content_type;
+
+        foreach ($order->products as $product) {
+            $uprid = $product['uprid'];
+
+            $this->contents[$uprid] = [
+                'qty' => (float)$product['qty'],
+            ];
+            if (isset($product['attributes'])) {
+                $this->contents[$uprid]['attributes'] = [];
+                foreach ($product['attributes'] as $attribute) {
+                    //- FIXME: Checkbox attributes' option_id is formatted as 33chk_37,
+                    //  where 33 is the option-id and 37 is the option-value
+                    $option_id = (string)$attribute['option_id'];
+                    $value_id = (int)$attribute['value_id'];
+                    $this->contents[$uprid]['attributes'][$option_id] = $value_id;
+                    if ($value_id === 0) {
+                        $this->contents[$uprid]['attribute_values'][$option_id] = $attribute['value'];
+                    }
+                }
+            }
+        }
+
+        // -----
+        // Initialize the calculated values; EO's cart doesn't re-calculate
+        // unless there's a change to the order's products.
+        //
+        $this->initializeCalculatedValues($order->products);
+    }
+    protected function initializeCalculatedValues(array $ordered_products): void
+    {
+        $this->total = 0;
+        $this->weight = 0;
+        foreach ($ordered_products as $product) {
+            $this->total += ($product['qty'] * $product['final_price']) + $product['onetime_charges'];
+            $this->weight += $product['qty'] * $product['products_weight'];
+        }
+    }
+
     public function restore_contents()
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
 
     // -----
@@ -37,16 +84,14 @@ class EoCart extends \shoppingCart
         parent::reset();
     }
 
-    // Do Nothing
     public function add_cart($product_id, $qty = 1, $attributes = [], $notify = true)
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
 
-    // Do Nothing
     public function update_quantity($uprid, $quantity = 0, $attributes = [])
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
 
     // -----
@@ -146,7 +191,7 @@ class EoCart extends \shoppingCart
      */
     public function calculate()
     {
-        return parent::calculate();
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
 
     /**
@@ -201,7 +246,7 @@ class EoCart extends \shoppingCart
      */
     public function show_total()
     {
-        return parent::show_total();
+        return $this->total;
     }
 
     /**
@@ -211,7 +256,8 @@ class EoCart extends \shoppingCart
      */
     public function show_total_before_discounts()
     {
-        return parent::show_total_before_discounts(); 
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        return $this->total;
     }
 
     /**
@@ -221,7 +267,7 @@ class EoCart extends \shoppingCart
      */
     public function show_weight()
     {
-        return parent::show_weight();
+        return $this->weight;
     }
 
     /**
@@ -296,28 +342,35 @@ class EoCart extends \shoppingCart
     }
 
     // -----
+    // Called by zen_get_shipping_enabled, which is called by "most"
+    // shipping modules to see if they should display. EO's cart
+    // **always** responds with a cost of 0.0, so that any currently-
+    // selected shipping modules' names will display in the dropdown
+    // on the main EO page.
+    //
+    public function free_shipping_items()
+    {
+        return 0.0;
+    }
+
+    // -----
     // This set of storefront cart functions are used **only** during
     // the shipping quote determination and "should not" be required
     // during an order's edit.
     //
-    public function free_shipping_items()
-    {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
-        return 0.0;
-    }
     public function free_shipping_prices()
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
         return 0.0;
     }
     public function free_shipping_weight()
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
         return 0.0;
     }
     public function download_counts()
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
         return 0; 
     }
 
@@ -327,39 +380,39 @@ class EoCart extends \shoppingCart
     //
     public function actionUpdateProduct($goto, $parameters)
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
-    public function actionAddProduct($goto, $parameters)
+    public function actionAddProduct($goto, $parameters = [])
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
-    public function actionBuyNow($goto, $parameters)
+    public function actionBuyNow($goto, $parameters = [])
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
-    public function actionMultipleAddProduct($goto, $parameters)
+    public function actionMultipleAddProduct($goto, $parameters = [])
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
-    public function actionNotify($goto, $parameters)
+    public function actionNotify($goto, $parameters = ['ignored'])
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
-    public function actionNotifyRemove($goto, $parameters)
+    public function actionNotifyRemove($goto, $parameters = ['ignored'])
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
     public function actionCustomerOrder($goto, $parameters)
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
     public function actionRemoveProduct($goto, $parameters)
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
     public function actionCartUserAction($goto, $parameters)
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
 
     /**
@@ -373,7 +426,7 @@ class EoCart extends \shoppingCart
      */
     public function adjust_quantity($check_qty, $products, $stack = 'shopping_cart')
     {
-        trigger_error('Call to unsupported shopping-cart method during Edit Orders processing.', E_USER_WARNING);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
         return $check_qty; 
     }
 

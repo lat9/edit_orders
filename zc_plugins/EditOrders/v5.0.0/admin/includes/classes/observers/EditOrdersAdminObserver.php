@@ -51,6 +51,10 @@ class EditOrdersAdminObserver extends base
 
                     /* From admin/includes/functions/functions_help.php */
                     'NOTIFIER_PLUGIN_HELP_PAGE_URL_LOOKUP',
+
+                    /* From /includes/functions/functions_customers.php */
+                    'NOTIFY_ZEN_IS_LOGGED_IN',
+                    'NOTIFY_ZEN_IN_GUEST_CHECKOUT',
                 ]
             );
         }
@@ -139,9 +143,26 @@ class EditOrdersAdminObserver extends base
         }
     }
 
-    protected function update(&$class, $eventID, $p1, &$p2, &$p3, &$p4, &$p5)
+    // -----
+    // Mimic storefront returns during EO processing. A customer is always logged in and
+    // it might be a guest checkout, based on the status determination by EO's version
+    // of the 'cart'.
+    //
+    protected function notify_zen_is_logged_in(&$class, string $e, $x, bool &$is_logged_in)
     {
-        switch ($eventID) {
+        $is_logged_in = true;
+    }
+    protected function notify_zen_in_guest_checkout(&$class, string $e, $x, bool &$in_guest_checkout)
+    {
+        $in_guest_checkout = $_SESSION['eoChanges']->isGuestCheckout();
+    }
+
+    // -----
+    // Handling non-standard events, names not starting with 'NOTIFY_'.
+    //
+    protected function update(&$class, $e, $p1, &$p2, &$p3, &$p4, &$p5)
+    {
+        switch ($e) {
             // -----
             // Added v4.7.0, replacing function override on EO page.
             //
