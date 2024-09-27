@@ -157,12 +157,10 @@ $define = [
 // Other elements
     'RESET_TOTALS' => 'Reset totals prior to update? ',
     'PAYMENT_CALC_METHOD' => 'Choose product-pricing method:',
-        'PAYMENT_CALC_MANUAL' => 'As entered',
-        'PAYMENT_CALC_AUTO' => 'Automatically, without specials pricing',
-        'PAYMENT_CALC_AUTOSPECIALS' => 'Automatically, using specials pricing',
-    'PRODUCT_PRICES_CALC_AUTO' => ' <b>Note:</b> Pricing for products will be <em>automatically</em> calculated <em>without</em> &quot;specials&quot; pricing.',
-    'PRODUCT_PRICES_CALC_AUTOSPECIALS' => ' <b>Note:</b> Pricing for products will be <em>automatically</em> calculated, using &quot;specials&quot; pricing.',
-    'PRODUCT_PRICES_CALC_MANUAL' => ' <b>Note:</b> Pricing for products will use the value(s) that you enter.',
+        'PAYMENT_CALC_MANUAL' => 'Enable editing',
+        'PAYMENT_CALC_AUTOSPECIALS' => 'Editing disallowed',
+    'PRODUCT_PRICES_CALC_AUTOSPECIALS' => ' <b>Note:</b> Product prices are <em>automatically</em> calculated and cannot be edited.',
+    'PRODUCT_PRICES_CALC_MANUAL' => ' <b>Note:</b> Product prices can be edited.',
     'EO_PRICE_AUTO_GRID_MESSAGE' => 'Auto Calculated',
 
     'EO_MESSAGE_PRICING_AUTO' => 'Pricing was automatically calculated, without specials pricing.',

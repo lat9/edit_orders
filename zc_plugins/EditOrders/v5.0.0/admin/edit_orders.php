@@ -469,48 +469,27 @@ if (isset($order->info['account_name']) || isset($order->info['account_number'])
             </div>
         </div>
 <?php
+$display_payment_calc_label = false;
 if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
     $choices = [
         ['id' => 1, 'text' => PAYMENT_CALC_AUTOSPECIALS],
-        ['id' => 2, 'text' => PAYMENT_CALC_AUTO],
-        ['id' => 3, 'text' => PAYMENT_CALC_MANUAL]
+        ['id' => 2, 'text' => PAYMENT_CALC_MANUAL]
     ];
-    switch (EO_PRODUCT_PRICE_CALC_DEFAULT) {
-        case 'AutoSpecials':
-            $default = 1;
-            break;
-        case 'Auto':
-            $default = 2;
-            break;
-        default:
-            $default = 3;
-            break;
-    }
-    if (isset($_SESSION['eo_price_calculations']) && $_SESSION['eo_price_calculations'] >= 1 && $_SESSION['eo_price_calculations'] <= 3) {
+    $default = (EO_PRODUCT_PRICE_CALC_DEFAULT === 'AutoSpecials') ? 1 : 2;
+    if (isset($_SESSION['eo_price_calculations']) && in_array($_SESSION['eo_price_calculations'], [1, 2], true)) {
         $default = $_SESSION['eo_price_calculations'];
     }
     $_SESSION['eo_price_calculations'] = $default;
-    $price_is_manual = ($default === 3);
+    $price_is_manual = ($default === 2);
 
     $display_payment_calc_label = true;
     $payment_calc_choice = zen_draw_pull_down_menu('payment_calc_method', $choices, $default, 'id="calc-method" class="form-control w-auto"');
+} elseif (EO_PRODUCT_PRICE_CALC_METHOD === 'AutoSpecials') {
+    $price_is_manual = false;
+    $payment_calc_choice = '<p class="text-center">' . PRODUCT_PRICES_CALC_AUTOSPECIALS . '</p>';
 } else {
-    switch (EO_PRODUCT_PRICE_CALC_METHOD) {
-        case 'AutoSpecials':
-            $payment_calc_choice = PRODUCT_PRICES_CALC_AUTOSPECIALS;
-            $price_is_manual = false;
-            break;
-        case 'Auto':
-            $payment_calc_choice = PRODUCT_PRICES_CALC_AUTO;
-            $price_is_manual = false;
-            break;
-        default:
-            $payment_calc_choice = PRODUCT_PRICES_CALC_MANUAL;
-            $price_is_manual = true;
-            break;
-    }
-    $display_payment_calc_label = false;
-    $payment_calc_choice = '<p class="text-center">' . $payment_calc_choice . '</p>';
+    $price_is_manual = true;
+    $payment_calc_choice = '<p class="text-center">' . PRODUCT_PRICES_CALC_MANUAL . '</p>';
 }
 
 // -----

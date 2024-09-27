@@ -103,14 +103,6 @@ $(function() {
     // Initialize the variout 'tooltip' elements.
     //
     $('[data-toggle="tooltip"]').tooltip();
-
-    $('#calc-method').on('change', function() {
-        if (this.value === '3') {
-            $('.price-net, .price-gross').removeAttr('disabled');
-        } else {
-            $('.price-net, .price-gross').attr('disabled', 'disabled');
-        }
-    });
 <?php
 // --------------------
 // START ADDRESS-RELATED HANDLING
@@ -370,6 +362,14 @@ if (ACCOUNT_STATE === 'true') {
 // START OVERALL HANDLING
 // --------------------
 ?>
+    $('#calc-method').on('change', function() {
+        if (this.value === '2') {
+            $('.price-net, .price-gross').removeAttr('disabled');
+        } else {
+            $('.price-net, .price-gross').attr('disabled', 'disabled');
+        }
+    });
+
     // -----
     // When values in any of the various sections have changed,
     // count up the changes and display/hide the update form.
