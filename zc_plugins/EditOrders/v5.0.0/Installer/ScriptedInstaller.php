@@ -3,6 +3,8 @@
 // Admin-level installation script for the "encapsulated" Edit Orders plugin for Zen Cart, by lat9.
 // Copyright (C) 2018-2024, Vinos de Frutas Tropicales.
 //
+// Last updated: v5.0.0 (new)
+//
 use Zencart\PluginSupport\ScriptedInstaller as ScriptedInstallBase;
 
 class ScriptedInstaller extends ScriptedInstallBase
@@ -34,9 +36,9 @@ class ScriptedInstaller extends ScriptedInstallBase
 
                 ('Strip tags from the shipping module name?', 'EO_SHIPPING_DROPDOWN_STRIP_TAGS', 'true', 'When enabled, HTML and PHP tags present in the title of a shipping module are removed from the text displayed in the shipping dropdown menu.<br><br>If partial or broken tags are present in the title it may result in the removal of more text than expected. If this happens, you will need to update the affected shipping module(s) or disable this option.', $cgi, 11, now(), NULL, 'zen_cfg_select_option([\'true\', \'false\'],'),
 
-                ('Product Price Calculation &mdash; Method', 'EO_PRODUCT_PRICE_CALC_METHOD', 'Auto', 'Choose the <em>method</em> that &quot;EO&quot; uses to calculate product prices when an order is updated, one of:<ol><li><b>Auto</b>: Each product-price is re-calculated.  If your products have attributes, this enables changes to a product\'s attributes to automatically update the associated product-price.</li><li><b>Manual</b>: Each product-price is based on the <b><i>admin-entered price</i></b> for the product.</li><li><b>Choose</b>: The product-price calculation method varies on an order-by-order basis, via the &quot;tick&quot; of a checkbox.  The default method used (<em>Auto</em> vs. <em>Manual</em> is defined by the <em>Product Price Calculation &mdash; Default</em> setting.</li></ol>', $cgi, 20, now(), NULL, 'zen_cfg_select_option([\'Auto\', \'Manual\', \'Choose\'],'),
+                ('Product Price Calculation &mdash; Method', 'EO_PRODUCT_PRICE_CALC_METHOD', 'AutoSpecials', 'Choose the <em>method</em> that &quot;EO&quot; uses to calculate product prices when an order is updated, one of:<ol><li><b>AutoSpecials</b>: Each product-price is re-calculated as if placing the order on the storefront. If your products have attributes, this enables changes to a product\'s attributes to automatically update the associated product-price.</li><li><b>Manual</b>: Each product-price is based on the <b><i>admin-entered price</i></b> for the product.</li><li><b>Choose</b>: The product-price calculation method varies on an order-by-order basis, via the &quot;tick&quot; of a checkbox.  The default method used  is defined by the <em>Product Price Calculation &mdash; Default</em> setting.</li></ol>', $cgi, 20, now(), NULL, 'zen_cfg_select_option([\'AutoSpecials\', \'Manual\', \'Choose\'],'),
 
-                ('Product Price Calculation &mdash; Default', 'EO_PRODUCT_PRICE_CALC_DEFAULT', 'Auto', 'If the product price-calculation method is <b>Choose</b>, what method should be used as the <em>default</em> method?', $cgi, 24, now(), NULL, 'zen_cfg_select_option([\'Auto\', \'Manual\'],'),
+                ('Product Price Calculation &mdash; Default', 'EO_PRODUCT_PRICE_CALC_DEFAULT', 'AutoSpecials', 'If the product price-calculation method is <b>Choose</b>, what method should be used as the <em>default</em> method?', $cgi, 24, now(), NULL, 'zen_cfg_select_option([\'AutoSpecials\', \'Manual\'],'),
 
                 ('Status-history Display Order', 'EO_STATUS_HISTORY_DISPLAY_ORDER', 'Asc', 'Choose the way that <em>Edit Orders</em> displays an order\'s status-history records, either as-recorded (<b>Asc</b>) or most-recent first (<b>Desc</b>).', $cgi, 30, now(), NULL, 'zen_cfg_select_option([\'Asc\', \'Desc\'],'),
 
@@ -56,8 +58,12 @@ class ScriptedInstaller extends ScriptedInstallBase
             'editOrders',
             'configEditOrders',
         ]);
-        zen_register_admin_page('editOrders', 'BOX_CONFIGURATION_EDIT_ORDERS', 'FILENAME_EDIT_ORDERS', '', 'customers', 'N');
-        zen_register_admin_page('configEditOrders', 'BOX_CONFIGURATION_EDIT_ORDERS', 'FILENAME_CONFIGURATION', "gID=$cgi", 'configuration', 'Y');
+        if (!zen_page_key_exists('editOrders')) {
+            zen_register_admin_page('editOrders', 'BOX_CONFIGURATION_EDIT_ORDERS', 'FILENAME_EDIT_ORDERS', '', 'customers', 'N');
+        }
+        if (!zen_page_key_exists('configEditOrders')) {
+            zen_register_admin_page('configEditOrders', 'BOX_CONFIGURATION_EDIT_ORDERS', 'FILENAME_CONFIGURATION', "gID=$cgi", 'configuration', 'Y');
+        }
 
         // -----
         // If a previous (non-encapsulated) version of the plugin is currently installed,
@@ -88,7 +94,7 @@ class ScriptedInstaller extends ScriptedInstallBase
             'configEditOrders',
         ]);
 
-        $this->deleteConfigGroupId($this->configGroupTitle, true);
+        $this->deleteConfigurationGroup($this->configGroupTitle, true);
     }
 
     protected function nonEncapsulatedVersionPresent(): bool
@@ -187,13 +193,27 @@ class ScriptedInstaller extends ScriptedInstallBase
               )"
         );
 
+        // -----
+        // EO 5.0.0 removes support for 'Auto' pricing updates.
+        //
         $this->updateConfigurationKey('EO_PRODUCT_PRICE_CALC_METHOD', [
             'configuration_description' =>
-                'Choose the <em>method</em> that &quot;EO&quot; uses to calculate product prices when an order is updated, one of:<ol><li><b>Auto</b>: Each product-price is re-calculated &mdash; <em>without</em> using any &quot;specials&quot; pricing.  If your products have attributes, this enables changes to a product\'s attributes to automatically update the associated product-price.</li><li><b>AutoSpecials</b>: Each product-price is re-calculated, as above, but using any &quot;specials&quot; pricing.</li><li><b>Manual</b>: Each product-price is based on the <b><i>admin-entered price</i></b> for the product.</li><li><b>Choose</b>: The product-price calculation method varies on an order-by-order basis, via the &quot;tick&quot; of a checkbox.  The default method used (<em>Auto</em> vs. <em>Manual</em> is defined by the <em>Product Price Calculation &mdash; Default</em> setting.</li></ol>',
-            'set_function' => 'zen_cfg_select_option([\'Auto\', \'AutoSpecials\', \'Manual\', \'Choose\'],'
+                'Choose the <em>method</em> that &quot;EO&quot; uses to calculate product prices when an order is updated, one of:<ol><li><b>AutoSpecials</b>: Each product-price is re-calculated as if placing the order on the storefront. If your products have attributes, this enables changes to a product\'s attributes to automatically update the associated product-price.</li><li><b>Manual</b>: Each product-price is based on the <b><i>admin-entered price</i></b> for the product.</li><li><b>Choose</b>: The product-price calculation method varies on an order-by-order basis, via the &quot;tick&quot; of a checkbox.  The default method used is defined by the <em>Product Price Calculation &mdash; Default</em> setting.</li></ol>',
+            'set_function' => 'zen_cfg_select_option([\'AutoSpecials\', \'Manual\', \'Choose\'],'
         ]);
+        if (defined('EO_PRODUCT_PRICE_CALC_METHOD') && EO_PRODUCT_PRICE_CALC_METHOD === 'Auto') {
+            $this->updateConfigurationKey('EO_PRODUCT_PRICE_CALC_METHOD', [
+                'configuration_value' => 'AutoSpecials',
+            ]);
+        }
+
         $this->updateConfigurationKey('EO_PRODUCT_PRICE_CALC_DEFAULT', [
-            'set_function' => 'zen_cfg_select_option([\'Auto\', \'AutoSpecials\', \'Manual\'],',
+            'set_function' => 'zen_cfg_select_option([\'AutoSpecials\', \'Manual\'],',
         ]);
+        if (defined('EO_PRODUCT_PRICE_CALC_DEFAULT') && EO_PRODUCT_PRICE_CALC_DEFAULT === 'Auto') {
+            $this->updateConfigurationKey('EO_PRODUCT_PRICE_CALC_DEFAULT', [
+                'configuration_value' => 'AutoSpecials',
+            ]);
+        }
     }
 }
