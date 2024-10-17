@@ -2,9 +2,9 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2003 The zen-cart developers
+// Copyright (c) 2003-2024 The zen-cart developers
 //
-//-Last modified v4.7.1
+// Last modified v5.0.0
 //
 // -----
 // Prior to EO v4.6.0, this code was in-line in the main /admin/edit_orders.php script.  Now required by

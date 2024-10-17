@@ -49,7 +49,7 @@ foreach ($order->totals as $next_total) {
         case 'ot_purchaseorder':
             break;
 
-        // Automatically generated fields, those should never be included
+        // Automatically generated fields, they're displayed but cannot be directly changed.
         case 'ot_subtotal':
         case 'ot_total':
         case 'ot_tax':
@@ -77,7 +77,10 @@ foreach ($order->totals as $next_total) {
         // for order total modules which handle the value based upon another condition
         case 'ot_coupon': 
 ?>
-    <td colspan="<?= $columns - 2 ?>"></td>
+    <td colspan="<?= $columns - 1 ?>"></td>
+    <td class="text-right">
+        <button class="btn btn-sm btn-warning me-2 mb-1 btn-update"><?= IMAGE_UPDATE ?></button>
+    </td>
     <td class="text-right">
         <?= zen_draw_input_field('title', $trimmed_title, 'class="eo-entry form-control"') ?>
     </td>
@@ -110,6 +113,7 @@ foreach ($order->totals as $next_total) {
             //
 ?>
     <td class="text-right">
+        <button class="btn btn-sm btn-warning me-2 mb-2 btn-update"><?= IMAGE_UPDATE ?></button>
         <?= zen_draw_pull_down_menu(
             'shipping_module',
             $available_modules,
@@ -145,11 +149,14 @@ foreach ($order->totals as $next_total) {
         case 'ot_gv':
         case 'ot_voucher': 
 ?>
-    <td colspan="<?= $columns - 2 ?>"></td>
-    <td class="smallText text-right">
+    <td colspan="<?= $columns - 1 ?>"></td>
+    <td class="text-right">
+        <button class="btn btn-sm btn-warning me-2 mb-1 btn-update"><?= IMAGE_UPDATE ?></button>
+    </td>
+    <td class="text-right">
         <?= zen_draw_input_field('title', $trimmed_title, 'class="eo-entry form-control"') ?>
     </td>
-    <td class="smallText text-right">
+    <td class="text-right">
 <?php
             if ($next_total['value'] > 0) {
                 $next_total['value'] *= -1;
@@ -162,11 +169,14 @@ foreach ($order->totals as $next_total) {
 
         default:
 ?>
-    <td colspan="<?= $columns - 2 ?>"></td>
-    <td class="smallText text-right">
+    <td colspan="<?= $columns - 1 ?>"></td>
+    <td class="text-right">
+        <button class="btn btn-sm btn-warning me-2 mb-1 btn-update"><?= IMAGE_UPDATE ?></button>
+    </td>
+    <td class="text-right">
         <?= zen_draw_input_field('title', $trimmed_title, 'class="eo-entry form-control"') ?>
     </td>
-    <td class="smallText text-right">
+    <td class="text-right">
         <?= zen_draw_input_field('value', $next_total['value'], 'class="amount form-control"') ?>
     </td>
 <?php
@@ -183,7 +193,7 @@ if (count($unused_order_totals) !== 0) {
 <tr id="add-ot-wrapper">
     <td colspan="<?= $columns ?>">&nbsp;</td>
     <td>
-        <button id="add-ot" class="btn btn-sm btn-warning me-2"><?= TEXT_ADD_ORDER_TOTAL ?></button>
+        <button id="add-ot" class="btn btn-sm btn-warning me-2 mb-1"><?= TEXT_ADD_ORDER_TOTAL ?></button>
         <?= zen_draw_pull_down_menu('code', $unused_order_totals, '', 'class="form-control d-inline"') ?>
     </td>
     <td>
