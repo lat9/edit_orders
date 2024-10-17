@@ -241,15 +241,13 @@ if (EDIT_ORDERS_USE_NUMERIC_FIELDS !== '1') {
     $input_field_type = 'number';
 }
 
-
 // -----
 // Since EO's order-updating is now AJAX-driven, pull the initial order-display
 // from the previous eo_edit_action_display.php.
 //
-define('DIR_WS_EO_MODULES', DIR_WS_MODULES . 'edit_orders/');
 ?>
 <div id="eo-main" class="container-fluid">
-    <?php require DIR_WS_EO_MODULES . 'eo_navigation.php'; ?>
+    <?php require DIR_WS_MODULES . 'eo_navigation.php'; ?>
 
     <div class="row">
         <div class="col-sm-6">
@@ -265,7 +263,7 @@ define('DIR_WS_EO_MODULES', DIR_WS_MODULES . 'edit_orders/');
         </div>
     </div>
 
-    <?php require DIR_WS_EO_MODULES . 'eo_edit_action_addresses_display.php'; ?>
+    <?php require DIR_WS_MODULES . 'eo_edit_action_addresses_display.php'; ?>
 
     <div class="row">
         <div id="eo-addl-info" class="col-md-4">
@@ -764,13 +762,13 @@ foreach ($order->products as $next_product) {
 <!-- End Products Listings Block -->
 
 <!-- Begin Order Total Block -->
-            <?php require DIR_WS_EO_MODULES . 'eo_edit_action_ot_table_display.php'; ?>
+            <?php require DIR_WS_MODULES . 'eo_edit_action_ot_table_display.php'; ?>
 <!-- End Order Total Block -->
         </table>
     </div>
 
 <!-- Begin Status-History Block -->
-    <?php require DIR_WS_EO_MODULES . 'eo_edit_action_osh_table_display.php'; ?>
+    <?php require DIR_WS_MODULES . 'eo_edit_action_osh_table_display.php'; ?>
 <!-- End Status-History Block -->
 </div>
 <!-- footer //-->
