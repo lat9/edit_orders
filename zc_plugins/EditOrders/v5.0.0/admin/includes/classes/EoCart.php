@@ -19,7 +19,6 @@ class EoCart extends \shoppingCart
 {
     const UNSUPPORTED_LOG_MESSAGE = 'Call to unsupported shopping-cart method during Edit Orders processing.';
 
-
     public function __construct()
     {
         parent::__construct();
@@ -70,6 +69,9 @@ class EoCart extends \shoppingCart
         }
     }
 
+    // -----
+    // Start shoppingCart class method overrides ...
+    //
     public function restore_contents()
     {
         trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
@@ -236,7 +238,14 @@ class EoCart extends \shoppingCart
      */
     public function get_products(bool $check_for_valid_cart = false)
     {
-        return parent::get_products(false); //- EO never checks for a valid cart
+        $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
+        $cart_products = [];
+        foreach ($updated_order->products as $next_product) {
+            $next_product['id'] = $next_product['uprid'];
+            $next_product['quantity'] = $next_product['qty'];
+            $cart_products[] = $next_product;
+        }
+        return $cart_products;
     }
 
     /**
@@ -456,7 +465,6 @@ class EoCart extends \shoppingCart
     {
         return parent::in_cart_product_total_price($product_id);
     }
-
 
     /**
      * calculate products_id quantity in cart regardless of attributes

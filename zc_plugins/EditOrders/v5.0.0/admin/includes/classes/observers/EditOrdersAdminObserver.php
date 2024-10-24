@@ -55,6 +55,11 @@ class EditOrdersAdminObserver extends base
                     /* From /includes/functions/functions_customers.php */
                     'NOTIFY_ZEN_IS_LOGGED_IN',
                     'NOTIFY_ZEN_IN_GUEST_CHECKOUT',
+
+                    /* From /includes/classes/order.php */
+                    'NOTIFY_ORDER_CART_ADDRESS_OVERRIDES',
+                    'NOTIFY_ORDER_CART_AFTER_ADDRESSES_SET',
+                    'NOTIFY_ORDER_CART_ADD_PRODUCT_LIST',
                 ]
             );
         }
@@ -131,11 +136,16 @@ class EditOrdersAdminObserver extends base
     //
     protected function notify_ot_shipping_tax_calcs(&$class, string $e, $x, bool &$external_shipping_tax_handler, &$shipping_tax, string &$shipping_tax_description): void
     {
-        global $eo;
-
-        $eo->eoUpdateOrderShippingTax($external_shipping_tax_handler, $shipping_tax, $shipping_tax_description);
-        $external_shipping_tax_handler = true;
         $this->detach($this, ['NOTIFY_OT_SHIPPING_TAX_CALCS']);
+        if ($external_shipping_tax_handler !== false) {
+            return;
+        }
+
+        $external_shipping_tax_handler = true;
+        
+        $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
+        $shipping_tax = $updated_order->info['shipping_tax_rate'];
+        $shipping_tax_description = $updated_order->info['shipping_tax_description'];
 
         $module = (isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
         if ($module !== '' && $module !== 'free') {
@@ -158,6 +168,63 @@ class EditOrdersAdminObserver extends base
     }
 
     // -----
+    // When the 'cart' is being converted to its order representation, the customer/billing/delivery
+    // addresses are set to the values currently registered for the edited order.
+    //
+    protected function notify_order_cart_address_overrides(&$order, string $e, $x, array &$customer_address_override, array &$delivery_address_override, array &$billing_address_override): void
+    {
+        $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
+        $customer_address_override = $updated_order->customer;
+        $delivery_address_override = $updated_order->delivery;
+        $billing_address_override = $updated_order->billing;
+    }
+
+    // -----
+    // When the 'cart' is being converted to its order representation, the taxable country/zone are set based
+    // on the values currently registered for the edited order.
+    //
+    protected function notify_order_cart_after_addresses_set(&$order, string $e, $x, &$taxCountryId, &$taxZoneId): void
+    {
+        $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
+
+        $billto_country = $updated_order->billing['country_id'];
+        $billto_zone_id = $updated_order->billing['zone_id'];
+
+        $shipto_country = $updated_order->delivery['country_id'];
+        $shipto_zone_id = $updated_order->delivery['zone_id'];
+
+        switch (STORE_PRODUCT_TAX_BASIS) {
+            case 'Shipping':
+                if ($updated_order->content_type === 'virtual') {
+                    $taxCountryId = $billto_country;
+                    $taxZoneId = $billto_zone_id;
+                } else {
+                    $taxCountryId = $shipto_country;
+                    $taxZoneId = $shipto_zone_id;
+                }
+                break;
+            case 'Billing':
+                $taxCountryId = $billto_country;
+                $taxZoneId = $billto_zone_id;
+                break;
+            case 'Store':
+                if ($billto_zone_id == STORE_ZONE || $updated_order->content_type === 'virtual') {
+                    $taxCountryId = $billto_country;
+                    $taxZoneId = $billto_zone_id;
+                } else {
+                    $taxCountryId = $shipto_country;
+                    $taxZoneId = $shipto_zone_id;
+                }
+                break;
+        }
+    }
+
+    protected function notify_order_cart_add_product_list(&$order, string $e, array $index_product, &$attributes_handled): void
+    {
+        $attributes_handled = true;
+    }
+
+    // -----
     // Handling non-standard events, names not starting with 'NOTIFY_'.
     //
     protected function update(&$class, $e, $p1, &$p2, &$p3, &$p4, &$p5)
@@ -176,15 +243,13 @@ class EditOrdersAdminObserver extends base
             // $p2 ... (r/w) A reference to the $tax_address array to be returned (containing a 'country_id' and 'zone_id').
             //
             case 'ZEN_GET_TAX_LOCATIONS':
-                global $order, $customer_country_id, $customer_zone_id, $eo;
+                global $order, $customer_country_id, $customer_zone_id;
 
+                $is_virtual_order = ($_SESSION['eoChanges']->getUpdatedOrder()->content_type === 'virtual');
                 if (STORE_PRODUCT_TAX_BASIS === 'Store') {
                     $customer_country_id = STORE_COUNTRY;
                     $customer_zone_id = STORE_ZONE;
-                } elseif (STORE_PRODUCT_TAX_BASIS === 'Billing') {
-                    $customer_country_id = $order->billing['country']['id'];
-                    $customer_zone_id = $order->billing['zone_id'];
-                } elseif ($eo->eoOrderIsVirtual()) {
+                } elseif (STORE_PRODUCT_TAX_BASIS === 'Billing' || $is_virtual_order === true) {
                     $customer_country_id = $order->billing['country']['id'];
                     $customer_zone_id = $order->billing['zone_id'];
                 } else {

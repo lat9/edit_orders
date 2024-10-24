@@ -17,8 +17,6 @@ class EditOrders
     protected int $orders_id;
     public bool $tax_updated;
     protected array $product_tax_descriptions;
-    protected $shipping_tax_rate;
-    protected $shipping_tax_description;
     protected int $ot_sort_default;
 
     protected bool $orderHasShipping;
@@ -188,7 +186,7 @@ class EditOrders
         // -----
         // An order's query (as pulled from the database) doesn't match the storefront
         // signature when created from the cart.  Specifically, the order-object's tax_groups
-        // aren't filled in for either the info nor products elements.
+        // aren't filled in for either the info or products elements.
         //
         $tax_groups_created = $this->createOrderTaxGroups();
 
@@ -265,18 +263,22 @@ class EditOrders
 
         // -----
         // The order-class' query of an order doesn't include each product's unique
-        // id (the products_prid). Gather that information for use in rebuilding
+        // id (the products_prid) or its tax_class_id. Gather that information for use in rebuilding
         // each product's record.
         //
         global $db;
         $uprids_from_db = $db->Execute(
-            "SELECT orders_products_id, products_prid
-               FROM " . TABLE_ORDERS_PRODUCTS . "
+            "SELECT op.orders_products_id, op.products_prid, p.products_tax_class_id
+               FROM " . TABLE_ORDERS_PRODUCTS . " op
+                    LEFT JOIN " . TABLE_PRODUCTS . " p
+                        ON p.products_id = op.products_id
               WHERE orders_id = " . $this->orders_id
         );
         $uprids = [];
+        $tax_class_ids = [];
         foreach ($uprids_from_db as $next_record) {
             $uprids[$next_record['orders_products_id']] = $next_record['products_prid'];
+            $tax_class_ids[$next_record['orders_products_id']] = $next_record['products_tax_class_id'];
         }
 
         // -----
@@ -285,6 +287,7 @@ class EditOrders
         //
         foreach ($this->order->products as &$next_product) {
             $next_product['qty'] = $this->convertToIntOrFloat($next_product['qty']);
+            $next_product['tax_class_id'] = $tax_class_ids[$next_product['orders_products_id']];    //- Will be null if the product no longer exists!
             $next_product['tax'] = (float)$next_product['tax'];
             $next_product['final_price'] = (float)$next_product['final_price'];
             $next_product['onetime_charges'] = $this->convertToIntOrFloat($next_product['onetime_charges']);
@@ -671,7 +674,7 @@ class EditOrders
     {
         $totals_to_skip = ['ot_group_pricing', 'ot_tax', 'ot_loworderfee', 'ot_purchaseorder'];
         foreach ($order->totals as $next_ot) {
-            $totals_to_skip[] = $next_ot['class'];
+            $totals_to_skip[] = $next_ot['class'] ?? $next_ot['code'];
         }
 
         $order_totals = new \order_total();
@@ -692,7 +695,7 @@ class EditOrders
         return $unused_totals;
     }
 
-    public function arrayImplode($array_fields, $output_string = '')
+    public function arrayImplode(array $array_fields, string $output_string = ''): string
     {
         foreach ($array_fields as $key => $value) {
             if (is_array($value)) {
@@ -733,7 +736,7 @@ class EditOrders
         $_SESSION['payment'] = $this->order->info['payment_module_code'];
  
         $this->eoLog("getOrderInfo($action), on exit:\n" . $this->eoFormatTaxInfoForLog(), 'tax');
-        return $order;
+        return $this->order;
     }
 
     public function eoInitializeShipping($oID, $action)
@@ -943,15 +946,7 @@ class EditOrders
             return (empty($shipping_tax_rate)) ? 0 : $shipping_tax_rate;
         }
 
-        $tax_rate = 0;
-        $shipping_module = $order->info['shipping_module_code'];
-        if (isset($this->shipping_tax_rate)) {
-            $tax_rate = $this->shipping_tax_rate;
-        } elseif (!empty($GLOBALS[$shipping_module]) && is_object($GLOBALS[$shipping_module]) && !empty($GLOBALS[$shipping_module]->tax_class)) {
-            $tax_location = zen_get_tax_locations();
-            $tax_rate = zen_get_tax_rate($GLOBALS[$shipping_module]->tax_class, $tax_location['country_id'], $tax_location['zone_id']);
-        }
-        return (empty($tax_rate)) ? 0 : $tax_rate;
+        return $_SESSION['eoChanges']->getUpdatedOrder()->info['shipping_tax_rate'];
     }
 
     public function eoFormatTaxInfoForLog(bool $include_caller = false): string

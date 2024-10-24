@@ -79,6 +79,13 @@ if ($eo->queryOrder($order) === false) {
 ['orders_statuses' => $orders_statuses, 'orders_status_array' => $orders_status_array] = zen_getOrdersStatuses();
 
 // -----
+// Set the order's currency into the session; any current value will be restored once EO's processing
+// has completed.
+//
+$_SESSION['eo_saved_currency'] = $_SESSION['currency'] ?? false;
+$_SESSION['currency'] = $order->info['currency'];
+
+// -----
 // Start action-related processing.
 //
 $action = $_GET['action'] ?? 'edit';
@@ -197,6 +204,31 @@ if (empty($order->customer['country_id']) || empty($order->billing['country_id']
 }
 
 // -----
+// Initialize session-based customer variables expected by the storefront
+// order-creation processing.
+//
+$_SESSION['customer_id'] = $order->info['customer_id'];
+$_SESSION['customers_ip_address'] = '.';
+
+// -----
+// Initialize the session-based values for shipping and payment used in the
+// storefront order's processing.
+//
+$_SESSION['payment'] = $order->info['payment_module_code'];
+$shipping_cost = 0;
+foreach ($order->totals as $next_total) {
+    if ($next_total['class'] === 'ot_shipping') {
+        $shipping_cost = $next_total['value'];
+        break;
+    }
+}
+$_SESSION['shipping'] = [
+    'id' => $order->info['shipping_module_code'] . '_',
+    'title' => $order->info['shipping_method'],
+    'cost' => $shipping_cost,
+];
+
+// -----
 // Instantiate EO's cart-override into the session for use by storefront
 // shipping- and order-total-module handling.
 //
@@ -222,22 +254,14 @@ $_SESSION['cart']->loadFromOrder($order);
 //
 // to a site-specific /admin/extra_datafiles module.
 //
-// Note that EO's rendering of input fields is (currently) a mixture of directly-coded <input /> tags
-// and inputs generated via zen_draw_input_field.  The variables set below that start with $input_ are
-// used on the function-call field-generation and the others are used when directly-coded.
-//
 zen_define_default('EDIT_ORDERS_USE_NUMERIC_FIELDS', '1');
 if (EDIT_ORDERS_USE_NUMERIC_FIELDS !== '1') {
     $input_value_params = '';
     $input_tax_params = '';
-    $value_params = '';
-    $tax_params = '';
     $input_field_type = 'text';
 } else {
     $input_value_params = ' min="0" step="any"';
     $input_tax_params = ' min="0" max="100" step="any"';
-    $value_params = $input_value_params . ' type="number"';
-    $tax_params = $input_tax_params . ' type="number"';
     $input_field_type = 'number';
 }
 
@@ -471,14 +495,14 @@ $display_payment_calc_label = false;
 if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
     $choices = [
         ['id' => 1, 'text' => PAYMENT_CALC_AUTOSPECIALS],
-        ['id' => 2, 'text' => PAYMENT_CALC_MANUAL]
+        ['id' => 3, 'text' => PAYMENT_CALC_MANUAL]
     ];
-    $default = (EO_PRODUCT_PRICE_CALC_DEFAULT === 'AutoSpecials') ? 1 : 2;
-    if (isset($_SESSION['eo_price_calculations']) && in_array($_SESSION['eo_price_calculations'], [1, 2], true)) {
+    $default = (EO_PRODUCT_PRICE_CALC_DEFAULT === 'AutoSpecials') ? 1 : 3;
+    if (isset($_SESSION['eo_price_calculations']) && in_array($_SESSION['eo_price_calculations'], [1, 3], true)) {
         $default = $_SESSION['eo_price_calculations'];
     }
     $_SESSION['eo_price_calculations'] = $default;
-    $price_is_manual = ($default === 2);
+    $price_is_manual = ($default === 3);
 
     $display_payment_calc_label = true;
     $payment_calc_choice = zen_draw_pull_down_menu('payment_calc_method', $choices, $default, 'id="calc-method" class="form-control w-auto"');
@@ -495,14 +519,6 @@ if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
 //
 $additional_inputs = '';
 $zco_notifier->notify('NOTIFY_EO_UPDATE_FORM_ADDL_INPUTS', $order, $additional_inputs);
-
-$reset_totals_block =
-    '<div class="checkbox">' .
-        '<label>' .
-            zen_draw_checkbox_field('reset_totals', '', EO_TOTAL_RESET_DEFAULT === 'on') .
-            '&nbsp;' . RESET_TOTALS .
-        '</label>' .
-    '</div>';
 ?>
         <div id="eo-update-info" class="col-md-8">
             <div class="panel panel-warning">
@@ -533,7 +549,7 @@ if ($display_payment_calc_label === false) {
                     <div>
                         <?= zen_draw_form('edit_order', FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action', 'paycc']) . 'action=update_order', 'post', 'id="update-form" class="form-inline"') ?>
                             <button id="update-verify" type="button" class="btn btn-danger"><?= IMAGE_UPDATE ?></button>
-                            <?= "&nbsp;$reset_totals_block&nbsp;$additional_inputs" ?>
+                            <?= "&nbsp;$additional_inputs" ?>
                         <?= '</form>' ?>
                     </div>
                     <div id="update-modal" class="modal fade address-modal" role="dialog"></div>
@@ -544,6 +560,8 @@ if ($display_payment_calc_label === false) {
 
 <!-- Begin Products Listing Block -->
     <div class="row">
+        <?= zen_draw_hidden_field('ot_changes', '0', 'id="ot-changes" class="eo-changed"') ?>
+        <?= zen_draw_hidden_field('product_changes', '0', 'id="product-changes" class="eo-changed"') ?>
         <table id="products-listing" class="table table-striped mb-2">
             <tr class="dataTableHeadingRow">
 <?php
@@ -588,8 +606,8 @@ if (is_array($extra_headings)) {
     }
 }
 ?>
-                <th class="dataTableHeadingContent text-center" colspan="3"><?= TABLE_HEADING_PRODUCTS ?></th>
-                <th class="dataTableHeadingContent"><?= TABLE_HEADING_PRODUCTS_MODEL ?></th>
+                <th class="dataTableHeadingContent text-center" colspan="3"><?= TABLE_HEADING_PRODUCTS_MODEL ?></th>
+                <th class="dataTableHeadingContent"><?= TABLE_HEADING_PRODUCTS ?></th>
                 <th class="dataTableHeadingContent text-right"><?= TABLE_HEADING_TAX ?></th>
 <?php
 // -----
@@ -678,6 +696,10 @@ foreach ($order->products as $next_product) {
                 <td>&nbsp;X&nbsp;</td>
 
                 <td class="dataTableContent">
+                    <?= zen_draw_input_field('model', $next_product['model'], $model_params . ' class="eo-entry form-control"') ?>
+                </td>
+
+                <td class="dataTableContent">
                     <?= zen_draw_input_field('name', $next_product['name'], $name_params . ' class="eo-entry form-control"') ?>
 <?php
     if (isset($next_product['attributes'])) {
@@ -703,10 +725,6 @@ foreach ($order->products as $next_product) {
 <?php
     }
 ?>
-                </td>
-
-                <td class="dataTableContent">
-                    <?= zen_draw_input_field('model', $next_product['model'], $model_params . ' class="eo-entry form-control"') ?>
                 </td>
 <?php
     // -----
@@ -779,5 +797,4 @@ require DIR_WS_INCLUDES . 'footer.php';
 </body>
 </html>
 <?php
-unset($_SESSION['customer_id'], $_SESSION['customer_country_id'], $_SESSION['customer_zone_id'], $_SESSION['cart'], $_SESSION['shipping'], $_SESSION['payment']);
 require DIR_WS_INCLUDES . 'application_bottom.php';

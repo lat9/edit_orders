@@ -5,11 +5,14 @@
 //
 // Last updated: v5.0.0 (new)
 //
+use Zencart\Plugins\Admin\EditOrders\EditOrders;
 use Zencart\Plugins\Admin\EditOrders\EoOrderChanges;
+use Zencart\Traits\InteractsWithPlugins;
 use Zencart\Traits\NotifierManager;
 
 class zcAjaxEditOrdersAdmin
 {
+    use InteractsWithPlugins;
     use NotifierManager;
 
     // -----
@@ -261,5 +264,77 @@ class zcAjaxEditOrdersAdmin
             $return_array[$next_entry['name']] = $next_entry['value'];
         }
         return $return_array;
+    }
+
+    // -----
+    // Update an order-total's text and/or values.
+    //
+    public function updateOrderTotal(): array
+    {
+        if ($_POST['ot_class'] === 'ot_shipping') {
+            $_SESSION['eoChanges']->updateShippingInfo(
+                $_POST['shipping_module'],
+                $_POST['title'],
+                $_POST['value'],
+                $_POST['shipping_tax']
+            );
+            $_SESSION['shipping'] = [
+                'id' => $_POST['shipping_module'] . '_',
+                'title' => $_POST['title'],
+                'cost' => $_POST['value'],
+            ];
+        } else {
+        }
+
+        global $currencies, $order, $eo;
+        require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
+        $currencies = new currencies();
+
+        require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
+        $order = new \order();
+
+        require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order_total.php';
+        $order_total_modules = new \order_total();
+        $order->totals = $order_total_modules->process();
+
+        // -----
+        // Use the base trait to determine this plugin's directory location.
+        //
+        $this->detectZcPluginDetails(__DIR__);
+        $eo = new EditOrders(0);
+
+        zen_define_default('EDIT_ORDERS_USE_NUMERIC_FIELDS', '1');
+        if (EDIT_ORDERS_USE_NUMERIC_FIELDS !== '1') {
+            $input_value_params = '';
+            $input_tax_params = '';
+            $input_field_type = 'text';
+        } else {
+            $input_value_params = ' min="0" step="any"';
+            $input_tax_params = ' min="0" max="100" step="any"';
+            $input_field_type = 'number';
+        }
+
+        $this->disableGzip();
+        ob_start();
+        require $this->pluginManagerInstalledVersionDirectory . 'admin/' . DIR_WS_MODULES . 'eo_edit_action_ot_table_display.php';
+        $ot_table_html = ob_get_clean();
+
+        return [
+            'status' => 'ok',
+            'ot_changes' => 1,
+            'ot_table_html' => $ot_table_html,
+        ];
+    }
+
+    // -----
+    // Gzip compression can "get in the way" of the AJAX requests on current versions of IE and
+    // Chrome.
+    //
+    // This internal method sets that compression "off" for the AJAX responses.
+    //
+    protected function disableGzip()
+    {
+        @ob_end_clean();
+        @ini_set('zlib.output_compression', '0');
     }
 }

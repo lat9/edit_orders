@@ -26,6 +26,7 @@ class EoOrderChanges
     protected array $ordersStatuses;
 
     protected bool $isGuestCheckout;
+    protected bool $isWholesale;
 
     public function __construct(\order $original_order)
     {
@@ -49,10 +50,21 @@ class EoOrderChanges
             $is_guest_checkout = $db->Execute(
                 "SELECT is_guest_checkout
                    FROM " . TABLE_ORDERS . "
-                  WHERE orders_id = " . (int)$order->info['order_id'] . "
+                  WHERE orders_id = " . (int)$original_order->info['order_id'] . "
                   LIMIT 1"
             );
             $this->isGuestCheckout = !empty($is_guest_checkout->fields['is_guest_checkout']);
+        }
+
+        $this->isWholesale = false;
+        if ($sniffer->field_exists(TABLE_ORDERS, 'is_wholesale')) {
+            $is_wholesale = $db->Execute(
+                "SELECT is_wholesale
+                   FROM " . TABLE_ORDERS . "
+                  WHERE orders_id = " . (int)$original_order->info['order_id'] . "
+                  LIMIT 1"
+            );
+            $this->isWholesale = !empty($is_wholesale->fields['is_wholesale']);
         }
     }
     protected function generateProductMappings(): void
@@ -81,6 +93,11 @@ class EoOrderChanges
     public function isGuestCheckout(): bool
     {
         return $this->isGuestCheckout;
+    }
+
+    public function isWholesale(): bool
+    {
+        return $this->isWholesale;
     }
 
     public function getOriginalOrder(): \stdClass
@@ -227,6 +244,11 @@ class EoOrderChanges
                     ];
                     break;
                 default:
+                    $info_changes[] = [
+                        'label' => $label,
+                        'original' => $this->original->info[$key],
+                        'updated' => $this->updated->info[$key],
+                    ];
                     break;
             }
         }
@@ -259,5 +281,56 @@ class EoOrderChanges
             ];
         }
         return $address_changes;
+    }
+
+    public function updateShippingInfo(string $shipping_module_code, string $shipping_method, string $shipping_cost, string $shipping_tax_rate): void
+    {
+        $shipping_info_fields = ['shipping_method', 'shipping_module_code', 'shipping_cost', 'shipping_tax_rate'];
+        foreach ($shipping_info_fields as $field_name) {
+            $value = $$field_name;
+            if ($field_name === 'shipping_method' || $field_name === 'shipping_module_code') {
+                if ($this->original->info[$field_name] === $value) {
+                    unset($this->updated->info['changes'][$field_name]);
+                } else {
+                    $this->updated->info[$field_name] = $value;
+                    $this->updated->info['changes'][$field_name] = $field_name;
+                }
+                continue;
+            }
+
+            $value = $this->convertToIntOrFloat($value);
+            if ($this->original->info[$field_name] == $value) {
+                unset($this->updated->info['changes'][$field_name]);
+            } else {
+                $this->updated->info[$field_name] = $value;
+                $this->updated->info['changes'][$field_name] = $field_name;
+            }
+        }
+    }
+
+    public function saveTotalsInfoChanges(array $order_info): int
+    {
+        $info_total_fields = ['subtotal', 'total', 'tax', 'order_weight', 'coupon_code'];
+        foreach ($info_total_fields as $field_name) {
+            if ($this->original->info[$field_name] == $order_info[$field_name]) {
+                unset($this->updated->info['changes'][$field_name]);
+                continue;
+            }
+            $this->updated->info[$field_name] = $order_info[$field_name];
+            $this->updated->info['changes'][$field_name] = $field_name;
+        }
+        return count($this->updated->info['changes']);
+    }
+
+    // -----
+    // Convert a string value to either an int or float, depending on
+    // the presence of a '.' in the value.
+    //
+    protected function convertToIntOrFloat(string $value): int|float
+    {
+        if (strpos($value, '.') === false) {
+            return (int)$value;
+        }
+        return (float)$value;
     }
 }

@@ -6,6 +6,10 @@
 //
 // Last modified v5.0.0
 //
+// Declaring the EditOrders.php class' instance as global, since this module is also
+// used during AJAX processing when an order-total field is updated.
+//
+global $eo, $zco_notifier;
 
 // -----
 // Give a watching observer the chance to identify additional order-totals that should be considered display-only.
@@ -35,9 +39,9 @@ $add_product_button = '<button id="add-product" class="btn btn-sm btn-warning">'
 
 // Iterate over the order totals.
 foreach ($order->totals as $next_total) {
-    $ot_class = $next_total['class'];
+    $ot_class = $next_total['class'] ?? $next_total['code'];
 ?>
-<tr class="eo-ot <?= $ot_class ?>">
+<tr class="eo-ot">
     <td class="dataTableContent" colspan="3"><?= $add_product_button ?></td>
 <?php
     $add_product_button = '';
@@ -79,9 +83,10 @@ foreach ($order->totals as $next_total) {
 ?>
     <td colspan="<?= $columns - 1 ?>"></td>
     <td class="text-right">
-        <button class="btn btn-sm btn-warning me-2 mb-1 btn-update"><?= IMAGE_UPDATE ?></button>
+        <button class="btn btn-sm btn-warning me-2 mb-1 d-none eo-btn-update"><?= IMAGE_UPDATE ?></button>
     </td>
     <td class="text-right">
+        <?= zen_draw_hidden_field('ot_class', $ot_class) ?>
         <?= zen_draw_input_field('title', $trimmed_title, 'class="eo-entry form-control"') ?>
     </td>
     <td class="text-right">
@@ -111,13 +116,18 @@ foreach ($order->totals as $next_total) {
             // -----
             // Otherwise, display the shipping-module dropdown for selection.
             //
+            $shipping_module_code = $order->info['shipping_module_code'];
+            if (strpos($shipping_module_code, '_') !== false) {
+                $shipping_module_code = substr($shipping_module_code, 0, strpos($shipping_module_code, '_'));
+            }
 ?>
     <td class="text-right">
-        <button class="btn btn-sm btn-warning me-2 mb-2 btn-update"><?= IMAGE_UPDATE ?></button>
+        <button class="btn btn-sm btn-warning me-2 mb-2 d-none eo-btn-update"><?= IMAGE_UPDATE ?></button>
+        <?= zen_draw_hidden_field('ot_class', $ot_class) ?>
         <?= zen_draw_pull_down_menu(
             'shipping_module',
             $available_modules,
-            $order->info['shipping_module_code'],
+            $shipping_module_code,
             'id="shipping-select" class="eo-entry me-2 form-control"'
         ) ?>
         <?= zen_draw_input_field('title', $trimmed_title, 'id="ship-title" class="eo-entry form-control" ' . $shipping_title_max) ?>
@@ -151,9 +161,10 @@ foreach ($order->totals as $next_total) {
 ?>
     <td colspan="<?= $columns - 1 ?>"></td>
     <td class="text-right">
-        <button class="btn btn-sm btn-warning me-2 mb-1 btn-update"><?= IMAGE_UPDATE ?></button>
+        <button class="btn btn-sm btn-warning me-2 mb-1 d-none eo-btn-update"><?= IMAGE_UPDATE ?></button>
     </td>
     <td class="text-right">
+        <?= zen_draw_hidden_field('ot_class', $ot_class) ?>
         <?= zen_draw_input_field('title', $trimmed_title, 'class="eo-entry form-control"') ?>
     </td>
     <td class="text-right">
@@ -171,9 +182,10 @@ foreach ($order->totals as $next_total) {
 ?>
     <td colspan="<?= $columns - 1 ?>"></td>
     <td class="text-right">
-        <button class="btn btn-sm btn-warning me-2 mb-1 btn-update"><?= IMAGE_UPDATE ?></button>
+        <button class="btn btn-sm btn-warning me-2 mb-1 d-none eo-btn-update"><?= IMAGE_UPDATE ?></button>
     </td>
     <td class="text-right">
+        <?= zen_draw_hidden_field('ot_class', $ot_class) ?>
         <?= zen_draw_input_field('title', $trimmed_title, 'class="eo-entry form-control"') ?>
     </td>
     <td class="text-right">
@@ -190,7 +202,7 @@ foreach ($order->totals as $next_total) {
 $unused_order_totals = $eo->getUnusedOrderTotalModules($order);
 if (count($unused_order_totals) !== 0) {
 ?>
-<tr id="add-ot-wrapper">
+<tr id="add-ot-wrapper" class="eo-ot">
     <td colspan="<?= $columns ?>">&nbsp;</td>
     <td>
         <button id="add-ot" class="btn btn-sm btn-warning me-2 mb-1"><?= TEXT_ADD_ORDER_TOTAL ?></button>

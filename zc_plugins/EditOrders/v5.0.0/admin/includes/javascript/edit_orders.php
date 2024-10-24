@@ -268,7 +268,7 @@ if (ACCOUNT_STATE === 'true') {
             $('.cc-field').hide().prop('disabled', true);
         }
     });
-    
+
     $('#eo-addl-info .eo-entry').on('change', function() {
         console.log($('#eo-addl-info :input').serializeArray());
     });
@@ -278,21 +278,43 @@ if (ACCOUNT_STATE === 'true') {
 // --------------------
 
 // --------------------
-// START PRODUCTS' AND ORDER-TOTALS' HANDLING
+// START PRODUCTS' HANDLING
 // --------------------
 ?>
-    $('tr.eo-ot .eo-entry').on('change', function() {
-        let closestRow = $(this).closest('tr');
-        $.each(closestRow.attr('class').split(/\s+/), function(index, row_class) {
-            if (row_class !== 'eo-ot') {
-                $('<input>').attr({
-                    type: 'hidden',
-                    name: 'ot_class',
-                    value: row_class
-                }).appendTo(closestRow);
-            }
+<?php
+// --------------------
+// END PRODUCTS' HANDLING
+// --------------------
+
+// --------------------
+// START ORDER-TOTALS' HANDLING
+// --------------------
+?>
+    $(document).on('change', 'tr.eo-ot input:not(:hidden), tr.eo-ot select', function() {
+        $(this).closest('tr.eo-ot').find('button.eo-btn-update').first().show();
+        $(this).addClass('border-warning');
+    });
+
+    $(document).on('click', 'tr.eo-ot button.eo-btn-update', function() {
+        let closestRow = $(this).closest('tr.eo-ot');
+        $('<input>').attr({
+            type: 'hidden',
+            name: 'payment_calc_method',
+            value: $('#calc-method').val()
+        }).appendTo(closestRow);
+
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=updateOrderTotal',
+            data: closestRow.find(':input').serializeArray()
+        }).done(function(response) {
+            closestRow.find('input[type="hidden"][name="payment_calc_method"]').remove();
+            $('#products-listing > tbody > tr.eo-ot').remove();
+            $('#products-listing > tbody').append(response.ot_table_html);
+            $('#ot-changes').val(response.ot_changes).trigger('change');
         });
-       $('<input>').attr({
+    });
+/*
+        $('<input>').attr({
             type: 'hidden',
             name: 'ot_changed',
             value: $(this).attr('name')
@@ -301,11 +323,11 @@ if (ACCOUNT_STATE === 'true') {
         $('input[type="hidden"][name="ot_class"], input[type="hidden"][name="ot_changed"').remove();
         console.log(closestRow.find(':input').serializeArray());
     });
-
+*/
     $('#eo-no-shipping').parent().hide();
 <?php
 // --------------------
-// END PRODUCTS' AND ORDER-TOTALS' HANDLING
+// END ORDER-TOTALS' HANDLING
 // --------------------
 
 // --------------------
@@ -352,7 +374,7 @@ if (ACCOUNT_STATE === 'true') {
 // --------------------
 ?>
     $('#calc-method').on('change', function() {
-        if (this.value === '2') {
+        if (this.value === '3') {
             $('.price-net, .price-gross').removeAttr('disabled');
         } else {
             $('.price-net, .price-gross').attr('disabled', 'disabled');
