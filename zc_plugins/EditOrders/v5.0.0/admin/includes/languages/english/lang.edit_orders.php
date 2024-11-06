@@ -13,8 +13,12 @@ $define = [
     'HEADING_TITLE_STATUS' => 'Status:',
     'HEADING_TITLE_ADD_PRODUCT' => 'Adding a Product to Order',
     'TEXT_BUTTON_CHANGE_ATTRIBS_ALT' => 'Change the attributes for this product',
+
     'TEXT_ORIGINAL_VALUE' => 'Original: <code>%s</code>',           //- Tooltip string
+    'TEXT_ORDER_TOTAL_ADDED' => '%1$s was added: %2$s',
+    'TEXT_ORDER_TOTAL_REMOVED' => '%1$s was removed: %2$s',
     'TEXT_OSH_CHANGED_VALUES' => 'These values were changed in the order:',
+    'TEXT_OT_CHANGES' => 'Order Total Changes',
     'TEXT_VALUE_CHANGED' => '%1$s was changed from %2$s to %3$s',   //- Used by the AJAX processing and for OSH record
     'TEXT_VALUE_UNKNOWN' => 'Unknown [%s]',  //- %s is filled in with the unknown 'entity'
 

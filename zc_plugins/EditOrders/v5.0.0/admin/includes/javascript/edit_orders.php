@@ -300,7 +300,8 @@ if (ACCOUNT_STATE === 'true') {
         $('<input>').attr({
             type: 'hidden',
             name: 'payment_calc_method',
-            value: $('#calc-method').val()
+            value: 'Manual',
+//            value: $('#calc-method').val()
         }).appendTo(closestRow);
 
         zcJS.ajax({
@@ -374,7 +375,7 @@ if (ACCOUNT_STATE === 'true') {
 // --------------------
 ?>
     $('#calc-method').on('change', function() {
-        if (this.value === '3') {
+        if (this.value === 'Manual') {
             $('.price-net, .price-gross').removeAttr('disabled');
         } else {
             $('.price-net, .price-gross').attr('disabled', 'disabled');

@@ -60,6 +60,8 @@ class EditOrdersAdminObserver extends base
                     'NOTIFY_ORDER_CART_ADDRESS_OVERRIDES',
                     'NOTIFY_ORDER_CART_AFTER_ADDRESSES_SET',
                     'NOTIFY_ORDER_CART_ADD_PRODUCT_LIST',
+                    'NOTIFY_ORDER_CART_EXTERNAL_TAX_RATE_LOOKUP',
+                    'NOTIFY_ORDER_CART_FINISHED',
                 ]
             );
         }
@@ -224,10 +226,55 @@ class EditOrdersAdminObserver extends base
         $attributes_handled = true;
     }
 
+    protected function notify_order_cart_external_tax_rate_lookup(&$order, string $e, $x, &$products, int &$loop, int &$index, &$taxCountryId, &$taxZoneId, &$taxRates): void
+    {
+        // -----
+        // If another observer has already provided the tax-rates' override, those overrides
+        // are in effect!
+        //
+        if ($taxRates !== null) {
+            return;
+        }
+
+        // -----
+        // If product-pricing is not to be performed 'manually', the 'base' Zen Cart
+        // tax calculations are used.
+        //
+        if ($_POST['payment_calc_method'] !== 'Manual') {
+            return;
+        }
+
+        $current_product = $products[$loop];
+        $uprid = (string)$current_product['id'];
+        $updated_product = $_SESSION['eoChanges']->getUpdatedProductByUprid($uprid);
+        if (empty($updated_product)) {
+            return;
+        }
+
+        $tax_description = $updated_product['tax_description'];
+        $tax_rate = $updated_product['tax'];
+        $taxRates[$tax_description] = $tax_rate;
+
+        $order->products[$index]['tax'] = $tax_rate;
+        $order->products[$index]['tax_description'] = $tax_description;
+        $order->products[$index]['tax_groups'] = $taxRates;
+    }
+
+    // -----
+    // The order's overall weight isn't recorded in the storefront order until
+    // the order's created.  Add that value at the end of the conversion from
+    // cart to order-object so that any change in the order's weight can
+    // be properly tracked.
+    //
+    protected function notify_order_cart_finished(&$order, string $e): void
+    {
+        $order->info['order_weight'] = $_SESSION['cart']->show_weight();
+    }
+
     // -----
     // Handling non-standard events, names not starting with 'NOTIFY_'.
     //
-    protected function update(&$class, $e, $p1, &$p2, &$p3, &$p4, &$p5)
+    protected function update(&$class, string $e, $p1, &$p2, &$p3, &$p4, &$p5)
     {
         switch ($e) {
             // -----
