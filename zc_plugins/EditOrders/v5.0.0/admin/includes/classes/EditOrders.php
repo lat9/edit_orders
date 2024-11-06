@@ -17,8 +17,6 @@ class EditOrders
     protected int $orders_id;
     public bool $tax_updated;
     protected array $product_tax_descriptions;
-    protected $shipping_tax_rate;
-    protected $shipping_tax_description;
     protected int $ot_sort_default;
 
     protected bool $orderHasShipping;
@@ -28,7 +26,7 @@ class EditOrders
     public function __construct(int $orders_id)
     {
         $this->eo_action_level = (int)EO_DEBUG_ACTION_LEVEL;
-        $this->logfile_name = DIR_FS_LOGS . '/eo_debug_' . $orders_id . '.log';
+        $this->logfile_name = DIR_FS_LOGS . '/eo_debug_' . $orders_id . date('_Ymd') . '.log';
 
         $this->orders_id = (int)$orders_id;
         $this->tax_updated = false;
@@ -188,7 +186,7 @@ class EditOrders
         // -----
         // An order's query (as pulled from the database) doesn't match the storefront
         // signature when created from the cart.  Specifically, the order-object's tax_groups
-        // aren't filled in for either the info nor products elements.
+        // aren't filled in for either the info or products elements.
         //
         $tax_groups_created = $this->createOrderTaxGroups();
 
@@ -265,18 +263,22 @@ class EditOrders
 
         // -----
         // The order-class' query of an order doesn't include each product's unique
-        // id (the products_prid). Gather that information for use in rebuilding
+        // id (the products_prid) or its tax_class_id. Gather that information for use in rebuilding
         // each product's record.
         //
         global $db;
         $uprids_from_db = $db->Execute(
-            "SELECT orders_products_id, products_prid
-               FROM " . TABLE_ORDERS_PRODUCTS . "
+            "SELECT op.orders_products_id, op.products_prid, p.products_tax_class_id
+               FROM " . TABLE_ORDERS_PRODUCTS . " op
+                    LEFT JOIN " . TABLE_PRODUCTS . " p
+                        ON p.products_id = op.products_id
               WHERE orders_id = " . $this->orders_id
         );
         $uprids = [];
+        $tax_class_ids = [];
         foreach ($uprids_from_db as $next_record) {
             $uprids[$next_record['orders_products_id']] = $next_record['products_prid'];
+            $tax_class_ids[$next_record['orders_products_id']] = $next_record['products_tax_class_id'];
         }
 
         // -----
@@ -285,6 +287,7 @@ class EditOrders
         //
         foreach ($this->order->products as &$next_product) {
             $next_product['qty'] = $this->convertToIntOrFloat($next_product['qty']);
+            $next_product['tax_class_id'] = $tax_class_ids[$next_product['orders_products_id']];    //- Will be null if the product no longer exists!
             $next_product['tax'] = (float)$next_product['tax'];
             $next_product['final_price'] = (float)$next_product['final_price'];
             $next_product['onetime_charges'] = $this->convertToIntOrFloat($next_product['onetime_charges']);
@@ -407,7 +410,7 @@ class EditOrders
         // Finally, traverse the products in the order, adding each product's cost to
         // its associated tax-groups.
         //
-        foreach ($this->order->products as $product) {
+        foreach ($this->order->products as &$product) {
             $tax_description = $this->findTaxGroupNameFromValue($product['tax']);
             if ($tax_description === '') {
                 global $messageStack;
@@ -422,6 +425,7 @@ class EditOrders
                 return false;
             }
 
+            $product['tax_description'] = $tax_description;
             $this->addCostToTaxGroup($tax_description, ($product['final_price'] * $product['qty']) + $product['onetime_charges']);
         }
         return true;
@@ -671,7 +675,7 @@ class EditOrders
     {
         $totals_to_skip = ['ot_group_pricing', 'ot_tax', 'ot_loworderfee', 'ot_purchaseorder'];
         foreach ($order->totals as $next_ot) {
-            $totals_to_skip[] = $next_ot['class'];
+            $totals_to_skip[] = $next_ot['class'] ?? $next_ot['code'];
         }
 
         $order_totals = new \order_total();
@@ -692,7 +696,7 @@ class EditOrders
         return $unused_totals;
     }
 
-    public function arrayImplode($array_fields, $output_string = '')
+    public function arrayImplode(array $array_fields, string $output_string = ''): string
     {
         foreach ($array_fields as $key => $value) {
             if (is_array($value)) {
@@ -733,144 +737,7 @@ class EditOrders
         $_SESSION['payment'] = $this->order->info['payment_module_code'];
  
         $this->eoLog("getOrderInfo($action), on exit:\n" . $this->eoFormatTaxInfoForLog(), 'tax');
-        return $order;
-    }
-
-    public function eoInitializeShipping($oID, $action)
-    {
-        global $order;
-        $this->eoLog("eoInitializeShipping($oID, $action), on entry: " . $this->eoFormatTaxInfoForLog(), 'tax');
-
-        // -----
-        // Shipping cost and tax rate initializations are dependent on the current
-        // 'action' being performed.
-        //
-        switch ($action) {
-            case 'update_order':
-                $order = $this->initializeShippingCostFromPostedValue($order);
-                $this->initializeOrderShippingTax($oID, $action);
-                break;
-            case 'add_prdct':
-                $order = $this->initializeShippingCostFromOrder($order);
-                $this->initializeOrderShippingTax($oID, $action);
-                $this->removeTaxFromShippingCost($order);
-                break;
-            default:
-                $order = $this->initializeShippingCostFromOrder($order);
-                $this->initializeOrderShippingTax($oID, $action);
-                $this->removeTaxFromShippingCost($order);
-                break;
-        }
-        $this->eoLog("eoInitializeShipping($oID, $action), on exit: " . $this->eoFormatTaxInfoForLog(), 'tax');
-    }
-
-    protected function initializeShippingCostFromOrder($order)
-    {
-        // -----
-        // Determine the order's current shipping cost, retrieved from the value present in the
-        // shipping order-total's value.
-        //
-        $query = $GLOBALS['db']->Execute(
-            "SELECT `value` 
-               FROM " . TABLE_ORDERS_TOTAL . "
-              WHERE orders_id = {$this->orders_id}
-                AND class = 'ot_shipping'
-              LIMIT 1"
-        );
-        if (!$query->EOF) {
-            $this->order->info['shipping_cost'] = $query->fields['value'];
-            $_SESSION['shipping'] = [
-                'title' => $order->info['shipping_method'],
-                'id' => $order->info['shipping_module_code'] . '_',
-                'cost' => $order->info['shipping_cost']
-            ];
-        } else {
-            $this->order->info['shipping_cost'] = 0;
-            $_SESSION['shipping'] = [
-                'title' => EO_FREE_SHIPPING,
-                'id' => 'free_free',
-                'cost' => 0
-            ];
-        }
-        return $order;
-    }
-
-    protected function initializeShippingCostFromPostedValue($order)
-    {
-        $found_ot_shipping = false;
-        $ot_shipping = 'Not found';
-        if (isset($_POST['update_total']) && is_array($_POST['update_total'])) {
-            foreach ($_POST['update_total'] as $current_total) {
-                if ($current_total['code'] === 'ot_shipping') {
-                    $ot_shipping = json_encode($current_total);
-                    $found_ot_shipping = true;
-                    $shipping_module = $current_total['shipping_module'] . '_';
-                    $shipping_cost = $this->eoRoundCurrencyValue($current_total['value']);
-                    $shipping_title = $current_total['title'];
-                    break;
-                }
-            }
-        }
-        if ($found_ot_shipping === true) {
-            $order->info['shipping_cost'] = $shipping_cost;
-            $_SESSION['shipping'] = [
-                'title' => $shipping_title,
-                'id' => $shipping_module,
-                'cost' => $shipping_cost
-            ];
-        } else {
-            $order->info['shipping_cost'] = 0;
-            $_SESSION['shipping'] = [
-                'title' => EO_FREE_SHIPPING,
-                'id' => 'free_free',
-                'cost' => 0
-            ];
-        }
-        $this->eoLog("initializeShippingCostFromPostedValue, ot_shipping: $ot_shipping, shipping cost: {$order->info['shipping_cost']}.");
-        return $order;
-    }
-
-    protected function initializeOrderShippingTax($oID, $action): void
-    {
-        global $order;
-
-        // -----
-        // Determine any previously-recorded shipping tax-rate for the order.
-        //
-        $tax_rate = $GLOBALS['db']->Execute(
-            "SELECT shipping_tax_rate
-               FROM " . TABLE_ORDERS . "
-              WHERE orders_id = $oID
-              LIMIT 1"
-        );
-        if ($tax_rate->EOF || ($tax_rate->fields['shipping_tax_rate'] === null && $action !== 'edit')) {
-            trigger_error("Sequencing error; order ($oID) not present or shipping tax-rate not initialized for $action action.", E_USER_ERROR);
-            exit();
-        }
-        switch ($action) {
-            case 'update_order':
-                $shipping_tax = $_POST['shipping_tax'] ?? 0;
-                $this->shipping_tax_rate = is_numeric($shipping_tax) ? $shipping_tax : 0;
-                $order->info['shipping_tax'] = $this->calculateOrderShippingTax(true);
-                break;
-
-            case 'add_prdct':
-                $this->shipping_tax_rate = $tax_rate->fields['shipping_tax_rate'];
-                $order->info['shipping_tax'] = $this->eoRoundCurrencyValue(zen_calculate_tax($order->info['shipping_cost'], $this->shipping_tax_rate));
-                break;
-
-            default:
-                $this->shipping_tax_rate = $tax_rate->fields['shipping_tax_rate'];
-                $order->info['shipping_tax'] = $this->calculateOrderShippingTax(false);
-                break;
-        }
-        $GLOBALS['db']->Execute(
-            "UPDATE " . TABLE_ORDERS . "
-                SET shipping_tax_rate = " . $this->shipping_tax_rate . "
-              WHERE orders_id = $oID
-              LIMIT 1"
-        );
-        $order->info['shipping_tax_rate'] = $this->shipping_tax_rate;
+        return $this->order;
     }
 
     // -----
@@ -910,30 +777,6 @@ class EditOrders
         return $shipping_tax;
     }
 
-    // -----
-    // Invoked by EO's admin observer-class to override the tax to be applied to any
-    // shipping cost, as offered by the ot_shipping module's processing.
-    //
-    public function eoUpdateOrderShippingTax(bool $tax_updated, &$shipping_tax_rate, &$shipping_tax_description): void
-    {
-        if ($tax_updated === false) {
-            $shipping_tax_rate = $this->shipping_tax_rate ?? 0;
-
-            $shipping_tax_description = $this->product_tax_descriptions[$shipping_tax_rate] ?? sprintf(EO_SHIPPING_TAX_DESCRIPTION, (string)$shipping_tax_rate);
-        }
-        $this->shipping_tax_description = $shipping_tax_description;
-        $this->eoLog("eoUpdateOrderShippingTax($tax_updated, $shipping_tax_rate, $shipping_tax_description): " . json_encode($this->product_tax_descriptions), 'tax');
-
-        if (isset($GLOBALS['order']) && is_object($GLOBALS['order'])) {
-            if (!isset($GLOBALS['order']->info['tax_groups'][$shipping_tax_description])) {
-                $GLOBALS['order']->info['tax_groups'][$shipping_tax_description] = 0;
-            }
-            if (!isset($GLOBALS['order']->info['shipping_tax'])) {
-                $GLOBALS['order']->info['shipping_tax'] = 0;
-            }
-        }
-    }
-
     public function eoGetShippingTaxRate($order)
     {
         $shipping_tax_rate = false;
@@ -943,15 +786,7 @@ class EditOrders
             return (empty($shipping_tax_rate)) ? 0 : $shipping_tax_rate;
         }
 
-        $tax_rate = 0;
-        $shipping_module = $order->info['shipping_module_code'];
-        if (isset($this->shipping_tax_rate)) {
-            $tax_rate = $this->shipping_tax_rate;
-        } elseif (!empty($GLOBALS[$shipping_module]) && is_object($GLOBALS[$shipping_module]) && !empty($GLOBALS[$shipping_module]->tax_class)) {
-            $tax_location = zen_get_tax_locations();
-            $tax_rate = zen_get_tax_rate($GLOBALS[$shipping_module]->tax_class, $tax_location['country_id'], $tax_location['zone_id']);
-        }
-        return (empty($tax_rate)) ? 0 : $tax_rate;
+        return $_SESSION['eoChanges']->getUpdatedOrder()->info['shipping_tax_rate'];
     }
 
     public function eoFormatTaxInfoForLog(bool $include_caller = false): string
@@ -1031,7 +866,9 @@ class EditOrders
 
     public function eoFormatCurrencyValue($value)
     {
-        return $GLOBALS['currencies']->format($this->eoRoundCurrencyValue($value), true, $this->info['currency'], $this->info['currency_value']);
+        global $currencies;
+
+        return $currencies->format($this->eoRoundCurrencyValue($value), true, $this->info['currency'], $this->info['currency_value']);
     }
 
     // -----
@@ -1100,32 +937,6 @@ class EditOrders
         return $languageLoader->loadModuleLanguageFile($module_name, $module_type);
     }
 
-    // -----
-    // This method determines the specified order-total's defined sort-order.
-    //
-    public function eoGetOrderTotalSortOrder(string $order_total_code): int
-    {
-        global $languageLoader;
-
-        $sort_order = false;
-        $module_file = $order_total_code . '.php';
-
-        if ($this->loadModuleLanguageFile($module_file, 'order_total') === true) {
-            require_once DIR_FS_CATALOG_MODULES . 'order_total/' . $module_file;
-            $order_total = new $order_total_code();
-            $sort_order = (int)$order_total->sort_order;
-        }
-
-        if ($sort_order === false) {
-            if (!isset($this->ot_sort_default)) {
-                $this->ot_sort_default = 0;
-            }
-            $sort_order = $this->ot_sort_default;
-            $this->ot_sort_default++;
-        }
-        return $sort_order;
-    }
-
     public function getOrderInfoUpdateSql(array $original_values, array $updated_values): array
     {
         $order_info_updates = [];
@@ -1133,18 +944,20 @@ class EditOrders
         foreach ($updated_fields as $key) {
             switch ($key) {
                 case 'orders_status':
-                    $order_info_updates[] = [
-                        'fieldName' => $key,
-                        'value' => $updated_values[$key],
-                        'type' => 'integer',
-                    ];
+                    $order_info_updates[] = ['fieldName' => $key, 'value' => $updated_values[$key], 'type' => 'integer',];
+                    break;
+                case 'total':
+                    $order_info_updates[] = ['fieldName' => 'order_total', 'value' => $updated_values[$key], 'type' => 'float',];
+                    break;
+                case 'tax':
+                    $order_info_updates[] = ['fieldName' => 'order_tax', 'value' => $updated_values[$key], 'type' => 'float',];
+                    break;
+                case 'shipping_tax_rate':
+                case 'order_weight':
+                    $order_info_updates[] = ['fieldName' => $key, 'value' => $updated_values[$key], 'type' => 'float',];
                     break;
                 default:
-                    $order_info_updates[] = [
-                        'fieldName' => $key,
-                        'value' => $updated_values[$key],
-                        'type' => 'stringIgnoreNull',
-                    ];
+                    $order_info_updates[] = ['fieldName' => $key, 'value' => $updated_values[$key], 'type' => 'stringIgnoreNull',];
                     break;
             }
         }
@@ -1181,11 +994,7 @@ class EditOrders
                 case 'suburb':
                 case 'city':
                 case 'postcode':
-                    $address_updates[] = [
-                        'fieldName' => $field_prefix . $key,
-                        'value' => $updated_values[$key],
-                        'type' => 'stringIgnoreNull',
-                    ];
+                    $address_updates[] = ['fieldName' => $field_prefix . $key, 'value' => $updated_values[$key], 'type' => 'stringIgnoreNull',];
                     break;
 
                 default:
@@ -1202,26 +1011,14 @@ class EditOrders
                         $key_change,
                         $key_type
                     );
-                    $address_updates[] = [
-                        'fieldName' => $key_change ?? $key,
-                        'value' => $updated_values[$key],
-                        'type' => $key_type ?? 'stringIgnoreNull',
-                    ];
+                    $address_updates[] = ['fieldName' => $key_change ?? $key, 'value' => $updated_values[$key], 'type' => $key_type ?? 'stringIgnoreNull',];
                     break;
             }
         }
 
         if ($country_change === true) {
-            $address_updates[] = [
-                'fieldName' => $field_prefix . 'country',
-                'value' => zen_get_country_name($country_id),
-                'type' => 'stringIgnoreNull',
-            ];
-            $address_updates[] = [
-                'fieldName' => $field_prefix . 'address_format_id',
-                'value' => zen_get_address_format_id($country_id),
-                'type' => 'integer',
-            ];
+            $address_updates[] = ['fieldName' => $field_prefix . 'country', 'value' => zen_get_country_name($country_id), 'type' => 'stringIgnoreNull',];
+            $address_updates[] = ['fieldName' => $field_prefix . 'address_format_id', 'value' => zen_get_address_format_id($country_id), 'type' => 'integer',];
         }
 
         if ($state_zone_change === true) {
@@ -1230,11 +1027,7 @@ class EditOrders
             if ($zone_name === 'no-zone') {
                 $zone_name = $state ?? '';
             }
-            $address_updates[] = [
-                'fieldName' => $field_prefix . 'state',
-                'value' => $zone_name,
-                'type' => 'stringIgnoreNull',
-            ];
+            $address_updates[] = ['fieldName' => $field_prefix . 'state', 'value' => $zone_name, 'type' => 'stringIgnoreNull',];
         }
 
         return $address_updates;
@@ -1243,9 +1036,7 @@ class EditOrders
     public function eoLog($message, $message_type = 'general')
     {
         if ($this->eo_action_level !== 0) {
-            if (!(EO_DEBUG_TAXES_ONLY === 'true' && $message_type !== 'tax')) {
-                error_log("$message\n", 3, $this->logfile_name);
-            }
+            error_log(date('Ymd H:i:s ') . "$message\n", 3, $this->logfile_name);
         }
     }
 }

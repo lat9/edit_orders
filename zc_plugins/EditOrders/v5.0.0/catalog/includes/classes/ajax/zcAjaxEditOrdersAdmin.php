@@ -5,11 +5,14 @@
 //
 // Last updated: v5.0.0 (new)
 //
+use Zencart\Plugins\Admin\EditOrders\EditOrders;
 use Zencart\Plugins\Admin\EditOrders\EoOrderChanges;
+use Zencart\Traits\InteractsWithPlugins;
 use Zencart\Traits\NotifierManager;
 
 class zcAjaxEditOrdersAdmin
 {
+    use InteractsWithPlugins;
     use NotifierManager;
 
     // -----
@@ -131,56 +134,17 @@ class zcAjaxEditOrdersAdmin
 
     public function getChangesModal(): array
     {
-        $original_order = $_SESSION['eoChanges']->getOriginalOrder();
-        $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
         $changes = $_SESSION['eoChanges']->getChangedValues();
 
         $modal_html = '';
         foreach ($changes as $title => $fields_changed) {
             if ($title === 'osh_info') {
-                $additional_inputs = '';
-                foreach ($fields_changed[0]['updated'] as $key => $value) {
-                    if (in_array($key, ['comment_added', 'status', 'notify_comments'])) {
-                        continue;
-                    }
-                    switch ($key) {
-                        case 'notify':
-                            switch ($value) {
-                                case 0:
-                                    $customer_notified = TEXT_NO;
-                                    break;
-                                case 1:
-                                    $customer_notified = TEXT_YES;
-                                    break;
-                                default:
-                                    $customer_notified = TEXT_HIDDEN;
-                                    break;
-                            }
-                            break;
-                        case 'message':
-                            if (!empty($value)) {
-                                $message = '<br><br><code>' . $value . '</code>';
-                            }
-                            break;
-                        default:
-                            if (!empty($value)) {
-                                $additional_inputs .= '<br><br><code>' . $key . '</code>: <code>' . $value . '</code>';
-                            }
-                            break;
-                    }
-                }
+                $modal_html .= $this->getOshChangesModal($fields_changed);
+                continue;
+            }
 
-                $modal_html .=
-                    '<div class="panel panel-default">' .
-                        '<div class="panel-heading">' . TEXT_COMMENT_ADDED . '</div>' .
-                        '<div class="panel-body">' .
-                            '<ul class="list-group my-0">' .
-                                '<li class="list-group-item">' .
-                                    '<strong>' . ENTRY_NOTIFY_CUSTOMER . '</strong> ' . $customer_notified . ($message ?? '') . $additional_inputs .
-                                '</li>' .
-                            '</ul>' .
-                        '</div>' .
-                    '</div>';
+            if ($title === 'order_totals') {
+                $modal_html .= $this->getOrderTotalsChangesModal($fields_changed);
                 continue;
             }
 
@@ -195,9 +159,9 @@ class zcAjaxEditOrdersAdmin
                 $updated_value = '<code>' . $next_change['updated'] . '</code>';
                 $label = '<strong>' . rtrim($next_change['label'], ':') . '</strong>';
                 $modal_html .=
-                            '<li class="list-group-item">' .
-                                sprintf(TEXT_VALUE_CHANGED, $label, $original_value, $updated_value) .
-                            '</li>';
+                    '<li class="list-group-item">' .
+                        sprintf(TEXT_VALUE_CHANGED, $label, $original_value, $updated_value) .
+                    '</li>';
             }
 
             $modal_html .=
@@ -230,6 +194,87 @@ class zcAjaxEditOrdersAdmin
             'modal_html' => $modal_html,
         ];
     }
+    protected function getOshChangesModal(array $fields_changed): string
+    {
+        $modal_html = '';
+        $additional_inputs = '';
+        foreach ($fields_changed[0]['updated'] as $key => $value) {
+            if (in_array($key, ['comment_added', 'status', 'notify_comments'])) {
+                continue;
+            }
+            switch ($key) {
+                case 'notify':
+                    switch ($value) {
+                        case 0:
+                            $customer_notified = TEXT_NO;
+                            break;
+                        case 1:
+                            $customer_notified = TEXT_YES;
+                            break;
+                        default:
+                            $customer_notified = TEXT_HIDDEN;
+                            break;
+                    }
+                    break;
+                case 'message':
+                    if (!empty($value)) {
+                        $message = '<br><br><code>' . $value . '</code>';
+                    }
+                    break;
+                default:
+                    if (!empty($value)) {
+                        $additional_inputs .= '<br><br><code>' . $key . '</code>: <code>' . $value . '</code>';
+                    }
+                    break;
+            }
+        }
+
+        $modal_html .=
+            '<div class="panel panel-default">' .
+                '<div class="panel-heading">' . TEXT_COMMENT_ADDED . '</div>' .
+                '<div class="panel-body">' .
+                    '<ul class="list-group my-0">' .
+                        '<li class="list-group-item">' .
+                            '<strong>' . ENTRY_NOTIFY_CUSTOMER . '</strong> ' . $customer_notified . ($message ?? '') . $additional_inputs .
+                        '</li>' .
+                    '</ul>' .
+                '</div>' .
+            '</div>';
+
+        return $modal_html;
+    }
+    protected function getOrderTotalsChangesModal(array $fields_changed): string
+    {
+        $modal_html =
+            '<div class="panel panel-default">' .
+                '<div class="panel-heading">' . TEXT_OT_CHANGES . '</div>' .
+                '<div class="panel-body">' .
+                    '<ul class="list-group my-0">' . "\n";
+
+        foreach ($fields_changed as $next_change) {
+            $original_value = '<code>' . ($next_change['original'] ?? '') . '</code>';
+            $updated_value = '<code>' . ($next_change['updated'] ?? '') . '</code>';
+            $label = '<strong>' . rtrim($next_change['label'], ':') . '</strong>';
+            switch ($next_change['status']) {
+                case 'removed':
+                    $changes_text = sprintf(TEXT_ORDER_TOTAL_REMOVED, $label, $original_value);
+                    break;
+                case 'added':
+                    $changes_text = sprintf(TEXT_ORDER_TOTAL_ADDED, $label, $updated_value);
+                    break;
+                default:
+                    $changes_text = sprintf(TEXT_VALUE_CHANGED, $label, $original_value, $updated_value);
+                    break;
+            }
+            $modal_html .= '<li class="list-group-item">' . $changes_text . '</li>';
+        }
+
+        $modal_html .=
+                    '</ul>' .
+                '</div>' .
+            '</div>';
+        return $modal_html;
+    }
 
     protected function getBuiltInAddressFields(): array
     {
@@ -261,5 +306,98 @@ class zcAjaxEditOrdersAdmin
             $return_array[$next_entry['name']] = $next_entry['value'];
         }
         return $return_array;
+    }
+
+    // -----
+    // Update an order-total's text and/or value.
+    //
+    public function updateOrderTotal(): array
+    {
+        global $currencies, $order, $eo;
+
+        $eo = new EditOrders($_SESSION['eoChanges']->getOrderId());
+
+        if ($_POST['ot_class'] === 'ot_shipping') {
+            $updated_info = $_SESSION['eoChanges']->updateShippingInfo(
+                $_POST['shipping_module'],
+                rtrim($_POST['title'], ':'),
+                $_POST['value'],
+                $_POST['shipping_tax']
+            );
+            $_SESSION['shipping'] = [
+                'id' => $_POST['shipping_module'] . '_',
+                'title' => rtrim($_POST['title'], ':'),
+                'cost' => $_POST['value'],
+            ];
+        } else {
+        }
+
+        require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
+        $currencies = new currencies();
+
+        require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
+        $order = new \order();
+
+        require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order_total.php';
+        $order_total_modules = new \order_total();
+        $order->totals = $order_total_modules->process();
+
+        // -----
+        // Remove trailing slash from shipping-module's code.
+        //
+        $order->info['shipping_module_code'] = rtrim($order->info['shipping_module_code'], '_');
+
+        // -----
+        // Record any changes to the order's totals.
+        //
+        $ot_changes = $_SESSION['eoChanges']->saveOrderInfoChanges($order->info);
+        $ot_changes += $_SESSION['eoChanges']->saveOrderTotalsChanges($order->totals);
+        $eo->eoLog(
+            "Order totals updated.\nOriginal:\n" .
+            $eo->eoFormatArray($_SESSION['eoChanges']->getOriginalOrder()->totals) .
+            "\nUpdated:\n" .
+            $eo->eoFormatArray($_SESSION['eoChanges']->getUpdatedOrder()->totals) .
+            "\nChanges:\n" .
+            $eo->eoFormatArray($_SESSION['eoChanges']->getTotalsChanges())
+        );
+
+        // -----
+        // Use the base trait to determine this plugin's directory location.
+        //
+        $this->detectZcPluginDetails(__DIR__);
+
+        zen_define_default('EDIT_ORDERS_USE_NUMERIC_FIELDS', '1');
+        if (EDIT_ORDERS_USE_NUMERIC_FIELDS !== '1') {
+            $input_value_params = '';
+            $input_tax_params = '';
+            $input_field_type = 'text';
+        } else {
+            $input_value_params = ' min="0" step="any"';
+            $input_tax_params = ' min="0" max="100" step="any"';
+            $input_field_type = 'number';
+        }
+
+        $this->disableGzip();
+        ob_start();
+        require $this->pluginManagerInstalledVersionDirectory . 'admin/' . DIR_WS_MODULES . 'eo_edit_action_ot_table_display.php';
+        $ot_table_html = ob_get_clean();
+
+        return [
+            'status' => 'ok',
+            'ot_changes' => $ot_changes,
+            'ot_table_html' => $ot_table_html,
+        ];
+    }
+
+    // -----
+    // Gzip compression can "get in the way" of the AJAX requests on current versions of IE and
+    // Chrome.
+    //
+    // This internal method sets that compression "off" for the AJAX responses.
+    //
+    protected function disableGzip()
+    {
+        ob_end_clean();
+        ini_set('zlib.output_compression', '0');
     }
 }
