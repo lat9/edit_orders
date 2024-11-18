@@ -424,7 +424,9 @@ class zcAjaxEditOrdersAdmin
             "\nUpdated:\n" .
             $eo->eoFormatArray($_SESSION['eoChanges']->getUpdatedOrder()->totals) .
             "\nChanges:\n" .
-            $eo->eoFormatArray($_SESSION['eoChanges']->getTotalsChanges())
+            $eo->eoFormatArray($_SESSION['eoChanges']->getTotalsChanges()) .
+            "\not-totals:\n" .
+            $eo->eoFormatArray($_SESSION['eo-totals'] ?? [])
         );
 
         // -----

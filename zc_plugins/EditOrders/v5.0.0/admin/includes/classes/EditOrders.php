@@ -683,12 +683,16 @@ class EditOrders
     //
     public function getUnusedOrderTotalModules(\order|\stdClass $order): array
     {
+        $order_totals = $this->getOrderTotalsObject();
+
         $totals_to_skip = ['ot_group_pricing', 'ot_tax', 'ot_loworderfee', 'ot_purchaseorder', 'ot_gv', 'ot_voucher', 'ot_cod_fee'];
         foreach ($order->totals as $next_ot) {
-            $totals_to_skip[] = $next_ot['class'] ?? $next_ot['code'];
+            $class = $next_ot['class'] ?? $next_ot['code'];
+            $totals_to_skip[] = $class;
+            if (!empty($GLOBALS[$class]->eoCanBeAdded)) {
+                $_SESSION['eo-totals'][$class] = ['title' => $next_ot['title'], 'value' => $next_ot['value'],];
+            }
         }
-
-        $order_totals = $this->getOrderTotalsObject();
 
         $module_list = explode(';', str_replace('.php', '', MODULE_ORDER_TOTAL_INSTALLED));
         $unused_totals = [];
