@@ -349,17 +349,18 @@ class zcAjaxEditOrdersAdmin
     //
     public function addOrUpdateOrderTotal(): array
     {
+        $_POST['title'] = rtrim($_POST['title'], ' :');
         switch ($_POST['ot_class']) {
             case 'ot_shipping':
                 $updated_info = $_SESSION['eoChanges']->updateShippingInfo(
                     $_POST['module'],
-                    rtrim($_POST['title'], ':'),
+                    $_POST['title'],
                     $_POST['value'],
                     $_POST['tax']
                 );
                 $_SESSION['shipping'] = [
                     'id' => $_POST['module'] . '_',
-                    'title' => rtrim($_POST['title'], ':'),
+                    'title' => $_POST['title'],
                     'cost' => $_POST['value'],
                 ];
                 break;
@@ -426,7 +427,8 @@ class zcAjaxEditOrdersAdmin
             "\nChanges:\n" .
             $eo->eoFormatArray($_SESSION['eoChanges']->getTotalsChanges()) .
             "\not-totals:\n" .
-            $eo->eoFormatArray($_SESSION['eo-totals'] ?? [])
+            $eo->eoFormatArray($_SESSION['eo-totals'] ?? []),
+            'with-date'
         );
 
         // -----

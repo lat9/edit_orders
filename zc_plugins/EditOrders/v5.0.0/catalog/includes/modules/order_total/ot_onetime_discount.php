@@ -102,7 +102,7 @@ class ot_onetime_discount
                 unset($_SESSION['eo-totals']['ot_onetime_discount']);
                 return;
             }
-            $_SESSION['eo-totals']['ot_onetime_discount'] = ['value' => $value, 'title' => rtrim($title, ' :'),];
+            $_SESSION['eo-totals']['ot_onetime_discount'] = ['value' => $value, 'title' => $title,];
         }
 
         if (!isset($_SESSION['eo-totals']['ot_onetime_discount'])) {
@@ -113,7 +113,7 @@ class ot_onetime_discount
 
         // Output the order total information
         $this->output[] = [
-            'title' => $_SESSION['eo-totals']['ot_onetime_discount']['title'] . ':',
+            'title' => rtrim($_SESSION['eo-totals']['ot_onetime_discount']['title'], ' :') . ':',
             'text' => $currencies->format($_SESSION['eo-totals']['ot_onetime_discount']['value'], true, $order->info['currency'], $order->info['currency_value']),
             'value' => $_SESSION['eo-totals']['ot_onetime_discount']['value'],
         ];

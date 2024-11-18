@@ -58,6 +58,10 @@ if (empty($order->info)) {
 // method will redirect back to the base orders' processing.
 //
 $eo = new EditOrders($oID);
+
+$action = $_GET['action'] ?? 'edit';
+$eo->eoLog("Edit Orders entered action ($action). Enabled Order Totals: " . MODULE_ORDER_TOTAL_INSTALLED, 'with-date');
+
 $eo->checkEnvironment();
 
 // -----
@@ -87,8 +91,6 @@ $_SESSION['currency'] = $order->info['currency'];
 // -----
 // Start action-related processing.
 //
-$action = $_GET['action'] ?? 'edit';
-$eo->eoLog("\n" . date('Y-m-d H:i:s') . ", Edit Orders entered action ($action)\nEnabled Order Totals: " . MODULE_ORDER_TOTAL_INSTALLED);
 $zco_notifier->notify('EDIT_ORDERS_START_ACTION_PROCESSING');
 switch ($action) {
     // Update Order

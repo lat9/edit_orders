@@ -199,7 +199,9 @@ class EditOrders
         //
         $tax_groups_created = $this->createOrderTaxGroups();
 
-        $this->eoLog("queryOrder, on exit\n" . json_encode($this->order, JSON_PRETTY_PRINT));
+        $order = clone $this->order;
+        unset($order->statuses);
+        $this->eoLog("\tqueryOrder, on exit\n" . json_encode($order, JSON_PRETTY_PRINT));
 
         return $tax_groups_created;
     }
@@ -372,7 +374,7 @@ class EditOrders
                             AND opa.products_options_id = " . (int)$current_attribute['option_id'] . "
                           LIMIT 1"
                     );
-                    $this->eoLog("Checking whether the product's attribute is a download, option_id = " . $current_attribute['option_id'] . ", value_id = " . $current_attribute['value_id'] . ": (" . $download_check->EOF . ")");
+                    $this->eoLog("\tProduct $products_id, attribute download check, " . $current_attribute['option_id'] . "/" . $current_attribute['value_id'] . ": (" . !$download_check->EOF . ")");
                     if (!$download_check->EOF) {
                         $virtual_products++;
                         break;  //-Out of foreach attributes loop
@@ -382,7 +384,7 @@ class EditOrders
         }
 
         $product_count = count($this->order->products);
-        $this->eoLog("\nsetContentType: Order contains $product_count unique products, $virtual_products of those are virtual");
+        $this->eoLog("\tsetContentType: Order contains $product_count unique products, $virtual_products of those are virtual");
 
         if ($virtual_products === 0) {
             $this->order->content_type = 'physical';
@@ -752,7 +754,7 @@ class EditOrders
         //
         $_SESSION['payment'] = $this->order->info['payment_module_code'];
  
-        $this->eoLog("getOrderInfo($action), on exit:\n" . $this->eoFormatTaxInfoForLog(), 'tax');
+        $this->eoLog("\tgetOrderInfo($action), on exit:\n" . $this->eoFormatTaxInfoForLog());
         return $this->order;
     }
 
@@ -768,7 +770,7 @@ class EditOrders
         $shipping_tax_rate = false;
         $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX', $order, $shipping_tax, $shipping_tax_rate);
         if ($shipping_tax !== false && $shipping_tax_rate !== false) {
-            $this->eoLog("calculateOrderShippingTax, override returning $shipping_tax, rate = $shipping_tax_rate.");
+            $this->eoLog("\tcalculateOrderShippingTax, override returning $shipping_tax, rate = $shipping_tax_rate.");
             $this->shipping_tax_rate = $shipping_tax_rate;
             return $shipping_tax;
         }
@@ -789,7 +791,7 @@ class EditOrders
         }
         $this->shipping_tax_rate = $tax_rate;
         $shipping_tax = $this->eoRoundCurrencyValue(zen_calculate_tax((float)$order->info['shipping_cost'], (float)$tax_rate));
-        $this->eoLog("calculateOrderShippingTax returning $shipping_tax, rate = " . var_export($tax_rate, true) . ", cost = {$order->info['shipping_cost']}.");
+        $this->eoLog("\tcalculateOrderShippingTax returning $shipping_tax, rate = " . var_export($tax_rate, true) . ", cost = {$order->info['shipping_cost']}.");
         return $shipping_tax;
     }
 
@@ -798,7 +800,7 @@ class EditOrders
         $shipping_tax_rate = false;
         $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX_RATE', $order, $shipping_tax_rate);
         if ($shipping_tax_rate !== false) {
-            $this->eoLog("eoGetShippingTaxRate, override returning rate = $shipping_tax_rate.", 'tax');
+            $this->eoLog("\teoGetShippingTaxRate, override returning rate = $shipping_tax_rate.", 'tax');
             return (empty($shipping_tax_rate)) ? 0 : $shipping_tax_rate;
         }
 
@@ -807,7 +809,7 @@ class EditOrders
 
     public function eoFormatTaxInfoForLog(bool $include_caller = false): string
     {
-        $log_info = "\n";
+        $log_info = '';
 
         if ($include_caller === true) {
             $trace = debug_backtrace();
@@ -854,7 +856,7 @@ class EditOrders
         $shipping_tax_processed = false;
         $this->notify('NOTIFY_EO_REMOVE_SHIPPING_TAX', [], $order, $shipping_tax_processed);
         if ($shipping_tax_processed === true) {
-            $this->eoLog("removeTaxFromShippingCost override, shipping_cost ({$order->info['shipping_cost']}), order tax ({$order->info['tax']})", 'tax');
+            $this->eoLog("\tremoveTaxFromShippingCost override, shipping_cost ({$order->info['shipping_cost']}), order tax ({$order->info['tax']})", 'tax');
             return;
         }
 
@@ -867,7 +869,7 @@ class EditOrders
             $order->info['tax'] -= $shipping_tax;
             $order->info['shipping_tax'] = 0;
 
-            $this->eoLog("removeTaxFromShippingCost, updated: $tax_rate, $shipping_cost, $shipping_cost_ex, $shipping_tax", 'tax');
+            $this->eoLog("\tremoveTaxFromShippingCost, updated: $tax_rate, $shipping_cost, $shipping_cost_ex, $shipping_tax", 'tax');
         }
     }
 
@@ -1049,10 +1051,11 @@ class EditOrders
         return $address_updates;
     }
 
-    public function eoLog($message, $message_type = 'general')
+    public function eoLog(string $message, string $message_type = 'general'): void
     {
         if ($this->eo_action_level !== 0) {
-            error_log(date('Ymd H:i:s ') . "$message\n", 3, $this->logfile_name);
+            $date = ($message_type === 'with-date') ? "\n" . date('Y-m-d H:i:s: ') : '';
+            error_log($date . "$message\n", 3, $this->logfile_name);
         }
     }
 }
