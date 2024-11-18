@@ -22,6 +22,7 @@ class EditOrders
     protected bool $orderHasShipping;
 
     protected \order $order;
+    protected \order_total $orderTotals;
 
     public function __construct(int $orders_id)
     {
@@ -31,6 +32,14 @@ class EditOrders
         $this->orders_id = (int)$orders_id;
         $this->tax_updated = false;
         $this->product_tax_descriptions = [];
+    }
+
+    public function getOrderTotalsObject(): \order_total
+    {
+        if (!isset($this->orderTotals)) {
+            $this->orderTotals = new \order_total();
+        }
+        return $this->orderTotals;
     }
 
     // -----
@@ -615,6 +624,7 @@ class EditOrders
     protected function addCostToTaxGroup(string $tax_group_description, int|float $value): void
     {
         $this->order->info['tax_subtotals'][$tax_group_description]['subtotal'] += $value;
+        $this->order->info['tax_groups'][$tax_group_description] += $value * $this->order->info['tax_subtotals'][$tax_group_description]['tax_rate'] / 100;
 
         if (!isset($this->order->info['tax_subtotals'][$tax_group_description]['parent_groups'])) {
             return;
@@ -630,7 +640,7 @@ class EditOrders
     // For EO versions prior to 5.0.0, provided by the eo_get_available_shipping_modules
     // function.
     //
-    public function getAvailableShippingModules(\order $order): array
+    public function getAvailableShippingModules(\order|\stdClass $order): array
     {
         $order_shipping_module = $order->info['shipping_module_code'];
         if ($order_shipping_module === '') {
@@ -671,14 +681,14 @@ class EditOrders
     // Processing based on eo_get_available_order_totals_class_values for EO versions
     // prior to v5.0.0.
     //
-    public function getUnusedOrderTotalModules(\order $order): array
+    public function getUnusedOrderTotalModules(\order|\stdClass $order): array
     {
-        $totals_to_skip = ['ot_group_pricing', 'ot_tax', 'ot_loworderfee', 'ot_purchaseorder'];
+        $totals_to_skip = ['ot_group_pricing', 'ot_tax', 'ot_loworderfee', 'ot_purchaseorder', 'ot_gv', 'ot_voucher', 'ot_cod_fee'];
         foreach ($order->totals as $next_ot) {
             $totals_to_skip[] = $next_ot['class'] ?? $next_ot['code'];
         }
 
-        $order_totals = new \order_total();
+        $order_totals = $this->getOrderTotalsObject();
 
         $module_list = explode(';', str_replace('.php', '', MODULE_ORDER_TOTAL_INSTALLED));
         $unused_totals = [];
@@ -687,10 +697,12 @@ class EditOrders
                 continue;
             }
 
-            $unused_totals[] = [
-                'id' => $class,
-                'text' => $GLOBALS[$class]->title,
-            ];
+            if ($class === 'ot_coupon' || !empty($GLOBALS[$class]->eoCanBeAdded)) {
+                $unused_totals[] = [
+                    'id' => $class,
+                    'text' => $GLOBALS[$class]->title,
+                ];
+            }
         }
 
         return $unused_totals;

@@ -35,16 +35,35 @@ if (!empty($display_only_totals_list)) {
 //
 $columns = ((DISPLAY_PRICE_WITH_TAX === 'true') ? 7 : 6) - 2;
 
-$add_product_button = '<button id="add-product" class="btn btn-sm btn-warning">' . TEXT_ADD_NEW_PRODUCT . '</button>';
+$add_product_button = '<button id="add-product" class="btn btn-sm btn-info">' . TEXT_ADD_NEW_PRODUCT . '</button>';
+
+$add_ot_button = '';
+$unused_order_totals = $eo->getUnusedOrderTotalModules($order);
+if (count($unused_order_totals) !== 0) {
+    $add_ot_button =
+        '<button id="eo-add-ot" class="btn btn-sm btn-info me-2 mb-1">' . TEXT_ADD_ORDER_TOTAL . '</button>' .
+        zen_draw_pull_down_menu('code', $unused_order_totals, '', 'id="eo-add-ot-code" class="form-control d-inline"');
+}
+
+// -----
+// Retrieve the previously gathered order total classes for the order.
+//
+$order_totals = $eo->getOrderTotalsObject();
 
 // Iterate over the order totals.
 foreach ($order->totals as $next_total) {
     $ot_class = $next_total['class'] ?? $next_total['code'];
 ?>
 <tr class="eo-ot">
-    <td class="dataTableContent" colspan="3"><?= $add_product_button ?></td>
+    <td class="dataTableContent">
+        <?= $add_product_button ?>
+    </td>
+    <td class="dataTableContent" colspan="2">
+        <?= $add_ot_button ?>
+    </td>
 <?php
     $add_product_button = '';
+    $add_ot_button = '';
 
     $trimmed_title = strip_tags(trim($next_total['title']));
 
@@ -59,6 +78,11 @@ foreach ($order->totals as $next_total) {
         case 'ot_tax':
         case 'ot_local_sales_taxes':
         case 'display-only':
+        case 'ot_group_pricing':
+        case 'ot_cod_fee':
+        case 'ot_loworderfee':
+        case 'ot_gv':
+        case 'ot_voucher':
 ?>
     <td colspan="<?= $columns - 2 ?>"></td>
     <td class="text-right eo-label"><?= $trimmed_title ?></td>
@@ -66,40 +90,23 @@ foreach ($order->totals as $next_total) {
 <?php
             break;
 
-        // Include these in the update but do not allow them to be changed
-        case 'ot_group_pricing':
-        case 'ot_cod_fee':
-        case 'ot_loworderfee':
-?>
-    <td colspan="<?= $columns - 2 ?>"></td>
-    <td class="text-right"><?= strip_tags($next_total['title']) ?></td>
-    <td class="text-right"><?= $next_total['text'] ?></td>
-<?php
-            break;
-
         // Allow changing the title / text, but not the value. Typically used
         // for order total modules which handle the value based upon another condition
         case 'ot_coupon': 
 ?>
-    <td colspan="<?= $columns - 1 ?>"></td>
+    <td colspan="<?= $columns - 3 ?>"></td>
     <td class="text-right">
-        <button class="btn btn-sm btn-warning me-2 mb-1 d-none eo-btn-update"><?= IMAGE_UPDATE ?></button>
+        <button class="btn btn-sm btn-info me-2 mb-2 eo-btn-ot-edit" data-ot-class="ot_coupon">
+            <?= ICON_EDIT ?>
+        </button>
     </td>
-    <td class="text-right">
-        <?= zen_draw_hidden_field('ot_class', $ot_class) ?>
-        <?= zen_draw_input_field('title', $trimmed_title, 'class="eo-entry form-control"') ?>
-    </td>
-    <td class="text-right">
-        <?= $next_total['text'] .
-            zen_draw_hidden_field('value', $next_total['value'])
-        ?>
-    </td>
+    <td class="text-right eo-label"><?= $trimmed_title ?></td>
+    <td class="text-right eo-label"><?= $next_total['text'] ?></td>
 <?php
             break;
 
         case 'ot_shipping':
             $shipping_tax_rate = $eo->eoGetShippingTaxRate($order);
-            $shipping_title_max = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'shipping_method') . '"';
             $available_modules = $eo->getAvailableShippingModules($order);
 
             // -----
@@ -108,7 +115,7 @@ foreach ($order->totals as $next_total) {
             //
             if (count($available_modules) === 0) {
 ?>
-        <td id="eo-no-shipping" colspan="<?= $columns ?>"></td>
+    <td id="eo-no-shipping" colspan="<?= $columns ?>"></td>
 <?php
                 break;
             }
@@ -122,98 +129,56 @@ foreach ($order->totals as $next_total) {
             }
 ?>
     <td class="text-right">
-        <button class="btn btn-sm btn-warning me-2 mb-2 d-none eo-btn-update"><?= IMAGE_UPDATE ?></button>
-        <?= zen_draw_hidden_field('ot_class', $ot_class) ?>
-        <?= zen_draw_pull_down_menu(
-            'shipping_module',
-            $available_modules,
-            $shipping_module_code,
-            'id="shipping-select" class="eo-entry me-2 form-control"'
-        ) ?>
-        <?= zen_draw_input_field('title', $trimmed_title, 'id="ship-title" class="eo-entry form-control" ' . $shipping_title_max) ?>
+        <button class="btn btn-sm btn-info me-2 mb-2 eo-btn-ot-edit" data-ot-class="ot_shipping">
+            <?= ICON_EDIT ?>
+        </button>
     </td>
 
     <td>
-        <div class="tax-percentage">&nbsp;%</div>
-        <?= zen_draw_input_field('shipping_tax', (string)$shipping_tax_rate, 'id="ship-tax" class="amount form-control"' . $input_tax_params, false, $input_field_type) ?>
+        <div class="tax-percentage"><?= $shipping_tax_rate ?>%</div>
     </td>
 <?php
-            $value_name = 'value';
             if (DISPLAY_PRICE_WITH_TAX === 'true') {
                 $shipping_net = $next_total['value'] / (1 + ($shipping_tax_rate / 100));
 ?>
     <td>
-        <?= zen_draw_input_field('value', (string)$shipping_net, 'id="ship-net" class="amount form-control"' . $input_value_params, false, $input_field_type) ?>
+        <?= (string)$shipping_net ?>
     </td>
 <?php
-                $value_name = 'gross';
             }
 ?>
-    <td></td>
-    <td>
-        <?= zen_draw_input_field($value_name, $next_total['value'], 'id="ship-gross" class="amount form-control"' . $input_value_params, false, $input_field_type) ?>
+    <td class="text-right eo-label">
+        <?= $trimmed_title ?>
     </td>
-<?php
-            break;
-
-        case 'ot_gv':
-        case 'ot_voucher': 
-?>
-    <td colspan="<?= $columns - 1 ?>"></td>
-    <td class="text-right">
-        <button class="btn btn-sm btn-warning me-2 mb-1 d-none eo-btn-update"><?= IMAGE_UPDATE ?></button>
-    </td>
-    <td class="text-right">
-        <?= zen_draw_hidden_field('ot_class', $ot_class) ?>
-        <?= zen_draw_input_field('title', $trimmed_title, 'class="eo-entry form-control"') ?>
-    </td>
-    <td class="text-right">
-<?php
-            if ($next_total['value'] > 0) {
-                $next_total['value'] *= -1;
-            }
-            echo zen_draw_input_field('value', $next_total['value'], 'class="amount form-control" step="any"', false, $input_field_type);
-?>
+    <td class="text-right eo-label">
+        <?= $next_total['text'] ?>
     </td>
 <?php
             break;
 
         default:
+            if (empty($GLOBALS[$total_class]->eoCanBeAdded)) {
 ?>
-    <td colspan="<?= $columns - 1 ?>"></td>
+    <td colspan="<?= $columns - 2 ?>"></td>
+ 
+<?php
+            } else {
+?>
+   <td colspan="<?= $columns - 3 ?>"></td>
     <td class="text-right">
-        <button class="btn btn-sm btn-warning me-2 mb-1 d-none eo-btn-update"><?= IMAGE_UPDATE ?></button>
+        <button class="btn btn-sm btn-info me-2 mb-2 eo-btn-ot-edit" data-ot-class="<?= $total_class ?>">
+            <?= ICON_EDIT ?>
+        </button>
     </td>
-    <td class="text-right">
-        <?= zen_draw_hidden_field('ot_class', $ot_class) ?>
-        <?= zen_draw_input_field('title', $trimmed_title, 'class="eo-entry form-control"') ?>
-    </td>
-    <td class="text-right">
-        <?= zen_draw_input_field('value', $next_total['value'], 'class="amount form-control"') ?>
-    </td>
+<?php
+            }
+?>
+    <td class="text-right eo-label"><?= $trimmed_title ?></td>
+    <td class="text-right eo-label"><?= $next_total['text'] ?></td>
 <?php
             break;
     }
 ?>
-</tr>
-<?php
-}
-
-$unused_order_totals = $eo->getUnusedOrderTotalModules($order);
-if (count($unused_order_totals) !== 0) {
-?>
-<tr id="add-ot-wrapper" class="eo-ot">
-    <td colspan="<?= $columns ?>">&nbsp;</td>
-    <td>
-        <button id="add-ot" class="btn btn-sm btn-warning me-2 mb-1"><?= TEXT_ADD_ORDER_TOTAL ?></button>
-        <?= zen_draw_pull_down_menu('code', $unused_order_totals, '', 'class="form-control d-inline"') ?>
-    </td>
-    <td>
-        <?= zen_draw_input_field('title', '', 'class="form-control"') ?>
-    </td>
-    <td>
-        <?= zen_draw_input_field('value', '', 'id="add-ot-value" class="form-control" step="any"', false, $input_field_type) ?>
-    </td>
 </tr>
 <?php
 }

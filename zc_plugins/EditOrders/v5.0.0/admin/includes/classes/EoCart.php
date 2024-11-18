@@ -31,8 +31,8 @@ class EoCart extends \shoppingCart
     public function loadFromOrder(\order $order): void
     {
         $this->content_type = $order->content_type;
-
-        foreach ($order->products as $product) {
+        $option_types = [];
+        foreach ($order->products as &$product) {
             $uprid = $product['uprid'];
 
             $this->contents[$uprid] = [
@@ -41,17 +41,35 @@ class EoCart extends \shoppingCart
             if (isset($product['attributes'])) {
                 $this->contents[$uprid]['attributes'] = [];
                 foreach ($product['attributes'] as $attribute) {
-                    //- FIXME: Checkbox attributes' option_id is formatted as 33chk_37,
-                    //  where 33 is the option-id and 37 is the option-value
-                    $option_id = (string)$attribute['option_id'];
+                    $option_id = (int)$attribute['option_id'];
                     $value_id = (int)$attribute['value_id'];
+                    $option_type = $option_types[$option_id] ?? false;
+                    if ($option_type === false) {
+                        $option_info = zen_get_option_details($option_id);
+                        if ($option_info->EOF) {
+                            $product['missing_options'][] = $option_id;
+                        } else {
+                            $option_type = (int)$option_info->fields['products_options_type'];
+                            $option_types[$option_id] = $option_type;
+                        }
+                    }
+
+                    // -----
+                    // Checkbox attributes' option_id is formatted as 33chk_37,
+                    //  where 33 is the option-id and 37 is the option-value
+                    //
+                    if ($option_type === 3) {
+                        $option_id = $option_id . 'chk_' . $value_id;
+                    }
+
                     $this->contents[$uprid]['attributes'][$option_id] = $value_id;
                     if ($value_id === 0) {
-                        $this->contents[$uprid]['attribute_values'][$option_id] = $attribute['value'];
+                        $this->contents[$uprid]['attributes_values'][$option_id] = $attribute['value'];
                     }
                 }
             }
         }
+        unset($product);
 
         // -----
         // Initialize the calculated values; EO's cart doesn't re-calculate

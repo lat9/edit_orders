@@ -39,11 +39,15 @@ if (isset($_SESSION['eo_saved_currency'])) {
 
 unset(
     $_SESSION['cart'],
+    $_SESSION['cc_id'],
+    $_SESSION['cot_gv'],
     $_SESSION['customer_country_id'],
     $_SESSION['customer_zone_id'],
     $_SESSION['customer_id'],
     $_SESSION['customers_ip_address'],
     $_SESSION['eoChanges'],
+    $_SESSION['eo-totals'],
     $_SESSION['payment'],
     $_SESSION['shipping'],
+    $_SESSION['shipping_tax_description'],
 );

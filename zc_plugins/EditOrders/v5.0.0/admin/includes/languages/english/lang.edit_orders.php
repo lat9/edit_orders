@@ -12,13 +12,16 @@ $define = [
     'HEADING_TITLE_SEARCH' => 'Order ID:',
     'HEADING_TITLE_STATUS' => 'Status:',
     'HEADING_TITLE_ADD_PRODUCT' => 'Adding a Product to Order',
-    'TEXT_BUTTON_CHANGE_ATTRIBS_ALT' => 'Change the attributes for this product',
 
-    'TEXT_ORIGINAL_VALUE' => 'Original: <code>%s</code>',           //- Tooltip string
+    'TEXT_BUTTON_CHANGE_ATTRIBS_ALT' => 'Change the attributes for this product',
+    'TEXT_LABEL_TAX' => 'Tax (%):',
     'TEXT_ORDER_TOTAL_ADDED' => '%1$s was added: %2$s',
     'TEXT_ORDER_TOTAL_REMOVED' => '%1$s was removed: %2$s',
+    'TEXT_ORIGINAL_ORDER' => 'Original Order',
+    'TEXT_ORIGINAL_VALUE' => 'Original: <code>%s</code>',           //- Tooltip string
     'TEXT_OSH_CHANGED_VALUES' => 'These values were changed in the order:',
     'TEXT_OT_CHANGES' => 'Order Total Changes',
+    'TEXT_UPDATED_ORDER' => 'Updated Order',
     'TEXT_VALUE_CHANGED' => '%1$s was changed from %2$s to %3$s',   //- Used by the AJAX processing and for OSH record
     'TEXT_VALUE_UNKNOWN' => 'Unknown [%s]',  //- %s is filled in with the unknown 'entity'
 
@@ -106,7 +109,7 @@ $define = [
     'ERROR_ADDRESS_COUNTRY_NOT_FOUND' => 'Order #%u cannot be edited. One or more of the addresses in the order uses a country unknown to your store; taxes and some shipping modules will likely not function correctly until the issue has been resolved.<br><br>This typically occurs if an admin deletes, renames or disables a country using the <b>Locations / Taxes :: Countries</b> tool. The issue can be corrected by doing one of the following:<ul><li>Add the country (and name) back to your Zen Cart database.</li><li>Re-enable the country temporarily to enable the order to be edited.</li></ul>',
     'WARNING_ORDER_NOT_UPDATED' => 'Warning: Nothing to change. The order was not updated.',
     'WARNING_ORDER_QTY_OVER_MAX' => 'Warning: The quantity requested exceeded the maximum allowed for an order. The quantity added was reduced to the maximum allowed per order.',
-    'WARNING_ORDER_COUPON_BAD' => 'Warning: The coupon code was not found in the database. Note: the title / text of a coupon is usually formatted like &quot;Discount Coupon : coupon_code :&quot;. ',
+    'WARNING_ORDER_COUPON_BAD' => 'Warning: The coupon code (%s) for the order is no longer valid. Updating the order will remove any deductions associated with that coupon!',
     'WARNING_INSUFFICIENT_PRODUCT_STOCK' => 'Insufficient stock for <em>%1$s</em>, requested %2$s with %3$s available.',
 
     'ERROR_CANT_DETERMINE_TAX_RATES' => 'Order #%u cannot be edited, since its tax-rates cannot be determined.',
@@ -122,9 +125,18 @@ $define = [
     'TEXT_ATTRIBUTES_UPLOAD_NONE' => 'No file was uploaded',
 
 // Order Totals Display
+    'ERROR_OT_NOT_INSTALLED' => 'The order-total selected (%s) is not installed and cannot be updated.',
     'TEXT_ADD_ORDER_TOTAL' => 'Add ',
     'TEXT_CHOOSE_SHIPPING_MODULE' => 'Choose a shipping module: ',
-    'TEXT_COMMAND_TO_DELETE_CURRENT_COUPON_FROM_ORDER' => 'REMOVE',
+    'TEXT_COMMAND_TO_DELETE_CURRENT_COUPON_FROM_ORDER' => 'REMOVE',     //- ALWAYS uppercased!
+    'TEXT_COUPON_LINK_TITLE' => 'see the Coupon conditions',
+    'TEXT_LABEL_COUPON_CODE' => 'Coupon Code:',
+    'TEXT_LABEL_METHOD' => 'Method:',
+    'TEXT_LABEL_MODULE' => 'Module:',
+    'TEXT_LABEL_TITLE' => 'Title:',
+    'TEXT_LABEL_VALUE' => 'Value:',
+    'TEXT_OT_ADD_MODAL_TITLE' => 'Add Order Total (%s)',
+    'TEXT_OT_UPDATE_MODAL_TITLE' => 'Editing Order Total (%s)',    //- %s is filled in with the order-total's class, e.g. ot_shipping
 
 // Add a Product
     'TEXT_ADD_NEW_PRODUCT' => 'Add Product',
@@ -167,21 +179,21 @@ $define = [
     'PRODUCT_PRICES_CALC_MANUAL' => ' <b>Note:</b> Product prices can be edited.',
     'EO_PRICE_AUTO_GRID_MESSAGE' => 'Auto Calculated',
 
-    'EO_MESSAGE_PRICING_AUTO' => 'Pricing was automatically calculated, without specials pricing.',
-    'EO_MESSAGE_PRICING_AUTOSPECIALS' => 'Pricing was automatically calculated, using specials pricing.',
-    'EO_MESSAGE_PRICING_MANUAL' => 'Pricing was supplied manually.',
-    'EO_MESSAGE_ORDER_UPDATED' => 'The order was updated via "Edit Orders". ',
     'EO_MESSAGE_ADDRESS_UPDATED' => 'The order\'s %1$s address was updated from: ',   //-%1$s: The type of address (see below) that was updated
         'EO_CUSTOMER' => 'customer',
         'EO_BILLING' => 'billing',
         'EO_DELIVERY' => 'delivery',
+        'EO_MESSAGE_ORDER_UPDATED' => 'The order was updated via "Edit Orders". ',
+    'EO_MESSAGE_PRICING_AUTO' => 'Pricing was automatically calculated, without specials pricing.',
+    'EO_MESSAGE_PRICING_AUTOSPECIALS' => 'Pricing was automatically calculated, using specials pricing.',
+    'EO_MESSAGE_PRICING_MANUAL' => 'Pricing was supplied manually.',
+
     'EO_MESSAGE_PRODUCT_ADDED' => 'Added %1$s x "%2$s" to the order',   //-%1$s: The product quantity, %2$s: The product name
-    'EO_MESSAGE_ATTRIBS_ADDED' => ', with options (%s)',
+    'EO_MESSAGE_PRODUCT_ATTRIBS_ADDED' => ', with options (%s)',
 
     'EO_SHIPPING_TAX_DESCRIPTION' => 'Shipping Tax (%s%%)',
     'EO_FREE_SHIPPING' => 'Free Shipping',
 
     'TEXT_PANEL_HEADER_UPDATE_INFO' => 'Order-Update Information',
 ];
-
 return $define;
