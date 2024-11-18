@@ -309,28 +309,73 @@ class zcAjaxEditOrdersAdmin
     }
 
     // -----
-    // Update an order-total's text and/or value.
+    // Get the modal form contents for an order-total's edit.
     //
-    public function updateOrderTotal(): array
+    public function getOrderTotalUpdateModal(): array
+    {
+        return $this->getModalContent('eo_ot_update_modal.php');
+    }
+
+    // -----
+    // Get the modal form contents for an order-total's addition to the order.
+    //
+    public function getOrderTotalAddModal(): array
+    {
+        return $this->getModalContent('eo_ot_add_modal.php');
+    }
+
+    protected function getModalContent(string $modal_filename): array
+    {
+        // -----
+        // Use the base trait to determine this plugin's directory location.
+        //
+        $this->detectZcPluginDetails(__DIR__);
+
+        $eo = new EditOrders($_SESSION['eoChanges']->getOrderId());
+
+        $this->disableGzip();
+        ob_start();
+        require $this->pluginManagerInstalledVersionDirectory . 'admin/' . DIR_WS_MODULES . $modal_filename;
+        $modal_content = ob_get_clean();
+
+        return [
+            'status' => 'ok',
+            'modal_content' => $modal_content,
+        ];
+    }
+
+    // -----
+    // Adding or updating an order-total.
+    //
+    public function addOrUpdateOrderTotal(): array
+    {
+        $_POST['title'] = rtrim($_POST['title'], ' :');
+        switch ($_POST['ot_class']) {
+            case 'ot_shipping':
+                $updated_info = $_SESSION['eoChanges']->updateShippingInfo(
+                    $_POST['module'],
+                    $_POST['title'],
+                    $_POST['value'],
+                    $_POST['tax']
+                );
+                $_SESSION['shipping'] = [
+                    'id' => $_POST['module'] . '_',
+                    'title' => $_POST['title'],
+                    'cost' => $_POST['value'],
+                ];
+                break;
+
+            default:
+                break;
+        }
+        return $this->processOrderUpdate();
+    }
+
+    protected function processOrderUpdate(): array
     {
         global $currencies, $order, $eo;
 
         $eo = new EditOrders($_SESSION['eoChanges']->getOrderId());
-
-        if ($_POST['ot_class'] === 'ot_shipping') {
-            $updated_info = $_SESSION['eoChanges']->updateShippingInfo(
-                $_POST['shipping_module'],
-                rtrim($_POST['title'], ':'),
-                $_POST['value'],
-                $_POST['shipping_tax']
-            );
-            $_SESSION['shipping'] = [
-                'id' => $_POST['shipping_module'] . '_',
-                'title' => rtrim($_POST['title'], ':'),
-                'cost' => $_POST['value'],
-            ];
-        } else {
-        }
 
         require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
         $currencies = new currencies();
@@ -338,12 +383,34 @@ class zcAjaxEditOrdersAdmin
         require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
         $order = new \order();
 
-        require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order_total.php';
-        $order_total_modules = new \order_total();
+        $order_total_modules = $eo->getOrderTotalsObject();
+        if (isset($_POST['dc_redeem_code'], $GLOBALS['ot_coupon']) && $_POST['dc_redeem_code'] !== $order->info['coupon_code']) {
+            if (strtoupper($_POST['dc_redeem_code']) === 'TEXT_COMMAND_TO_DELETE_CURRENT_COUPON_FROM_ORDER') {
+                unset($_SESSION['cc_id']);
+                $order->info['coupon_code'] = '';
+            } else {
+                $coupon_id = $GLOBALS['ot_coupon']->performValidations($_POST['dc_redeem_code']);
+                $coupon_errors = $GLOBALS['ot_coupon']->getValidationErrors();
+                if (count($coupon_errors) === 0) {
+                    $_SESSION['cc_id'] = $coupon_id;
+                    $order->info['coupon_code'] = $_POST['dc_redeem_code'];
+                } else {
+                    $messages = [];
+                    foreach ($coupon_errors as $next_message) {
+                        $messages[] = ['params' => 'messageStackAlert alert alert-warning', 'text' => '<i class="fa-solid fa-2x fa-hand-stop-o"></i> ' . $next_message];
+                    }
+                    $table_block = new boxTableBlock();
+                    return [
+                        'status' => 'error',
+                        'message_html' => $table_block->tableBlock($messages),
+                    ];
+                }
+            }
+        }
         $order->totals = $order_total_modules->process();
 
         // -----
-        // Remove trailing slash from shipping-module's code.
+        // Remove trailing underscore from shipping-module's code.
         //
         $order->info['shipping_module_code'] = rtrim($order->info['shipping_module_code'], '_');
 
@@ -358,7 +425,10 @@ class zcAjaxEditOrdersAdmin
             "\nUpdated:\n" .
             $eo->eoFormatArray($_SESSION['eoChanges']->getUpdatedOrder()->totals) .
             "\nChanges:\n" .
-            $eo->eoFormatArray($_SESSION['eoChanges']->getTotalsChanges())
+            $eo->eoFormatArray($_SESSION['eoChanges']->getTotalsChanges()) .
+            "\not-totals:\n" .
+            $eo->eoFormatArray($_SESSION['eo-totals'] ?? []),
+            'with-date'
         );
 
         // -----

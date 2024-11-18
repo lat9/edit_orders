@@ -28,7 +28,7 @@ $model_params = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'product
 foreach ($order->products as $next_product) {
     $orders_products_id = $next_product['orders_products_id'];
 ?>
-            <tr class="eo-prod dataTableRow" data-opi="<?= $orders_products_id ?>">
+            <tr class="eo-prod dataTableRow">
 <?php
     // -----
     // To add more columns at the beginning of the order's products' table, a
@@ -68,40 +68,30 @@ foreach ($order->products as $next_product) {
         }
     }
 
-    $base_var_name = 'update_products[' . $orders_products_id . ']';
     $price_entry_disabled = ($price_is_manual === true) ? '' : 'disabled';
 ?>
                 <td class="dataTableContent text-center">
-                    <?= zen_draw_input_field('qty', $next_product['qty'], 'class="amount prod-qty mx-auto form-control"' . $input_value_params, false, $input_field_type) ?>
-<?php
-    if (isset($next_product['attributes'])) {
-?>
-                    <button class="update-attributes btn btn-sm btn-warning mt-2" title="<?= TEXT_BUTTON_CHANGE_ATTRIBS_ALT ?>">
+                    <button class="eo-btn-prod-edit btn btn-sm btn-info mt-2 mx-2" data-opi="<?= $orders_products_id ?>">
                         <?= ICON_EDIT ?>
                     </button>
-<?php
-    }
-?>
                 </td>
 
-                <td>&nbsp;X&nbsp;</td>
-
-                <td class="dataTableContent">
-                    <?= zen_draw_input_field('model', $next_product['model'], $model_params . ' class="eo-entry form-control"') ?>
+                <td class="dataTableContent text-right">
+                    <?= $next_product['qty'] ?>&nbsp;X&nbsp;
                 </td>
 
                 <td class="dataTableContent">
-                    <?= zen_draw_input_field('name', $next_product['name'], $name_params . ' class="eo-entry form-control"') ?>
+                    <?= $next_product['model'] ?>
+                </td>
+
+                <td class="dataTableContent">
+                    <?= $next_product['name'] ?>
 <?php
     if (isset($next_product['attributes'])) {
 ?>
                     <div class="row">
                         <small>&nbsp;<i><?= TEXT_ATTRIBUTES_ONE_TIME_CHARGE ?></i></small>
-                        <?= zen_draw_input_field(
-                            'onetime_charges',
-                            $next_product['onetime_charges'],
-                            'class=" amount-onetime form-control form-control-sm d-inline" ' . $price_entry_disabled
-                        ) ?>
+                        <?= $currencies->format($next_product['onetime_charges'], true, $order->info['currency'], $order->info['currency_value']) ?>
                     </div>
 
                     <ul class="attribs-list">
@@ -121,30 +111,15 @@ foreach ($order->products as $next_product) {
     // -----
     // Starting with EO v4.4.0, both the net and gross prices are displayed when the store displays prices with tax.
     //
-    if (DISPLAY_PRICE_WITH_TAX === 'true') {
-        $final_price = $next_product['final_price'];
-        $onetime_charges = $next_product['onetime_charges'];
-    } else {
-        $final_price = $next_product['final_price'];
-        $onetime_charges = $eo->eoRoundCurrencyValue($next_product['onetime_charges']);
-    }
+    $final_price = $next_product['final_price'];
+    $onetime_charges = $next_product['onetime_charges'];
 ?>
                 <td class="dataTableContent text-right">
-                    <div class="tax-percentage">&nbsp;%</div>
-                    <?= zen_draw_input_field(
-                        'tax',
-                        zen_display_tax_value($next_product['tax']),
-                        'class="amount price-tax form-control d-inline-block"' . $input_tax_params,
-                        false,
-                        $input_field_type
-                    ) ?>
+                    <?= zen_display_tax_value($next_product['tax']) ?>%
                 </td>
 
                 <td class="dataTableContent text-right">
-                    <?= zen_draw_input_field(
-                        'final_price',
-                        $final_price,
-                        $input_value_params . ' class="amount price-net form-control" ' . $price_entry_disabled) ?>
+                    <?= $currencies->format($final_price, true, $order->info['currency'], $order->info['currency_value']) ?>
                 </td>
 <?php
     if (DISPLAY_PRICE_WITH_TAX === 'true') {
@@ -152,11 +127,7 @@ foreach ($order->products as $next_product) {
         $final_price = $gross_price;
 ?>
                 <td class="dataTableContent text-right">
-                    <?= zen_draw_input_field(
-                        'gross',
-                        $gross_price,
-                        $input_value_params . ' class="amount price-gross form-control" ' . $price_entry_disabled
-                    ) ?>
+                    <?= $gross_price ?>
                 </td>
 <?php
     }

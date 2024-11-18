@@ -290,26 +290,37 @@ if (ACCOUNT_STATE === 'true') {
 // START ORDER-TOTALS' HANDLING
 // --------------------
 ?>
-    $(document).on('change', 'tr.eo-ot input:not(:hidden), tr.eo-ot select', function() {
-        $(this).closest('tr.eo-ot').find('button.eo-btn-update').first().show();
-        $(this).addClass('border-warning');
+    $(document).on('click', 'button.eo-btn-ot-edit', function() {
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=getOrderTotalUpdateModal',
+            data: {
+                ot_class: $(this).attr('data-ot-class')
+            }
+        }).done(function(response) {
+            $('#ot-edit-modal .modal-content').html(response.modal_content);
+            $('#ot-edit-modal').modal();
+        });
     });
 
-    $(document).on('click', 'tr.eo-ot button.eo-btn-update', function() {
-        let closestRow = $(this).closest('tr.eo-ot');
-        $('<input>').attr({
-            type: 'hidden',
-            name: 'payment_calc_method',
-            value: 'Manual',
-//            value: $('#calc-method').val()
-        }).appendTo(closestRow);
-
+    $(document).on('click', '#eo-add-ot', function() {
         zcJS.ajax({
-            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=updateOrderTotal',
-            data: closestRow.find(':input').serializeArray()
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=getOrderTotalAddModal',
+            data: {
+                ot_class: $('#eo-add-ot-code').find(":selected").val()
+            }
         }).done(function(response) {
-            closestRow.find('input[type="hidden"][name="payment_calc_method"]').remove();
-            $('#products-listing > tbody > tr.eo-ot').remove();
+            $('#ot-edit-modal .modal-content').html(response.modal_content);
+            $('#ot-edit-modal').modal();
+        });
+    });
+
+    $(document).on('click', '#eo-ot-add-update', function() {
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=addOrUpdateOrderTotal',
+            data: $('#ot-edit-modal form').serializeArray()
+        }).done(function(response) {
+            $('#ot-edit-modal').modal('hide');
+            $('#products-listing tr.eo-ot').remove();
             $('#products-listing > tbody').append(response.ot_table_html);
             $('#ot-changes').val(response.ot_changes).trigger('change');
         });

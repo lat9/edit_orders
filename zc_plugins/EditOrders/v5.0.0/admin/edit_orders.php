@@ -58,6 +58,10 @@ if (empty($order->info)) {
 // method will redirect back to the base orders' processing.
 //
 $eo = new EditOrders($oID);
+
+$action = $_GET['action'] ?? 'edit';
+$eo->eoLog("Edit Orders entered action ($action). Enabled Order Totals: " . MODULE_ORDER_TOTAL_INSTALLED, 'with-date');
+
 $eo->checkEnvironment();
 
 // -----
@@ -87,8 +91,6 @@ $_SESSION['currency'] = $order->info['currency'];
 // -----
 // Start action-related processing.
 //
-$action = $_GET['action'] ?? 'edit';
-$eo->eoLog("\n" . date('Y-m-d H:i:s') . ", Edit Orders entered action ($action)\nEnabled Order Totals: " . MODULE_ORDER_TOTAL_INSTALLED);
 $zco_notifier->notify('EDIT_ORDERS_START_ACTION_PROCESSING');
 switch ($action) {
     // Update Order
@@ -234,7 +236,24 @@ switch ($action) {
             zen_update_orders_history((int)$oID, $order_changed_message);
         }
 
-        unset($_SESSION['eoChanges'], $_SESSION['cart']);
+        // -----
+        // Note: Currently replicated in /includes/init_includes/init_eo_config.php, covering the
+        // case where the admin has navigated away from editing an order.
+        //
+        unset(
+            $_SESSION['cart'],
+            $_SESSION['cc_id'],
+            $_SESSION['cot_gv'],
+            $_SESSION['customer_country_id'],
+            $_SESSION['customer_zone_id'],
+            $_SESSION['customer_id'],
+            $_SESSION['customers_ip_address'],
+            $_SESSION['eoChanges'],
+            $_SESSION['eo-totals'],
+            $_SESSION['payment'],
+            $_SESSION['shipping'],
+            $_SESSION['shipping_tax_description'],
+        );
 
         $messageStack->add_session(sprintf(SUCCESS_ORDER_UPDATED, (int)$oID), 'success');
         zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
@@ -273,21 +292,46 @@ $_SESSION['customers_ip_address'] = '.';
 
 // -----
 // Initialize the session-based values for shipping and payment used in the
-// storefront order's processing.
+// storefront order's processing.  Ditto for any coupon/gift-certificate
+// applied to the order.
 //
-$_SESSION['payment'] = $order->info['payment_module_code'];
-$shipping_cost = 0;
-foreach ($order->totals as $next_total) {
-    if ($next_total['class'] === 'ot_shipping') {
-        $shipping_cost = $next_total['value'];
-        break;
+if (!empty($order->info['coupon_code'])) {
+    $coupon_check = $db->Execute(
+        "SELECT coupon_id
+           FROM " . TABLE_COUPONS . "
+          WHERE coupon_code = '" . zen_db_prepare_input($order->info['coupon_code']) . "'
+          LIMIT 1"
+    );
+    if ($coupon_check->EOF) {
+        $messageStack->add(sprintf(WARNING_ORDER_COUPON_BAD, $order->info['coupon_code']), 'warning');
+    } else {
+        $_SESSION['cc_id'] = $coupon_check->fields['coupon_id'];
     }
 }
-$_SESSION['shipping'] = [
-    'id' => $order->info['shipping_module_code'] . '_',
-    'title' => $order->info['shipping_method'],
-    'cost' => $shipping_cost,
-];
+
+$_SESSION['payment'] = $order->info['payment_module_code'];
+
+foreach ($order->totals as $next_total) {
+    switch ($next_total['class']) {
+        case 'ot_shipping':
+            $_SESSION['shipping'] = [
+                'id' => $order->info['shipping_module_code'] . '_',
+                'title' => $order->info['shipping_method'],
+                'cost' => $next_total['value'],
+            ];
+            break;
+
+        case 'ot_gv':
+            $_SESSION['cot_gv'] = (string)$next_total['value'];
+            break;
+
+        default:
+            if (!empty($GLOBALS[$next_total['class']]->eoCanBeAdded)) {
+                $_SESSION['eo-totals'][$next_total['class']] = ['title' => $next_total['title'], 'value' => $next_total['value']];
+            }
+            break;
+    }
+}
 
 // -----
 // Instantiate EO's cart-override into the session for use by storefront
@@ -695,6 +739,13 @@ if (DISPLAY_PRICE_WITH_TAX === 'true') {
             <?php require DIR_WS_MODULES . 'eo_prod_table_display.php'; ?>
             <?php require DIR_WS_MODULES . 'eo_edit_action_ot_table_display.php'; ?>
         </table>
+    </div>
+
+    <div id="ot-edit-modal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            </div>
+        </div>
     </div>
 
 <!-- Begin Status-History Block -->

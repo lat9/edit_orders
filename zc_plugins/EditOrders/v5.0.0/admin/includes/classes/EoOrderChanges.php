@@ -361,7 +361,7 @@ class EoOrderChanges
             $this->updated->info[$field_name] = $order_info[$field_name];
             $this->updated->info['changes'][$field_name] = $field_name;
         }
-        return count($this->updated->info['changes']);
+        return count($this->updated->info['changes'] ?? []);
     }
 
     public function saveOrderTotalsChanges(array $order_totals): int
@@ -448,7 +448,7 @@ class EoOrderChanges
         $ot_code = $order_total['code'] ?? $order_total['class'];
         foreach ($this->updated->totals as $ot_index => $next_total) {
             if ($ot_code !== 'ot_tax') {
-                if ($next_total['class'] === $ot_code) {
+                if (($next_total['class'] ?? $next_total['code']) === $ot_code) {
                     $index = $ot_index;
                     break;
                 }
