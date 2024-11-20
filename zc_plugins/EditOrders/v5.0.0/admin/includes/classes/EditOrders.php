@@ -86,6 +86,7 @@ class EditOrders
         //
         if (DISPLAY_PRICE_WITH_TAX_ADMIN !== DISPLAY_PRICE_WITH_TAX) {
             $messageStack->add_session(ERROR_DISPLAY_PRICE_WITH_TAX, 'error');
+            zen_redirect(zen_href_link(FILENAME_ORDERS, zen_get_all_get_params()));
         }
 
         // -----
@@ -185,7 +186,14 @@ class EditOrders
         // There are also some fields in a storefront order's 'info' array that aren't present
         // in an order's query.
         //
-        $this->addOrConvertOrderFields();
+        // Note: If a product, product-option or product-option-value no longer exists (i.e.
+        // it's been deleted from the store), the order can no longer be edited since no pricing or
+        // product details are present. The called method has set the appropriate message to inform
+        // the current admin of the condition.
+        //
+        if ($this->addOrConvertOrderFields() === false) {
+            zen_redirect(zen_href_link(FILENAME_ORDERS, zen_get_all_get_params()));
+        }
 
         // -----
         // Set the content type for this order.
@@ -258,8 +266,10 @@ class EditOrders
     // Add fields that aren't present in a queried order and convert others
     // to align with their value-type during the checkout processing.
     //
-    protected function addOrConvertOrderFields(): void
+    protected function addOrConvertOrderFields(): bool
     {
+        global $messageStack;
+
         // -----
         // Add the 'info' array elements that aren't present in an order's query.
         //
@@ -297,8 +307,19 @@ class EditOrders
         // format used in the storefront.
         //
         foreach ($this->order->products as &$next_product) {
-            $next_product['qty'] = $this->convertToIntOrFloat($next_product['qty']);
+            // -----
+            // If the product's tax-class-id is null, that indicates that the
+            // ordered product is no longer present in the database. The associated order
+            // cannot be edited.
+            //
+            $products_id = (int)$next_product['id'];
             $next_product['tax_class_id'] = $tax_class_ids[$next_product['orders_products_id']];    //- Will be null if the product no longer exists!
+            if ($next_product['tax_class_id'] === null) {
+                $messageStack->add_session(sprintf(ERROR_PRODUCT_DOES_NOT_EXIST, $this->orders_id, zen_output_string_protected($next_product['name']), $products_id), 'error');
+                return false;
+            }
+
+            $next_product['qty'] = $this->convertToIntOrFloat($next_product['qty']);
             $next_product['tax'] = (float)$next_product['tax'];
             $next_product['final_price'] = (float)$next_product['final_price'];
             $next_product['onetime_charges'] = $this->convertToIntOrFloat($next_product['onetime_charges']);
@@ -318,9 +339,36 @@ class EditOrders
             }
 
             for ($i = 0, $n = count($next_product['attributes']); $i < $n; $i++) {
-                $next_product['attributes'][$i]['option_id'] = (int)$next_product['attributes'][$i]['option_id'];
+                $option_id = (int)$next_product['attributes'][$i]['option_id'];
+                $value_id = (int)$next_product['attributes'][$i]['value_id'];
+                $check = $db->Execute(
+                    "SELECT products_attributes_id
+                       FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
+                      WHERE products_id = $products_id
+                        AND options_id = $option_id
+                        AND options_values_id = $value_id
+                      LIMIT 1"
+                );
+                if ($check->EOF) {
+                    $messageStack->add_session(
+                        sprintf(ERROR_PRODUCT_ATTRIBUTE_DOES_NOT_EXIST,
+                            $this->orders_id,
+                            zen_output_string_protected($next_product['attributes'][$i]['option']),
+                            $option_id,
+                            zen_output_string_protected($next_product['attributes'][$i]['value']),
+                            $value_id,
+                            zen_output_string_protected($next_product['name']),
+                            $products_id
+                        ),
+                        'error'
+                    );
+                    return false;
+                }
+                $next_product['attributes'][$i]['option_id'] = $option_id;
             }
         }
+
+        return true;
     }
 
     // -----
