@@ -324,6 +324,22 @@ class zcAjaxEditOrdersAdmin
         return $this->getModalContent('eo_ot_add_modal.php');
     }
 
+    // -----
+    // Get the modal form contents for a product's edit.
+    //
+    public function getProductUpdateModal(): array
+    {
+        return $this->getModalContent('eo_prod_update_modal.php');
+    }
+
+    // -----
+    // Get the modal form contents for a product's addition to the order.
+    //
+    public function getProductAddModal(): array
+    {
+        return $this->getModalContent('eo_prod_add_modal.php');
+    }
+
     protected function getModalContent(string $modal_filename): array
     {
         // -----

@@ -460,11 +460,16 @@ class EoOrderChanges
         return $index;
     }
 
+    public function getOriginalProductByUprid(string $uprid): array
+    {
+        $index = $this->upridMapping[$uprid] ?? null;
+        return ($index === null) ? [] : $this->original->products[$index];
+    }
     public function getUpdatedProductByUprid(string $uprid): array
     {
         $index = $this->upridMapping[$uprid] ?? null;
         if ($index === null) {
-            trigger_error("Requested product ($uprid) not present in the order.", E_USER_NOTICE);
+            trigger_error("Requested product ($uprid) not present in the updated order.", E_USER_NOTICE);
             return [];
         }
         return $this->updated->products[$index];

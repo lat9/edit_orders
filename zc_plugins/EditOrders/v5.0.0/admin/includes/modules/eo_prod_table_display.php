@@ -67,11 +67,9 @@ foreach ($order->products as $next_product) {
 <?php
         }
     }
-
-    $price_entry_disabled = ($price_is_manual === true) ? '' : 'disabled';
 ?>
                 <td class="dataTableContent text-center">
-                    <button class="eo-btn-prod-edit btn btn-sm btn-info mt-2 mx-2" data-opi="<?= $orders_products_id ?>">
+                    <button class="eo-btn-prod-edit btn btn-sm btn-info mt-2 mx-2" data-uprid="<?= $next_product['uprid'] ?>">
                         <?= ICON_EDIT ?>
                     </button>
                 </td>

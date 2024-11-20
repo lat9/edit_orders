@@ -14,7 +14,6 @@ $define = [
     'HEADING_TITLE_STATUS' => 'Status:',
     'HEADING_TITLE_ADD_PRODUCT' => 'Adding a Product to Order',
 
-    'TEXT_BUTTON_CHANGE_ATTRIBS_ALT' => 'Change the attributes for this product',
     'TEXT_LABEL_TAX' => 'Tax (%):',
     'TEXT_ORDER_TOTAL_ADDED' => '%1$s was added: %2$s',
     'TEXT_ORDER_TOTAL_REMOVED' => '%1$s was removed: %2$s',
@@ -38,9 +37,9 @@ $define = [
     'TABLE_HEADING_PRODUCTS' => 'Products',
     'TABLE_HEADING_TAX' => 'Tax',
     'TABLE_HEADING_TOTAL' => 'Total',
-    'TABLE_HEADING_UNIT_PRICE' => 'Unit Price',
-    'TABLE_HEADING_UNIT_PRICE_NET' => 'Unit Price (Net)',
-    'TABLE_HEADING_UNIT_PRICE_GROSS' => 'Unit Price (Gross)',
+    'TABLE_HEADING_UNIT_PRICE' => 'Unit Price', //- Also used for add/update product modals
+    'TABLE_HEADING_UNIT_PRICE_NET' => 'Unit Price (Net)',   //- Also used for add/update product modals
+    'TABLE_HEADING_UNIT_PRICE_GROSS' => 'Unit Price (Gross)',   //- Also used for add/update product modals
     'TABLE_HEADING_TOTAL_PRICE' => 'Total Price',
     'TABLE_HEADING_CUSTOMER_NOTIFIED' => 'Customer Notified',
     'TABLE_HEADING_DATE_ADDED' => 'Date Added',
@@ -128,10 +127,6 @@ $define = [
     'WARNING_ORDER_NOT_UPDATED' => 'Warning: Nothing to change. The order was not updated.',
     'WARNING_ORDER_QTY_OVER_MAX' => 'Warning: The quantity requested exceeded the maximum allowed for an order. The quantity added was reduced to the maximum allowed per order.',
 
-// Product & Attribute Display
-    'TEXT_ATTRIBUTES_ONE_TIME_CHARGE' => 'One Time Charges: &nbsp;&nbsp;',
-    'TEXT_ATTRIBUTES_UPLOAD_NONE' => 'No file was uploaded',
-
 // Order Totals Display
     'ERROR_OT_NOT_INSTALLED' => 'The order-total selected (%s) is not installed and cannot be updated.',
 
@@ -148,9 +143,22 @@ $define = [
     'TEXT_OT_UPDATE_MODAL_TITLE' => 'Editing Order Total (%s)',    //- %s is filled in with the order-total's class, e.g. ot_shipping
 
 // Adding/updating a product
+    'ERROR_PRODUCT_NOT_FOUND' => 'The requested product (%s) is not present in the order.',
+
     'TEXT_ADD_NEW_PRODUCT' => 'Add Product',
+    'TEXT_ATTRIBUTES_ONE_TIME_CHARGE' => 'One Time Charges:',
+    'TEXT_ATTRIBUTES_UPLOAD_NONE' => 'No file was uploaded',
+    'TEXT_PRODUCT_ATTRIBUTES' => 'Product Attributes',
+
+    'TEXT_LABEL_NAME' => 'Name:',
+    'TEXT_LABEL_MODEL' => 'Model:',
+    'TEXT_LABEL_QTY_AVAIL' => 'Qty avail:',
+    'TEXT_LABEL_QTY' => 'Qty:',
+
     'TEXT_PRODUCT_ADD_MODAL_TITLE' => 'Adding a Product to the Order',
+    'TEXT_PRODUCT_BEING_ADDED' => 'The product is being added to the order.',
     'TEXT_PRODUCT_UPDATE_MODAL_TITLE' => 'Updating a Product',
+
 
     'ADDPRODUCT_TEXT_CATEGORY_CONFIRM' => 'OK',
     'ADDPRODUCT_TEXT_SELECT_PRODUCT' => 'Choose product',

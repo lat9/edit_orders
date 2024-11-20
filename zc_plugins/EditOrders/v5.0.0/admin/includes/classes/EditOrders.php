@@ -674,6 +674,7 @@ class EditOrders
     protected function addCostToTaxGroup(string $tax_group_description, int|float $value): void
     {
         $this->order->info['tax_subtotals'][$tax_group_description]['subtotal'] += $value;
+        $this->order->info['tax_groups'][$tax_group_description] ??= 0;
         $this->order->info['tax_groups'][$tax_group_description] += $value * $this->order->info['tax_subtotals'][$tax_group_description]['tax_rate'] / 100;
 
         if (!isset($this->order->info['tax_subtotals'][$tax_group_description]['parent_groups'])) {
@@ -948,16 +949,16 @@ class EditOrders
     // -----
     // This class function mimics the zen_get_products_stock function, present in /includes/functions/functions_lookups.php.
     //
-    public function getProductsStock($products_id)
+    public function getProductsStock(string $products_uprid)
     {
         $stock_handled = false;
         $stock_quantity = 0;
-        $this->notify('NOTIFY_EO_GET_PRODUCTS_STOCK', $products_id, $stock_quantity, $stock_handled);
+        $this->notify('NOTIFY_EO_GET_PRODUCTS_STOCK', $products_uprid, $stock_quantity, $stock_handled);
         if (!$stock_handled) {
             $check = $GLOBALS['db']->ExecuteNoCache(
                 "SELECT products_quantity
                    FROM " . TABLE_PRODUCTS . "
-                  WHERE products_id = " . (int)zen_get_prid($products_id) . "
+                  WHERE products_id = " . (int)zen_get_prid($products_uprid) . "
                   LIMIT 1"
             );
             $stock_quantity = ($check->EOF) ? 0 : $check->fields['products_quantity'];

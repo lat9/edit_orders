@@ -748,15 +748,18 @@ if (DISPLAY_PRICE_WITH_TAX === 'true') {
         </div>
     </div>
 
-<!-- Begin Status-History Block -->
+    <div id="prod-edit-modal" class="modal fade" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+            </div>
+        </div>
+    </div>
+
     <?php require DIR_WS_MODULES . 'eo_edit_action_osh_table_display.php'; ?>
-<!-- End Status-History Block -->
 </div>
-<!-- footer //-->
-<?php 
-require DIR_WS_INCLUDES . 'footer.php'; 
-?>
-<!-- footer_eof //-->
+
+<?php require DIR_WS_INCLUDES . 'footer.php'; ?>
+
 </body>
 </html>
 <?php

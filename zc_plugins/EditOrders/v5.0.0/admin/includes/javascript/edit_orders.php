@@ -281,6 +281,27 @@ if (ACCOUNT_STATE === 'true') {
 // START PRODUCTS' HANDLING
 // --------------------
 ?>
+    $(document).on('click', 'button.eo-btn-prod-edit', function() {
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=getProductUpdateModal',
+            data: {
+                uprid: $(this).attr('data-uprid'),
+                payment_calc_method: $('#calc-method').find(':selected').val()
+            }
+        }).done(function(response) {
+            $('#prod-edit-modal .modal-content').html(response.modal_content);
+            $('#prod-edit-modal').modal();
+        });
+    });
+
+    $(document).on('click', '#add-product', function() {
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=getProductAddModal',
+        }).done(function(response) {
+            $('#prod-edit-modal .modal-content').html(response.modal_content);
+            $('#prod-edit-modal').modal();
+        });
+    });
 <?php
 // --------------------
 // END PRODUCTS' HANDLING
@@ -294,7 +315,7 @@ if (ACCOUNT_STATE === 'true') {
         zcJS.ajax({
             url: 'ajax.php?act=ajaxEditOrdersAdmin&method=getOrderTotalUpdateModal',
             data: {
-                ot_class: $(this).attr('data-ot-class')
+                ot_class: $(this).attr('data-ot-class'),
             }
         }).done(function(response) {
             $('#ot-edit-modal .modal-content').html(response.modal_content);
@@ -306,7 +327,7 @@ if (ACCOUNT_STATE === 'true') {
         zcJS.ajax({
             url: 'ajax.php?act=ajaxEditOrdersAdmin&method=getOrderTotalAddModal',
             data: {
-                ot_class: $('#eo-add-ot-code').find(":selected").val()
+                ot_class: $('#eo-add-ot-code').find(':selected').val()
             }
         }).done(function(response) {
             $('#ot-edit-modal .modal-content').html(response.modal_content);
