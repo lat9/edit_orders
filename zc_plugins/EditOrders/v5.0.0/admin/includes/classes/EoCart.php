@@ -75,16 +75,28 @@ class EoCart extends \shoppingCart
         // Initialize the calculated values; EO's cart doesn't re-calculate
         // unless there's a change to the order's products.
         //
-        $this->initializeCalculatedValues($order->products);
+        $this->calculateTotalAndWeight($order->products);
     }
-    protected function initializeCalculatedValues(array $ordered_products): void
+
+    public function calculateTotalAndWeight(array $ordered_products): void
     {
         $this->total = 0;
         $this->weight = 0;
         foreach ($ordered_products as $product) {
+            $this->contents[$product['uprid']]['qty'] = (float)$product['qty'];
             $this->total += ($product['qty'] * $product['final_price']) + $product['onetime_charges'];
             $this->weight += $product['qty'] * $product['products_weight'];
         }
+    }
+
+    // -----
+    // Remove a product from the cart.
+    //
+    public function removeProduct(string $uprid, array $product): void
+    {
+        unset($this->contents[$uprid]);
+        $this->total -= (($product['qty'] * $product['final_price']) + $product['onetime_charges']);
+        $this->weight -= $product['qty'] * $product['products_weight'];
     }
 
     // -----
@@ -182,7 +194,7 @@ class EoCart extends \shoppingCart
      */
     public function remove($uprid)
     {
-        parent::remove($uprid);
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
 
     /**
@@ -190,7 +202,7 @@ class EoCart extends \shoppingCart
      */
     public function remove_all()
     {
-        parent::remove_all();
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
     }
 
     /**
@@ -259,9 +271,11 @@ class EoCart extends \shoppingCart
         $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
         $cart_products = [];
         foreach ($updated_order->products as $next_product) {
-            $next_product['id'] = $next_product['uprid'];
-            $next_product['quantity'] = $next_product['qty'];
-            $cart_products[] = $next_product;
+            if ($next_product['qty'] != 0) {
+                $next_product['id'] = $next_product['uprid'];
+                $next_product['quantity'] = $next_product['qty'];
+                $cart_products[] = $next_product;
+            }
         }
         return $cart_products;
     }

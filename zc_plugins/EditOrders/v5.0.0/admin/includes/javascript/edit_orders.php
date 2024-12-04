@@ -293,6 +293,22 @@ if (ACCOUNT_STATE === 'true') {
             $('#prod-edit-modal').modal();
         });
     });
+    $(document).on('click', '#eo-prod-update', function() {
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=updateProduct',
+            data: $('#prod-update-form').serializeArray()
+        }).done(function(response) {
+            if (response.status == 'error') {
+            } else {
+                $('#prod-edit-modal').modal('hide');
+                $('#products-listing tr.eo-prod, #products-listing tr.eo-ot').remove();
+                $('#products-listing > tbody').append(response.prod_table_html);
+                $('#products-listing > tbody').append(response.ot_table_html);
+                $('#product-changes').val(response.prod_changes).trigger('change');
+                $('#ot-changes').val(response.ot_changes).trigger('change');
+            }
+        });
+    });
 
     $(document).on('click', '#add-product', function() {
         zcJS.ajax({

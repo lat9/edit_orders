@@ -21,6 +21,7 @@ $define = [
     'TEXT_ORIGINAL_VALUE' => 'Original: <code>%s</code>',           //- Tooltip string
     'TEXT_OSH_CHANGED_VALUES' => 'These values were changed in the order:',
     'TEXT_OT_CHANGES' => 'Order Total Changes',
+    'TEXT_PRODUCT_CHANGES' => 'Product Changes',
     'TEXT_UPDATED_ORDER' => 'Updated Order',
     'TEXT_VALUE_CHANGED' => '%1$s was changed from %2$s to %3$s',   //- Used by the AJAX processing and for OSH record
     'TEXT_VALUE_UNKNOWN' => 'Unknown [%s]',  //- %s is filled in with the unknown 'entity'
@@ -144,11 +145,16 @@ $define = [
 
 // Adding/updating a product
     'ERROR_PRODUCT_NOT_FOUND' => 'The requested product (%s) is not present in the order.',
+    'ERROR_MODEL_TOO_LONG' => 'The &quot;model&quot; value must not be longer than %u characters.',
+    'ERROR_NAME_TOO_LONG' => 'The &quot;name&quot; value must not be longer than %u characters.',
+    'ERROR_PRICE_INVALID' => 'The product price and/or onetime charges must be numeric and greater than or equal to zero.',
+    'ERROR_QTY_INSUFFICIENT' => 'Insufficient product quantity (%s) is available.',
+    'ERROR_QTY_INVALID' => 'The product quantity must be numeric and greater than or equal to zero.',
+    'ERROR_TAX_RATE_INVALID' => 'The tax-rate for the product must be a numeric value between 0 and 100.',
 
     'TEXT_ADD_NEW_PRODUCT' => 'Add Product',
     'TEXT_ATTRIBUTES_ONE_TIME_CHARGE' => 'One Time Charges:',
     'TEXT_ATTRIBUTES_UPLOAD_NONE' => 'No file was uploaded',
-    'TEXT_PRODUCT_ATTRIBUTES' => 'Product Attributes',
 
     'TEXT_LABEL_NAME' => 'Name:',
     'TEXT_LABEL_MODEL' => 'Model:',
@@ -156,9 +162,18 @@ $define = [
     'TEXT_LABEL_QTY' => 'Qty:',
 
     'TEXT_PRODUCT_ADD_MODAL_TITLE' => 'Adding a Product to the Order',
+    'TEXT_PRODUCT_ATTRIBUTES' => 'Product Attributes',
     'TEXT_PRODUCT_BEING_ADDED' => 'The product is being added to the order.',
     'TEXT_PRODUCT_UPDATE_MODAL_TITLE' => 'Updating a Product',
 
+    //- %1$s (qty), %2$s (name), %3$s (model), %4$s (final price), %5$s (tax rate)
+    'TEXT_STATUS_PRODUCT_ADDED' => '%1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%) was added.',
+
+    //- %1$s (name), %2$s (model), %3$s (final price), %4$s (tax rate)
+    'TEXT_STATUS_PRODUCT_CHANGED' => 'Some of the product details were changed: %1$s [%2$s] @ %3$s (tax-rate %4$s%%)',
+
+    //- %1$s (qty), %2$s (name), %3$s (model), %4$s (final price), %5$s (tax rate)
+    'TEXT_STATUS_PRODUCT_REMOVED' => '%1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%) was removed.',
 
     'ADDPRODUCT_TEXT_CATEGORY_CONFIRM' => 'OK',
     'ADDPRODUCT_TEXT_SELECT_PRODUCT' => 'Choose product',
@@ -184,7 +199,9 @@ $define = [
 
 // Required for various added zen_cart functions
     'PULL_DOWN_DEFAULT' => 'Please Choose Your Country',
-    'TEXT_UNKNOWN_TAX_RATE' => 'Sales Tax (%s%%)',
+
+    'TEXT_UNKNOWN_TAX_RATE_MANUAL' => 'Sales Tax (%s%%)',
+    'TEXT_UNKNOWN_TAX_RATE' => 'Sales Tax',
 
 // Other elements
     'RESET_TOTALS' => 'Reset totals prior to update? ',

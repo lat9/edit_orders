@@ -148,6 +148,11 @@ class zcAjaxEditOrdersAdmin
                 continue;
             }
 
+            if ($title === 'products') {
+                $modal_html .= $this->getProductsChangesModal($fields_changed);
+                continue;
+            }
+
             $modal_html .=
                 '<div class="panel panel-default">' .
                     '<div class="panel-heading">' . $title . '</div>' .
@@ -243,6 +248,25 @@ class zcAjaxEditOrdersAdmin
 
         return $modal_html;
     }
+    protected function getProductsChangesModal(array $fields_changed): string
+    {
+        $modal_html =
+            '<div class="panel panel-default">' .
+                '<div class="panel-heading">' . TEXT_PRODUCT_CHANGES . '</div>' .
+                '<div class="panel-body">' .
+                    '<ul class="list-group my-0">' . "\n";
+
+        foreach ($fields_changed as $uprid => $next_change) {
+            $modal_html .= '<li class="list-group-item">' . $next_change['label'] . '</li>';
+        }
+
+        $modal_html .=
+                    '</ul>' .
+                '</div>' .
+            '</div>';
+        return $modal_html;
+    }
+
     protected function getOrderTotalsChangesModal(array $fields_changed): string
     {
         $modal_html =
@@ -387,21 +411,130 @@ class zcAjaxEditOrdersAdmin
         return $this->processOrderUpdate();
     }
 
+    // -----
+    // Update an existing product in the order.
+    //
+    public function updateProduct(): array
+    {
+        global $eo;
+
+        $eo = new EditOrders($_SESSION['eoChanges']->getOrderId());
+
+        $messages = $this->updateProductCheckInputs($eo);
+        if (count($messages) !== 0) {
+            return [
+                'status' => 'error',
+                'messages' => $messages,
+            ];
+        }
+
+        $product_update = [
+            'qty' => $eo->convertToIntOrFloat($_POST['qty']),
+            'model' => $_POST['model'],
+            'name' => $_POST['name'],
+            'tax' => $eo->convertToIntOrFloat($_POST['tax']),
+        ];
+        if (isset($_POST['final_price'])) {
+            $product_update['final_price'] = $eo->convertToIntOrFloat($_POST['final_price']);
+        }
+        if (isset($_POST['onetime_charges'])) {
+            $product_update['onetime_charges'] = $eo->convertToIntOrFloat($_POST['onetime_charges']);
+        }
+        if (isset($_POST['id'])) {
+            //- FIXME: Need to account for a change in attributes, which could result in
+            // a different model/price
+            $product_update['attributes'] = $_POST['id'];
+        }
+
+        $_SESSION['eoChanges']->updateProductInOrder($_POST['uprid'], $product_update);
+
+        return $this->processOrderUpdate();
+    }
+    protected function updateProductCheckInputs(EditOrders $eo): array
+    {
+        $messages = [];
+
+        $updated_qty = $_POST['qty'];
+        if (!is_numeric($updated_qty) || $updated_qty < 0) {
+            $messages['qty'] = ERROR_QTY_INVALID;
+        }
+
+        $tax = $_POST['tax'];
+        if (!is_numeric($tax) || $tax < 0 || $tax > 100) {
+            $messages['tax'] = ERROR_TAX_RATE_INVALID;
+        }
+
+        $model = $_POST['model'];
+        if (strlen($model) > zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_model')) {
+            $messages['model'] = sprintf(ERROR_MODEL_TOO_LONG, zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_model'));
+        }
+
+        $name = $_POST['name'];
+        if (strlen($name) > zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_name')) {
+            $messages['name'] = sprintf(ERROR_NAME_TOO_LONG, zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_name'));
+        }
+
+        if (isset($_POST['final_price'])) {
+            $final_price = $_POST['final_price'];
+            if (!is_numeric($final_price) || $final_price < 0) {
+                $messages['final_price'] = ERROR_PRICE_INVALID;
+            }
+        }
+
+        if (isset($_POST['onetime_charges'])) {
+            $onetime_charges = $_POST['onetime_charges'];
+            if (!is_numeric($onetime_charges) || $onetime_charges < 0) {
+                $messages['onetime_charges'] = ERROR_PRICE_INVALID;
+            }
+        }
+
+        $updated_qty = $_POST['qty'];
+        if (!is_numeric($updated_qty) || $updated_qty < 0) {
+            $messages['qty'] = ERROR_QTY_INVALID;
+        } elseif (STOCK_ALLOW_CHECKOUT === 'false') {
+            $original_product = $_SESSION['eoChanges']->getOriginalProductByUprid($_POST['uprid']);
+            $original_qty = $original_product['qty'] ?? 0;
+            $qty_required = $eo->convertToIntOrFloat($updated_qty) - $original_qty;
+            $available_qty = $eo->getProductsAvailableStock($_POST['uprid'], $_POST['id'] ?? []);
+            if ($qty_required > $available_qty) {
+                $messages['qty'] = sprintf(ERROR_QTY_INSUFFICIENT, (string)$available_qty);
+            }
+        }
+
+        $additional_messages = [];
+        $this->notify('NOTIFY_EO_UPDATE_PRODUCT_CHECK_INPUTS', ['messages' => $messages, 'post' => $_POST], $additional_messages);
+        if (is_array($additional_messages)) {
+            $messages = array_merge($messages, $additional_messages);
+        }
+
+        return $messages;
+    }
+
     protected function processOrderUpdate(): array
     {
         global $currencies, $order, $eo;
 
-        $eo = new EditOrders($_SESSION['eoChanges']->getOrderId());
+        $eo ??= new EditOrders($_SESSION['eoChanges']->getOrderId());
 
         require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
         $currencies = new currencies();
 
+        // -----
+        // 'Create' the order from EO's cart.  Note that the order-class doesn't include
+        // a product's uprid (that's present in a product's 'id' element), so the id will
+        // be copied to the uprid for the rest of EO's processing.
+        //
         require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
         $order = new \order();
+        foreach ($order->products as $index => $product) {
+            $order->products[$index]['uprid'] = $order->products[$index]['id'];
+        }
+
+        $eo->eoLog("Products updated:\n" . $eo->eoFormatArray($order->products));
 
         $order_total_modules = $eo->getOrderTotalsObject();
         if (isset($_POST['dc_redeem_code'], $GLOBALS['ot_coupon']) && $_POST['dc_redeem_code'] !== $order->info['coupon_code']) {
-            if (strtoupper($_POST['dc_redeem_code']) === 'TEXT_COMMAND_TO_DELETE_CURRENT_COUPON_FROM_ORDER') {
+            if (strtoupper($_POST['dc_redeem_code']) === TEXT_COMMAND_TO_DELETE_CURRENT_COUPON_FROM_ORDER) {
                 unset($_SESSION['cc_id']);
                 $order->info['coupon_code'] = '';
             } else {
@@ -452,18 +585,11 @@ class zcAjaxEditOrdersAdmin
         //
         $this->detectZcPluginDetails(__DIR__);
 
-        zen_define_default('EDIT_ORDERS_USE_NUMERIC_FIELDS', '1');
-        if (EDIT_ORDERS_USE_NUMERIC_FIELDS !== '1') {
-            $input_value_params = '';
-            $input_tax_params = '';
-            $input_field_type = 'text';
-        } else {
-            $input_value_params = ' min="0" step="any"';
-            $input_tax_params = ' min="0" max="100" step="any"';
-            $input_field_type = 'number';
-        }
-
         $this->disableGzip();
+        ob_start();
+        require $this->pluginManagerInstalledVersionDirectory . 'admin/' . DIR_WS_MODULES . 'eo_prod_table_display.php';
+        $prod_table_html = ob_get_clean();
+
         ob_start();
         require $this->pluginManagerInstalledVersionDirectory . 'admin/' . DIR_WS_MODULES . 'eo_edit_action_ot_table_display.php';
         $ot_table_html = ob_get_clean();
@@ -471,7 +597,9 @@ class zcAjaxEditOrdersAdmin
         return [
             'status' => 'ok',
             'ot_changes' => $ot_changes,
+            'prod_changes' => $_SESSION['eoChanges']->getProductsChangeCount(),
             'ot_table_html' => $ot_table_html,
+            'prod_table_html' => $prod_table_html,
         ];
     }
 
