@@ -12,21 +12,16 @@
 global $eo, $zco_notifier;
 
 // -----
-// The $price_is_manual variable is set by the base edit_orders.php on the EO entry
-// page's initial rendering.  Follow-on invocations of this module are based on AJAX
-// activity, where the current pricing-calculation method is provided by a POSTed
-// variable.
+// Add the ordered products to the display.
 //
-$price_is_manual = $price_is_manual ?? (($_POST['payment_calc_method'] ?? 'Manual') === 'Manual');
-
-// -----
-// Initialize (outside of the loop, for performance) the attributes for the various product-related
-// input fields.
-//
-$name_params = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_name') . '"';
-$model_params = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_model') . '"';
 foreach ($order->products as $next_product) {
-    $orders_products_id = $next_product['orders_products_id'];
+    // -----
+    // Since a product could have been removed from an updated order, bypass
+    // the display of a product with a zero-valued quantity.
+    //
+    if ($next_product['qty'] == 0) {
+        continue;
+    }
 ?>
             <tr class="eo-prod dataTableRow">
 <?php
@@ -67,11 +62,9 @@ foreach ($order->products as $next_product) {
 <?php
         }
     }
-
-    $price_entry_disabled = ($price_is_manual === true) ? '' : 'disabled';
 ?>
                 <td class="dataTableContent text-center">
-                    <button class="eo-btn-prod-edit btn btn-sm btn-info mt-2 mx-2" data-opi="<?= $orders_products_id ?>">
+                    <button class="eo-btn-prod-edit btn btn-sm btn-info mt-2 mx-2" data-uprid="<?= $next_product['uprid'] ?>">
                         <?= ICON_EDIT ?>
                     </button>
                 </td>

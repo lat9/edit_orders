@@ -388,7 +388,7 @@ class EditOrders
     // Convert a string value to either an int or float, depending on
     // the presence of a '.' in the value.
     //
-    protected function convertToIntOrFloat(string $value): int|float
+    public function convertToIntOrFloat(string $value): int|float
     {
         if (strpos($value, '.') === false) {
             return (int)$value;
@@ -660,7 +660,7 @@ class EditOrders
         // products (or shipping) can be accumulated.
         //
         if ($value == 0) {
-            $group_name = sprintf(TEXT_UNKNOWN_TAX_RATE, '0');
+            $group_name = sprintf(TEXT_UNKNOWN_TAX_RATE_MANUAL, '0');
             $this->order->info['tax_groups'][$group_name] = 0;
             $this->order->info['tax_subtotals'][$group_name] = [
                 'tax_rate' => 0,
@@ -674,6 +674,7 @@ class EditOrders
     protected function addCostToTaxGroup(string $tax_group_description, int|float $value): void
     {
         $this->order->info['tax_subtotals'][$tax_group_description]['subtotal'] += $value;
+        $this->order->info['tax_groups'][$tax_group_description] ??= 0;
         $this->order->info['tax_groups'][$tax_group_description] += $value * $this->order->info['tax_subtotals'][$tax_group_description]['tax_rate'] / 100;
 
         if (!isset($this->order->info['tax_subtotals'][$tax_group_description]['parent_groups'])) {
@@ -838,7 +839,7 @@ class EditOrders
             }
         }
         $this->shipping_tax_rate = $tax_rate;
-        $shipping_tax = $this->eoRoundCurrencyValue(zen_calculate_tax((float)$order->info['shipping_cost'], (float)$tax_rate));
+        $shipping_tax = zen_calculate_tax((float)$order->info['shipping_cost'], (float)$tax_rate);
         $this->eoLog("\tcalculateOrderShippingTax returning $shipping_tax, rate = " . var_export($tax_rate, true) . ", cost = {$order->info['shipping_cost']}.");
         return $shipping_tax;
     }
@@ -921,20 +922,11 @@ class EditOrders
         }
     }
 
-    // -----
-    // Convert a currency value in the database's decimal(15,4) format, in string format.  This
-    // should help in the penny-off rounding calculations.
-    //
-    public function eoRoundCurrencyValue($value)
-    {
-        return $value;
-    }
-
     public function eoFormatCurrencyValue($value)
     {
         global $currencies;
 
-        return $currencies->format($this->eoRoundCurrencyValue($value), true, $this->info['currency'], $this->info['currency_value']);
+        return $currencies->format($value, true, $this->info['currency'], $this->info['currency_value']);
     }
 
     // -----
@@ -946,23 +938,25 @@ class EditOrders
     }
 
     // -----
-    // This class function mimics the zen_get_products_stock function, present in /includes/functions/functions_lookups.php.
+    // Retrieve a product/product-variant available stock.
     //
-    public function getProductsStock($products_id)
+    public function getProductsAvailableStock(string $products_uprid, array $attributes): int|float
     {
         $stock_handled = false;
         $stock_quantity = 0;
-        $this->notify('NOTIFY_EO_GET_PRODUCTS_STOCK', $products_id, $stock_quantity, $stock_handled);
-        if (!$stock_handled) {
-            $check = $GLOBALS['db']->ExecuteNoCache(
+        $this->notify('NOTIFY_EO_GET_PRODUCTS_AVAILABLE_STOCK', ['uprid' => $products_uprid, 'attributes' => $attributes], $stock_quantity, $stock_handled);
+        if ($stock_handled === false) {
+            global $db;
+
+            $check = $db->ExecuteNoCache(
                 "SELECT products_quantity
                    FROM " . TABLE_PRODUCTS . "
-                  WHERE products_id = " . (int)zen_get_prid($products_id) . "
+                  WHERE products_id = " . (int)zen_get_prid($products_uprid) . "
                   LIMIT 1"
             );
-            $stock_quantity = ($check->EOF) ? 0 : $check->fields['products_quantity'];
+            $stock_quantity = ($check->EOF) ? '0' : $check->fields['products_quantity'];
         }
-        return $stock_quantity;
+        return $this->convertToIntOrFloat((string)$stock_quantity);
     }
 
     // -----
@@ -1021,6 +1015,8 @@ class EditOrders
                 case 'shipping_tax_rate':
                 case 'order_weight':
                     $order_info_updates[] = ['fieldName' => $key, 'value' => $updated_values[$key], 'type' => 'float',];
+                    break;
+                case 'subtotal':
                     break;
                 default:
                     $order_info_updates[] = ['fieldName' => $key, 'value' => $updated_values[$key], 'type' => 'stringIgnoreNull',];
@@ -1097,6 +1093,153 @@ class EditOrders
         }
 
         return $address_updates;
+    }
+
+    public function updateOrderTotalsInDb(int $oID, array $ot_changes, array $totals_changes): string
+    {
+        global $db;
+
+        $ot_updates = '<li>' . TEXT_OT_CHANGES . '</li>';
+        $ot_updates .= '<ol type="a">';
+
+        $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
+        foreach ($totals_changes as $ot_index => $change_type) {
+            $updated_total = $updated_order->totals[$ot_index];
+            if ($change_type === 'added') {
+                $ot = [
+                    ['fieldName' => 'orders_id', 'value' => $oID, 'type' => 'integer'],
+                    ['fieldName' => 'title', 'value' => $updated_total['title'], 'type' => 'string'],
+                    ['fieldName' => 'text', 'value' => $updated_total['text'], 'type' => 'string'],
+                    ['fieldName' => 'value', 'value' => $updated_total['value'], 'type' => 'float'],
+                    ['fieldName' => 'class', 'value' => $updated_total['code'], 'type' => 'string' ],
+                    ['fieldName' => 'sort_order', 'value' => $updated_total['sort_order'], 'type' => 'integer'],
+                ];
+                $db->perform(TABLE_ORDERS_TOTAL, $ot);
+                $ot_updates .= '<li>' . sprintf(TEXT_ORDER_TOTAL_ADDED, $updated_total['code'], $ot_changes[$ot_index]['updated']) . '</li>';
+                continue;
+            }
+
+            if ($change_type === 'removed') {
+                if ($updated_total['class'] !== 'ot_tax') {
+                    $db->Execute(
+                        "DELETE FROM " . TABLE_ORDERS_TOTAL . "
+                          WHERE orders_id = " . (int)$oID . "
+                            AND `class` = '" . $updated_total['class'] . "'
+                          LIMIT 1"
+                    );
+                } else {
+                    $db->Execute(
+                        "DELETE FROM " . TABLE_ORDERS_TOTAL . "
+                          WHERE orders_id = " . (int)$oID . "
+                            AND `class` = '" . $updated_total['class'] . "'
+                            AND `title` = '" . zen_db_input($updated_total['title']) . "'
+                          LIMIT 1"
+                    );
+                }
+                $ot_updates .= '<li>' . sprintf(TEXT_ORDER_TOTAL_REMOVED, $updated_total['class'], $ot_changes[$ot_index]['original']) . '</li>';
+                continue;
+            }
+
+            $and_clause = ($updated_total['class'] === 'ot_tax') ? (" AND `title` = '" . zen_db_input($updated_total['class']) . "'") : '';
+            $ot = [
+                ['fieldName' => 'title', 'value' => $updated_total['title'], 'type' => 'string'],
+                ['fieldName' => 'text', 'value' => $updated_total['text'], 'type' => 'string'],
+                ['fieldName' => 'value', 'value' => $updated_total['value'], 'type' => 'float'],
+            ];
+            $db->perform(
+                TABLE_ORDERS_TOTAL,
+                $ot,
+                'update',
+                'orders_id = ' . (int)$oID . " AND `class` = '" . $updated_total['class'] . "'" . $and_clause . ' LIMIT 1'
+            );
+            $ot_updates .= '<li>' . sprintf(TEXT_VALUE_CHANGED, $updated_total['class'], $ot_changes[$ot_index]['original'], $ot_changes[$ot_index]['updated']) . '</li>';
+        }
+
+        $ot_updates .= '</ol>';
+        return $ot_updates;
+    }
+
+    public function updateOrderedProductsInDb(int $oID, array $products_changes): string
+    {
+        global $db;
+
+        $products_updates = '<li>' . TEXT_PRODUCT_CHANGES . '</li>';
+        $products_updates .= '<ol type="a">';
+
+        foreach ($products_changes as $uprid => $changes) {
+            $products_updates .= '<li>' . $changes['label'] . '</li>';
+
+            switch ($changes['status']) {
+                case 'removed':
+                    $orders_products_id = $changes['original']['orders_products_id'];
+                    $db->Execute(
+                        "DELETE FROM " . TABLE_ORDERS_PRODUCTS . "
+                          WHERE orders_products_id = $orders_products_id
+                          LIMIT 1"
+                    );
+                    $db->Execute(
+                        "DELETE FROM " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . "
+                          WHERE orders_products_id = $orders_products_id"
+                    );
+                    $db->Execute(
+                        "DELETE FROM " . TABLE_ORDERS_PRODUCTS_DOWNLOAD . "
+                          WHERE orders_products_id = $orders_products_id"
+                    );
+
+                    $original_qty = $changes['original']['qty'];
+                    $products_id = (int)$changes['original']['id'];
+                    $db->Execute(
+                        "UPDATE " . TABLE_PRODUCTS . "
+                            SET products_quantity = products_quantity + $original_qty
+                          WHERE products_id = $products_id
+                          LIMIT 1"
+                    );
+
+                    $this->notify('NOTIFY_EO_PRODUCT_REMOVED', ['orders_products_id' => $orders_products_id, 'product' => $changes['original']]);
+                    break;
+
+                case 'added':
+                    break;
+
+                default:
+                    $updated_product = $changes['updated'];
+                    $orders_products_id = $updated_product['orders_products_id'];
+                    $orders_products_update = [
+                        ['fieldName' => 'products_model', 'value' => $updated_product['model'], 'type' => 'string'],
+                        ['fieldName' => 'products_name', 'value' => $updated_product['name'], 'type' => 'string'],
+                        ['fieldName' => 'products_price', 'value' => $updated_product['price'], 'type' => 'float'],
+                        ['fieldName' => 'final_price', 'value' => $updated_product['final_price'], 'type' => 'float'],
+                        ['fieldName' => 'products_tax', 'value' => $updated_product['tax'], 'type' => 'float'],
+                        ['fieldName' => 'products_quantity', 'value' => $updated_product['qty'], 'type' => 'float'],
+                        ['fieldName' => 'onetime_charges', 'value' => $updated_product['onetime_charges'], 'type' => 'float'],
+                    ];
+                    $db->perform(TABLE_ORDERS_PRODUCTS, $orders_products_update, 'update', "orders_products_id = $orders_products_id LIMIT 1");
+
+                    $products_id = (int)$changes['updated']['id'];
+                    $changed_qty = $changes['changed_qty'];
+                    if ($changed_qty >= 0) {
+                        $db->Execute(
+                            "UPDATE " . TABLE_PRODUCTS . "
+                                SET products_quantity = products_quantity - $changed_qty
+                              WHERE products_id = $products_id
+                              LIMIT 1"
+                        );
+                    } else {
+                        $db->Execute(
+                            "UPDATE " . TABLE_PRODUCTS . "
+                                SET products_quantity = products_quantity + " . ($changed_qty * -1) . "
+                              WHERE products_id = $products_id
+                              LIMIT 1"
+                        );
+                    }
+
+                    $this->notify('NOTIFY_EO_PRODUCT_CHANGED', ['orders_products_id' => $orders_products_id, 'changes' => $changes]);
+                    break;
+            }
+        }
+
+        $products_updates .= '</ol>';
+        return $products_updates;
     }
 
     public function eoLog(string $message, string $message_type = 'general'): void

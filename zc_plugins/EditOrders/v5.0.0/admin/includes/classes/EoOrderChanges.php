@@ -23,7 +23,10 @@ class EoOrderChanges
     protected \stdClass $original;
     public \stdClass $updated;
     protected int $orderId;
-    public array $upridMapping = [];
+
+    protected array $upridMapping = [];
+    protected array $productsChanges = [];
+
     protected array $opIdMapping = [];
     protected array $totalsChanges = [];
     protected array $ordersStatuses;
@@ -213,10 +216,6 @@ class EoOrderChanges
             ];
         }
 
-        if (!empty($this->totalsChanges)) {
-            $changes['order_totals'] = $this->getOrderTotalsChangedValues();
-        }
-
         if (!empty($updated_order->customer['changes'])) {
             $changes[ENTRY_CUSTOMER] = $this->getAddressChangedValues('customer');
         }
@@ -227,6 +226,14 @@ class EoOrderChanges
 
         if (!empty($updated_order->billing['changes'])) {
             $changes[ENTRY_BILLING_ADDRESS] = $this->getAddressChangedValues('billing');
+        }
+
+        if (!empty($this->totalsChanges)) {
+            $changes['order_totals'] = $this->getOrderTotalsChangedValues();
+        }
+
+        if (!empty($this->productsChanges)) {
+            $changes['products'] = $this->getProductsChangedValues();
         }
 
         return $changes;
@@ -320,6 +327,88 @@ class EoOrderChanges
             ];
         }
         return $address_changes;
+    }
+
+    protected function getProductsChangedValues(): array
+    {
+        $product_changes = [];
+        foreach ($this->productsChanges as $uprid => $change_status) {
+            $index = $this->upridMapping[$uprid] ?? null;
+            if ($index === null) {
+                trigger_error(
+                    "Unrecognized product ($uprid) change recorded.\nproductsChanges:\n" . var_export($this->productsChanges, true) .
+                        "\nupridMapping:\n" . var_export($this->upridMapping, true)
+                );
+                continue;
+            }
+
+            switch ($change_status) {
+                case 'removed':
+                    $product = $this->original->products[$index];
+                    $product_changes[$uprid] = [
+                        'status' => 'removed',
+                        'label' => sprintf(
+                            TEXT_STATUS_PRODUCT_REMOVED,
+                            (string)$product['qty'],
+                            $this->getChangedProductName($product),
+                            $product['model'],
+                            (string)$product['final_price'],
+                            (string)$product['tax']
+                        ),
+                    ];
+                    break;
+                case 'added':
+                    $product = $this->updated->products[$index];
+                    $product_changes[$uprid] = [
+                        'status' => 'added',
+                        'label' => sprintf(
+                            TEXT_STATUS_PRODUCT_ADDED,
+                            (string)$product['qty'],
+                            $this->getChangedProductName($product),
+                            $product['model'],
+                            (string)$product['final_price'],
+                            (string)$product['tax']
+                        ),
+                        'updated' => $product,
+                    ];
+                    break;
+                default:
+                    $product = $this->updated->products[$index];
+
+                    $original_qty = $this->original->products[$index]['qty'];
+                    $updated_qty = $this->updated->products[$index]['qty'];
+                    $changed_qty = $updated_qty - $original_qty;
+                    $changed_message = ($changed_qty == 0) ? TEXT_STATUS_PRODUCT_CHANGED : (($changed_qty < 0) ? TEXT_STATUS_PRODUCT_REMOVED : TEXT_STATUS_PRODUCT_ADDED);
+                    $product_changes[$uprid] = [
+                        'status' => 'updated',
+                        'changed_qty' => $changed_qty,
+                        'label' => sprintf(
+                            $changed_message,
+                            (string)abs($changed_qty),
+                            $this->getChangedProductName($product),
+                            $product['model'],
+                            (string)$product['final_price'],
+                            (string)$product['tax']
+                        ),
+                        'original' => $this->original->products[$index],
+                        'updated' => $this->updated->products[$index],
+                    ];
+                    break;
+            }
+        }
+        return $product_changes;
+    }
+    protected function getChangedProductName(array $product): string
+    {
+        $name = $product['name'];
+        if (!empty($product['attributes'])) {
+            $attributes_display = [];
+            foreach ($product['attributes'] as $next_attr) {
+                $attributes_display[] = $next_attr['option'] . ': ' . nl2br(zen_output_string_protected($next_attribute['value']));
+            }
+            $name .= ' (' . implode(', ', $attributes_display) . ')';
+        }
+        return $name;
     }
 
     public function updateShippingInfo(string $shipping_module_code, string $shipping_method, string $shipping_cost, string $shipping_tax_rate): array
@@ -460,14 +549,61 @@ class EoOrderChanges
         return $index;
     }
 
+    public function getOriginalProductByUprid(string $uprid): array
+    {
+        $index = $this->upridMapping[$uprid] ?? null;
+        return ($index === null) ? [] : $this->original->products[$index];
+    }
     public function getUpdatedProductByUprid(string $uprid): array
     {
         $index = $this->upridMapping[$uprid] ?? null;
         if ($index === null) {
-            trigger_error("Requested product ($uprid) not present in the order.", E_USER_NOTICE);
+            trigger_error("Requested product ($uprid) not present in the updated order.", E_USER_NOTICE);
             return [];
         }
         return $this->updated->products[$index];
+    }
+
+    public function updateProductInOrder(string $uprid, array $product): void
+    {
+        //-FIXME: Haven't accounted for a change in attributes.
+        $index = $this->upridMapping[$uprid] ?? null;
+        if ($index !== null) {
+            $changes = 0;
+            $is_removal = false;
+            $original_qty = $this->original->products[$index]['qty'] ?? $this->updated->products[$index]['qty'];
+            foreach ($product as $field => $value) {
+                if ($this->updated->products[$index][$field] != $value) {
+                    $changes++;
+                    if ($field === 'qty' && $value == 0) {
+                        $is_removal = true;
+                    }
+                    $this->updated->products[$index][$field] = $value;
+                }
+            }
+            if ($changes !== 0) {
+                if ($is_removal === false) {
+                    $this->productsChanges[$uprid] ??= 'updated';
+                    $_SESSION['cart']->calculateTotalAndWeight($this->updated->products);
+                } elseif (($this->productsChanges[$uprid] ?? '') === 'added') {
+                    unset($this->productsChanges[$uprid]);
+                    $_SESSION['cart']->removeProduct($uprid, $this->updated->products[$index]);
+                } else {
+                    $this->productsChanges[$uprid] = 'removed';
+                    $_SESSION['cart']->removeProduct($uprid, $this->updated->products[$index]);
+                }
+            }
+        }
+    }
+
+    public function getProductsChangeCount(): int
+    {
+        return count($this->productsChanges);
+    }
+
+    public function getProductsChanges(): array
+    {
+        return $this->productsChanges;
     }
 
     // -----

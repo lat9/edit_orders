@@ -66,7 +66,7 @@ $eo->checkEnvironment();
 
 // -----
 // Make the modifications needed to coerce the recorded/queried order into
-// its storefront format. The method returns an indication as to whether/not
+// its storefront 'cart' format. The method returns an indication as to whether/not
 // it could successfully 'divine' that information.
 //
 // When the method returns false, its processing has set any messages to be displayed
@@ -135,68 +135,15 @@ switch ($action) {
             );
         }
 
-        if (!empty($updated_order->products['changes'])) {      //- FIXME,
+        $products_updates = '';
+        if (!empty($changed_values['products'])) {
+            $products_updates = $eo->updateOrderedProductsInDb($oID, $changed_values['products']);
         }
 
         $ot_updates = '';
         $totals_changes = $_SESSION['eoChanges']->getTotalsChanges();
         if (!empty($totals_changes)) {
-            $ot_changes = $changed_values['order_totals'];
-
-            $ot_updates = '<li>' . TEXT_OT_CHANGES . '</li>';
-            $ot_updates .= '<ol type="a">';
-            foreach ($totals_changes as $ot_index => $change_type) {
-                $updated_total = $updated_order->totals[$ot_index];
-                if ($change_type === 'added') {
-                    $ot = [
-                        ['fieldName' => 'orders_id', 'value' => $oID, 'type' => 'integer',],
-                        ['fieldName' => 'title', 'value' => $updated_total['title'], 'type' => 'string',],
-                        ['fieldName' => 'text', 'value' => $updated_total['text'], 'type' => 'string',],
-                        ['fieldName' => 'value', 'value' => $updated_total['value'], 'type' => 'float',],
-                        ['fieldName' => 'class', 'value' => $updated_total['code'], 'type' => 'string', ],
-                        ['fieldName' => 'sort_order', 'value' => $updated_total['sort_order'], 'type' => 'integer',],
-                    ];
-                    $db->perform(TABLE_ORDERS_TOTAL, $ot);
-                    $ot_updates .= '<li>' . sprintf(TEXT_ORDER_TOTAL_ADDED, $updated_total['code'], $ot_changes[$ot_index]['updated']) . '</li>';
-                    continue;
-                }
-
-                if ($change_type === 'removed') {
-                    if ($updated_total['class'] !== 'ot_tax') {
-                        $db->Execute(
-                            "DELETE FROM " . TABLE_ORDERS_TOTAL . "
-                              WHERE orders_id = " . (int)$oID . "
-                                AND `class` = '" . $updated_total['class'] . "'
-                              LIMIT 1"
-                        );
-                    } else {
-                        $db->Execute(
-                            "DELETE FROM " . TABLE_ORDERS_TOTAL . "
-                              WHERE orders_id = " . (int)$oID . "
-                                AND `class` = '" . $updated_total['class'] . "'
-                                AND `title` = '" . zen_db_input($updated_total['title']) . "'
-                              LIMIT 1"
-                        );
-                    }
-                    $ot_updates .= '<li>' . sprintf(TEXT_ORDER_TOTAL_REMOVED, $updated_total['class'], $ot_changes[$ot_index]['original']) . '</li>';
-                    continue;
-                }
-
-                $and_clause = ($updated_total['class'] === 'ot_tax') ? (" AND `title` = '" . zen_db_input($updated_total['class']) . "'") : '';
-                $ot = [
-                    ['fieldName' => 'title', 'value' => $updated_total['title'], 'type' => 'string',],
-                    ['fieldName' => 'text', 'value' => $updated_total['text'], 'type' => 'string',],
-                    ['fieldName' => 'value', 'value' => $updated_total['value'], 'type' => 'float',],
-                ];
-                $db->perform(
-                    TABLE_ORDERS_TOTAL,
-                    $ot,
-                    'update',
-                    'orders_id = ' . (int)$oID . " AND `class` = '" . $updated_total['class'] . "'" . $and_clause . ' LIMIT 1'
-                );
-                $ot_updates .= '<li>' . sprintf(TEXT_VALUE_CHANGED, $updated_total['class'], $ot_changes[$ot_index]['original'], $ot_changes[$ot_index]['updated']) . '</li>';
-            }
-            $ot_updates .= '</ol>';
+            $ot_updates = $eo->updateOrderTotalsInDb($oID, $changed_values['order_totals'], $totals_changes);
         }
 
         if (!empty($updated_order->statuses['changes'])) {
@@ -218,6 +165,10 @@ switch ($action) {
             }
             if ($title === 'order_totals') {
                 $order_changed_message .= $ot_updates;
+                continue;
+            }
+            if ($title === 'products') {
+                $order_changed_message .= $products_updates;
                 continue;
             }
 
@@ -352,24 +303,6 @@ $_SESSION['cart']->loadFromOrder($order);
 </div>
 <!-- header_eof //-->
 <?php
-// -----
-// A store can override EO's application of the 'type="number"' parameters by adding the definition
-//
-// define('EDIT_ORDERS_USE_NUMERIC_FIELDS', '0');
-//
-// to a site-specific /admin/extra_datafiles module.
-//
-zen_define_default('EDIT_ORDERS_USE_NUMERIC_FIELDS', '1');
-if (EDIT_ORDERS_USE_NUMERIC_FIELDS !== '1') {
-    $input_value_params = '';
-    $input_tax_params = '';
-    $input_field_type = 'text';
-} else {
-    $input_value_params = ' min="0" step="any"';
-    $input_tax_params = ' min="0" max="100" step="any"';
-    $input_field_type = 'number';
-}
-
 // -----
 // Since EO's order-updating is now AJAX-driven, pull the initial order-display
 // from the previous eo_edit_action_display.php.
@@ -748,15 +681,18 @@ if (DISPLAY_PRICE_WITH_TAX === 'true') {
         </div>
     </div>
 
-<!-- Begin Status-History Block -->
+    <div id="prod-edit-modal" class="modal fade" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+            </div>
+        </div>
+    </div>
+
     <?php require DIR_WS_MODULES . 'eo_edit_action_osh_table_display.php'; ?>
-<!-- End Status-History Block -->
 </div>
-<!-- footer //-->
-<?php 
-require DIR_WS_INCLUDES . 'footer.php'; 
-?>
-<!-- footer_eof //-->
+
+<?php require DIR_WS_INCLUDES . 'footer.php'; ?>
+
 </body>
 </html>
 <?php
