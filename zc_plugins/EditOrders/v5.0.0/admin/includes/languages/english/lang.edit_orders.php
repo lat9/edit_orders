@@ -121,7 +121,6 @@ $define = [
 
     'SUCCESS_ORDER_UPDATED' => 'Order #%u has been successfully updated.',
 
-    'WARNING_ATTRIBUTE_OPTION_GRID' => 'Warning: Absolute\'s Product Attribute Grid was detected, however the Product Option Type for Attribute Grid was not fully installed in the database. Temporarily configuring PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID = 23997.',
     'WARNING_INSUFFICIENT_PRODUCT_STOCK' => 'Insufficient stock for <em>%1$s</em>, requested %2$s with %3$s available.',
     'WARNING_NO_UPDATES_TO_ORDER' => 'Nothing to update; no changes to this order were recorded.',
     'WARNING_ORDER_COUPON_BAD' => 'Warning: The coupon code (%s) for the order is no longer valid. Updating the order will remove any deductions associated with that coupon!',
@@ -154,7 +153,10 @@ $define = [
 
     'TEXT_ADD_NEW_PRODUCT' => 'Add Product',
     'TEXT_ATTRIBUTES_ONE_TIME_CHARGE' => 'One Time Charges:',
-    'TEXT_ATTRIBUTES_UPLOAD_NONE' => 'No file was uploaded',
+    'TEXT_ATTRIBUTES_READONLY' => ' (r/o)',
+    'TEXT_ATTRIBUTES_UNKNOWN_OPTION_TYPE' => 'Unknown option type (%u)',
+
+    'TEXT_FILE_UPLOAD_NOT_SUPPORTED' => 'FILE UPLOAD NOT SUPPORTED',
 
     'TEXT_LABEL_NAME' => 'Name:',
     'TEXT_LABEL_MODEL' => 'Model:',
@@ -204,7 +206,6 @@ $define = [
     'TEXT_UNKNOWN_TAX_RATE' => 'Sales Tax',
 
 // Other elements
-    'RESET_TOTALS' => 'Reset totals prior to update? ',
     'PAYMENT_CALC_METHOD' => 'Choose product-pricing method:',
         'PAYMENT_CALC_MANUAL' => 'Enable editing',
         'PAYMENT_CALC_AUTOSPECIALS' => 'Editing disallowed',

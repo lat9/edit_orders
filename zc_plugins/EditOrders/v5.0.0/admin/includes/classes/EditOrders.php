@@ -93,24 +93,6 @@ class EditOrders
         // Issue a notification, allowing other add-ons to add any warnings they might have.
         //
         $this->notify('EDIT_ORDERS_CHECKS_AND_WARNINGS');
-
-        // Check for the installation of "Absolute's Product Attribute Grid"
-        if (!defined('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID')) {
-            if (defined('CONFIG_ATTRIBUTE_OPTION_GRID_INSTALLED')) {
-                define('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID', '23997');
-                $messageStack->add(WARNING_ATTRIBUTE_OPTION_GRID, 'warning');
-            } else {
-                define('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID', '-1');
-            }
-        }
-
-        // Check for the installation of "Potteryhouse's/mc12345678's Stock By Attributes"
-        zen_define_default('PRODUCTS_OPTIONS_TYPE_SELECT_SBA', '-1');
-
-        // -----
-        // Check for the installation of lat9's "Attribute Image Swapper".
-        //
-        zen_define_default('PRODUCTS_OPTIONS_TYPE_IMAGE_SWATCH', -1);
     }
 
     public function getOrder(): \order
