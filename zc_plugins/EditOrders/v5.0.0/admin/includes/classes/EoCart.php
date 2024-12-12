@@ -100,11 +100,28 @@ class EoCart extends \shoppingCart
     }
 
     // -----
+    // Add a product to the cart.
+    //
+    public function addProduct(array $product): void
+    {
+        $uprid = $product['uprid'];
+        $this->contents[$uprid] = $product;
+        trigger_error('fixme');
+        $this->total += (($product['qty'] * $product['final_price']) + $product['onetime_charges']);
+        $this->weight += $product['qty'] * $product['products_weight'];
+    }
+
+    protected function isUnsupportedMethod()
+    {
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+    }
+
+    // -----
     // Start shoppingCart class method overrides ...
     //
     public function restore_contents()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     // -----
@@ -118,12 +135,12 @@ class EoCart extends \shoppingCart
 
     public function add_cart($product_id, $qty = 1, $attributes = [], $notify = true)
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     public function update_quantity($uprid, $quantity = 0, $attributes = [])
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     // -----
@@ -142,7 +159,7 @@ class EoCart extends \shoppingCart
      */
     protected function removeUprid($uprid)
     {
-        unset($this->contents[$uprid]);
+        $this->isUnsupportedMethod();
     }
 
     /**
@@ -194,7 +211,7 @@ class EoCart extends \shoppingCart
      */
     public function remove($uprid)
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     /**
@@ -202,7 +219,7 @@ class EoCart extends \shoppingCart
      */
     public function remove_all()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     /**
@@ -223,7 +240,7 @@ class EoCart extends \shoppingCart
      */
     public function calculate()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     /**
@@ -297,7 +314,7 @@ class EoCart extends \shoppingCart
      */
     public function show_total_before_discounts()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
         return $this->total;
     }
 
@@ -401,17 +418,17 @@ class EoCart extends \shoppingCart
     //
     public function free_shipping_prices()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
         return 0.0;
     }
     public function free_shipping_weight()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
         return 0.0;
     }
     public function download_counts()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
         return 0; 
     }
 
@@ -421,39 +438,39 @@ class EoCart extends \shoppingCart
     //
     public function actionUpdateProduct($goto, $parameters)
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionAddProduct($goto, $parameters = [])
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionBuyNow($goto, $parameters = [])
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionMultipleAddProduct($goto, $parameters = [])
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionNotify($goto, $parameters = ['ignored'])
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionNotifyRemove($goto, $parameters = ['ignored'])
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionCustomerOrder($goto, $parameters)
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionRemoveProduct($goto, $parameters)
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionCartUserAction($goto, $parameters)
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     /**
@@ -467,7 +484,7 @@ class EoCart extends \shoppingCart
      */
     public function adjust_quantity($check_qty, $products, $stack = 'shopping_cart')
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
         return $check_qty; 
     }
 

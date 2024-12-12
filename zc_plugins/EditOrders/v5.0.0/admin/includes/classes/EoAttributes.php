@@ -25,19 +25,15 @@ class EoAttributes
      * Constructs an Attributes class for accessing product attributes, options,
      * and values.
      */
-    public function __construct(array $product)
+    public function __construct(int $products_id, array $attributes)
     {
         global $db;
 
         $this->currentSelections = [];
-        if (isset($product['attributes'])) {
-            foreach ($product['attributes'] as $next_attr) {
-                $this->currentSelections[$next_attr['option_id']]['value_ids'][] = $next_attr['value_id'];
-                $this->currentSelections[$next_attr['option_id']]['value'] = $next_attr['value'];
-            }
+        foreach ($attributes as $next_attr) {
+            $this->currentSelections[$next_attr['option_id']]['value_ids'][] = $next_attr['value_id'];
+            $this->currentSelections[$next_attr['option_id']]['value'] = $next_attr['value'];
         }
-
-        $products_id = (int)$product['id'];
 
         // -----
         // Preset the "ORDER BY" clause for the products' options.

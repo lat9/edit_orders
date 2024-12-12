@@ -212,9 +212,6 @@ $define = [
     'PRODUCT_PRICES_CALC_AUTOSPECIALS' => ' <b>Note:</b> Product prices are <em>automatically</em> calculated and cannot be edited.',
     'PRODUCT_PRICES_CALC_MANUAL' => ' <b>Note:</b> Product prices can be edited.',
 
-    'EO_FREE_SHIPPING' => 'Free Shipping',
-    'EO_PRICE_AUTO_GRID_MESSAGE' => 'Auto Calculated',
-
     'EO_MESSAGE_ADDRESS_UPDATED' => 'The order\'s %1$s address was updated from: ',   //-%1$s: The type of address (see below) that was updated
         'EO_CUSTOMER' => 'customer',
         'EO_BILLING' => 'billing',
@@ -226,8 +223,6 @@ $define = [
 
     'EO_MESSAGE_PRODUCT_ADDED' => 'Added %1$s x "%2$s" to the order',   //-%1$s: The product quantity, %2$s: The product name
     'EO_MESSAGE_PRODUCT_ATTRIBS_ADDED' => ', with options (%s)',
-
-    'EO_SHIPPING_TAX_DESCRIPTION' => 'Shipping Tax (%s%%)',
 
     'TEXT_PANEL_HEADER_UPDATE_INFO' => 'Order-Update Information',
 ];
