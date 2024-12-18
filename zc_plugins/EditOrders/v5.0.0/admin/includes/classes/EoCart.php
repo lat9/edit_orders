@@ -28,11 +28,14 @@ class EoCart extends \shoppingCart
     // Reconstruct the cart from the ordered products, for use during pricing/quantity
     // updates.
     //
+    // Note: Called *once* on the initial entry to the edit_orders.php tool. Assumes that
+    // the eoChanges session variable has been previously created.
+    //
     public function loadFromOrder(\order $order): void
     {
         $this->content_type = $order->content_type;
         $option_types = [];
-        foreach ($order->products as &$product) {
+        foreach ($order->products as $i => $product) {
             $uprid = $product['uprid'];
 
             $this->contents[$uprid] = [
@@ -41,13 +44,13 @@ class EoCart extends \shoppingCart
             if (isset($product['attributes'])) {
                 $this->contents[$uprid]['attributes'] = [];
                 foreach ($product['attributes'] as $attribute) {
-                    $option_id = (int)$attribute['option_id'];
-                    $value_id = (int)$attribute['value_id'];
+                    $option_id = $attribute['option_id'];
+                    $value_id = $attribute['value_id'];
                     $option_type = $option_types[$option_id] ?? false;
                     if ($option_type === false) {
                         $option_info = zen_get_option_details($option_id);
                         if ($option_info->EOF) {
-                            $product['missing_options'][] = $option_id;
+                            $order->products[$i]['missing_options'][] = $option_id;
                         } else {
                             $option_type = (int)$option_info->fields['products_options_type'];
                             $option_types[$option_id] = $option_type;
@@ -55,21 +58,21 @@ class EoCart extends \shoppingCart
                     }
 
                     // -----
-                    // Checkbox attributes' option_id is formatted as 33chk_37,
+                    // Checkbox attributes' option_id is formatted as 33_chk37,
                     //  where 33 is the option-id and 37 is the option-value
                     //
                     if ($option_type === 3) {
-                        $option_id = $option_id . 'chk_' . $value_id;
+                        $option_id = $option_id . '_chk' . $value_id;
                     }
 
                     $this->contents[$uprid]['attributes'][$option_id] = $value_id;
-                    if ($value_id === 0) {
+                    if ($value_id == 0) {
                         $this->contents[$uprid]['attributes_values'][$option_id] = $attribute['value'];
                     }
                 }
             }
+            $_SESSION['eoChanges']->saveCartContents($i, $this->contents[$uprid]);
         }
-        unset($product);
 
         // -----
         // Initialize the calculated values; EO's cart doesn't re-calculate

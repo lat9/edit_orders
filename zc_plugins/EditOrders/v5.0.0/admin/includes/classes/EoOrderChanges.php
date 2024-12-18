@@ -109,6 +109,12 @@ class EoOrderChanges
         return clone $this->updated;
     }
 
+    public function saveCartContents(int $index, array $cart_contents): void
+    {
+        $this->original->products[$index]['cart_contents'] = $cart_contents;
+        $this->updated->products[$index]['cart_contents'] = $cart_contents;
+    }
+
     public function getTotalsChanges(): array
     {
         return $this->totalsChanges;
@@ -386,7 +392,7 @@ class EoOrderChanges
                         'changed_qty' => $changed_qty,
                         'label' => sprintf(
                             $changed_message,
-                            (string)abs($changed_qty),
+                            ($changed_qty == 0) ? 'n/a' : (string)abs($changed_qty),
                             $this->getChangedProductName($product),
                             $product['model'],
                             (string)$product['final_price'],
@@ -598,23 +604,25 @@ class EoOrderChanges
                     continue;
                 }
 
-                if ($this->updated->products[$index][$field] != $value) {
+                if ($this->original->products[$index][$field] != $value) {
                     $changes++;
-                    if ($field === 'qty' && $value == 0) {
-                        $is_removal = true;
-                    }
-                    $this->updated->products[$index][$field] = $value;
                 }
+
+                if ($field === 'qty' && $value == 0) {
+                    $is_removal = true;
+                }
+                $this->updated->products[$index][$field] = $value;
             }
 
-            if ($changes === 0) {
+            if ($changes === 0 && $is_variant_update === false && $is_removal === false) {
                 unset($this->productsChanges[$original_uprid]);
+                $_SESSION['cart']->calculateTotalAndWeight($this->updated->products);
+
+            } elseif ($is_variant_update === true) {
+                $this->updateProductVariant($index, $original_uprid, $updated_uprid, $product_updates);
+
             } else {
-                if ($is_variant_update === true) {
-                    $this->updateProductVariant($index, $original_uprid, $updated_uprid, $product_updates);
-                } else {
-                    $this->recordProductChanges($index, $original_uprid, $is_removal);
-                }
+                $this->recordProductChanges($index, $original_uprid, $is_removal);
             }
         }
     }
@@ -628,7 +636,7 @@ class EoOrderChanges
     //    2 => '21',
     //    5 => '24',
     //    6 => '23',
-    //    '13chk_35' => 'on',
+    //    '13_chk35' => 'on',
     //    'file_8' => '1. cake-concert-0.jpg',
     //    'file_7' => '',
     //    'txt_10' => 'Some text stuff',
@@ -639,12 +647,12 @@ class EoOrderChanges
     // To match the footprint used on the storefront when calculating a
     // product's uprid:
     //
-    // 1. The xxchk_yy attributes need to be converted into
+    // 1. The xx_chkyy attributes need to be converted into
     //    an array of arrays with the attribute-value.
     // 2. The file_xx attributes need to be the last elements of the
     //    modified attributes' array and renamed to use a 'txt_' prefix.
     //
-    // Note: Admin sanitization 'complexities' made using the xxchk_yy format instead
+    // Note: Admin sanitization 'complexities' made using the xx_chkyy format instead
     // of the array-of-arrays much less complicated!
     //
     protected function reformatPostedAttributes(array $posted_attributes): array
@@ -652,8 +660,8 @@ class EoOrderChanges
         $reformatted_attributes = [];
         $file_type_attributes = [];
         foreach ($posted_attributes as $key => $value) {
-            if (str_contains($key, 'chk_')) {
-                [$option_id, $values_id] = explode('chk_', $key);
+            if (str_contains($key, '_chk')) {
+                [$option_id, $values_id] = explode('_chk', $key);
                 $reformatted_attributes[$option_id][$values_id] = $values_id;
                 continue;
             }

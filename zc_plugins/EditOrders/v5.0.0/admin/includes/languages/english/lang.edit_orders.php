@@ -168,14 +168,14 @@ $define = [
     'TEXT_PRODUCT_BEING_ADDED' => 'The product is being added to the order.',
     'TEXT_PRODUCT_UPDATE_MODAL_TITLE' => 'Updating a Product',
 
-    //- %1$s (qty), %2$s (name), %3$s (model), %4$s (final price), %5$s (tax rate)
-    'TEXT_STATUS_PRODUCT_ADDED' => '%1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%) was added.',
-
-    //- %1$s (name), %2$s (model), %3$s (final price), %4$s (tax rate)
-    'TEXT_STATUS_PRODUCT_CHANGED' => 'Some of the product details were changed: %1$s [%2$s] @ %3$s (tax-rate %4$s%%)',
-
-    //- %1$s (qty), %2$s (name), %3$s (model), %4$s (final price), %5$s (tax rate)
-    'TEXT_STATUS_PRODUCT_REMOVED' => '%1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%) was removed.',
+    //- These three constants define the message to be recorded for products' changes. All 3
+    //  use the same sprintf values:
+    //
+    // %1$s (qty), %2$s (name), %3$s (model), %4$s (final price), %5$s (tax rate)
+    //
+    'TEXT_STATUS_PRODUCT_ADDED' => 'Added: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
+    'TEXT_STATUS_PRODUCT_CHANGED' => 'Some of the product details were changed: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
+    'TEXT_STATUS_PRODUCT_REMOVED' => 'Removed: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
 
     'ADDPRODUCT_TEXT_CATEGORY_CONFIRM' => 'OK',
     'ADDPRODUCT_TEXT_SELECT_PRODUCT' => 'Choose product',

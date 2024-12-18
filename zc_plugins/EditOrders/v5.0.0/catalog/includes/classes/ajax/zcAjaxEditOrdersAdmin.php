@@ -444,7 +444,16 @@ class zcAjaxEditOrdersAdmin
             $product_update['attributes'] = $_POST['id'];
         }
 
-        $_SESSION['eoChanges']->updateProductInOrder($_POST['uprid'], $product_update);
+        $uprid = $_POST['uprid'];
+        $this->notify('NOTIFY_EO_AJAX_UPDATE_PRODUCT',
+            [
+                'uprid' => $uprid,
+                'original_product' => $_SESSION['eoChanges']->getOriginalProductByUprid($uprid),
+            ],
+            $product_update
+        );
+
+        $_SESSION['eoChanges']->updateProductInOrder($uprid, $product_update);
 
         return $this->processOrderUpdate();
     }

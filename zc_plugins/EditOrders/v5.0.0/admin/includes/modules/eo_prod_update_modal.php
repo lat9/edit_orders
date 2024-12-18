@@ -139,8 +139,9 @@ if (empty($original_product) && empty($updated_product)) {
     //
     $name_params = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_name') . '"';
     $model_params = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_model') . '"';
+    $uprid = $updated_product['uprid'];
 
-    $qty_available = $eo->getProductsAvailableStock($updated_product['uprid'], $updated_product['attributes'] ?? []);
+    $qty_available = $eo->getProductsAvailableStock($uprid, $_SESSION['cart']->contents[$uprid]['attributes'] ?? []);
 ?>
             <div class="col-sm-6">
                 <h5 class="text-center"><?= TEXT_UPDATED_ORDER ?></h5>

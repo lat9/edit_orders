@@ -64,7 +64,7 @@ foreach ($attribs->getOptionsValues() as $option_id => $option_info) {
                 $checked = $attribs->isOptionValueSelected($option_id, $value_id);
 ?>
                                 <label class="checkbox-inline">
-                                    <?= zen_draw_checkbox_field('id[' . $option_id . 'chk_' . $value_id . ']', 'on', $checked) ?>
+                                    <?= zen_draw_checkbox_field('id[' . $option_id . '_chk' . $value_id . ']', 'on', $checked) ?>
                                     <?= $value_info['name'] ?>
                                 </label>
 <?php
