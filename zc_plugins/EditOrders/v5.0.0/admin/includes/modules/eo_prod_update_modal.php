@@ -6,8 +6,6 @@
 //
 // Last modified v5.0.0
 //
-use Zencart\Plugins\Admin\EditOrders\EoAttributes;
-
 $uprid = $_POST['uprid'] ?? '';
 
 // -----
@@ -68,37 +66,7 @@ if (empty($original_product) && empty($updated_product)) {
                         <?= zen_draw_input_field('name', $original_product['name'], 'id="prod-name-o" class="form-control" disabled') ?>
                     </div>
                 </div>
-<?php
-        if (isset($original_product['attributes'])) {
-?>
-                <div class="panel">
-                    <div class="panel-heading text-center"><?= TEXT_PRODUCT_ATTRIBUTES ?></div>
-                    <div class="panel-body">
-                        <div class="form-group">
-                            <label class="control-label col-sm-2" for="prod-otc-o"><?= TEXT_ATTRIBUTES_ONE_TIME_CHARGE ?></label>
-                            <div class="col-sm-10">
-                                <?= zen_draw_input_field('onetime_charges', $original_product['onetime_charges'], 'id="prod-otc-o" class="form-control" disabled') ?>
-                            </div>
-                        </div>
 
-<?php
-            foreach ($original_product['attributes'] as $next_attribute) {
-                $for = 'prod-a-' . $next_attribute['option_id'] . '-' . $next_attribute['value_id'] . '-o';
-?>
-                        <div class="form-group">
-                            <label class="control-label col-sm-2" for="<?= $for ?>"><?= zen_output_string_protected($next_attribute['option']) ?></label>
-                            <div class="col-sm-10">
-                                <?= zen_draw_input_field($for, zen_output_string_protected($next_attribute['value']), 'id="' . $for . '" class="form-control" disabled') ?>
-                            </div>
-                        </div>
-<?php
-            }
-?>
-                    </div>
-                </div>
-<?php
-        }
-?>
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="prod-tax-o"><?= TEXT_LABEL_TAX ?></label>
                     <div class="col-sm-10">
@@ -127,6 +95,36 @@ if (empty($original_product) && empty($updated_product)) {
                 </div>
 <?php
         }
+
+        if (isset($original_product['attributes'])) {
+?>
+                <div class="panel panel-info dataTableRow">
+                    <div class="panel-heading text-center"><?= TEXT_PRODUCT_ATTRIBUTES ?></div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label class="control-label col-sm-2" for="prod-otc-o"><?= TEXT_ATTRIBUTES_ONE_TIME_CHARGE ?></label>
+                            <div class="col-sm-10">
+                                <?= zen_draw_input_field('onetime_charges', $original_product['onetime_charges'], 'id="prod-otc-o" class="form-control" disabled') ?>
+                            </div>
+                        </div>
+
+<?php
+            foreach ($original_product['attributes'] as $next_attribute) {
+                $for = 'prod-a-' . $next_attribute['option_id'] . '-' . $next_attribute['value_id'] . '-o';
+?>
+                        <div class="form-group">
+                            <label class="control-label col-sm-2" for="<?= $for ?>"><?= zen_output_string_protected($next_attribute['option']) ?></label>
+                            <div class="col-sm-10">
+                                <?= zen_draw_input_field($for, zen_output_string_protected($next_attribute['value']), 'id="' . $for . '" class="form-control" disabled') ?>
+                            </div>
+                        </div>
+<?php
+            }
+?>
+                    </div>
+                </div>
+<?php
+        }
     }
 ?>
             </div>
@@ -141,8 +139,9 @@ if (empty($original_product) && empty($updated_product)) {
     //
     $name_params = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_name') . '"';
     $model_params = 'maxlength="' . zen_field_length(TABLE_ORDERS_PRODUCTS, 'products_model') . '"';
+    $uprid = $updated_product['uprid'];
 
-    $qty_available = $eo->getProductsAvailableStock($updated_product['uprid'], $updated_product['attributes'] ?? []);
+    $qty_available = $eo->getProductsAvailableStock($uprid, $_SESSION['cart']->contents[$uprid]['attributes'] ?? []);
 ?>
             <div class="col-sm-6">
                 <h5 class="text-center"><?= TEXT_UPDATED_ORDER ?></h5>
@@ -176,28 +175,7 @@ if (empty($original_product) && empty($updated_product)) {
                         <?= zen_draw_input_field('name', $updated_product['name'], 'id="prod-name" class="form-control" ' . $name_params) ?>
                     </div>
                 </div>
-<?php
-    if (isset($updated_product['attributes'])) {
-?>
-                <div class="panel">
-                    <div class="panel-heading text-center"><?= TEXT_PRODUCT_ATTRIBUTES ?></div>
-                    <div class="panel-body">
-                        <div class="form-group">
-                            <label class="control-label col-sm-2" for="prod-otc"><?= TEXT_ATTRIBUTES_ONE_TIME_CHARGE ?></label>
-                            <div class="col-sm-10">
-                                <?= zen_draw_input_field('onetime_charges', $updated_product['onetime_charges'], 'id="prod-otc" class="form-control" min="0" step="any" ' . $price_entry_disabled, false, 'number') ?>
-                            </div>
-                        </div>
-                    </div>
-<?php
-        $eo_attribs = new EoAttributes((int)$updated_product['id']);
-        foreach ($updated_product['attributes'] as $next_attribute) {
-        }
-?>
-                </div>
-<?php
-    }
-?>
+
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="prod-tax"><?= TEXT_LABEL_TAX ?></label>
                     <div class="col-sm-10">
@@ -225,6 +203,17 @@ if (empty($original_product) && empty($updated_product)) {
                     </div>
                 </div>
 <?php
+    }
+
+    // -----
+    // If the updated product has attributes, bring in the attribute-formatting
+    // that's common to a product's update and addition.
+    //
+    // Note: No directory specified for the 'require', since the module is in the same
+    // directory as this modal-display handler.
+    //
+    if (isset($updated_product['attributes'])) {
+        require 'eo_attributes_display.php';
     }
 ?>
             </div>

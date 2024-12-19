@@ -6,6 +6,7 @@
 // Last updated: EO v5.0.0
 //
 namespace Zencart\Plugins\Admin\EditOrders;
+
 use Zencart\Traits\NotifierManager;
 
 class EditOrders
@@ -93,24 +94,6 @@ class EditOrders
         // Issue a notification, allowing other add-ons to add any warnings they might have.
         //
         $this->notify('EDIT_ORDERS_CHECKS_AND_WARNINGS');
-
-        // Check for the installation of "Absolute's Product Attribute Grid"
-        if (!defined('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID')) {
-            if (defined('CONFIG_ATTRIBUTE_OPTION_GRID_INSTALLED')) {
-                define('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID', '23997');
-                $messageStack->add(WARNING_ATTRIBUTE_OPTION_GRID, 'warning');
-            } else {
-                define('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID', '-1');
-            }
-        }
-
-        // Check for the installation of "Potteryhouse's/mc12345678's Stock By Attributes"
-        zen_define_default('PRODUCTS_OPTIONS_TYPE_SELECT_SBA', '-1');
-
-        // -----
-        // Check for the installation of lat9's "Attribute Image Swapper".
-        //
-        zen_define_default('PRODUCTS_OPTIONS_TYPE_IMAGE_SWATCH', -1);
     }
 
     public function getOrder(): \order
@@ -938,13 +921,16 @@ class EditOrders
     }
 
     // -----
-    // Retrieve a product/product-variant available stock.
+    // Retrieve the available stock for a product or product-variant.
     //
-    public function getProductsAvailableStock(string $products_uprid, array $attributes): int|float
+    // Note: The $cart_attributes contain an attribute array in the shopping_cart class'
+    // format!
+    //
+    public function getProductsAvailableStock(string $products_uprid, array $cart_attributes): int|float
     {
         $stock_handled = false;
         $stock_quantity = 0;
-        $this->notify('NOTIFY_EO_GET_PRODUCTS_AVAILABLE_STOCK', ['uprid' => $products_uprid, 'attributes' => $attributes], $stock_quantity, $stock_handled);
+        $this->notify('NOTIFY_EO_GET_PRODUCTS_AVAILABLE_STOCK', ['uprid' => $products_uprid, 'attributes' => $cart_attributes], $stock_quantity, $stock_handled);
         if ($stock_handled === false) {
             global $db;
 
@@ -1186,16 +1172,18 @@ class EditOrders
                           WHERE orders_products_id = $orders_products_id"
                     );
 
-                    $original_qty = $changes['original']['qty'];
-                    $products_id = (int)$changes['original']['id'];
-                    $db->Execute(
-                        "UPDATE " . TABLE_PRODUCTS . "
-                            SET products_quantity = products_quantity + $original_qty
-                          WHERE products_id = $products_id
-                          LIMIT 1"
-                    );
-
-                    $this->notify('NOTIFY_EO_PRODUCT_REMOVED', ['orders_products_id' => $orders_products_id, 'product' => $changes['original']]);
+                    $product_quantity_updated = false;
+                    $this->notify('NOTIFY_EO_PRODUCT_REMOVED', ['orders_products_id' => $orders_products_id, 'original_order' => $changes['original']], $product_quantity_updated);
+                    if ($product_quantity_updated === false) {
+                        $original_qty = $changes['original']['qty'];
+                        $products_id = (int)$changes['original']['id'];
+                        $db->Execute(
+                            "UPDATE " . TABLE_PRODUCTS . "
+                                SET products_quantity = products_quantity + $original_qty
+                              WHERE products_id = $products_id
+                              LIMIT 1"
+                        );
+                    }
                     break;
 
                 case 'added':
@@ -1215,8 +1203,22 @@ class EditOrders
                     ];
                     $db->perform(TABLE_ORDERS_PRODUCTS, $orders_products_update, 'update', "orders_products_id = $orders_products_id LIMIT 1");
 
-                    $products_id = (int)$changes['updated']['id'];
+                    $product_quantity_updated = false;
                     $changed_qty = $changes['changed_qty'];
+                    $this->notify('NOTIFY_EO_PRODUCT_CHANGED',
+                        [
+                            'orders_products_id' => $orders_products_id,
+                            'original_product' => $changes['original'],
+                            'updated_product' => $updated_product,
+                            'changed_qty' => $changed_qty,
+                        ],
+                        $product_quantity_updated
+                    );
+                    if ($product_quantity_updated !== false) {
+                        break;
+                    }
+
+                    $products_id = (int)$changes['updated']['id'];
                     if ($changed_qty >= 0) {
                         $db->Execute(
                             "UPDATE " . TABLE_PRODUCTS . "
@@ -1232,8 +1234,6 @@ class EditOrders
                               LIMIT 1"
                         );
                     }
-
-                    $this->notify('NOTIFY_EO_PRODUCT_CHANGED', ['orders_products_id' => $orders_products_id, 'changes' => $changes]);
                     break;
             }
         }

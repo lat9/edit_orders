@@ -121,7 +121,6 @@ $define = [
 
     'SUCCESS_ORDER_UPDATED' => 'Order #%u has been successfully updated.',
 
-    'WARNING_ATTRIBUTE_OPTION_GRID' => 'Warning: Absolute\'s Product Attribute Grid was detected, however the Product Option Type for Attribute Grid was not fully installed in the database. Temporarily configuring PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID = 23997.',
     'WARNING_INSUFFICIENT_PRODUCT_STOCK' => 'Insufficient stock for <em>%1$s</em>, requested %2$s with %3$s available.',
     'WARNING_NO_UPDATES_TO_ORDER' => 'Nothing to update; no changes to this order were recorded.',
     'WARNING_ORDER_COUPON_BAD' => 'Warning: The coupon code (%s) for the order is no longer valid. Updating the order will remove any deductions associated with that coupon!',
@@ -154,7 +153,10 @@ $define = [
 
     'TEXT_ADD_NEW_PRODUCT' => 'Add Product',
     'TEXT_ATTRIBUTES_ONE_TIME_CHARGE' => 'One Time Charges:',
-    'TEXT_ATTRIBUTES_UPLOAD_NONE' => 'No file was uploaded',
+    'TEXT_ATTRIBUTES_READONLY' => ' (r/o)',
+    'TEXT_ATTRIBUTES_UNKNOWN_OPTION_TYPE' => 'Unknown option type (%u)',
+
+    'TEXT_FILE_UPLOAD_NOT_SUPPORTED' => 'FILE UPLOAD NOT SUPPORTED',
 
     'TEXT_LABEL_NAME' => 'Name:',
     'TEXT_LABEL_MODEL' => 'Model:',
@@ -166,14 +168,14 @@ $define = [
     'TEXT_PRODUCT_BEING_ADDED' => 'The product is being added to the order.',
     'TEXT_PRODUCT_UPDATE_MODAL_TITLE' => 'Updating a Product',
 
-    //- %1$s (qty), %2$s (name), %3$s (model), %4$s (final price), %5$s (tax rate)
-    'TEXT_STATUS_PRODUCT_ADDED' => '%1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%) was added.',
-
-    //- %1$s (name), %2$s (model), %3$s (final price), %4$s (tax rate)
-    'TEXT_STATUS_PRODUCT_CHANGED' => 'Some of the product details were changed: %1$s [%2$s] @ %3$s (tax-rate %4$s%%)',
-
-    //- %1$s (qty), %2$s (name), %3$s (model), %4$s (final price), %5$s (tax rate)
-    'TEXT_STATUS_PRODUCT_REMOVED' => '%1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%) was removed.',
+    //- These three constants define the message to be recorded for products' changes. All 3
+    //  use the same sprintf values:
+    //
+    // %1$s (qty), %2$s (name), %3$s (model), %4$s (final price), %5$s (tax rate)
+    //
+    'TEXT_STATUS_PRODUCT_ADDED' => 'Added: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
+    'TEXT_STATUS_PRODUCT_CHANGED' => 'Some of the product details were changed: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
+    'TEXT_STATUS_PRODUCT_REMOVED' => 'Removed: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
 
     'ADDPRODUCT_TEXT_CATEGORY_CONFIRM' => 'OK',
     'ADDPRODUCT_TEXT_SELECT_PRODUCT' => 'Choose product',
@@ -204,15 +206,11 @@ $define = [
     'TEXT_UNKNOWN_TAX_RATE' => 'Sales Tax',
 
 // Other elements
-    'RESET_TOTALS' => 'Reset totals prior to update? ',
     'PAYMENT_CALC_METHOD' => 'Choose product-pricing method:',
         'PAYMENT_CALC_MANUAL' => 'Enable editing',
         'PAYMENT_CALC_AUTOSPECIALS' => 'Editing disallowed',
     'PRODUCT_PRICES_CALC_AUTOSPECIALS' => ' <b>Note:</b> Product prices are <em>automatically</em> calculated and cannot be edited.',
     'PRODUCT_PRICES_CALC_MANUAL' => ' <b>Note:</b> Product prices can be edited.',
-
-    'EO_FREE_SHIPPING' => 'Free Shipping',
-    'EO_PRICE_AUTO_GRID_MESSAGE' => 'Auto Calculated',
 
     'EO_MESSAGE_ADDRESS_UPDATED' => 'The order\'s %1$s address was updated from: ',   //-%1$s: The type of address (see below) that was updated
         'EO_CUSTOMER' => 'customer',
@@ -225,8 +223,6 @@ $define = [
 
     'EO_MESSAGE_PRODUCT_ADDED' => 'Added %1$s x "%2$s" to the order',   //-%1$s: The product quantity, %2$s: The product name
     'EO_MESSAGE_PRODUCT_ATTRIBS_ADDED' => ', with options (%s)',
-
-    'EO_SHIPPING_TAX_DESCRIPTION' => 'Shipping Tax (%s%%)',
 
     'TEXT_PANEL_HEADER_UPDATE_INFO' => 'Order-Update Information',
 ];

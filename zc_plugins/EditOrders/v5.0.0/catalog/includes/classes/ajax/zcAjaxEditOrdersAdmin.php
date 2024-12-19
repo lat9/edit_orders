@@ -392,7 +392,7 @@ class zcAjaxEditOrdersAdmin
         $_POST['title'] = rtrim($_POST['title'], ' :');
         switch ($_POST['ot_class']) {
             case 'ot_shipping':
-                $updated_info = $_SESSION['eoChanges']->updateShippingInfo(
+                $_SESSION['eoChanges']->updateShippingInfo(
                     $_POST['module'],
                     $_POST['title'],
                     $_POST['value'],
@@ -441,12 +441,19 @@ class zcAjaxEditOrdersAdmin
             $product_update['onetime_charges'] = $eo->convertToIntOrFloat($_POST['onetime_charges']);
         }
         if (isset($_POST['id'])) {
-            //- FIXME: Need to account for a change in attributes, which could result in
-            // a different model/price
             $product_update['attributes'] = $_POST['id'];
         }
 
-        $_SESSION['eoChanges']->updateProductInOrder($_POST['uprid'], $product_update);
+        $uprid = $_POST['uprid'];
+        $this->notify('NOTIFY_EO_AJAX_UPDATE_PRODUCT',
+            [
+                'uprid' => $uprid,
+                'original_product' => $_SESSION['eoChanges']->getOriginalProductByUprid($uprid),
+            ],
+            $product_update
+        );
+
+        $_SESSION['eoChanges']->updateProductInOrder($uprid, $product_update);
 
         return $this->processOrderUpdate();
     }

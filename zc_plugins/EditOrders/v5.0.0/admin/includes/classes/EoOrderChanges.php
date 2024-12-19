@@ -8,6 +8,7 @@
 namespace Zencart\Plugins\Admin\EditOrders;
 
 use Zencart\Plugins\Admin\EditOrders\EditOrders;
+use Zencart\Plugins\Admin\EditOrders\EoAttributes;
 
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
@@ -27,7 +28,6 @@ class EoOrderChanges
     protected array $upridMapping = [];
     protected array $productsChanges = [];
 
-    protected array $opIdMapping = [];
     protected array $totalsChanges = [];
     protected array $ordersStatuses;
 
@@ -46,6 +46,9 @@ class EoOrderChanges
         $this->original->products = $original_order->products;
         $this->original->statuses = $original_order->statuses;
         $this->original->totals = $original_order->totals;
+        foreach ($this->original->totals as $index => $values) {
+            $this->original->totals[$index]['value'] = $this->convertToIntOrFloat($values['value']);
+        }
 
         $this->generateProductMappings();
 
@@ -78,7 +81,6 @@ class EoOrderChanges
     {
         for ($i = 0, $n = count($this->original->products); $i < $n; $i++) {
             $this->upridMapping[$this->original->products[$i]['uprid']] = $i;
-            $this->opIdMapping[$this->original->products[$i]['orders_products_id']] = $i;
         }
     }
 
@@ -99,12 +101,18 @@ class EoOrderChanges
 
     public function getOriginalOrder(): \stdClass
     {
-        return $this->original;
+        return clone $this->original;
     }
     
     public function getUpdatedOrder(): \stdClass
     {
-        return $this->updated;
+        return clone $this->updated;
+    }
+
+    public function saveCartContents(int $index, array $cart_contents): void
+    {
+        $this->original->products[$index]['cart_contents'] = $cart_contents;
+        $this->updated->products[$index]['cart_contents'] = $cart_contents;
     }
 
     public function getTotalsChanges(): array
@@ -384,7 +392,7 @@ class EoOrderChanges
                         'changed_qty' => $changed_qty,
                         'label' => sprintf(
                             $changed_message,
-                            (string)abs($changed_qty),
+                            ($changed_qty == 0) ? 'n/a' : (string)abs($changed_qty),
                             $this->getChangedProductName($product),
                             $product['model'],
                             (string)$product['final_price'],
@@ -404,9 +412,9 @@ class EoOrderChanges
         if (!empty($product['attributes'])) {
             $attributes_display = [];
             foreach ($product['attributes'] as $next_attr) {
-                $attributes_display[] = $next_attr['option'] . ': ' . nl2br(zen_output_string_protected($next_attribute['value']));
+                $attributes_display[] = $next_attr['option'] . ': ' . nl2br(zen_output_string_protected($next_attr['value']));
             }
-            $name .= ' (' . implode(', ', $attributes_display) . ')';
+            $name .= ' <small>(' . implode(', ', $attributes_display) . ')</small>';
         }
         return $name;
     }
@@ -443,6 +451,9 @@ class EoOrderChanges
     {
         $info_total_fields = ['subtotal', 'total', 'tax', 'order_weight', 'coupon_code', 'shipping_method', 'shipping_module_code', 'shipping_tax_rate'];
         foreach ($info_total_fields as $field_name) {
+            if (is_float($order_info[$field_name])) {
+                $order_info[$field_name] = round($order_info[$field_name], 4);
+            }
             if ($this->original->info[$field_name] == $order_info[$field_name]) {
                 unset($this->updated->info['changes'][$field_name]);
                 continue;
@@ -460,6 +471,12 @@ class EoOrderChanges
         $remaining_totals = $this->updated->totals;
         foreach ($order_totals as $next_total) {
             $ot_index = $this->getOrderTotalIndex($next_total);
+
+            if (is_string($next_total['value'])) {
+                $next_total['value'] = $this->convertToIntOrFloat($next_total['value']);
+            } elseif (is_float($next_total['value'])) {
+                $next_total['value'] = round($next_total['value'], 4);
+            }
 
             // -----
             // If the current order-total has been added, record its values in
@@ -564,36 +581,184 @@ class EoOrderChanges
         return $this->updated->products[$index];
     }
 
-    public function updateProductInOrder(string $uprid, array $product): void
+    // -----
+    // Update a product/product-variant that already exists in the order.
+    //
+    // The $original_uprid identifies the pre-existing product being updated and $product_updates
+    // contains the updated fields posted via the modal product-update form.
+    //
+    public function updateProductInOrder(string $original_uprid, array $product_updates): void
     {
-        //-FIXME: Haven't accounted for a change in attributes.
-        $index = $this->upridMapping[$uprid] ?? null;
+        $index = $this->upridMapping[$original_uprid] ?? null;
         if ($index !== null) {
             $changes = 0;
             $is_removal = false;
-            $original_qty = $this->original->products[$index]['qty'] ?? $this->updated->products[$index]['qty'];
-            foreach ($product as $field => $value) {
-                if ($this->updated->products[$index][$field] != $value) {
-                    $changes++;
-                    if ($field === 'qty' && $value == 0) {
-                        $is_removal = true;
+            $is_variant_update = false;
+            foreach ($product_updates as $field => $value) {
+                if ($field === 'attributes') {
+                    $updated_uprid = zen_get_uprid((int)$original_uprid, $this->reformatPostedAttributes($value));
+                    if ($original_uprid !== $updated_uprid) {
+                        $changes++;
+                        $is_variant_update = true;
                     }
-                    $this->updated->products[$index][$field] = $value;
+                    continue;
                 }
+
+                if ($this->original->products[$index][$field] != $value) {
+                    $changes++;
+                }
+
+                if ($field === 'qty' && $value == 0) {
+                    $is_removal = true;
+                }
+                $this->updated->products[$index][$field] = $value;
             }
-            if ($changes !== 0) {
-                if ($is_removal === false) {
-                    $this->productsChanges[$uprid] ??= 'updated';
-                    $_SESSION['cart']->calculateTotalAndWeight($this->updated->products);
-                } elseif (($this->productsChanges[$uprid] ?? '') === 'added') {
-                    unset($this->productsChanges[$uprid]);
-                    $_SESSION['cart']->removeProduct($uprid, $this->updated->products[$index]);
-                } else {
-                    $this->productsChanges[$uprid] = 'removed';
-                    $_SESSION['cart']->removeProduct($uprid, $this->updated->products[$index]);
-                }
+
+            if ($changes === 0 && $is_variant_update === false && $is_removal === false) {
+                unset($this->productsChanges[$original_uprid]);
+                $_SESSION['cart']->calculateTotalAndWeight($this->updated->products);
+
+            } elseif ($is_variant_update === true) {
+                $this->updateProductVariant($index, $original_uprid, $updated_uprid, $product_updates);
+
+            } else {
+                $this->recordProductChanges($index, $original_uprid, $is_removal);
             }
         }
+    }
+
+    // -----
+    // The attribute values from a product's update or addition are posted in a
+    // associative array similar to:
+    //
+    //  'id' => [
+    //    1 => '26',
+    //    2 => '21',
+    //    5 => '24',
+    //    6 => '23',
+    //    '13_chk35' => 'on',
+    //    'file_8' => '1. cake-concert-0.jpg',
+    //    'file_7' => '',
+    //    'txt_10' => 'Some text stuff',
+    //    'txt_9' => '',
+    //    'txt_11' => '',
+    //  ]
+    //
+    // To match the footprint used on the storefront when calculating a
+    // product's uprid:
+    //
+    // 1. The xx_chkyy attributes need to be converted into
+    //    an array of arrays with the attribute-value.
+    // 2. The file_xx attributes need to be the last elements of the
+    //    modified attributes' array and renamed to use a 'txt_' prefix.
+    //
+    // Note: Admin sanitization 'complexities' made using the xx_chkyy format instead
+    // of the array-of-arrays much less complicated!
+    //
+    protected function reformatPostedAttributes(array $posted_attributes): array
+    {
+        $reformatted_attributes = [];
+        $file_type_attributes = [];
+        foreach ($posted_attributes as $key => $value) {
+            if (str_contains($key, '_chk')) {
+                [$option_id, $values_id] = explode('_chk', $key);
+                $reformatted_attributes[$option_id][$values_id] = $values_id;
+                continue;
+            }
+
+            if (str_starts_with($key, 'file_')) {
+                $txt_key = str_replace('file_', 'txt_', $key);
+                $file_type_attributes[$txt_key] = $value;
+                continue;
+            }
+
+            $reformatted_attributes[(string)$key] = (string)$value;
+        }
+
+        return $reformatted_attributes + $file_type_attributes;
+    }
+
+    protected function recordProductChanges(int $index, string $uprid, bool $is_removal): void
+    {
+        if ($is_removal === false) {
+            $this->productsChanges[$uprid] ??= 'updated';
+            $_SESSION['cart']->calculateTotalAndWeight($this->updated->products);
+
+        } elseif (($this->productsChanges[$uprid] ?? '') === 'added') {
+            unset($this->productsChanges[$uprid]);
+            $_SESSION['cart']->removeProduct($uprid, $this->updated->products[$index]);
+
+        } else {
+            $this->productsChanges[$uprid] = 'removed';
+            $_SESSION['cart']->removeProduct($uprid, $this->updated->products[$index]);
+        }
+    }
+
+    // -----
+    // If an ordered product's attributes are changed, EO treats that as if the
+    // original product-variant was removed from the order and the updated
+    // product-variant was updated/added.
+    //
+    // Note: This method is called **only** when a product's original and updated uprid
+    // are not the same, implying a change in the product's variant.
+    //
+    protected function updateProductVariant(int $original_index, string $original_uprid, string $updated_uprid, array $product_updates): void
+    {
+        // -----
+        // First, deal with the original product-variant's removal.  If the variant
+        // was added during this order-edit, it's simply removed from the
+        // updated order.  Otherwise, the product-variant is marked as to-be-removed.
+        //
+        if (($this->productsChanges[$original_uprid] ?? '') === 'added') {
+            unset($this->productsChanges[$original_uprid]);
+            $_SESSION['cart']->removeProduct($original_uprid, $this->updated->products[$original_index]);
+        } else {
+            $this->productsChanges[$original_uprid] = 'removed';
+            $_SESSION['cart']->removeProduct($original_uprid, $this->updated->products[$original_index]);
+        }
+
+        // -----
+        // Next, either add the 'new' product-variant to the edited order or update
+        // information associated with the existing variant.
+        //
+        // Start by checking to see if the product-variant has ever been in the
+        // order for this edit session.
+        //
+        $updated_index = $this->upridMapping[$updated_uprid] ?? null;
+
+        // -----
+        // If this is a brand-new variant for the cart, add it.
+        //
+        if ($updated_index === null) {
+            $this->addProductToOrder($updated_uprid, $product_updates);
+            return;
+        }
+
+        // -----
+        // Compare the to-be-updated product-variant to the posted changes, continuing
+        // only non-attribute-related changes are present.
+        //
+        $changes = 0;
+        $is_removal = false;
+        foreach ($product_updates as $field => $value) {
+            if ($field === 'attributes' || $this->updated->products[$updated_index][$field] == $value) {
+                continue;
+            }
+            $changes++;
+            if ($field === 'qty' && $value == 0) {
+                $is_removal = true;
+            }
+            $this->updated->products[$updated_index][$field] = $value;
+        }
+
+        if ($changes !== 0) {
+            $this->recordProductChanges($updated_index, $updated_uprid, $is_removal);
+        }
+    }
+
+    protected function addProductToOrder(string $uprid, array $product): void
+    {
+        trigger_error($uprid . "\n" . var_export($product, true));
     }
 
     public function getProductsChangeCount(): int

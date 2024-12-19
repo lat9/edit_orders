@@ -223,7 +223,12 @@ class EditOrdersAdminObserver extends base
 
     protected function notify_order_cart_add_product_list(&$order, string $e, array $index_product, &$attributes_handled): void
     {
-        $attributes_handled = true;
+        $index = $index_product['index'];
+        $product = $index_product['products'];
+        if (!empty($product['attributes'])) {
+            $attributes_handled = true;
+            $order->products[$index]['attributes'] = $product['attributes'];
+        }
     }
 
     protected function notify_order_cart_external_tax_rate_lookup(&$order, string $e, $x, &$products, int &$loop, int &$index, &$taxCountryId, &$taxZoneId, &$taxRates): void

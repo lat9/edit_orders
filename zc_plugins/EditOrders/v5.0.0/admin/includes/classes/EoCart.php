@@ -28,11 +28,14 @@ class EoCart extends \shoppingCart
     // Reconstruct the cart from the ordered products, for use during pricing/quantity
     // updates.
     //
+    // Note: Called *once* on the initial entry to the edit_orders.php tool. Assumes that
+    // the eoChanges session variable has been previously created.
+    //
     public function loadFromOrder(\order $order): void
     {
         $this->content_type = $order->content_type;
         $option_types = [];
-        foreach ($order->products as &$product) {
+        foreach ($order->products as $i => $product) {
             $uprid = $product['uprid'];
 
             $this->contents[$uprid] = [
@@ -41,13 +44,13 @@ class EoCart extends \shoppingCart
             if (isset($product['attributes'])) {
                 $this->contents[$uprid]['attributes'] = [];
                 foreach ($product['attributes'] as $attribute) {
-                    $option_id = (int)$attribute['option_id'];
-                    $value_id = (int)$attribute['value_id'];
+                    $option_id = $attribute['option_id'];
+                    $value_id = $attribute['value_id'];
                     $option_type = $option_types[$option_id] ?? false;
                     if ($option_type === false) {
                         $option_info = zen_get_option_details($option_id);
                         if ($option_info->EOF) {
-                            $product['missing_options'][] = $option_id;
+                            $order->products[$i]['missing_options'][] = $option_id;
                         } else {
                             $option_type = (int)$option_info->fields['products_options_type'];
                             $option_types[$option_id] = $option_type;
@@ -55,21 +58,21 @@ class EoCart extends \shoppingCart
                     }
 
                     // -----
-                    // Checkbox attributes' option_id is formatted as 33chk_37,
+                    // Checkbox attributes' option_id is formatted as 33_chk37,
                     //  where 33 is the option-id and 37 is the option-value
                     //
                     if ($option_type === 3) {
-                        $option_id = $option_id . 'chk_' . $value_id;
+                        $option_id = $option_id . '_chk' . $value_id;
                     }
 
                     $this->contents[$uprid]['attributes'][$option_id] = $value_id;
-                    if ($value_id === 0) {
+                    if ($value_id == 0) {
                         $this->contents[$uprid]['attributes_values'][$option_id] = $attribute['value'];
                     }
                 }
             }
+            $_SESSION['eoChanges']->saveCartContents($i, $this->contents[$uprid]);
         }
-        unset($product);
 
         // -----
         // Initialize the calculated values; EO's cart doesn't re-calculate
@@ -100,11 +103,28 @@ class EoCart extends \shoppingCart
     }
 
     // -----
+    // Add a product to the cart.
+    //
+    public function addProduct(array $product): void
+    {
+        $uprid = $product['uprid'];
+        $this->contents[$uprid] = $product;
+        trigger_error('fixme');
+        $this->total += (($product['qty'] * $product['final_price']) + $product['onetime_charges']);
+        $this->weight += $product['qty'] * $product['products_weight'];
+    }
+
+    protected function isUnsupportedMethod()
+    {
+        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+    }
+
+    // -----
     // Start shoppingCart class method overrides ...
     //
     public function restore_contents()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     // -----
@@ -118,12 +138,12 @@ class EoCart extends \shoppingCart
 
     public function add_cart($product_id, $qty = 1, $attributes = [], $notify = true)
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     public function update_quantity($uprid, $quantity = 0, $attributes = [])
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     // -----
@@ -142,7 +162,7 @@ class EoCart extends \shoppingCart
      */
     protected function removeUprid($uprid)
     {
-        unset($this->contents[$uprid]);
+        $this->isUnsupportedMethod();
     }
 
     /**
@@ -194,7 +214,7 @@ class EoCart extends \shoppingCart
      */
     public function remove($uprid)
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     /**
@@ -202,7 +222,7 @@ class EoCart extends \shoppingCart
      */
     public function remove_all()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     /**
@@ -223,7 +243,7 @@ class EoCart extends \shoppingCart
      */
     public function calculate()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     /**
@@ -297,7 +317,7 @@ class EoCart extends \shoppingCart
      */
     public function show_total_before_discounts()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
         return $this->total;
     }
 
@@ -401,17 +421,17 @@ class EoCart extends \shoppingCart
     //
     public function free_shipping_prices()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
         return 0.0;
     }
     public function free_shipping_weight()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
         return 0.0;
     }
     public function download_counts()
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
         return 0; 
     }
 
@@ -421,39 +441,39 @@ class EoCart extends \shoppingCart
     //
     public function actionUpdateProduct($goto, $parameters)
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionAddProduct($goto, $parameters = [])
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionBuyNow($goto, $parameters = [])
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionMultipleAddProduct($goto, $parameters = [])
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionNotify($goto, $parameters = ['ignored'])
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionNotifyRemove($goto, $parameters = ['ignored'])
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionCustomerOrder($goto, $parameters)
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionRemoveProduct($goto, $parameters)
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
     public function actionCartUserAction($goto, $parameters)
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
     }
 
     /**
@@ -467,7 +487,7 @@ class EoCart extends \shoppingCart
      */
     public function adjust_quantity($check_qty, $products, $stack = 'shopping_cart')
     {
-        trigger_error(self::UNSUPPORTED_LOG_MESSAGE, E_USER_WARNING);
+        $this->isUnsupportedMethod();
         return $check_qty; 
     }
 
