@@ -523,18 +523,20 @@ class zcAjaxEditOrdersAdmin
 
         $eo ??= new EditOrders($_SESSION['eoChanges']->getOrderId());
 
-        require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
-        $currencies = new currencies();
-
         // -----
-        // 'Create' the order from EO's cart.  Note that the order-class doesn't include
+        // 'Create' the order (in global scope) from EO's cart. Note that the order-class doesn't include
         // a product's uprid (that's present in a product's 'id' element), so the id will
         // be copied to the uprid for the rest of EO's processing.
         //
-        require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
-        $order = new \order();
+        // Note: Depending on the current product-pricing method and potential
+        // changes in a product's tax, some of the product's information might
+        // have changed during the order's creation. Each updated product is submitted
+        // to EO's change-monitor for those checks.
+        //
+        $eo->createOrderFromCart();
         foreach ($order->products as $index => $product) {
             $order->products[$index]['uprid'] = $order->products[$index]['id'];
+            $_SESSION['eoChanges']->recordCreatedProductChanges($order->products[$index]['uprid'], $order->products[$index]);
         }
 
         $eo->eoLog("Products updated:\n" . $eo->eoFormatArray($order->products));
