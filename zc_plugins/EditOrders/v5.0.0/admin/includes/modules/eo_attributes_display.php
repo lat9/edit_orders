@@ -22,6 +22,8 @@ use Zencart\Plugins\Admin\EditOrders\EoAttributes;
                                     'number') ?>
                             </div>
                         </div>
+
+                        <div id="attrib-messages"></div>
 <?php
 // -----
 // Retrieve all attributes associated with the current product.

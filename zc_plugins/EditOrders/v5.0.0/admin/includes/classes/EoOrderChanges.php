@@ -381,7 +381,7 @@ class EoOrderChanges
                     ];
                     break;
                 default:
-                    $product = $this->updated->products[$index];
+                    $product = $this->original->products[$index];
 
                     $original_qty = $this->original->products[$index]['qty'];
                     $updated_qty = $this->updated->products[$index]['qty'];
@@ -692,6 +692,19 @@ class EoOrderChanges
             $this->productsChanges[$uprid] = 'removed';
             $_SESSION['cart']->removeProduct($uprid, $this->updated->products[$index]);
         }
+    }
+
+    // -----
+    // During an order's 'creation', it's possible that a product's tax, onetime-charge or
+    // final-price have changed. If so, record those updates in the updated order.
+    //
+    public function recordCreatedProductChanges(string $uprid, array $product): void
+    {
+        $updated_fields = [];
+        foreach (['tax', 'final_price', 'onetime_charges'] as $field) {
+            $updated_fields[$field] = $product[$field];
+        }
+        $this->updateProductInOrder($uprid, $updated_fields);
     }
 
     // -----

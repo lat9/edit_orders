@@ -103,6 +103,24 @@ class EditOrders
         return $order;
     }
 
+    // -----
+    // 'Create' the order from EO's cart in the 'global' scope.
+    //
+    public function createOrderFromCart(): void
+    {
+        global $currencies, $order;
+
+        if (!class_exists('currencies')) {
+            require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
+        }
+        $currencies ??= new \currencies();
+
+        if (!class_exists('order')) {
+            require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
+        }
+        $order = new \order();
+    }
+
     public function queryOrder(\order $order): bool
     {
         // -----
@@ -1126,7 +1144,7 @@ class EditOrders
                 continue;
             }
 
-            $and_clause = ($updated_total['class'] === 'ot_tax') ? (" AND `title` = '" . zen_db_input($updated_total['class']) . "'") : '';
+            $and_clause = ($updated_total['class'] === 'ot_tax') ? (" AND `title` = '" . zen_db_input($updated_total['title']) . "'") : '';
             $ot = [
                 ['fieldName' => 'title', 'value' => $updated_total['title'], 'type' => 'string'],
                 ['fieldName' => 'text', 'value' => $updated_total['text'], 'type' => 'string'],

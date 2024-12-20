@@ -164,7 +164,7 @@ if (ACCOUNT_STATE === 'true') {
                 return el.length != 0
             });
             var sorted = split.sort();
-            countryZones = '<option selected="selected" value="0"><?php echo addslashes(PLEASE_SELECT); ?><' + '/option><option' + sorted.join('<option');
+            countryZones = '<option selected="selected" value="0"><?= addslashes(PLEASE_SELECT) ?><' + '/option><option' + sorted.join('<option');
             $(this).parents('form').first().find('.state-input').val('').parent().hide();
             $(this).parents('form').first().find('.state-select').html(countryZones).prop('disabled', false).parent().show();
         } else {
@@ -281,6 +281,10 @@ if (ACCOUNT_STATE === 'true') {
 // START PRODUCTS' HANDLING
 // --------------------
 ?>
+    // -----
+    // When the "Edit" button associated with an ordered product is clicked,
+    // the product's update-modal form is displayed.
+    //
     $(document).on('click', 'button.eo-btn-prod-edit', function() {
         zcJS.ajax({
             url: 'ajax.php?act=ajaxEditOrdersAdmin&method=getProductUpdateModal',
@@ -293,12 +297,28 @@ if (ACCOUNT_STATE === 'true') {
             $('#prod-edit-modal').modal();
         });
     });
+
+    // -----
+    // From a product's update-modal display, when the modal's "Update" button
+    // is clicked, the entered information is (a) validated and (b) recorded in
+    // the to-be-updated order if all's OK.
+    //
     $(document).on('click', '#eo-prod-update', function() {
         zcJS.ajax({
             url: 'ajax.php?act=ajaxEditOrdersAdmin&method=updateProduct',
             data: $('#prod-update-form').serializeArray()
         }).done(function(response) {
-            if (response.status == 'error') {
+            if (response.status === 'error') {
+                $('#prod-updated').removeClass('border-danger');
+                $('#prod-updated span.eo-field-error').remove();
+                $('#prod-messages, #attrib-messages').empty();
+                $.each(response.messages, function(key, value) {
+                    if (key === 'attributes') {
+                        $('#attrib-messages').text(value).addClass('border-danger');
+                    } else {
+                        $('input[name="'+key+'"]').addClass('border-danger').after('<span class="eo-field-error text-danger">'+value+'</span>');
+                    }
+                });
             } else {
                 $('#prod-edit-modal').modal('hide');
                 $('#products-listing tr.eo-prod, #products-listing tr.eo-ot').remove();
@@ -489,7 +509,7 @@ if (!empty($addl_js_files)) {
         } else {
             $js_file = DIR_WS_INCLUDES . 'javascript/' . "$js_filename.js";
 ?>
-<script src="<?php echo $js_file; ?>"></script>
+<script src="<?= $js_file ?>"></script>
 <?php
         }
     }

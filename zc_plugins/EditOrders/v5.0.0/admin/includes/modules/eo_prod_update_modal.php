@@ -21,7 +21,6 @@ $updated_product = $_SESSION['eoChanges']->getUpdatedProductByUprid($uprid);
     </div>
 
     <div class="modal-body">
-        <div id="eo-prod-messages"></div>
 <?php
 if (empty($original_product) && empty($updated_product)) {
     $update_button = '';
@@ -45,32 +44,32 @@ if (empty($original_product) && empty($updated_product)) {
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="prod-qty-avail-o"></label>
                     <div class="col-sm-10">
-                        <?= zen_draw_input_field('qty_avail', '', 'id="prod-qty-avail-o" class="form-control invisible" disabled') ?>
+                        <?= zen_draw_input_field('unused', '', 'id="prod-qty-avail-o" class="form-control invisible" disabled') ?>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="prod-qty-o"><?= TEXT_LABEL_QTY ?></label>
                     <div class="col-sm-10">
-                        <?= zen_draw_input_field('qty', $original_product['qty'], 'id="prod-qty-o" class="form-control" disabled') ?>
+                        <?= zen_draw_input_field('unused', $original_product['qty'], 'id="prod-qty-o" class="form-control" disabled') ?>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="prod-model-o"><?= TEXT_LABEL_MODEL ?></label>
                     <div class="col-sm-10">
-                        <?= zen_draw_input_field('model', $original_product['model'], 'id="prod-model-o" class="form-control" disabled') ?>
+                        <?= zen_draw_input_field('unused', $original_product['model'], 'id="prod-model-o" class="form-control" disabled') ?>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="prod-name-o"><?= TEXT_LABEL_NAME ?></label>
                     <div class="col-sm-10">
-                        <?= zen_draw_input_field('name', $original_product['name'], 'id="prod-name-o" class="form-control" disabled') ?>
+                        <?= zen_draw_input_field('unused', $original_product['name'], 'id="prod-name-o" class="form-control" disabled') ?>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="prod-tax-o"><?= TEXT_LABEL_TAX ?></label>
                     <div class="col-sm-10">
-                        <?= zen_draw_input_field('tax', $original_product['tax'], 'id="prod-tax-o" class="form-control" disabled') ?>
+                        <?= zen_draw_input_field('unused', $original_product['tax'], 'id="prod-tax-o" class="form-control" disabled') ?>
                     </div>
                 </div>
 <?php
@@ -80,7 +79,7 @@ if (empty($original_product) && empty($updated_product)) {
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="prod-price-net-o"><?= $final_price_label ?>:</label>
                     <div class="col-sm-10">
-                        <?= zen_draw_input_field('final_price', $final_price, 'id="prod-price-net-o" class="form-control" disabled') ?>
+                        <?= zen_draw_input_field('unused', $final_price, 'id="prod-price-net-o" class="form-control" disabled') ?>
                     </div>
                 </div>
 <?php
@@ -90,7 +89,7 @@ if (empty($original_product) && empty($updated_product)) {
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="prod-price-gross-o"><?= rtrim(TABLE_HEADING_UNIT_PRICE_GROSS, ':') ?>:</label>
                     <div class="col-sm-10">
-                        <?= zen_draw_input_field('gross_price', $gross_price, 'id="prod-price-gross-o" class="form-control" disabled') ?>
+                        <?= zen_draw_input_field('unused', $gross_price, 'id="prod-price-gross-o" class="form-control" disabled') ?>
                     </div>
                 </div>
 <?php
@@ -104,7 +103,7 @@ if (empty($original_product) && empty($updated_product)) {
                         <div class="form-group">
                             <label class="control-label col-sm-2" for="prod-otc-o"><?= TEXT_ATTRIBUTES_ONE_TIME_CHARGE ?></label>
                             <div class="col-sm-10">
-                                <?= zen_draw_input_field('onetime_charges', $original_product['onetime_charges'], 'id="prod-otc-o" class="form-control" disabled') ?>
+                                <?= zen_draw_input_field('unused', $original_product['onetime_charges'], 'id="prod-otc-o" class="form-control" disabled') ?>
                             </div>
                         </div>
 
@@ -115,7 +114,7 @@ if (empty($original_product) && empty($updated_product)) {
                         <div class="form-group">
                             <label class="control-label col-sm-2" for="<?= $for ?>"><?= zen_output_string_protected($next_attribute['option']) ?></label>
                             <div class="col-sm-10">
-                                <?= zen_draw_input_field($for, zen_output_string_protected($next_attribute['value']), 'id="' . $for . '" class="form-control" disabled') ?>
+                                <?= zen_draw_input_field('unused', zen_output_string_protected($next_attribute['value']), 'id="' . $for . '" class="form-control" disabled') ?>
                             </div>
                         </div>
 <?php
@@ -143,14 +142,17 @@ if (empty($original_product) && empty($updated_product)) {
 
     $qty_available = $eo->getProductsAvailableStock($uprid, $_SESSION['cart']->contents[$uprid]['attributes'] ?? []);
 ?>
-            <div class="col-sm-6">
+            <div id="prod-updated" class="col-sm-6">
                 <h5 class="text-center"><?= TEXT_UPDATED_ORDER ?></h5>
+
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="prod-qty-avail"><?= TEXT_LABEL_QTY_AVAIL ?></label>
                     <div class="col-sm-10">
                         <?= zen_draw_input_field('qty_avail', $qty_available, 'id="prod-qty-avail" class="form-control" disabled') ?>
                     </div>
                 </div>
+
+                <div id="prod-messages"></div>
 <?php
     $max_qty = '';
     if (STOCK_ALLOW_CHECKOUT === 'false') {
