@@ -223,6 +223,10 @@ class EditOrdersAdminObserver extends base
 
     protected function notify_order_cart_add_product_list(&$order, string $e, array $index_product, &$attributes_handled): void
     {
+        if ($_SESSION['eoChanges']->productAddInProcess() === true) {
+            return;
+        }
+
         $index = $index_product['index'];
         $product = $index_product['products'];
         if (!empty($product['attributes'])) {

@@ -444,16 +444,7 @@ class zcAjaxEditOrdersAdmin
             $product_update['attributes'] = $_POST['id'];
         }
 
-        $uprid = $_POST['uprid'];
-        $this->notify('NOTIFY_EO_AJAX_UPDATE_PRODUCT',
-            [
-                'uprid' => $uprid,
-                'original_product' => $_SESSION['eoChanges']->getOriginalProductByUprid($uprid),
-            ],
-            $product_update
-        );
-
-        $_SESSION['eoChanges']->updateProductInOrder($uprid, $product_update);
+        $_SESSION['eoChanges']->updateProductInOrder($_POST['uprid'], $product_update);
 
         return $this->processOrderUpdate();
     }
@@ -482,26 +473,23 @@ class zcAjaxEditOrdersAdmin
         }
 
         if (isset($_POST['final_price'])) {
-            $final_price = $_POST['final_price'];
-            if (!is_numeric($final_price) || $final_price < 0) {
+            if (!is_numeric($_POST['final_price']) || $_POST['final_price'] < 0) {
                 $messages['final_price'] = ERROR_PRICE_INVALID;
             }
         }
 
         if (isset($_POST['onetime_charges'])) {
-            $onetime_charges = $_POST['onetime_charges'];
-            if (!is_numeric($onetime_charges) || $onetime_charges < 0) {
+            if (!is_numeric($_POST['onetime_charges']) || $_POST['onetime_charges'] < 0) {
                 $messages['onetime_charges'] = ERROR_PRICE_INVALID;
             }
         }
 
-        $updated_qty = $_POST['qty'];
-        if (!is_numeric($updated_qty) || $updated_qty < 0) {
+        if (!is_numeric($_POST['qty']) || $_POST['qty'] < 0) {
             $messages['qty'] = ERROR_QTY_INVALID;
         } elseif (STOCK_ALLOW_CHECKOUT === 'false') {
             $original_product = $_SESSION['eoChanges']->getOriginalProductByUprid($_POST['uprid']);
             $original_qty = $original_product['qty'] ?? 0;
-            $qty_required = $eo->convertToIntOrFloat($updated_qty) - $original_qty;
+            $qty_required = $eo->convertToIntOrFloat($_POST['qty']) - $original_qty;
             $available_qty = $eo->getProductsAvailableStock($_POST['uprid'], $_POST['id'] ?? []);
             if ($qty_required > $available_qty) {
                 $messages['qty'] = sprintf(ERROR_QTY_INSUFFICIENT, (string)$available_qty);

@@ -105,13 +105,72 @@ class EoCart extends \shoppingCart
     // -----
     // Add a product to the cart.
     //
-    public function addProduct(array $product): void
+    public function addProduct(string $uprid, array $attributes, int|float $qty): array
     {
-        $uprid = $product['uprid'];
-        $this->contents[$uprid] = $product;
-        trigger_error('fixme');
-        $this->total += (($product['qty'] * $product['final_price']) + $product['onetime_charges']);
-        $this->weight += $product['qty'] * $product['products_weight'];
+        $cart_attributes = [];
+        $cart_attributes_values = [];
+        $file_attributes = [];
+        foreach ($attributes as $key => $value) {
+            if (str_contains($key, '_chk')) {
+                [$option_id, $values_id] = explode('_chk', $key);
+                $cart_attributes[$key] = $values_id;
+                continue;
+            }
+
+            if (str_starts_with($key, 'txt_')) {
+                if (empty($value)) {
+                    continue;
+                }
+                $options_id = str_replace('txt_', '', $key);
+                $cart_attributes[$options_id] = '0';
+                $cart_attributes_values[$options_id] = $value;
+                continue;
+            }
+
+            if (str_starts_with($key, 'file_')) {
+                if (empty($value)) {
+                    continue;
+                }
+                $options_id = str_replace('file_', '', $key);
+                $file_attributes[$options_id] = '0';
+                $cart_attributes_values[$options_id] = $value;
+                continue;
+            }
+
+            $cart_attributes[(string)$key] = (string)$value;
+        }
+        $cart_attributes += $file_attributes;
+
+        $saved_contents = $this->contents;
+        $uprid_contents = [
+            'qty' => $qty,
+        ];
+        if (!empty($cart_attributes)) {
+            $uprid_contents['attributes'] = $cart_attributes;
+        }
+        if (!empty($cart_attributes_values)) {
+            $uprid_contents['attributes_values'] = $cart_attributes_values;
+        }
+
+        $this->contents = [
+            $uprid => $uprid_contents,
+        ];
+
+        $cart_products = parent::get_products(false);
+
+        $this->contents = $saved_contents;
+        $this->contents[$uprid] = $uprid_contents;
+
+        $new_product = $cart_products[0];
+        $new_product['uprid'] = $uprid;
+        $new_product['qty'] = $qty;
+        $new_product['products_weight'] = $new_product['weight'];
+        $new_product['cart_contents'] = $uprid_contents;
+
+        $this->total += (($qty * $new_product['final_price']) + $new_product['onetime_charges']);
+        $this->weight += $qty * $new_product['products_weight'];
+
+        return $new_product;
     }
 
     protected function isUnsupportedMethod()
@@ -288,9 +347,10 @@ class EoCart extends \shoppingCart
      */
     public function get_products(bool $check_for_valid_cart = false)
     {
-        $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
+        $products = $_SESSION['eoChanges']->getUpdatedOrdersProducts();
+
         $cart_products = [];
-        foreach ($updated_order->products as $next_product) {
+        foreach ($products as $next_product) {
             if ($next_product['qty'] != 0) {
                 $next_product['id'] = $next_product['uprid'];
                 $next_product['quantity'] = $next_product['qty'];
