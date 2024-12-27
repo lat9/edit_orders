@@ -527,7 +527,7 @@ class zcAjaxEditOrdersAdmin
             $_SESSION['eoChanges']->recordCreatedProductChanges($order->products[$index]['uprid'], $order->products[$index]);
         }
 
-        $eo->eoLog("Products updated:\n" . $eo->eoFormatArray($order->products));
+        $eo->eoLog("processOrderUpdate, products:\n" . $eo->eoFormatArray($order->products));
 
         $order_total_modules = $eo->getOrderTotalsObject();
         if (isset($_POST['dc_redeem_code'], $GLOBALS['ot_coupon']) && $_POST['dc_redeem_code'] !== $order->info['coupon_code']) {

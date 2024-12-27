@@ -133,7 +133,7 @@ class EoAttributes
 
     public function isOptionValueSelected(int $option_id, string $option_value_id): bool
     {
-        return in_array($option_value_id, $this->currentSelections[$option_id]['value_ids'] ?? []);
+        return isset($this->currentSelections[$option_id . '_chk' . $option_value_id]) || in_array($option_value_id, $this->currentSelections[$option_id]['value_ids'] ?? []);
     }
 
     public function searchOptionsValues(string $key, string $value): array

@@ -39,8 +39,6 @@ $queryCache = new EditOrdersQueryCache();
 // -----
 // Create an initial copy of the requested order's information.
 //
-zen_define_default('EO_DEBUG_TAXES_ONLY', 'false');  //-Either 'true' or 'false'
-
 require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
 $order = new order($oID);
 
@@ -196,8 +194,8 @@ switch ($action) {
             $_SESSION['cc_id'],
             $_SESSION['cot_gv'],
             $_SESSION['customer_country_id'],
-            $_SESSION['customer_zone_id'],
             $_SESSION['customer_id'],
+            $_SESSION['customer_zone_id'],
             $_SESSION['customers_ip_address'],
             $_SESSION['eoChanges'],
             $_SESSION['eo-totals'],

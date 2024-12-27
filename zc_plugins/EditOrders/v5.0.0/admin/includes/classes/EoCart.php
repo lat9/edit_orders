@@ -86,7 +86,19 @@ class EoCart extends \shoppingCart
         $this->total = 0;
         $this->weight = 0;
         foreach ($ordered_products as $product) {
-            $this->contents[$product['uprid']]['qty'] = (float)$product['qty'];
+            if (empty($product)) {
+                continue;
+            }
+
+            $uprid = $product['uprid'];
+            if (!isset($this->contents[$uprid]['attributes']) && !empty($product['cart_contents']['attributes'])) {
+                $this->contents[$uprid]['attributes'] = $product['cart_contents']['attributes'];
+                if (!empty($product['cart_contents']['attributes_values'])) {
+                    $this->contents[$uprid]['attributes_values'] = $product['cart_contents']['attributes_values'];
+                }
+            }
+
+            $this->contents[$uprid]['qty'] = (float)$product['qty'];
             $this->total += ($product['qty'] * $product['final_price']) + $product['onetime_charges'];
             $this->weight += $product['qty'] * $product['products_weight'];
         }

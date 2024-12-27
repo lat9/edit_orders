@@ -122,7 +122,7 @@ class EoOrderChanges
     {
         $products = [];
         foreach ($this->updated->products as $next_product) {
-            if (($this->productsChanges[$next_product['uprid']] ?? '') !== 'removed') {
+            if (!empty($next_product) && ($this->productsChanges[$next_product['uprid']] ?? '') !== 'removed') {
                 $products[] = $next_product;
             }
         }
@@ -645,7 +645,7 @@ class EoOrderChanges
                 $this->changeProductVariant($index, $original_uprid, $updated_uprid, $product_updates, $is_removal);
 
             } else {
-                $this->recordProductChanges($index, $original_uprid, $is_removal);
+                $this->recordProductChanges($changes, $index, $original_uprid, $is_removal);
             }
         }
     }
@@ -706,10 +706,12 @@ class EoOrderChanges
         return $reformatted_attributes + $file_type_attributes;
     }
 
-    protected function recordProductChanges(int $index, string $uprid, bool $is_removal): void
+    protected function recordProductChanges(int $changes, int $index, string $uprid, bool $is_removal): void
     {
         if ($is_removal === false) {
-            $this->productsChanges[$uprid] ??= 'updated';
+            if ($changes !== 0) {
+                $this->productsChanges[$uprid] ??= 'updated';
+            }
             $this->notify('NOTIFY_EO_CHANGES_UPDATE_PRODUCT',
                 [
                     'uprid' => $uprid,
@@ -737,7 +739,7 @@ class EoOrderChanges
     {
         $updated_fields = [];
         foreach (['tax', 'final_price', 'onetime_charges'] as $field) {
-            $updated_fields[$field] = $product[$field];
+            $updated_fields[$field] = round((float)$product[$field], 6);
         }
         $this->updateProductInOrder($uprid, $updated_fields);
     }
@@ -758,8 +760,9 @@ class EoOrderChanges
         // updated order.  Otherwise, the product-variant is marked as to-be-removed.
         //
         if ($this->isProductAdded($original_uprid) === true) {
-            unset($this->productsChanges[$original_uprid]);
             $_SESSION['cart']->removeProduct($original_uprid, $this->updated->products[$original_index]);
+            $this->updated->products[$original_index] = [];
+            unset($this->productsChanges[$original_uprid], $this->upridMapping[$original_uprid]);
         } else {
             $this->productsChanges[$original_uprid] = 'removed';
             $_SESSION['cart']->removeProduct($original_uprid, $this->original->products[$original_index]);
@@ -783,6 +786,14 @@ class EoOrderChanges
         }
 
         // -----
+        // If the to-be-updated variant was previously removed from the order, remove
+        // that status-change.
+        //
+        if (($this->productsChanges[$updated_uprid] ?? '') === 'removed') {
+            unset($this->productsChanges[$updated_uprid]);
+        }
+
+        // -----
         // Compare the to-be-updated product-variant to the posted changes, continuing
         // only if non-attribute-related changes are present.
         //
@@ -797,7 +808,7 @@ class EoOrderChanges
         }
 
         if ($changes !== 0 || $is_removal === true) {
-            $this->recordProductChanges($updated_index, $updated_uprid, $is_removal);
+            $this->recordProductChanges($changes, $updated_index, $updated_uprid, $is_removal);
         }
     }
 
