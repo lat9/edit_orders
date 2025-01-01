@@ -332,10 +332,57 @@ if (ACCOUNT_STATE === 'true') {
 
     $(document).on('click', '#add-product', function() {
         zcJS.ajax({
-            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=getProductAddModal',
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=addNewProductStart',
         }).done(function(response) {
             $('#prod-edit-modal .modal-content').html(response.modal_content);
             $('#prod-edit-modal').modal();
+        });
+    });
+
+    $(document).on('click', '.prod-add', function() {
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=newProductChosen',
+            data: $(this).closest('form').serializeArray()
+        }).done(function(response) {
+            $('#prod-edit-modal .modal-content').html(response.modal_content);
+            $('#prod-edit-modal').modal();
+        });
+    });
+
+    $(document).on('click', '#recalculate-pricing', function() {
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=recalculateNewProduct',
+            data: $(this).closest('form').serializeArray()
+        }).done(function(response) {
+            $('#prod-edit-modal .modal-content').html(response.modal_content);
+            $('#prod-edit-modal').modal();
+        });
+    });
+
+    $(document).on('click', '#add-to-order', function() {
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=addNewProduct',
+            data: $(this).closest('form').serializeArray()
+        }).done(function(response) {
+            if (response.status === 'error') {
+                $('#prod-add-details').removeClass('border-danger');
+                $('#prod-add-details span.eo-field-error').remove();
+                $('#prod-messages, #attrib-messages').empty();
+                $.each(response.messages, function(key, value) {
+                    if (key === 'attributes') {
+                        $('#attrib-messages').text(value).addClass('border-danger');
+                    } else {
+                        $('input[name="'+key+'"]').addClass('border-danger').after('<span class="eo-field-error text-danger">'+value+'</span>');
+                    }
+                });
+            } else {
+                $('#prod-edit-modal').modal('hide');
+                $('#products-listing tr.eo-prod, #products-listing tr.eo-ot').remove();
+                $('#products-listing > tbody').append(response.prod_table_html);
+                $('#products-listing > tbody').append(response.ot_table_html);
+                $('#product-changes').val(response.prod_changes).trigger('change');
+                $('#ot-changes').val(response.ot_changes).trigger('change');
+            }
         });
     });
 <?php

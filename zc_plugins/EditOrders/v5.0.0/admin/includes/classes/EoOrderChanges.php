@@ -9,6 +9,7 @@ namespace Zencart\Plugins\Admin\EditOrders;
 
 use Zencart\Plugins\Admin\EditOrders\EditOrders;
 use Zencart\Plugins\Admin\EditOrders\EoAttributes;
+use Zencart\Traits\NotifierManager;
 
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
@@ -21,12 +22,15 @@ if (!defined('IS_ADMIN_FLAG')) {
  */
 class EoOrderChanges
 {
+    use NotifierManager;
+
     protected \stdClass $original;
     public \stdClass $updated;
     protected int $orderId;
 
     protected array $upridMapping = [];
     protected array $productsChanges = [];
+    protected bool $productBeingAdded = false;
 
     protected array $totalsChanges = [];
     protected array $ordersStatuses;
@@ -99,14 +103,30 @@ class EoOrderChanges
         return $this->isWholesale;
     }
 
+    public function productAddInProcess(): bool
+    {
+        return $this->productBeingAdded;
+    }
+
     public function getOriginalOrder(): \stdClass
     {
         return clone $this->original;
     }
-    
+
     public function getUpdatedOrder(): \stdClass
     {
         return clone $this->updated;
+    }
+
+    public function getUpdatedOrdersProducts(): array
+    {
+        $products = [];
+        foreach ($this->updated->products as $next_product) {
+            if (!empty($next_product) && ($this->productsChanges[$next_product['uprid']] ?? '') !== 'removed') {
+                $products[] = $next_product;
+            }
+        }
+        return $products;
     }
 
     public function saveCartContents(int $index, array $cart_contents): void
@@ -363,6 +383,7 @@ class EoOrderChanges
                             (string)$product['final_price'],
                             (string)$product['tax']
                         ),
+                        'original' => $product,
                     ];
                     break;
                 case 'added':
@@ -569,7 +590,7 @@ class EoOrderChanges
     public function getOriginalProductByUprid(string $uprid): array
     {
         $index = $this->upridMapping[$uprid] ?? null;
-        return ($index === null) ? [] : $this->original->products[$index];
+        return ($index === null || !isset($this->original->products[$index])) ? [] : $this->original->products[$index];
     }
     public function getUpdatedProductByUprid(string $uprid): array
     {
@@ -593,18 +614,18 @@ class EoOrderChanges
         if ($index !== null) {
             $changes = 0;
             $is_removal = false;
-            $is_variant_update = false;
+            $is_variant_change = false;
             foreach ($product_updates as $field => $value) {
                 if ($field === 'attributes') {
                     $updated_uprid = zen_get_uprid((int)$original_uprid, $this->reformatPostedAttributes($value));
                     if ($original_uprid !== $updated_uprid) {
                         $changes++;
-                        $is_variant_update = true;
+                        $is_variant_change = true;
                     }
                     continue;
                 }
 
-                if ($this->original->products[$index][$field] != $value) {
+                if (($this->original->products[$index][$field] ?? $this->updated->products[$index][$field]) != $value) {
                     $changes++;
                 }
 
@@ -614,17 +635,44 @@ class EoOrderChanges
                 $this->updated->products[$index][$field] = $value;
             }
 
-            if ($changes === 0 && $is_variant_update === false && $is_removal === false) {
-                unset($this->productsChanges[$original_uprid]);
+            if ($changes === 0 && $is_variant_change === false && $is_removal === false) {
+                if ($this->isProductAdded($original_uprid) === false) {
+                    unset($this->productsChanges[$original_uprid]);
+                }
                 $_SESSION['cart']->calculateTotalAndWeight($this->updated->products);
 
-            } elseif ($is_variant_update === true) {
-                $this->updateProductVariant($index, $original_uprid, $updated_uprid, $product_updates);
+            } elseif ($is_variant_change === true) {
+                $this->changeProductVariant($index, $original_uprid, $updated_uprid, $product_updates, $is_removal);
 
             } else {
-                $this->recordProductChanges($index, $original_uprid, $is_removal);
+                $this->recordProductChanges($changes, $index, $original_uprid, $is_removal);
             }
         }
+    }
+
+    // -----
+    // Add a new product to the order. Note that while the new-product path has been
+    // taken by the admin, it's possible that the specified product already exists in
+    // the order!
+    //
+    public function addNewProductToOrder(string $prid, array $product_updates): void
+    {
+        $uprid = zen_get_uprid((int)$prid, $this->reformatPostedAttributes($product_updates['attributes'] ?? []));
+
+        $index = $this->upridMapping[$uprid] ?? null;
+        if ($index !== null) {
+            $this->updateProductInOrder($uprid, $product_updates);
+            return;
+        }
+
+        $index = $this->addProductToOrder($uprid, $product_updates);
+
+        $this->recordProductChanges(0, $index, $uprid, false);
+    }
+
+    protected function isProductAdded(string $uprid): bool
+    {
+        return (($this->productsChanges[$uprid] ?? '') === 'added');
     }
 
     // -----
@@ -678,13 +726,22 @@ class EoOrderChanges
         return $reformatted_attributes + $file_type_attributes;
     }
 
-    protected function recordProductChanges(int $index, string $uprid, bool $is_removal): void
+    protected function recordProductChanges(int $changes, int $index, string $uprid, bool $is_removal): void
     {
         if ($is_removal === false) {
-            $this->productsChanges[$uprid] ??= 'updated';
+            if ($changes !== 0) {
+                $this->productsChanges[$uprid] ??= 'updated';
+            }
+            $this->notify('NOTIFY_EO_RECORD_CHANGES',
+                [
+                    'uprid' => $uprid,
+                    'original_product' => ($this->original->products[$index] ?? []),
+                ],
+                $this->updated->products[$index]
+            );
             $_SESSION['cart']->calculateTotalAndWeight($this->updated->products);
 
-        } elseif (($this->productsChanges[$uprid] ?? '') === 'added') {
+        } elseif ($this->isProductAdded($uprid) === true) {
             unset($this->productsChanges[$uprid]);
             $_SESSION['cart']->removeProduct($uprid, $this->updated->products[$index]);
 
@@ -702,7 +759,7 @@ class EoOrderChanges
     {
         $updated_fields = [];
         foreach (['tax', 'final_price', 'onetime_charges'] as $field) {
-            $updated_fields[$field] = $product[$field];
+            $updated_fields[$field] = round((float)$product[$field], 6);
         }
         $this->updateProductInOrder($uprid, $updated_fields);
     }
@@ -715,19 +772,20 @@ class EoOrderChanges
     // Note: This method is called **only** when a product's original and updated uprid
     // are not the same, implying a change in the product's variant.
     //
-    protected function updateProductVariant(int $original_index, string $original_uprid, string $updated_uprid, array $product_updates): void
+    protected function changeProductVariant(int $original_index, string $original_uprid, string $updated_uprid, array $product_updates, bool $is_removal): void
     {
         // -----
         // First, deal with the original product-variant's removal.  If the variant
         // was added during this order-edit, it's simply removed from the
         // updated order.  Otherwise, the product-variant is marked as to-be-removed.
         //
-        if (($this->productsChanges[$original_uprid] ?? '') === 'added') {
-            unset($this->productsChanges[$original_uprid]);
+        if ($this->isProductAdded($original_uprid) === true) {
             $_SESSION['cart']->removeProduct($original_uprid, $this->updated->products[$original_index]);
+            $this->updated->products[$original_index] = [];
+            unset($this->productsChanges[$original_uprid], $this->upridMapping[$original_uprid]);
         } else {
             $this->productsChanges[$original_uprid] = 'removed';
-            $_SESSION['cart']->removeProduct($original_uprid, $this->updated->products[$original_index]);
+            $_SESSION['cart']->removeProduct($original_uprid, $this->original->products[$original_index]);
         }
 
         // -----
@@ -748,30 +806,58 @@ class EoOrderChanges
         }
 
         // -----
+        // If the to-be-updated variant was previously removed from the order, remove
+        // that status-change.
+        //
+        if (($this->productsChanges[$updated_uprid] ?? '') === 'removed') {
+            unset($this->productsChanges[$updated_uprid]);
+        }
+
+        // -----
         // Compare the to-be-updated product-variant to the posted changes, continuing
-        // only non-attribute-related changes are present.
+        // only if non-attribute-related changes are present.
         //
         $changes = 0;
-        $is_removal = false;
         foreach ($product_updates as $field => $value) {
             if ($field === 'attributes' || $this->updated->products[$updated_index][$field] == $value) {
                 continue;
             }
+
             $changes++;
-            if ($field === 'qty' && $value == 0) {
-                $is_removal = true;
-            }
             $this->updated->products[$updated_index][$field] = $value;
         }
 
-        if ($changes !== 0) {
-            $this->recordProductChanges($updated_index, $updated_uprid, $is_removal);
+        if ($changes !== 0 || $is_removal === true) {
+            $this->recordProductChanges($changes, $updated_index, $updated_uprid, $is_removal);
         }
     }
 
-    protected function addProductToOrder(string $uprid, array $product): void
+    protected function addProductToOrder(string $uprid, array $product): int
     {
-        trigger_error($uprid . "\n" . var_export($product, true));
+        global $order, $currencies, $eo;
+
+        $eo ??= new EditOrders($this->getOrderId());
+
+        $eo->setProductBeingAdded(true);
+        $cart_product = $eo->addProductToCart($uprid, $product);
+
+        $index = count($this->updated->products);
+        $this->upridMapping[$uprid] = $index;
+
+        $this->updated->products[] = $cart_product;
+        $this->productsChanges[$uprid] = 'added';
+
+        $eo->createOrderFromCart();
+        $eo->setProductBeingAdded(false);
+
+        foreach ($order->products as $next_product) {
+            if ($next_product['id'] != $uprid) {
+                continue;
+            }
+
+            $this->updated->products[$index] = array_merge($this->updated->products[$index], $next_product);
+            return $index;
+        }
     }
 
     public function getProductsChangeCount(): int

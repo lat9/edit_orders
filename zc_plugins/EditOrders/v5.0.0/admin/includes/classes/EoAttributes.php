@@ -25,12 +25,12 @@ class EoAttributes
      * Constructs an Attributes class for accessing product attributes, options,
      * and values.
      */
-    public function __construct(int $products_id, array $attributes)
+    public function __construct(int $products_id, array $selected_attributes = [])
     {
         global $db;
 
         $this->currentSelections = [];
-        foreach ($attributes as $next_attr) {
+        foreach ($selected_attributes as $next_attr) {
             $this->currentSelections[$next_attr['option_id']]['value_ids'][] = $next_attr['value_id'];
             $this->currentSelections[$next_attr['option_id']]['value'] = $next_attr['value'];
         }
@@ -48,17 +48,17 @@ class EoAttributes
             "SELECT DISTINCT po.products_options_id AS `id`, po.products_options_name AS `name`,
                     po.products_options_type AS `type`, po.products_options_length AS `length`,
                     po.products_options_size AS `size`, po.products_options_rows AS `rows`
-               FROM " . TABLE_PRODUCTS_OPTIONS . " po
-                    LEFT JOIN " . TABLE_PRODUCTS_ATTRIBUTES . " pa
-                        ON pa.options_id = po.products_options_id
-              WHERE pa.products_id= :products_id
-                AND po.language_id = :language_id ";
+               FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
+                    INNER JOIN " . TABLE_PRODUCTS_OPTIONS . " po
+                        ON po.products_options_id = pa.options_id
+                       AND po.language_id = :language_id 
+              WHERE pa.products_id = :products_id";
         $sql = $db->bindVars($sql, ':products_id', $products_id, 'integer');
         $sql = $db->bindVars($sql, ':language_id', $_SESSION['languages_id'], 'integer');
 
         // Don't include READONLY attributes if product can be added to cart without them
         if (PRODUCTS_OPTIONS_TYPE_READONLY_IGNORED === '0') {
-            $sql .= " AND po.products_options_type != " . (int)PRODUCTS_OPTIONS_TYPE_READONLY;
+            $sql .= ' AND po.products_options_type != ' . (int)PRODUCTS_OPTIONS_TYPE_READONLY;
         }
 
         $sql .= ' ORDER BY ' . $options_order_by;
@@ -82,8 +82,8 @@ class EoAttributes
             $sql =
                 "SELECT pov.products_options_values_id AS `id`, pov.products_options_values_name AS `name`, pa.*
                    FROM  " . TABLE_PRODUCTS_ATTRIBUTES . " pa
-                        LEFT JOIN " . TABLE_PRODUCTS_OPTIONS_VALUES . " pov
-                            ON pa.options_values_id = pov.products_options_values_id
+                        INNER JOIN " . TABLE_PRODUCTS_OPTIONS_VALUES . " pov
+                            ON pov.products_options_values_id = pa.options_values_id
                            AND pov.language_id = :language_id
                   WHERE pa.products_id = :products_id
                     AND pa.options_id = :options_id 
@@ -133,7 +133,7 @@ class EoAttributes
 
     public function isOptionValueSelected(int $option_id, string $option_value_id): bool
     {
-        return in_array($option_value_id, $this->currentSelections[$option_id]['value_ids'] ?? []);
+        return isset($this->currentSelections[$option_id . '_chk' . $option_value_id]) || in_array($option_value_id, $this->currentSelections[$option_id]['value_ids'] ?? []);
     }
 
     public function searchOptionsValues(string $key, string $value): array

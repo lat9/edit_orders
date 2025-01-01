@@ -37,7 +37,7 @@ if (empty($original_product) && empty($updated_product)) {
 <?php
     if (count($original_product) === 0) {
 ?>
-                <p><?= TEXT_PRODUCT_BEING_ADDED ?></p>
+                <p class="text-center h5 p-2"><?= TEXT_PRODUCT_BEING_ADDED ?></p>
 <?php
     } else {
 ?>
@@ -214,7 +214,7 @@ if (empty($original_product) && empty($updated_product)) {
     // Note: No directory specified for the 'require', since the module is in the same
     // directory as this modal-display handler.
     //
-    if (isset($updated_product['attributes'])) {
+    if (!empty($updated_product['attributes'])) {
         require 'eo_attributes_display.php';
     }
 ?>

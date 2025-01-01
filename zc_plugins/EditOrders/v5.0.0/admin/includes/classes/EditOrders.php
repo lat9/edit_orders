@@ -19,6 +19,7 @@ class EditOrders
     public bool $tax_updated;
     protected array $product_tax_descriptions;
     protected int $ot_sort_default;
+    protected bool $productBeingAdded = false;
 
     protected bool $orderHasShipping;
 
@@ -96,11 +97,37 @@ class EditOrders
         $this->notify('EDIT_ORDERS_CHECKS_AND_WARNINGS');
     }
 
+    public function setProductBeingAdded(bool $status): void
+    {
+        $this->productBeingAdded = $status;
+    }
+    public function productAddInProcess(): bool
+    {
+        return $this->productBeingAdded;
+    }
+
     public function getOrder(): \order
     {
         $order = $this->order;
         unset($this->order);
         return $order;
+    }
+
+    public function addProductToCart(string $uprid, array $product): array
+    {
+        $qty = $this->convertToIntOrFloat($product['qty']);
+        $cart_product = $_SESSION['cart']->addProduct($uprid, $product['attributes'] ?? [], $qty);
+
+        $this->notify('NOTIFY_EO_ADD_PRODUCT_TO_CART',
+            [
+                'uprid' => $uprid,
+                'qty' => $qty,
+                'product' => $product,
+            ],
+            $cart_product
+        );
+
+        return $cart_product;
     }
 
     // -----
@@ -764,87 +791,6 @@ class EditOrders
         return $unused_totals;
     }
 
-    public function arrayImplode(array $array_fields, string $output_string = ''): string
-    {
-        foreach ($array_fields as $key => $value) {
-            if (is_array($value)) {
-                $output_string = $this->arrayImplode($value, $output_string);
-            } else {
-                $output_string .= $value . '^';
-            }
-        }
-        return $output_string;
-    }
-
-    public function getOrderInfo($action)
-    {
-        // -----
-        // Cleanup tax_groups in the order (broken code in order.php)
-        // Shipping module will automatically add tax if needed.
-        //
-        $this->order->info['tax_groups'] = [];
-        foreach ($this->order->products as $product) {
-            $this->getProductTaxes($product);
-        }
-
-        // -----
-        // Correctly add the running subtotal (broken code in older versions of order.php).
-        //
-        if (!isset($this->order->info['subtotal'])) {
-            foreach ($this->order->totals as $next_total) {
-                if ($next_total['class'] === 'ot_subtotal') {
-                    $this->order->info['subtotal'] = $next_total['value'];
-                    break;
-                }
-            }
-        }
-
-        // -----
-        // Some order-totals (notably ot_cod_fee) rely on the payment-module code being present in the session ...
-        //
-        $_SESSION['payment'] = $this->order->info['payment_module_code'];
- 
-        $this->eoLog("\tgetOrderInfo($action), on exit:\n" . $this->eoFormatTaxInfoForLog());
-        return $this->order;
-    }
-
-    // -----
-    // Determine the tax-rate and associated tax for the order's shipping, giving a watching
-    // observer the opportunity to override the calculations.
-    //
-    protected function calculateOrderShippingTax(bool $use_saved_tax_rate = false)
-    {
-        global $order;
-
-        $shipping_tax = false;
-        $shipping_tax_rate = false;
-        $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX', $order, $shipping_tax, $shipping_tax_rate);
-        if ($shipping_tax !== false && $shipping_tax_rate !== false) {
-            $this->eoLog("\tcalculateOrderShippingTax, override returning $shipping_tax, rate = $shipping_tax_rate.");
-            $this->shipping_tax_rate = $shipping_tax_rate;
-            return $shipping_tax;
-        }
-
-        if ($use_saved_tax_rate === true || $this->shipping_tax_rate !== null) {
-            $tax_rate = $this->shipping_tax_rate;
-        } else {
-            eo_shopping_cart();
-            require_once DIR_FS_CATALOG . DIR_WS_CLASSES . 'shipping.php';
-            $shipping_modules = new \shipping();
-
-            $tax_rate = 0;
-            $shipping_module = $order->info['shipping_module_code'];
-            if (!empty($GLOBALS[$shipping_module]) && is_object($GLOBALS[$shipping_module]) && !empty($GLOBALS[$shipping_module]->tax_class)) {
-                $tax_location = zen_get_tax_locations();
-                $tax_rate = zen_get_tax_rate($GLOBALS[$shipping_module]->tax_class, $tax_location['country_id'], $tax_location['zone_id']);
-            }
-        }
-        $this->shipping_tax_rate = $tax_rate;
-        $shipping_tax = zen_calculate_tax((float)$order->info['shipping_cost'], (float)$tax_rate);
-        $this->eoLog("\tcalculateOrderShippingTax returning $shipping_tax, rate = " . var_export($tax_rate, true) . ", cost = {$order->info['shipping_cost']}.");
-        return $shipping_tax;
-    }
-
     public function eoGetShippingTaxRate($order)
     {
         $shipping_tax_rate = false;
@@ -857,77 +803,9 @@ class EditOrders
         return $_SESSION['eoChanges']->getUpdatedOrder()->info['shipping_tax_rate'];
     }
 
-    public function eoFormatTaxInfoForLog(bool $include_caller = false): string
-    {
-        $log_info = '';
-
-        if ($include_caller === true) {
-            $trace = debug_backtrace();
-            $log_info = ' Called by ' . $trace[1]['file'] . ' on line #' . $trace[1]['line'] . "\n";
-        }
-
-        $log_info .= "\t" .
-            'Subtotal: ' . ($this->order->info['subtotal'] ?? '(not set)') . ', ' .
-            'Shipping: ' . ($this->order->info['shipping_cost'] ?? '(not set)') . ', ' .
-            'Shipping Tax-Rate: ' . ($this->order->info['shipping_tax_rate'] ?? ' (not set)') . ', ' .
-            'Shipping Tax-Description: ' . ($this->shipping_tax_description ?? ' (not set)') . ', ' .
-            'Shipping Tax: ' . ($this->order->info['shipping_tax'] ?? '(not set)') . ', ' .
-            'Tax: ' . $this->order->info['tax'] . ', ' .
-            'Total: ' . $this->order->info['total'] . ', ' .
-            'Tax Groups: ' . (!empty($this->order->info['tax_groups']) ? json_encode($this->order->info['tax_groups'], JSON_PRETTY_PRINT) : 'None') . "\n";
-
-        $log_info .= "\t" .
-            '$_SESSION[\'shipping\']: ' . ((isset($_SESSION['shipping'])) ? json_encode($_SESSION['shipping'], JSON_PRETTY_PRINT) : '(not set)') . "\n";
-
-        $log_info .= $this->eoFormatOrderTotalsForLog();
-
-        return $log_info;
-    }
-
-    public function eoFormatOrderTotalsForLog(string $title = ''): string
-    {
-        $log_info = ($title === '') ? ("\nOrder Totals\n") : $title;
-        $log_info .= json_encode($this->order->totals, JSON_PRETTY_PRINT);
-        return $log_info;
-    }
-
     public function eoOrderIsVirtual(): bool
     {
         return ($this->order->content_type === 'virtual');
-    }
-
-    // -----
-    // When a store "Displays Prices with Tax" and shipping is taxed, the shipping-cost recorded in the order includes
-    // the shipping tax.  This function, called when an EO order is created, backs that tax quantity out of the shipping
-    // cost since the order-totals processing will re-calculate that value.
-    //
-    public function removeTaxFromShippingCost(&$order): void
-    {
-        $shipping_tax_processed = false;
-        $this->notify('NOTIFY_EO_REMOVE_SHIPPING_TAX', [], $order, $shipping_tax_processed);
-        if ($shipping_tax_processed === true) {
-            $this->eoLog("\tremoveTaxFromShippingCost override, shipping_cost ({$order->info['shipping_cost']}), order tax ({$order->info['tax']})", 'tax');
-            return;
-        }
-
-        if (DISPLAY_PRICE_WITH_TAX === 'true') {
-            $tax_rate = 1 + $this->shipping_tax_rate / 100;
-            $shipping_cost = $order->info['shipping_cost'];
-            $shipping_cost_ex = $order->info['shipping_cost'] / $tax_rate;
-            $shipping_tax = $shipping_cost - $shipping_cost_ex;
-            $order->info['shipping_cost'] = $shipping_cost - $shipping_tax;
-            $order->info['tax'] -= $shipping_tax;
-            $order->info['shipping_tax'] = 0;
-
-            $this->eoLog("\tremoveTaxFromShippingCost, updated: $tax_rate, $shipping_cost, $shipping_cost_ex, $shipping_tax", 'tax');
-        }
-    }
-
-    public function eoFormatCurrencyValue($value)
-    {
-        global $currencies;
-
-        return $currencies->format($value, true, $this->info['currency'], $this->info['currency_value']);
     }
 
     // -----
@@ -1191,8 +1069,8 @@ class EditOrders
                     );
 
                     $product_quantity_updated = false;
-                    $this->notify('NOTIFY_EO_PRODUCT_REMOVED', ['orders_products_id' => $orders_products_id, 'original_order' => $changes['original']], $product_quantity_updated);
-                    if ($product_quantity_updated === false) {
+                    $this->notify('NOTIFY_EO_PRODUCT_REMOVED', ['orders_products_id' => $orders_products_id, 'original_product' => $changes['original']], $product_quantity_updated);
+                    if (STOCK_LIMITED === 'true' && $product_quantity_updated === false) {
                         $original_qty = $changes['original']['qty'];
                         $products_id = (int)$changes['original']['id'];
                         $db->Execute(
@@ -1205,6 +1083,138 @@ class EditOrders
                     break;
 
                 case 'added':
+                    $updated_product = $changes['updated'];
+                    $sql_data_array = [
+                        'orders_id' => $oID,
+                        'products_id' => (int)$updated_product['id'],
+                        'products_model' => $updated_product['model'],
+                        'products_name' => $updated_product['name'],
+                        'products_price' => $updated_product['price'],
+                        'final_price' => $updated_product['final_price'],
+                        'onetime_charges' => $updated_product['onetime_charges'],
+                        'products_tax' => $updated_product['tax'],
+                        'products_quantity' => $updated_product['qty'],
+                        'products_priced_by_attribute' => $updated_product['products_priced_by_attribute'],
+                        'product_is_free' => $updated_product['product_is_free'],
+                        'products_discount_type' => $updated_product['products_discount_type'],
+                        'products_discount_type_from' => $updated_product['products_discount_type_from'],
+                        'products_prid' => $updated_product['uprid'],
+                        'products_weight' => (float)$updated_product['weight'],
+                        'products_virtual' => (int)$updated_product['products_virtual'],
+                        'product_is_always_free_shipping' => (int)$updated_product['product_is_always_free_shipping'],
+                        'products_quantity_order_min' => (float)$updated_product['products_quantity_order_min'],
+                        'products_quantity_order_units' => (float)$updated_product['products_quantity_order_units'],
+                        'products_quantity_order_max' => (float)$updated_product['products_quantity_order_max'],
+                        'products_quantity_mixed' => (int)$updated_product['products_quantity_mixed'],
+                        'products_mixed_discount_quantity' => (int)$updated_product['products_mixed_discount_quantity'],
+                    ];
+                    zen_db_perform(TABLE_ORDERS_PRODUCTS, $sql_data_array);
+
+                    $orders_products_id = $db->insert_ID();
+                    $sql_data_array['orders_products_id'] = $orders_products_id;
+                    $product_quantity_updated = false;
+                    $this->notify('NOTIFY_EO_PRODUCT_ADDED', ['sql' => $sql_data_array, 'updated_product' => $updated_product], $product_quantity_updated);
+
+                    $products_id = (int)$updated_product['id'];
+                    if (STOCK_LIMITED === 'true' && $product_quantity_updated === false) {
+                        $db->Execute(
+                            "UPDATE " . TABLE_PRODUCTS . "
+                                SET products_quantity = products_quantity - " . $updated_product['qty'] . "
+                              WHERE products_id = $products_id
+                              LIMIT 1"
+                        );
+                    }
+
+                    if (isset($updated_product['attributes'])) {
+                        if (DOWNLOAD_ENABLED === 'false') {
+                            $additional_selects = '';
+                            $additional_join = '';
+                        } else {
+                            $additional_selects = ', pad.products_attributes_maxdays, pad.products_attributes_maxcount, pad.products_attributes_filename';
+                            $additional_join = 'LEFT JOIN ' . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . ' pad ON pad.products_attributes_id = pa.products_attributes_id';
+                        }
+
+                        foreach ($updated_product['attributes'] as $attribute) {
+                            $attributes_query =
+                                "SELECT po.products_options_name, pov.products_options_values_name,
+                                        pa.options_values_price, pa.price_prefix,
+                                        pa.product_attribute_is_free, pa.products_attributes_weight, pa.products_attributes_weight_prefix,
+                                        pa.attributes_discounted, pa.attributes_price_base_included, pa.attributes_price_onetime,
+                                        pa.attributes_price_factor, pa.attributes_price_factor_offset,
+                                        pa.attributes_price_factor_onetime, pa.attributes_price_factor_onetime_offset,
+                                        pa.attributes_qty_prices, pa.attributes_qty_prices_onetime,
+                                        pa.attributes_price_words, pa.attributes_price_words_free,
+                                        pa.attributes_price_letters, pa.attributes_price_letters_free" . $additional_selects . "
+                                   FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
+                                        INNER JOIN " . TABLE_PRODUCTS_OPTIONS . " po
+                                            ON po.products_options_id = pa.options_id
+                                           AND po.language_id = " . $_SESSION['languages_id'] . "
+                                        INNER JOIN " . TABLE_PRODUCTS_OPTIONS_VALUES . " pov
+                                            ON pov.products_options_values_id = pa.options_values_id
+                                           AND pov.language_id = " . $_SESSION['languages_id'] . "
+                                        $additional_join
+                                  WHERE pa.products_id = $products_id
+                                    AND pa.options_id = " . (int)$attribute['option_id'] . "
+                                    AND pa.options_values_id = " . (int)$attribute['value_id'] . "
+                                  LIMIT 1";
+                            $attributes_result = $db->Execute($attributes_query);
+                            $attributes_values = $attributes_result->fields;
+
+                            // -----
+                            // A couple of the 'products_attributes' fields' values might be `NULL` and zen_db_perform's processing
+                            // doesn't accept those values when run under PHP versions 8.1 and later. Those
+                            // `NULL` values are converted to an empty string ('').
+                            //
+                            $sql_data_array = [
+                                'orders_id' => $oID,
+                                'orders_products_id' => $orders_products_id,
+                                'products_options' => $attributes_values['products_options_name'],
+                                'products_options_values' => $attribute['value'],
+                                'options_values_price' => $attributes_values['options_values_price'],
+                                'price_prefix' => $attributes_values['price_prefix'],
+                                'product_attribute_is_free' => $attributes_values['product_attribute_is_free'],
+                                'products_attributes_weight' => $attributes_values['products_attributes_weight'],
+                                'products_attributes_weight_prefix' => $attributes_values['products_attributes_weight_prefix'],
+                                'attributes_discounted' => $attributes_values['attributes_discounted'],
+                                'attributes_price_base_included' => $attributes_values['attributes_price_base_included'],
+                                'attributes_price_onetime' => $attributes_values['attributes_price_onetime'],
+                                'attributes_price_factor' => $attributes_values['attributes_price_factor'],
+                                'attributes_price_factor_offset' => $attributes_values['attributes_price_factor_offset'],
+                                'attributes_price_factor_onetime' => $attributes_values['attributes_price_factor_onetime'],
+                                'attributes_price_factor_onetime_offset' => $attributes_values['attributes_price_factor_onetime_offset'],
+                                'attributes_qty_prices' => $attributes_values['attributes_qty_prices'] ?? '',
+                                'attributes_qty_prices_onetime' => $attributes_values['attributes_qty_prices_onetime'] ?? '',
+                                'attributes_price_words' => $attributes_values['attributes_price_words'],
+                                'attributes_price_words_free' => $attributes_values['attributes_price_words_free'],
+                                'attributes_price_letters' => $attributes_values['attributes_price_letters'],
+                                'attributes_price_letters_free' => $attributes_values['attributes_price_letters_free'],
+                                'products_options_id' => (int)$attribute['option_id'],
+                                'products_options_values_id' => (int)$attribute['value_id'],
+                                'products_prid' => $updated_product['uprid'],
+                            ];
+                            zen_db_perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);
+                            $opa_insert_id = $db->insert_ID();
+
+                            $sql_data_array['orders_products_attributes_id'] = $opa_insert_id;
+                            $this->notify('NOTIFY_EO_PRODUCT_ATTRIBUTE_ADDED', ['sql' => $sql_data_array, 'attribute' => $attribute, 'attribute_db_values' => $attributes_values]);
+
+                            if (DOWNLOAD_ENABLED === 'true' && !empty($attributes_values['products_attributes_filename'])) {
+                                $sql_data_array = [
+                                    'orders_id' => $oID,
+                                    'orders_products_id' => $orders_products_id,
+                                    'orders_products_filename' => $attributes_values['products_attributes_filename'],
+                                    'download_maxdays' => $attributes_values['products_attributes_maxdays'],
+                                    'download_count' => $attributes_values['products_attributes_maxcount'],
+                                    'products_prid' => $updated_product['uprid'],
+                                    'products_attributes_id' => $opa_insert_id,
+                                ];
+                                zen_db_perform(TABLE_ORDERS_PRODUCTS_DOWNLOAD, $sql_data_array);
+                                $opd_insert_id = $db->insert_ID();
+
+                                $this->notify('NOTIFY_EO_PRODUCT_DOWNLOAD_ADDED', ['opd_insert_id' => $opd_insert_id, 'sql' => $sql_data_array]);
+                            }
+                        }
+                    }
                     break;
 
                 default:
@@ -1232,25 +1242,23 @@ class EditOrders
                         ],
                         $product_quantity_updated
                     );
-                    if ($product_quantity_updated !== false) {
-                        break;
-                    }
-
-                    $products_id = (int)$changes['updated']['id'];
-                    if ($changed_qty >= 0) {
-                        $db->Execute(
-                            "UPDATE " . TABLE_PRODUCTS . "
-                                SET products_quantity = products_quantity - $changed_qty
-                              WHERE products_id = $products_id
-                              LIMIT 1"
-                        );
-                    } else {
-                        $db->Execute(
-                            "UPDATE " . TABLE_PRODUCTS . "
-                                SET products_quantity = products_quantity + " . ($changed_qty * -1) . "
-                              WHERE products_id = $products_id
-                              LIMIT 1"
-                        );
+                    if (STOCK_LIMITED === 'true' && $product_quantity_updated === false) {
+                        $products_id = (int)$changes['updated']['id'];
+                        if ($changed_qty >= 0) {
+                            $db->Execute(
+                                "UPDATE " . TABLE_PRODUCTS . "
+                                    SET products_quantity = products_quantity - $changed_qty
+                                  WHERE products_id = $products_id
+                                  LIMIT 1"
+                            );
+                        } else {
+                            $db->Execute(
+                                "UPDATE " . TABLE_PRODUCTS . "
+                                    SET products_quantity = products_quantity + " . ($changed_qty * -1) . "
+                                  WHERE products_id = $products_id
+                                  LIMIT 1"
+                            );
+                        }
                     }
                     break;
             }

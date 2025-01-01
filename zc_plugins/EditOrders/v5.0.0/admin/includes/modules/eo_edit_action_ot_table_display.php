@@ -41,7 +41,7 @@ $add_ot_button = '';
 $unused_order_totals = $eo->getUnusedOrderTotalModules($order);
 if (count($unused_order_totals) !== 0) {
     $add_ot_button =
-        '<button id="eo-add-ot" class="btn btn-sm btn-info me-2 mb-1">' . TEXT_ADD_ORDER_TOTAL . '</button>' .
+        '<button id="eo-add-ot" class="btn btn-sm btn-info me-2 mb-1">' . BUTTON_ADD . '</button>' .
         zen_draw_pull_down_menu('code', $unused_order_totals, '', 'id="eo-add-ot-code" class="form-control d-inline"');
 }
 

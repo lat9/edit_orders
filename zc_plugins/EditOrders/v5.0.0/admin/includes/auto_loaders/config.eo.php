@@ -8,12 +8,6 @@ if (!defined ('IS_ADMIN_FLAG')) {
     die ('Illegal Access'); 
 }
 
-$autoLoadConfig[0][] = [
-    'autoType' => 'class',
-    'loadFile' => 'mock_cart.php',
-    'classPath' => DIR_WS_CLASSES
-];
-
 // -----
 // Load point 63 is after the session's initialization [60] but before the
 // languages are loaded [65].
