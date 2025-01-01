@@ -19,6 +19,7 @@ class EditOrders
     public bool $tax_updated;
     protected array $product_tax_descriptions;
     protected int $ot_sort_default;
+    protected bool $productBeingAdded = false;
 
     protected bool $orderHasShipping;
 
@@ -96,11 +97,37 @@ class EditOrders
         $this->notify('EDIT_ORDERS_CHECKS_AND_WARNINGS');
     }
 
+    public function setProductBeingAdded(bool $status): void
+    {
+        $this->productBeingAdded = $status;
+    }
+    public function productAddInProcess(): bool
+    {
+        return $this->productBeingAdded;
+    }
+
     public function getOrder(): \order
     {
         $order = $this->order;
         unset($this->order);
         return $order;
+    }
+
+    public function addProductToCart(string $uprid, array $product): array
+    {
+        $qty = $this->convertToIntOrFloat($product['qty']);
+        $cart_product = $_SESSION['cart']->addProduct($uprid, $product['attributes'] ?? [], $qty);
+
+        $this->notify('NOTIFY_EO_ADD_PRODUCT_TO_CART',
+            [
+                'uprid' => $uprid,
+                'qty' => $qty,
+                'product' => $product,
+            ],
+            $cart_product
+        );
+
+        return $cart_product;
     }
 
     // -----

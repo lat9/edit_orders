@@ -7,6 +7,8 @@
 //
 namespace Zencart\Plugins\Admin\EditOrders;
 
+use Zencart\Plugins\Admin\EditOrders\EditOrders;
+
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
@@ -110,8 +112,8 @@ class EoCart extends \shoppingCart
     public function removeProduct(string $uprid, array $product): void
     {
         unset($this->contents[$uprid]);
-        $this->total -= (($product['qty'] * $product['final_price']) + $product['onetime_charges']);
-        $this->weight -= $product['qty'] * $product['products_weight'];
+        $this->total -= (($product['quantity'] * $product['final_price']) + $product['onetime_charges']);
+        $this->weight -= $product['quantity'] * $product['products_weight'];
     }
 
     // -----
@@ -359,6 +361,12 @@ class EoCart extends \shoppingCart
      */
     public function get_products(bool $check_for_valid_cart = false)
     {
+        global $eo;
+
+        if (isset($eo) && $eo->productAddInProcess() === true) {
+            return parent::get_products();
+        }
+
         $products = $_SESSION['eoChanges']->getUpdatedOrdersProducts();
 
         $cart_products = [];

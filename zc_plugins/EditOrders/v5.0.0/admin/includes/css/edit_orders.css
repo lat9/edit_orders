@@ -29,18 +29,19 @@
 .text-nowrap {
     white-space: nowrap;
 }
-.w-auto {
-    width: auto;
-}
-
 .attribs-list {
     font-size: smaller;
 }
-.eo-label {
+.eo-label,
+.fw-bold {
     font-weight: bold;
 }
-.model {
+.model,
+.w-auto {
     width: auto;
+}
+.ml-auto {
+    margin-left: auto!important;
 }
 .smallText a {
     font-size: 9px;
@@ -51,6 +52,9 @@
 }
 .tooltip {
     z-index: 10000000;
+}
+.w-50 {
+    width: 50%!important;
 }
 
 hr {

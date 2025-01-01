@@ -6,6 +6,7 @@
 // Last updated: v5.0.0 (new)
 //
 use Zencart\Plugins\Admin\EditOrders\EditOrders;
+use Zencart\Plugins\Admin\EditOrders\EoAttributes;
 use Zencart\Plugins\Admin\EditOrders\EoOrderChanges;
 use Zencart\Traits\InteractsWithPlugins;
 use Zencart\Traits\NotifierManager;
@@ -357,21 +358,174 @@ class zcAjaxEditOrdersAdmin
     }
 
     // -----
-    // Get the modal form contents for a product's addition to the order.
+    // Get the modal form contents to start a new product's addition to the order. This
+    // is where the initial product selection occurs.
     //
-    public function getProductAddModal(): array
+    public function addNewProductStart(): array
     {
-        return $this->getModalContent('eo_prod_add_modal.php');
+        $parameters = [
+            'prid' => 0,
+        ];
+        return $this->getModalContent('eo_prod_add_modal.php', $parameters);
     }
 
-    protected function getModalContent(string $modal_filename): array
+    // -----
+    // Get the modal form contents for a new product's addition to the order,
+    // once a product's ID has been chosen.
+    //
+    public function newProductChosen(): array
     {
+        global $eo, $order;
+        $eo = new EditOrders($_SESSION['eoChanges']->getOrderId());
+
+        $prid = (int)$_POST['prid'];
+        $choose_form = $_POST['choose_form'];
+        $price_entry_disabled = 'disabled';
+        $modal_variables = ['prid', 'price_entry_disabled', 'choose_form'];
+        if ($prid !== 0) {
+            $attributes = $this->getNewProductDefaultAttributes($prid);
+            if (count($attributes) !== 0) {
+                $uprid = zen_get_uprid($prid, $attributes);
+                $modal_variables += ['uprid', 'attributes'];
+            }
+        }
+
+        $product = [
+            'qty' => '1',
+            'attributes' => $attributes ?? [],
+        ];
+        $eo->setProductBeingAdded(true);
+        $cart_product = $eo->addProductToCart($uprid ?? $prid, $product);
+
+        $eo->createOrderFromCart();
+        $eo->setProductBeingAdded(false);
+
+        foreach ($order->products as $next_product) {
+            if ($next_product['id'] != ($uprid ?? $prid)) {
+                continue;
+            }
+            $new_product = $next_product;
+            $new_product['uprid'] = $next_product['id'];
+            $modal_variables[] = 'new_product';
+            break;
+        }
+
+        $parameters = compact($modal_variables);
+        return $this->getModalContent('eo_prod_add_modal.php', $parameters);
+    }
+    protected function getNewProductDefaultAttributes($prid): array
+    {
+        $attribs = new EoAttributes($prid);
+        $options_values = $attribs->getOptionsValues();
+        if (count($options_values) === 0) {
+            return [];
+        }
+
+        $default_attributes = [];
+        foreach ($options_values as $option_id => $option_values) {
+            if (in_array($option_values['type'], [PRODUCTS_OPTIONS_TYPE_TEXT, PRODUCTS_OPTIONS_TYPE_FILE])) {
+                continue;
+            }
+
+            $is_checkbox_option = ($option_values['type'] === PRODUCTS_OPTIONS_TYPE_CHECKBOX);
+            unset($default);
+            foreach ($option_values['values'] as $option_value_id => $value_info) {
+                if ($is_checkbox_option === true) {
+                    if ($value_info['attributes_default'] === '1') {
+                        $default_attributes[$option_id . '_chk' . $option_value_id] = $option_value_id;
+                    }
+                } else {
+                    $default ??= $option_value_id;
+                    if ($value_info['attributes_default'] === '1') {
+                        $default = $option_value_id;
+                        break;
+                    }
+                }
+            }
+            if (isset($default)) {
+                $default_attributes[$option_id] = $default;
+            }
+        }
+        return $default_attributes;
+    }
+
+    // -----
+    // Re-calculate pricing and taxes for a to-be-added product.
+    //
+    public function recalculateNewProduct(): array
+    {
+        global $eo, $order;
+        $eo = new EditOrders($_SESSION['eoChanges']->getOrderId());
+
+        $prid = (int)$_POST['prid'];
+        $choose_form = $_POST['choose_form'];
+        $price_entry_disabled = 'disabled';
+
+        $product = $this->getPostedProduct();
+        $attributes = $product['attributes'] ?? [];
+        $uprid = zen_get_uprid($prid, $attributes);
+
+        $modal_variables = ['prid', 'price_entry_disabled', 'choose_form', 'uprid', 'attributes'];
+
+        $eo->setProductBeingAdded(true);
+        $cart_product = $eo->addProductToCart($uprid, $product);
+
+        $eo->createOrderFromCart();
+        $eo->setProductBeingAdded(false);
+
+        foreach ($order->products as $next_product) {
+            if ($next_product['id'] != $uprid) {
+                continue;
+            }
+            $new_product = $next_product;
+            $new_product['uprid'] = $next_product['id'];
+            $modal_variables[] = 'new_product';
+            break;
+        }
+
+        $parameters = compact($modal_variables);
+        return $this->getModalContent('eo_prod_add_modal.php', $parameters);
+    }
+
+    // -----
+    // Add the new product to the order.
+    //
+    public function addNewProduct(): array
+    {
+        global $eo, $order;
+        $eo = new EditOrders($_SESSION['eoChanges']->getOrderId());
+
+        $zero_qty_ok = false;
+        $messages = $this->updateProductCheckInputs($eo, $zero_qty_ok);
+        if (count($messages) !== 0) {
+            return [
+                'status' => 'error',
+                'messages' => $messages,
+            ];
+        }
+
+        $_SESSION['eoChanges']->addNewProductToOrder($_POST['prid'], $this->getPostedProduct());
+
+        return $this->processOrderUpdate();
+    }
+
+    // -----
+    // Common method to load a specified modal template.
+    //
+    protected function getModalContent(string $modal_filename, array $parameters = []): array
+    {
+        // -----
+        // Extract the modal's parameters, for use by the specified modal template.
+        //
+        extract($parameters);
+
         // -----
         // Use the base trait to determine this plugin's directory location.
         //
         $this->detectZcPluginDetails(__DIR__);
 
-        $eo = new EditOrders($_SESSION['eoChanges']->getOrderId());
+        global $eo;
+        $eo ??= new EditOrders($_SESSION['eoChanges']->getOrderId());
 
         $this->disableGzip();
         ob_start();
@@ -417,10 +571,10 @@ class zcAjaxEditOrdersAdmin
     public function updateProduct(): array
     {
         global $eo;
-
         $eo = new EditOrders($_SESSION['eoChanges']->getOrderId());
 
-        $messages = $this->updateProductCheckInputs($eo);
+        $zero_qty_ok = true;
+        $messages = $this->updateProductCheckInputs($eo, $zero_qty_ok);
         if (count($messages) !== 0) {
             return [
                 'status' => 'error',
@@ -428,38 +582,24 @@ class zcAjaxEditOrdersAdmin
             ];
         }
 
-        $product_update = [
-            'qty' => $eo->convertToIntOrFloat($_POST['qty']),
-            'model' => $_POST['model'],
-            'name' => $_POST['name'],
-            'tax' => $eo->convertToIntOrFloat($_POST['tax']),
-        ];
-        if (isset($_POST['final_price'])) {
-            $product_update['final_price'] = $eo->convertToIntOrFloat($_POST['final_price']);
-        }
-        if (isset($_POST['onetime_charges'])) {
-            $product_update['onetime_charges'] = $eo->convertToIntOrFloat($_POST['onetime_charges']);
-        }
-        if (isset($_POST['id'])) {
-            $product_update['attributes'] = $_POST['id'];
-        }
-
-        $_SESSION['eoChanges']->updateProductInOrder($_POST['uprid'], $product_update);
+        $_SESSION['eoChanges']->updateProductInOrder($_POST['uprid'], $this->getPostedProduct());
 
         return $this->processOrderUpdate();
     }
-    protected function updateProductCheckInputs(EditOrders $eo): array
+    protected function updateProductCheckInputs(EditOrders $eo, bool $zero_qty_ok): array
     {
         $messages = [];
 
         $updated_qty = $_POST['qty'];
-        if (!is_numeric($updated_qty) || $updated_qty < 0) {
+        if (!is_numeric($updated_qty) || $updated_qty < 0 || ($zero_qty_ok === false && $updated_qty == 0)) {
             $messages['qty'] = ERROR_QTY_INVALID;
         }
 
-        $tax = $_POST['tax'];
-        if (!is_numeric($tax) || $tax < 0 || $tax > 100) {
-            $messages['tax'] = ERROR_TAX_RATE_INVALID;
+        if (isset($_POST['tax'])) {
+            $tax = $_POST['tax'];
+            if (!is_numeric($tax) || $tax < 0 || $tax > 100) {
+                $messages['tax'] = ERROR_TAX_RATE_INVALID;
+            }
         }
 
         $model = $_POST['model'];
@@ -497,12 +637,35 @@ class zcAjaxEditOrdersAdmin
         }
 
         $additional_messages = [];
-        $this->notify('NOTIFY_EO_UPDATE_PRODUCT_CHECK_INPUTS', ['messages' => $messages, 'post' => $_POST], $additional_messages);
+        $this->notify('NOTIFY_EO_PRODUCT_CHECK_INPUTS', ['messages' => $messages, 'post' => $_POST], $additional_messages);
         if (is_array($additional_messages)) {
             $messages = array_merge($messages, $additional_messages);
         }
 
         return $messages;
+    }
+    protected function getPostedProduct(): array
+    {
+        global $eo;
+
+        $product = [
+            'qty' => $eo->convertToIntOrFloat($_POST['qty']),
+            'model' => $_POST['model'],
+            'name' => $_POST['name'],
+        ];
+        if (isset($_POST['tax'])) {
+            $product['tax'] = $eo->convertToIntOrFloat($_POST['tax']);
+        }
+        if (isset($_POST['final_price'])) {
+            $product['final_price'] = $eo->convertToIntOrFloat($_POST['final_price']);
+        }
+        if (isset($_POST['onetime_charges'])) {
+            $product['onetime_charges'] = $eo->convertToIntOrFloat($_POST['onetime_charges']);
+        }
+        if (isset($_POST['id'])) {
+            $product['attributes'] = $_POST['id'];
+        }
+        return $product;
     }
 
     protected function processOrderUpdate(): array
@@ -561,7 +724,7 @@ class zcAjaxEditOrdersAdmin
         $order->info['shipping_module_code'] = rtrim($order->info['shipping_module_code'], '_');
 
         // -----
-        // Record any changes to the order's totals.
+        // Record any changes to the order's info and totals.
         //
         $ot_changes = $_SESSION['eoChanges']->saveOrderInfoChanges($order->info);
         $ot_changes += $_SESSION['eoChanges']->saveOrderTotalsChanges($order->totals);
@@ -573,7 +736,11 @@ class zcAjaxEditOrdersAdmin
             "\nChanges:\n" .
             $eo->eoFormatArray($_SESSION['eoChanges']->getTotalsChanges()) .
             "\not-totals:\n" .
-            $eo->eoFormatArray($_SESSION['eo-totals'] ?? []),
+            $eo->eoFormatArray($_SESSION['eo-totals'] ?? []) .
+            "\nOriginal Info:\n" .
+            $eo->eoFormatArray($_SESSION['eoChanges']->getOriginalOrder()->info) .
+            "\nUpdated Info:\n" .
+            $eo->eoFormatArray($_SESSION['eoChanges']->getUpdatedOrder()->info),
             'with-date'
         );
 

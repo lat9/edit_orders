@@ -6,8 +6,11 @@
 //
 $define = [
 // Page / Section Headings and common button names and other constants.
+    'BUTTON_ADD' => 'Add',
+    'BUTTON_CHOOSE' => 'Choose',
     'BUTTON_CLOSE' => 'Close',
     'BUTTON_COMMIT_CHANGES' => 'Commit Changes',
+    'BUTTON_RECALCULATE' => 'Recalculate',
 
     'HEADING_TITLE' => 'Editing Order',
     'HEADING_TITLE_SEARCH' => 'Order ID:',
@@ -130,7 +133,6 @@ $define = [
 // Order Totals Display
     'ERROR_OT_NOT_INSTALLED' => 'The order-total selected (%s) is not installed and cannot be updated.',
 
-    'TEXT_ADD_ORDER_TOTAL' => 'Add ',
     'TEXT_CHOOSE_SHIPPING_MODULE' => 'Choose a shipping module: ',
     'TEXT_COMMAND_TO_DELETE_CURRENT_COUPON_FROM_ORDER' => 'REMOVE',     //- ALWAYS uppercased!
     'TEXT_COUPON_LINK_TITLE' => 'see the Coupon conditions',
@@ -151,7 +153,7 @@ $define = [
     'ERROR_QTY_INVALID' => 'The product quantity must be numeric and greater than or equal to zero.',
     'ERROR_TAX_RATE_INVALID' => 'The tax-rate for the product must be a numeric value between 0 and 100.',
 
-    'TEXT_ADD_NEW_PRODUCT' => 'Add Product',
+    'TEXT_ADD_NEW_PRODUCT' => 'Add Product',        //- Used for button text
     'TEXT_ATTRIBUTES_ONE_TIME_CHARGE' => 'One Time Charges:',
     'TEXT_ATTRIBUTES_READONLY' => ' (r/o)',
     'TEXT_ATTRIBUTES_UNKNOWN_OPTION_TYPE' => 'Unknown option type (%u)',
@@ -163,9 +165,12 @@ $define = [
     'TEXT_LABEL_QTY_AVAIL' => 'Qty avail:',
     'TEXT_LABEL_QTY' => 'Qty:',
 
-    'TEXT_PRODUCT_ADD_MODAL_TITLE' => 'Adding a Product to the Order',
+    'TEXT_PRODUCT_ADD_MODAL_TITLE' => 'Add a Product to the Order',
     'TEXT_PRODUCT_ATTRIBUTES' => 'Product Attributes',
     'TEXT_PRODUCT_BEING_ADDED' => 'The product is being added to the order.',
+    'TEXT_PRODUCT_CHOOSE_BY_ID' => 'Choose by Product ID',
+    'TEXT_PRODUCT_CHOOSE_SUBTITLE' => 'Choose Product',
+    'TEXT_PRODUCT_NEW_MODAL_TITLE' => 'New Product',
     'TEXT_PRODUCT_UPDATE_MODAL_TITLE' => 'Updating a Product',
 
     //- These three constants define the message to be recorded for products' changes. All 3
@@ -176,22 +181,6 @@ $define = [
     'TEXT_STATUS_PRODUCT_ADDED' => 'Added: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
     'TEXT_STATUS_PRODUCT_CHANGED' => 'Some of the product details were changed: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
     'TEXT_STATUS_PRODUCT_REMOVED' => 'Removed: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
-
-    'ADDPRODUCT_TEXT_CATEGORY_CONFIRM' => 'OK',
-    'ADDPRODUCT_TEXT_SELECT_PRODUCT' => 'Choose product',
-    'ADDPRODUCT_TEXT_PRODUCT_CONFIRM' => 'OK',
-    'ADDPRODUCT_TEXT_SELECT_OPTIONS' => 'Choose options',
-    'ADDPRODUCT_TEXT_OPTIONS_CONFIRM' => 'OK',
-    'ADDPRODUCT_TEXT_OPTIONS_NOTEXIST' => 'No Options: Skipped..',
-    'ADDPRODUCT_TEXT_CONFIRM_QUANTITY' => '&nbsp;Qty&nbsp;',
-    'ADDPRODUCT_TEXT_CONFIRM_ADDNOW' => 'Add now',
-    'ADDPRODUCT_TEXT_STEP1' => 'Step 1:',
-    'ADDPRODUCT_TEXT_STEP2' => 'Step 2:',
-    'ADDPRODUCT_TEXT_STEP3' => 'Step 3:',
-    'ADDPRODUCT_TEXT_STEP4' => 'Step 4:',
-    'ADDPRODUCT_SPECIALS_SALES_PRICE' => 'Use Specials/Sales Price',
-    'ADDPRODUCT_TEXT_NO_OPTIONS' => 'No selectable options exist',
-    'ADDPRODUCT_CHOOSE_CATEGORY' => 'Choose Category',
 
 // Navigation Display
     'BUTTON_TO_LIST' => 'Order List',

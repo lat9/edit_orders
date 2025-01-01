@@ -650,6 +650,26 @@ class EoOrderChanges
         }
     }
 
+    // -----
+    // Add a new product to the order. Note that while the new-product path has been
+    // taken by the admin, it's possible that the specified product already exists in
+    // the order!
+    //
+    public function addNewProductToOrder(string $prid, array $product_updates): void
+    {
+        $uprid = zen_get_uprid((int)$prid, $this->reformatPostedAttributes($product_updates['attributes'] ?? []));
+
+        $index = $this->upridMapping[$uprid] ?? null;
+        if ($index !== null) {
+            $this->updateProductInOrder($uprid, $product_updates);
+            return;
+        }
+
+        $index = $this->addProductToOrder($uprid, $product_updates);
+
+        $this->recordProductChanges(0, $index, $uprid, false);
+    }
+
     protected function isProductAdded(string $uprid): bool
     {
         return (($this->productsChanges[$uprid] ?? '') === 'added');
@@ -712,7 +732,7 @@ class EoOrderChanges
             if ($changes !== 0) {
                 $this->productsChanges[$uprid] ??= 'updated';
             }
-            $this->notify('NOTIFY_EO_CHANGES_UPDATE_PRODUCT',
+            $this->notify('NOTIFY_EO_RECORD_CHANGES',
                 [
                     'uprid' => $uprid,
                     'original_product' => ($this->original->products[$index] ?? []),
@@ -812,23 +832,14 @@ class EoOrderChanges
         }
     }
 
-    protected function addProductToOrder(string $uprid, array $product): void
+    protected function addProductToOrder(string $uprid, array $product): int
     {
         global $order, $currencies, $eo;
 
-        $this->productBeingAdded = true;
+        $eo ??= new EditOrders($this->getOrderId());
 
-        $qty = $this->convertToIntOrFloat($product['qty']);
-        $cart_product = $_SESSION['cart']->addProduct($uprid, $product['attributes'] ?? [], $qty);
-
-        $this->notify('NOTIFY_EO_CHANGES_ADD_PRODUCT',
-            [
-                'uprid' => $uprid,
-                'qty' => $qty,
-                'product' => $product,
-            ],
-            $cart_product
-        );
+        $eo->setProductBeingAdded(true);
+        $cart_product = $eo->addProductToCart($uprid, $product);
 
         $index = count($this->updated->products);
         $this->upridMapping[$uprid] = $index;
@@ -836,10 +847,8 @@ class EoOrderChanges
         $this->updated->products[] = $cart_product;
         $this->productsChanges[$uprid] = 'added';
 
-        $eo ??= new EditOrders($this->getOrderId());
         $eo->createOrderFromCart();
-
-        $this->productBeingAdded = false;
+        $eo->setProductBeingAdded(false);
 
         foreach ($order->products as $next_product) {
             if ($next_product['id'] != $uprid) {
@@ -847,7 +856,7 @@ class EoOrderChanges
             }
 
             $this->updated->products[$index] = array_merge($this->updated->products[$index], $next_product);
-            return;
+            return $index;
         }
     }
 
