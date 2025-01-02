@@ -26,7 +26,7 @@ class EditOrders
     protected \order $order;
     protected \order_total $orderTotals;
 
-    public function __construct(int $orders_id)
+    public function __construct(int $orders_id = 0)
     {
         $this->eo_action_level = (int)EO_DEBUG_ACTION_LEVEL;
         $this->logfile_name = DIR_FS_LOGS . '/eo_debug_' . $orders_id . date('_Ymd') . '.log';
@@ -226,7 +226,7 @@ class EditOrders
         // -----
         // Set the content type for this order.
         //
-        $this->setContentType();
+        $this->order->content_type = $this->setContentType($this->order->products);
 
         // -----
         // An order's query (as pulled from the database) doesn't match the storefront
@@ -425,19 +425,19 @@ class EditOrders
     }
 
     // -----
-    // Set the order's 'content_type', checking whether each product is virtual, is
+    // Return the order's 'content_type', checking whether each product is virtual, is
     // a gift-certificate or includes a downloadable product.
     //
-    protected function setContentType(): void
+    public function setContentType(array $products): string
     {
         global $db;
 
         $virtual_products = 0;
-        foreach ($this->order->products as $current_product) {
+        foreach ($products as $current_product) {
             $products_id = (int)$current_product['orders_products_id'];
-            if ($current_product['products_virtual'] === 1 || strpos($current_product['model'], 'GIFT') === 0) {
+            if ($current_product['products_virtual'] === 1 || str_starts_with($current_product['model'], 'GIFT')) {
                 $virtual_products++;
-            } elseif (isset($current_product['attributes'])) {
+            } elseif (!empty($current_product['attributes'])) {
                 foreach ($current_product['attributes'] as $current_attribute) {
                     $download_check = $db->Execute(
                         "SELECT opa.orders_products_id
@@ -450,8 +450,9 @@ class EditOrders
                             AND opa.products_options_id = " . (int)$current_attribute['option_id'] . "
                           LIMIT 1"
                     );
-                    $this->eoLog("\tProduct $products_id, attribute download check, " . $current_attribute['option_id'] . "/" . $current_attribute['value_id'] . ": (" . !$download_check->EOF . ")");
+
                     if (!$download_check->EOF) {
+                        $this->eoLog("\tProduct $products_id, attribute is download, " . $current_attribute['option_id'] . '/' . $current_attribute['value_id']);
                         $virtual_products++;
                         break;  //-Out of foreach attributes loop
                     }
@@ -459,16 +460,17 @@ class EditOrders
             }
         }
 
-        $product_count = count($this->order->products);
+        $product_count = count($products);
         $this->eoLog("\tsetContentType: Order contains $product_count unique products, $virtual_products of those are virtual");
 
         if ($virtual_products === 0) {
-            $this->order->content_type = 'physical';
+            $content_type = 'physical';
         } elseif ($virtual_products === $product_count) {
-            $this->order->content_type = 'virtual';
+            $content_type = 'virtual';
         } else {
-            $this->order->content_type = 'mixed';
+            $content_type = 'mixed';
         }
+        return $content_type;
     }
 
     // -----

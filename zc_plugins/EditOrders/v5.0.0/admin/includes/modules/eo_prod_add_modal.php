@@ -18,23 +18,77 @@
         <div id="prod-add-choose" class="col-sm-6">
             <h5 class="text-center"><?= TEXT_PRODUCT_CHOOSE_SUBTITLE ?></h5>
 
-            <div id="prod-choose-id" class="panel panel-info">
-                <div class="panel-heading text-center fw-bold"><?= TEXT_PRODUCT_CHOOSE_BY_ID ?></div>
-                <div class="panel-body">
-                    <form class="form-horizontal" method="post" action="javascript:void(0);">
-                        <div class="form-group">
-                            <label class="control-label col-sm-2" for="prod-id-prid"><?= rtrim(TEXT_PRODUCTS_ID, ' :') ?>:</label>
-                            <div class="col-sm-8">
-                                <?= zen_draw_input_field('prid', ($prid === 0) ? '' : $prid, 'id="prod-id-prid" class="form-control"') ?>
-                            </div>
-                            <div class="col-sm-2 text-right">
-                                <button class="btn btn-primary prod-add"><?= BUTTON_CHOOSE ?></button>
-                                <?= zen_draw_hidden_field('choose_form', 'id') ?>
+            <details name="prod-choose" class="border border-info mb-3" <?= (($_POST['choose_form'] ?? 'id') === 'id') ? 'open' : '' ?>>
+                <summary class="h5 bg-info my-0 py-3 text-center"><?= TEXT_PRODUCT_CHOOSE_BY_ID ?></summary>
+                <form class="form-horizontal" method="post" action="javascript:void(0);">
+                    <div class="form-group mt-3">
+                        <label class="control-label col-sm-2" for="prod-id-prid"><?= rtrim(TEXT_PRODUCTS_ID, ' :') ?>:</label>
+                        <div class="col-sm-8">
+                            <?= zen_draw_input_field('prid', ($prid === 0) ? '' : $prid, 'id="prod-id-prid" class="form-control"') ?>
+                        </div>
+                        <div class="col-sm-2 text-center">
+                            <button class="btn btn-primary prod-add"><?= BUTTON_CHOOSE ?></button>
+                            <?= zen_draw_hidden_field('choose_form', 'id') ?>
+                        </div>
+                    </div>
+                </form>
+            </details>
+
+            <details name="prod-choose" class="border border-info mb-3" <?= (($_POST['choose_form'] ?? 'id') === 'search') ? 'open' : '' ?>>
+                <summary class="h5 bg-info my-0 py-3 text-center"><?= TEXT_PRODUCT_CHOOSE_BY_SEARCH ?></summary>
+                <form class="form-horizontal" method="post" action="javascript:void(0);">
+                    <div class="form-group mt-3">
+                        <?= zen_draw_label(HEADING_TITLE_SEARCH_DETAIL, 'search-keywords', 'class="control-label col-sm-2"') ?>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <?= zen_draw_input_field('keywords', ($_POST['keywords'] ?? ''), 'id="search-keywords" class="form-control"', false, 'search') ?>
+                                <span class="input-group-btn">
+                                    <button id="search-products" class="btn btn-info"><i class="fa-solid fa-magnifying-glass fa-lg"></i></button>
+                                </span>
                             </div>
                         </div>
-                    </form>
-                </div>
-            </div>
+                        <div class="col-sm-1">
+                        </div>
+                    </div>
+                    <?= zen_draw_hidden_field('choose_form', 'search') ?>
+                </form>
+                <div id="search-results"></div>
+            </details>
+<?php
+// -----
+// Get the site's current category-tree; identifying categories that include products with
+// an asterisk (*).
+//
+// Then traverse through the generated drop-down menu, searching for categories that
+// aren't noted as having products.  These selections are disabled for the subsequent
+// display.
+//
+$category_tree = zen_get_category_tree(TOPMOST_CATEGORY_PARENT_ID, '', '', [], false, true);
+$category_menu = zen_draw_pull_down_menu('categories_id', $category_tree, ($_POST['categories_id'] ?? '0'), 'id="choose-cat" class="form-control"');
+$category_menu_items = explode("\n", $category_menu);
+foreach ($category_menu_items as $i => $item) {
+    if (!str_starts_with($item, '<option') || str_contains($item, '*</option>') || str_contains($item, 'value="0"')) {
+        continue;
+    }
+    $category_menu_items[$i] = str_replace('">', '" disabled="disabled">', $item);
+}
+$category_menu = implode("\n", $category_menu_items);
+?>
+            <details name="prod-choose" class="border border-info mb-3" <?= (($_POST['choose_form'] ?? 'id') === 'category') ? 'open' : '' ?>>
+                <summary class="h5 bg-info my-0 py-3 text-center"><?= TEXT_PRODUCT_CHOOSE_BY_CATEGORY ?></summary>
+                <form class="form-horizontal" method="post" action="javascript:void(0);">
+                    <div class="form-group mt-3">
+                        <?= zen_draw_label(HEADING_TITLE_SEARCH_DETAIL, 'choose-cat', 'class="control-label col-sm-2"') ?>
+                        <div class="col-sm-9">
+                            <?= $category_menu ?>
+                        </div>
+                        <div class="col-sm-1">
+                        </div>
+                    </div>
+                    <?= zen_draw_hidden_field('choose_form', 'category') ?>
+                </form>
+                <div id="cat-results"></div>
+            </details>
 
         </div>
 
@@ -132,6 +186,14 @@ if (!empty($new_product)) {
                     <button id="add-to-order" class="btn btn-warning"><?= BUTTON_ADD ?></button>
                     <?= zen_draw_hidden_field('prid', $prid) ?>
                     <?= zen_draw_hidden_field('choose_form', $choose_form) ?>
+<?php
+    if (isset($_POST['keywords'])) {
+        echo zen_draw_hidden_field('keywords', $_POST['keywords']);
+    }
+    if (isset($_POST['categories_id'])) {
+        echo zen_draw_hidden_field('categories_id', $_POST['categories_id']);
+    }
+?>
                 </div>
             </form>
         </div>

@@ -148,6 +148,7 @@ $define = [
     'ERROR_PRODUCT_NOT_FOUND' => 'The requested product (%s) is not present in the order.',
     'ERROR_MODEL_TOO_LONG' => 'The &quot;model&quot; value must not be longer than %u characters.',
     'ERROR_NAME_TOO_LONG' => 'The &quot;name&quot; value must not be longer than %u characters.',
+    'ERROR_NO_MATCHING_PRODUCT' => 'No product was found that matches your request; please try again.',
     'ERROR_PRICE_INVALID' => 'The product price and/or onetime charges must be numeric and greater than or equal to zero.',
     'ERROR_QTY_INSUFFICIENT' => 'Insufficient product quantity (%s) is available.',
     'ERROR_QTY_INVALID' => 'The product quantity must be numeric and greater than or equal to zero.',
@@ -168,10 +169,15 @@ $define = [
     'TEXT_PRODUCT_ADD_MODAL_TITLE' => 'Add a Product to the Order',
     'TEXT_PRODUCT_ATTRIBUTES' => 'Product Attributes',
     'TEXT_PRODUCT_BEING_ADDED' => 'The product is being added to the order.',
+    'TEXT_PRODUCT_CHOOSE_BY_CATEGORY' => 'Choose by Category',
     'TEXT_PRODUCT_CHOOSE_BY_ID' => 'Choose by Product ID',
+    'TEXT_PRODUCT_CHOOSE_BY_SEARCH' => 'Choose by Product Name/Model Search',
     'TEXT_PRODUCT_CHOOSE_SUBTITLE' => 'Choose Product',
     'TEXT_PRODUCT_NEW_MODAL_TITLE' => 'New Product',
+    'TEXT_PRODUCT_NEW_SELECT_CHOOSE' => 'Select a product from the list below, then click the &quot;Choose&quot; button.',
     'TEXT_PRODUCT_UPDATE_MODAL_TITLE' => 'Updating a Product',
+
+    'TEXT_SELECT_PRODUCT' => 'Select Product:',
 
     //- These three constants define the message to be recorded for products' changes. All 3
     //  use the same sprintf values:

@@ -636,7 +636,7 @@ class EoOrderChanges
             }
 
             if ($changes === 0 && $is_variant_change === false && $is_removal === false) {
-                if ($this->isProductAdded($original_uprid) === false) {
+                if (($_GET['method'] ?? '') !== 'addNewProduct' && $this->isProductAdded($original_uprid) === false) {
                     unset($this->productsChanges[$original_uprid]);
                 }
                 $_SESSION['cart']->calculateTotalAndWeight($this->updated->products);
@@ -749,6 +749,9 @@ class EoOrderChanges
             $this->productsChanges[$uprid] = 'removed';
             $_SESSION['cart']->removeProduct($uprid, $this->updated->products[$index]);
         }
+
+        $eo = new EditOrders();
+        $this->updated->content_type = $eo->setContentType($this->updated->products);
     }
 
     // -----

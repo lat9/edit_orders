@@ -69,6 +69,9 @@ input.amount-onetime, input.prod-qty {
     text-align: right;
     width: 10rem;
 }
+details > summary {
+    cursor: pointer;
+}
 
 #products-listing select, #ship-title {
     display: inherit;
