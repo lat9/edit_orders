@@ -1,7 +1,7 @@
 <?php
 // -----
 // Part of the "Edit Orders" plugin by Cindy Merkin
-// Copyright (c) 2024 Vinos de Frutas Tropicales
+// Copyright (c) 2024-2025 Vinos de Frutas Tropicales
 //
 // Last updated: v5.0.0 (new)
 //
@@ -367,6 +367,64 @@ class zcAjaxEditOrdersAdmin
             'prid' => 0,
         ];
         return $this->getModalContent('eo_prod_add_modal.php', $parameters);
+    }
+
+    // -----
+    // Retrieve any products that match a new-product search string.
+    //
+    public function newProductSearch(): array
+    {
+        global $currencies;
+        if (!class_exists('currencies')) {
+            require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
+        }
+        $currencies ??= new \currencies();
+
+        $pulldown = new \productPulldown();
+        $pulldown->showModel(true)->showPrice(true)->onlyActive(true)->showID(true);
+        $product_dropdown = $pulldown->generatePulldownHtml('prid', 'id="select-search-prid" class="form-control" size="15"');
+        $matching_products = substr_count($product_dropdown, '</option>');
+        if ($matching_products === 0) {
+            $product_dropdown = '';
+        } elseif ($matching_products < 15) {
+            $product_dropdown = str_replace('size="15"', 'size="' . $matching_products . '"', $product_dropdown);
+        }
+
+        $parameters = [
+            'product_dropdown' => $product_dropdown,
+            'hidden_fields' => ['choose_form', 'keywords'],
+        ];
+
+        return $this->getModalContent('eo_new_product_select.php', $parameters);
+    }
+
+    // -----
+    // Retrieve any products that match a new-product search string.
+    //
+    public function getProductsInCategory(): array
+    {
+        global $currencies;
+        if (!class_exists('currencies')) {
+            require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
+        }
+        $currencies ??= new \currencies();
+
+        $pulldown = new \productPulldown();
+        $pulldown->showModel(true)->showPrice(true)->onlyActive(true)->setCategory((int)($_POST['categories_id'] ?? '0'))->showID(true);
+        $product_dropdown = $pulldown->generatePulldownHtml('prid', 'id="select-cat-prid" class="form-control" size="15"');
+        $matching_products = substr_count($product_dropdown, '</option>');
+        if ($matching_products === 0) {
+            $product_dropdown = '';
+        } elseif ($matching_products < 15) {
+            $product_dropdown = str_replace('size="15"', 'size="' . $matching_products . '"', $product_dropdown);
+        }
+
+        $parameters = [
+            'product_dropdown' => $product_dropdown,
+            'hidden_fields' => ['choose_form', 'categories_id'],
+        ];
+
+        return $this->getModalContent('eo_new_product_select.php', $parameters);
     }
 
     // -----

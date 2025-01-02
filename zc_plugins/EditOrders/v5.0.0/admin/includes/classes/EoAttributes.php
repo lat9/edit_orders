@@ -53,6 +53,7 @@ class EoAttributes
                         ON po.products_options_id = pa.options_id
                        AND po.language_id = :language_id 
               WHERE pa.products_id = :products_id";
+
         $sql = $db->bindVars($sql, ':products_id', $products_id, 'integer');
         $sql = $db->bindVars($sql, ':language_id', $_SESSION['languages_id'], 'integer');
 
@@ -86,7 +87,8 @@ class EoAttributes
                             ON pov.products_options_values_id = pa.options_values_id
                            AND pov.language_id = :language_id
                   WHERE pa.products_id = :products_id
-                    AND pa.options_id = :options_id 
+                    AND pa.options_id = :options_id
+                    AND pa.attributes_display_only = 0
                   ORDER BY " . $options_values_order_by;
 
             $sql = $db->bindVars($sql, ':products_id', $products_id, 'integer');

@@ -339,6 +339,24 @@ if (ACCOUNT_STATE === 'true') {
         });
     });
 
+    $(document).on('click', '#search-products', function() {
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=newProductSearch',
+            data: $(this).closest('form').serializeArray()
+        }).done(function(response) {
+            $('#search-results').html(response.modal_content);
+        });
+    });
+
+    $(document).on('change', '#choose-cat', function() {
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=getProductsInCategory',
+            data: $(this).closest('form').serializeArray()
+        }).done(function(response) {
+            $('#cat-results').html(response.modal_content);
+        });
+    });
+
     $(document).on('click', '.prod-add', function() {
         zcJS.ajax({
             url: 'ajax.php?act=ajaxEditOrdersAdmin&method=newProductChosen',

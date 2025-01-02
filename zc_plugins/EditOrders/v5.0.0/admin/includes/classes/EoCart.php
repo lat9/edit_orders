@@ -112,6 +112,7 @@ class EoCart extends \shoppingCart
     public function removeProduct(string $uprid, array $product): void
     {
         unset($this->contents[$uprid]);
+
         $this->total -= (($product['quantity'] * $product['final_price']) + $product['onetime_charges']);
         $this->weight -= $product['quantity'] * $product['products_weight'];
     }
