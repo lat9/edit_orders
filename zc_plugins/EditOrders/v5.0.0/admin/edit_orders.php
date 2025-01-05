@@ -204,7 +204,6 @@ switch ($action) {
             $_SESSION['shipping'],
             $_SESSION['shipping_tax_description'],
             $_SESSION['valid_to_checkout'],
- 
         );
 
         $messageStack->add_session(sprintf(SUCCESS_ORDER_UPDATED, (int)$oID), 'success');
@@ -330,204 +329,7 @@ $_SESSION['cart']->loadFromOrder($order);
 
     <div class="row">
         <div id="eo-addl-info" class="col-md-4">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <span class="h3"><?= TEXT_PANEL_HEADER_ADDL_INFO ?></span>
-                </div>
-                <div class="panel-body">
-                    <form id="eo-addl-info" class="form-horizontal">
-<?php
-// -----
-// Give a watching observer the opportunity to supply additional contact-information for the order.
-//
-// The $additional_contact_info (supplied as the notification's 2nd parameter), if supplied, is a
-// numerically-indexed array of arrays containing each label and associated content, e.g.:
-//
-// $additional_contact_info[] = [
-//     'label' => LABEL_TEXT,
-//     'for' => 'input-field-id',
-//     'content' => $field_content,
-// ];
-//
-// Note: If the 'for' element is not supplied, the 'label' and 'content' will be displayed
-// as 'simple' form elements.
-//
-// For EO versions prior to 5.0.0, this notification was 'EDIT_ORDERS_ADDITIONAL_CONTACT_INFORMATION'.
-//
-$additional_contact_info = [];
-$zco_notifier->notify('NOTIFY_EO_ADDL_CONTACT_INFO', $order, $additional_contact_info);
-
-if (is_array($additional_contact_info) && count($additional_contact_info) !== 0) {
-    foreach ($additional_contact_info as $contact_info) {
-        if (!empty($contact_info['label']) && !empty($contact_info['content'])) {
-?>
-                        <div class="row my-2">
-                            <div class="form-group">
-                                <label for="<?= $contact_info['for'] ?>" class="col-sm-4 control-label">
-                                    <?= $contact_info['label'] ?>
-                                </label>
-                                <div class="col-sm-8">
-                                    <?= $contact_info['content'] ?>
-                                </div>
-                            </div>
-                        </div>
-<?php
-        }
-    }
-}
-
-// -----
-// Note: Using loose comparison since the value is recorded (currently) as decimal(14,6)
-// and shows up in the order as (string)1.000000 if the order's placed in the store's
-// default currency.
-//
-if ($order->info['currency_value'] != 1) {
-?>
-                        <div class="row my-2">
-                            <div class="col-sm-4 eo-label">
-                                <?= sprintf(ENTRY_CURRENCY_VALUE, $order->info['currency']) ?>
-                            </div>
-                            <div class="col-sm-8">
-                                <?= $order->info['currency_value'] ?>
-                            </div>
-                        </div>
-<?php
-}
-
-$max_payment_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'payment_method') . '"';
-?>
-                        <div class="row my-2">
-                            <div class="form-group">
-                                <label for="payment-method" class="col-sm-4 control-label">
-                                    <?= ENTRY_PAYMENT_METHOD ?>
-                                </label>
-                                <div class="col-sm-8">
-                                    <?= zen_draw_input_field(
-                                        'payment_method',
-                                        zen_output_string_protected($order->info['payment_method']),
-                                        $max_payment_length . ' id="payment-method" class="eo-entry form-control"'
-                                    ) ?>
-                                    <?= ($order->info['payment_method'] !== TEXT_CREDIT_CARD) ? ENTRY_UPDATE_TO_CC : ENTRY_UPDATE_TO_CK ?>
-                                </div>
-                            </div>
-                        </div>
-<?php 
-$max_type_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_type') . '"';
-$max_owner_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_owner') . '"';
-$max_number_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_number') . '"';
-$max_expires_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'cc_expires') . '"';
-
-$cc_fields_display = 'd-none';
-if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || $order->info['payment_method'] === TEXT_CREDIT_CARD || !empty($order->info['cc_number'])) {
-    $cc_fields_display = '';
-}
-?>
-                        <div class="row cc-field my-2 <?= $cc_fields_display ?>">
-                            <div class="form-group">
-                                <label for="cc-type" class="col-sm-4 control-label">
-                                    <?= ENTRY_CREDIT_CARD_TYPE ?>
-                                </label>
-                                <div class="col-sm-8">
-                                    <?= zen_draw_input_field(
-                                        'cc_type',
-                                        zen_output_string_protected((string)$order->info['cc_type']),
-                                        $max_type_length . ' class="eo-entry form-control"'
-                                    ) ?>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row cc-field my-2 <?= $cc_fields_display ?>">
-                            <div class="form-group">
-                                <label for="cc-owner" class="col-sm-4 control-label">
-                                    <?= ENTRY_CREDIT_CARD_OWNER ?>
-                                </label>
-                                <div class="col-sm-8">
-                                    <?= zen_draw_input_field(
-                                        'cc_owner',
-                                        zen_output_string_protected((string)$order->info['cc_owner']),
-                                        $max_owner_length . ' class="eo-entry form-control"'
-                                    ) ?>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row cc-field my-2 <?= $cc_fields_display ?>">
-                            <div class="form-group">
-                                <label for="cc-number" class="col-sm-4 control-label">
-                                    <?= ENTRY_CREDIT_CARD_NUMBER ?>
-                                </label>
-                                <div class="col-sm-8">
-                                    <?= zen_draw_input_field(
-                                        'cc_number',
-                                        zen_output_string_protected((string)$order->info['cc_number']),
-                                        $max_number_length . ' class="eo-entry form-control"'
-                                    ) ?>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row cc-field my-2 <?= $cc_fields_display ?>">
-                            <div class="form-group">
-                                <label for="cc-expires" class="col-sm-4 control-label">
-                                    <?= ENTRY_CREDIT_CARD_EXPIRES ?>
-                                </label>
-                                <div class="col-sm-8">
-                                    <?= zen_draw_input_field(
-                                        'cc_expires',
-                                        zen_output_string_protected((string)$order->info['cc_expires']),
-                                        $max_expires_length . ' class="eo-entry form-control"'
-                                    ) ?>
-                                </div>
-                            </div>
-                        </div>
-<?php
-// -----
-// NOTE: No maximum lengths provided for these non-standard fields, since there's no way to know what database table
-// the information is stored in!
-//
-if (isset($order->info['account_name']) || isset($order->info['account_number']) || isset($order->info['po_number'])) {
-?>
-                        <hr>
-<?php
-    if (isset($order->info['account_name'])) {
-?>
-                        <div class="row my-2">
-                            <div class="col-sm-4 eo-label">
-                                <?= ENTRY_ACCOUNT_NAME ?>
-                            </div>
-                            <div class="col-sm-8">
-                                <?= zen_output_string_protected($order->info['account_name']) ?>
-                            </div>
-                        </div>
-<?php
-    }
-    if (isset($order->info['account_number'])) {
-?>
-                        <div class="row my-4">
-                            <div class="col-sm-3 eo-label">
-                                <?= ENTRY_ACCOUNT_NUMBER ?>
-                            </div>
-                            <div class="col-sm-8">
-                                <?= zen_output_string_protected($order->info['account_number']) ?>
-                            </div>
-                        </div>
-<?php
-    }
-    if (isset($order->info['po_number'])) {
-?>
-                        <div class="row my-2">
-                            <div class="col-sm-4 eo-label">
-                                <?= ENTRY_PURCHASE_ORDER_NUMBER ?>
-                            </div>
-                            <div class="col-sm-8">
-                                <?= zen_output_string_protected($order->info['po_number']) ?>
-                            </div>
-                        </div>
-<?php
-    }
-}
-?>
-                    </form>
-                </div>
-            </div>
+            <?php require DIR_WS_MODULES . 'eo_edit_action_order_info_display.php'; ?>
         </div>
 <?php
 $display_payment_calc_label = false;
@@ -676,7 +478,7 @@ if (DISPLAY_PRICE_WITH_TAX === 'true') {
     </div>
 
     <div id="ot-edit-modal" class="modal fade" role="dialog">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
             </div>
         </div>

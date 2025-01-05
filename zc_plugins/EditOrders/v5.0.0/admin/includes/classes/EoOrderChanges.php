@@ -69,17 +69,6 @@ class EoOrderChanges
             );
             $this->isGuestCheckout = !empty($is_guest_checkout->fields['is_guest_checkout']);
         }
-
-        $this->isWholesale = false;
-        if ($sniffer->field_exists(TABLE_ORDERS, 'is_wholesale')) {
-            $is_wholesale = $db->Execute(
-                "SELECT is_wholesale
-                   FROM " . TABLE_ORDERS . "
-                  WHERE orders_id = " . (int)$original_order->info['order_id'] . "
-                  LIMIT 1"
-            );
-            $this->isWholesale = !empty($is_wholesale->fields['is_wholesale']);
-        }
     }
     protected function generateProductMappings(): void
     {
@@ -96,11 +85,6 @@ class EoOrderChanges
     public function isGuestCheckout(): bool
     {
         return $this->isGuestCheckout;
-    }
-
-    public function isWholesale(): bool
-    {
-        return $this->isWholesale;
     }
 
     public function productAddInProcess(): bool

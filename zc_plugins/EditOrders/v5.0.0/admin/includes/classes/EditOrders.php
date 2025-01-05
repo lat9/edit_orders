@@ -150,6 +150,8 @@ class EditOrders
 
     public function queryOrder(\order $order): bool
     {
+        global $db;
+
         // -----
         // Register the order within a *temporary* copy in this class;
         // it'll be removed on edit_orders.php's subsequent call to
@@ -158,12 +160,26 @@ class EditOrders
         $this->order = $order;
 
         // -----
+        // The base order-class' 'query' method doesn't (as of zc210) record whether/not the
+        // order was created with wholesale pricing. If that field's not present in the
+        // current order, query the database to add it.
+        //
+        if (!isset($order->info['is_wholesale'])) {
+            $wholesale = $db->Execute(
+                "SELECT is_wholesale
+                   FROM " . TABLE_ORDERS . "
+                  WHERE orders_id = " . $this->orders_id . "
+                  LIMIT 1"
+            );
+            $order->info['is_wholesale'] = $wholesale->fields['is_wholesale'];
+        }
+
+        // -----
         // The base order-class' 'query' method processing sets the order's delivery address to
         // (bool)false if the shipping module is 'storepickup'. If that's the case,
         // restore the delivery-address information from the database.
         //
         if ($this->order->delivery === false) {
-            global $db;
             $delivery_address = $db->Execute(
                 "SELECT delivery_name AS `name`, delivery_company AS `company`, delivery_street_address AS street_address,
                         delivery_suburb AS suburb, delivery_city AS city, delivery_postcode AS postcode, delivery_state as `state`,

@@ -73,16 +73,19 @@ $define = [
     'TYPE_BELOW' => 'Type a choice below ...',
 
 // Order Payment Entries and Additional Infomation
-    'ENTRY_CURRENCY_VALUE' => 'Currency Value (%s):',   //- %s is filled in with the order's currency-code
-    'ENTRY_PAYMENT_METHOD' => 'Payment Method:',
     'ENTRY_CREDIT_CARD_TYPE' => 'Credit Card Type:',
     'ENTRY_CREDIT_CARD_OWNER' => 'Credit Card Owner:',
     'ENTRY_CREDIT_CARD_NUMBER' => 'Credit Card Number:',
     'ENTRY_CREDIT_CARD_EXPIRES' => 'Credit Card Expires:',
-    'ENTRY_UPDATE_TO_CC' => 'Enter <strong>Credit Card</strong> to view CC fields.',
-    'ENTRY_UPDATE_TO_CK' => 'Enter the payment method used for this order to hide CC fields. (<strong>PayPal, Check/Money Order, etc.</strong>)',
+    'ENTRY_CURRENCY_VALUE' => 'Currency Value (%s):',   //- %s is filled in with the order's currency-code
+    'ENTRY_IS_GUEST_ORDER' => 'Guest Order?',
+    'ENTRY_PAYMENT_METHOD' => 'Payment Method:',
+    'ENTRY_PAYMENT_MODULE' => 'Payment Module Code:',
     'ENTRY_PURCHASE_ORDER_NUMBER' => 'Purchase Order:',
-    'TEXT_CREDIT_CARD' => 'Credit Card',
+    'ENTRY_IS_WHOLESALE' => 'Wholesale Order?',
+    'ENTRY_CUSTOMER_WHOLESALE' => 'Wholesale Customer?',
+    'ENTRY_CUSTOMER_TAX_EXEMPT' => 'Tax-Exempt Customer?',
+
     'TEXT_PANEL_HEADER_ADDL_INFO' => 'Additional Information',
 
 // Order Status Entries

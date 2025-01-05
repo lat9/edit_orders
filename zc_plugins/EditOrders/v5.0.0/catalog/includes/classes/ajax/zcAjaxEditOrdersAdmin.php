@@ -601,7 +601,7 @@ class zcAjaxEditOrdersAdmin
     //
     public function addOrUpdateOrderTotal(): array
     {
-        $_POST['title'] = rtrim($_POST['title'], ' :');
+        $_POST['title'] = rtrim($_POST['title'] ?? $_POST['dc_redeem_code'], ' :');
         switch ($_POST['ot_class']) {
             case 'ot_shipping':
                 $_SESSION['eoChanges']->updateShippingInfo(
