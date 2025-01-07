@@ -29,7 +29,7 @@ if (empty($original_product) && empty($updated_product)) {
 <?php
 } else {
     $update_button = '<button id="eo-prod-update" class="btn btn-warning mx-2">' . IMAGE_UPDATE . '</button>';
-    $update_button .= zen_draw_hidden_field('uprid', $uprid) . zen_draw_hidden_field('payment_calc_method', $_POST['payment_calc_method']);
+    $update_button .= zen_draw_hidden_field('uprid', $uprid);
 ?>
         <div class="row">
             <div class="col-sm-6">

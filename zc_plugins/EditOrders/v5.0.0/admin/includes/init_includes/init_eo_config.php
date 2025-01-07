@@ -1,7 +1,7 @@
 <?php
 // -----
 // Admin-level initialization script for the Edit Orders plugin for Zen Cart, by lat9.
-// Copyright (C) 2018-2024, Vinos de Frutas Tropicales.
+// Copyright (C) 2018-2025, Vinos de Frutas Tropicales.
 //
 // Last updated: v5.0.0
 //
@@ -18,6 +18,7 @@ global $PHP_SELF;
 //
 if ($PHP_SELF === 'ajax.php' && ($_GET['act'] ?? '') === 'ajaxEditOrdersAdmin') {
     $PHP_SELF = 'edit_orders.php';
+    $_POST['payment_calc_method'] = in_array($_SESSION['eo_price_calculations'], ['AutoSpecials', 'Manual']) ? $_SESSION['eo_price_calculations'] : 'AutoSpecials';
     return;
 }
 if ($PHP_SELF === 'keepalive.php' || $PHP_SELF === FILENAME_EDIT_ORDERS . '.php') {

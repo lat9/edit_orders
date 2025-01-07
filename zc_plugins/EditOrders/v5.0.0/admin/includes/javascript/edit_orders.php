@@ -146,7 +146,7 @@ if (ACCOUNT_STATE === 'true') {
 ?>
     const country_zones = '<?= addslashes(json_encode($c2z)) ?>';
 
-    $('.address-country').on('change', function() {
+    $(document).on('change', '.address-country', function() {
         var countryHasZones = false;
         var countryZones = '';
         var selected_country = $('option:selected', this).val();
@@ -173,7 +173,7 @@ if (ACCOUNT_STATE === 'true') {
         }
     });
 
-    $('.state-select').on('change', function() {
+    $(document).on('change', '.state-select', function() {
         let selectedOption = $(this).val();
         $(this).find('option').prop('selected', false);
         $(this).find('option[value="'+selectedOption+'"]').prop('selected', true);
@@ -189,7 +189,7 @@ if (ACCOUNT_STATE === 'true') {
     // field and display the form's "Save" button to enable recording
     // the update into EO's session-based changes.
     //
-    $('.address-modal').on('shown.bs.modal', function() {
+    $(document).on('shown.bs.modal', '.address-modal', function() {
         if ($(this).find('.state-select > option').length > 1) {
             $(this).find('.state-input').parent().hide();
             $(this).find('.state-select').prop('disabled', false).parent().show();
@@ -212,7 +212,7 @@ if (ACCOUNT_STATE === 'true') {
     // changes to the associated address, remove all indication
     // of field-changes.
     //
-    $('.address-modal').on('hidden.bs.modal', function() {
+    $(document).on('hidden.bs.modal', '.address-modal', function() {
         if ($(this).find('.eo-changed').first().val() == 0) {
             $(this).find('input, select').removeClass('border-warning');
         }
@@ -223,7 +223,7 @@ if (ACCOUNT_STATE === 'true') {
     // indicated that the changes associated with the address
     // are to be saved for the future update to the order.
     //
-    $('.address-modal .btn-save').on('click', function() {
+    $(document).on('click', '.address-modal .btn-save', function() {
         let theButton = $(this);
         let theForm = theButton.parents('form').first();
         let addressType = theForm.find('.eo-addr-type').first().val();
@@ -232,7 +232,11 @@ if (ACCOUNT_STATE === 'true') {
             url: 'ajax.php?act=ajaxEditOrdersAdmin&method=updateAddress',
             data: theForm.serializeArray()
         }).done(function(response) {
-            if (response.status === 'ok') {
+            if (response.status === 'error') {
+                $.each(response.error_messages, function(field_id, message) {
+                    $('#'+field_id).addClass('border-danger').after('<span class="eo-field-error text-danger">'+message+'</span>');
+                });
+            } else {
                 theForm.find('.eo-changed').first().val(response.address_changes).trigger('change');
                 $('#address-'+addressType).html(response.address);
                 if (response.address_changes != 0) {
@@ -244,11 +248,12 @@ if (ACCOUNT_STATE === 'true') {
                 }
                 theForm.find('.btn-save').hide();
                 $('#google-map-link-'+addressType).attr('href', response.google_map_link);
+                $('#products-listing tr.eo-prod, #products-listing tr.eo-ot').remove();
+                $('#products-listing > tbody').append(response.prod_table_html);
+                $('#products-listing > tbody').append(response.ot_table_html);
+                $('#product-changes').val(response.prod_changes).trigger('change');
+                $('#ot-changes').val(response.ot_changes).trigger('change');
                 theButton.parents('.address-modal').modal('hide');
-            } else {
-                $.each(response.error_messages, function(field_id, message) {
-                    $('#'+field_id).addClass('border-danger').after('<span class="eo-field-error text-danger">'+message+'</span>');
-                });
             }
         });
     });
@@ -270,7 +275,6 @@ if (ACCOUNT_STATE === 'true') {
             url: 'ajax.php?act=ajaxEditOrdersAdmin&method=getProductUpdateModal',
             data: {
                 uprid: $(this).attr('data-uprid'),
-                payment_calc_method: $('#calc-method').find(':selected').val()
             }
         }).done(function(response) {
             $('#prod-edit-modal .modal-content').html(response.modal_content);
@@ -498,6 +502,12 @@ if (ACCOUNT_STATE === 'true') {
         } else {
             $('.price-net, .price-gross').attr('disabled', 'disabled');
         }
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=setCalculationMethod',
+            data: {
+                payment_calc_method: this.value,
+            }
+        });
     });
 
     // -----

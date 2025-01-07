@@ -2,7 +2,7 @@
 // -----
 // Part of the Edit Orders encapsulated plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2003, 2024 The zen-cart developers
+// Copyright (c) 2003, 2025 The zen-cart developers
 //
 // Last modified v5.0.0
 //
@@ -339,24 +339,21 @@ if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
         ['id' => 'Manual', 'text' => PAYMENT_CALC_MANUAL]
     ];
     $default = EO_PRODUCT_PRICE_CALC_DEFAULT;
-    if (isset($_SESSION['eo_price_calculations']) && in_array($_SESSION['eo_price_calculations'], ['AutoSpecials', 'Manual'], true)) {
+    if (isset($_SESSION['eo_price_calculations']) && in_array($_SESSION['eo_price_calculations'], ['AutoSpecials', 'Manual'])) {
         $default = $_SESSION['eo_price_calculations'];
     }
     $_SESSION['eo_price_calculations'] = $default;
-    $price_is_manual = ($default === 'Manual');
 
     $display_payment_calc_label = true;
     $payment_calc_choice = zen_draw_pull_down_menu('payment_calc_method', $choices, $default, 'id="calc-method" class="form-control w-auto"');
+
 } elseif (EO_PRODUCT_PRICE_CALC_METHOD === 'AutoSpecials') {
-    $price_is_manual = false;
-    $payment_calc_choice =
-        '<p class="text-center">' . PRODUCT_PRICES_CALC_AUTOSPECIALS . '</p>' .
-        zen_draw_hidden_field('payment_calc_method', 'AutoSpecials', 'id="calc-method"');
+    $_SESSION['eo_price_calculations'] = 'AutoSpecials';
+    $payment_calc_choice = '<p class="text-center">' . PRODUCT_PRICES_CALC_AUTOSPECIALS . '</p>';
+
 } else {
-    $price_is_manual = true;
-    $payment_calc_choice =
-        '<p class="text-center">' . PRODUCT_PRICES_CALC_MANUAL . '</p>' .
-        zen_draw_hidden_field('payment_calc_method', 'Manual', 'id="calc-method"');
+    $_SESSION['eo_price_calculations'] = 'Manual';
+    $payment_calc_choice = '<p class="text-center">' . PRODUCT_PRICES_CALC_MANUAL . '</p>';
 }
 
 // -----
