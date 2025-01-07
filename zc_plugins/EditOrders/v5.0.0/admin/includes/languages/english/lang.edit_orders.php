@@ -18,6 +18,7 @@ $define = [
     'HEADING_TITLE_ADD_PRODUCT' => 'Adding a Product to Order',
 
     'TEXT_LABEL_TAX' => 'Tax (%):',
+    'TEXT_MODAL_CHANGES_TITLE' => 'Current Order Changes',
     'TEXT_ORDER_TOTAL_ADDED' => '%1$s was added: %2$s',
     'TEXT_ORDER_TOTAL_REMOVED' => '%1$s was removed: %2$s',
     'TEXT_ORIGINAL_ORDER' => 'Original Order',
@@ -188,7 +189,7 @@ $define = [
     // %1$s (qty), %2$s (name), %3$s (model), %4$s (final price), %5$s (tax rate)
     //
     'TEXT_STATUS_PRODUCT_ADDED' => 'Added: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
-    'TEXT_STATUS_PRODUCT_CHANGED' => 'Some of the product details were changed: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
+    'TEXT_STATUS_PRODUCT_CHANGED' => 'Some product details were changed from: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
     'TEXT_STATUS_PRODUCT_REMOVED' => 'Removed: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
 
 // Navigation Display

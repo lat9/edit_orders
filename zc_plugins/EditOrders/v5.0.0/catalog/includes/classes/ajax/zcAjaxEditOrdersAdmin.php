@@ -183,7 +183,7 @@ class zcAjaxEditOrdersAdmin
                     '<div class="modal-content">' .
                         '<div class="modal-header">' .
                             '<button type="button" class="close" data-dismiss="modal">&times;</button>' .
-                            '<h4 class="modal-title">Modal Header</h4>' .
+                            '<h4 class="modal-title">' . TEXT_MODAL_CHANGES_TITLE . '</h4>' .
                         '</div>' .
                         '<div class="modal-body">' .
                             $modal_html .
@@ -816,12 +816,22 @@ class zcAjaxEditOrdersAdmin
         require $this->pluginManagerInstalledVersionDirectory . 'admin/' . DIR_WS_MODULES . 'eo_edit_action_ot_table_display.php';
         $ot_table_html = ob_get_clean();
 
+        ob_start();
+        $address_icon = 'fa-solid fa fa-truck';
+        $address_label = ENTRY_SHIPPING_ADDRESS;
+        $address_name = 'delivery';
+        $address_fields = $order->delivery;
+        $address_notifier = 'NOTIFY_EO_ADDL_SHIPPING_ADDRESS_ROWS';
+        require $this->pluginManagerInstalledVersionDirectory . 'admin/' . DIR_WS_MODULES . 'eo_common_address_format.php';
+        $shipping_address_html = ob_get_clean();
+
         return [
             'status' => 'ok',
             'ot_changes' => $ot_changes,
             'prod_changes' => $_SESSION['eoChanges']->getProductsChangeCount(),
             'ot_table_html' => $ot_table_html,
             'prod_table_html' => $prod_table_html,
+            'shipping_address_html' => $shipping_address_html,
         ];
     }
 
