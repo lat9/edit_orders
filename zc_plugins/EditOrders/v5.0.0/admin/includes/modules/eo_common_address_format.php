@@ -5,7 +5,8 @@
 //
 // Last modified v5.0.0
 //
-// This module is loaded in global scope by /admin/includes/modules/edit_orders/eo_edit_action_display.php.
+// This module is loaded in global scope by /admin/includes/modules/edit_orders/eo_edit_action_display.php and also
+// in function scope by /catalog/includes/classes/ajax/zcAjaxEditOrdersAdmin.php.
 //
 // The following variables are set for the module's use:
 //
@@ -20,6 +21,22 @@
 $modal_id = $address_name . '-modal';
 $google_map_address = urlencode($address_fields['street_address'] . ',' . $address_fields['city'] . ',' . $address_fields['state'] . ',' . $address_fields['postcode']);
 $google_map_link = 'https://maps.google.com/maps/search/?api=1&amp;query=' . $google_map_address;
+
+// -----
+// Gather the maximum database field-length for each of the address-related fields in the
+// order, noting that the ASSUMPTION is made that each of the customer/billing/delivery fields
+// are of equal length!
+//
+$max_name_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_name') . '"';
+$max_company_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_company') . '"';
+$max_street_address_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_street_address') . '"';
+$max_suburb_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_suburb') . '"';
+$max_city_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_city') . '"';
+$max_state_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_state') . '"';
+$max_postcode_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_postcode') . '"';
+$max_country_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_country') . '"';
+$max_telephone_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_telephone') . '"';
+$max_email_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_email_address') . '"';
 ?>
 <div class="row my-2">
     <div class="panel panel-default">
