@@ -224,7 +224,7 @@ class EditOrdersAdminObserver extends base
     protected function notify_order_cart_add_product_list(&$order, string $e, array $index_product, &$attributes_handled): void
     {
         global $eo;
-        if ($eo->productAddInProcess() === true) {
+        if ($eo->productAddInProcess() === true || ($_POST['payment_calc_method'] ?? '') !== 'Manual') {
             return;
         }
 
@@ -250,7 +250,8 @@ class EditOrdersAdminObserver extends base
         // If product-pricing is not to be performed 'manually', the 'base' Zen Cart
         // tax calculations are used.
         //
-        if (($_POST['payment_calc_method'] ?? '') !== 'Manual') {
+        global $eo;
+        if ($eo->productAddInProcess() === true || ($_POST['payment_calc_method'] ?? '') !== 'Manual') {
             return;
         }
 

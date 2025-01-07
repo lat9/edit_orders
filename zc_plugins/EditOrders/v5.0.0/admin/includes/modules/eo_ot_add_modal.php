@@ -60,7 +60,7 @@ switch ($ot_class) {
 
     <div class="modal-footer">
         <button id="eo-ot-add-update" class="btn btn-warning mx-2"><?= IMAGE_UPDATE ?></button>
-        <?= zen_draw_hidden_field('ot_class', $ot_class) . zen_draw_hidden_field('payment_calc_method', 'Manual') ?>
+        <?= zen_draw_hidden_field('ot_class', $ot_class) ?>
         <button type="button" class="btn btn-default" data-dismiss="modal"><?= BUTTON_CLOSE ?></button>
     </div>
 </form>

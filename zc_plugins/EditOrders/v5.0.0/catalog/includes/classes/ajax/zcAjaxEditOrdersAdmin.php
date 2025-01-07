@@ -99,8 +99,10 @@ class zcAjaxEditOrdersAdmin
         }
 
         $address_changes = [];
+        $order_update_changes = [];
         if ($status === 'ok') {
             $address_changes = $_SESSION['eoChanges']->updateAddressInfo($address_type, $address, $labels);
+            $order_update_changes = $this->processOrderUpdate();
         }
 
         $zone_id = (int)($address['zone_id'] ?? 0);
@@ -108,12 +110,24 @@ class zcAjaxEditOrdersAdmin
         $google_map_address = urlencode($address['street_address'] . ',' . $address['city'] . ',' . $state . ',' . $address['postcode']);
 
         $address_format_id = zen_get_address_format_id($address['country_id']);
-        return [
+        $address_return = [
             'status' => $status,
             'address' => zen_address_format($address_format_id, $address, false, '', '<br>'),
             'google_map_link' => 'https://maps.google.com/maps/search/?api=1&amp;query=' . $google_map_address,
             'address_changes' => $address_changes,
             'error_messages' => array_merge($builtin_errors, $non_builtin_errors),
+        ];
+        return array_merge($order_update_changes, $address_return);
+    }
+
+    public function setCalculationMethod(): array
+    {
+        if (!in_array($_POST['payment_calc_method'], ['AutoSpecials', 'Manual'])) {
+            $_POST['payment_calc_method'] = 'AutoSpecials';
+        }
+        $_SESSION['eo_price_calculations'] = $_POST['payment_calc_method'];
+        return [
+            'status' => 'ok',
         ];
     }
 

@@ -47,7 +47,7 @@ if (!in_array($ot_class, $module_list)) {
     }
 
     $update_button = '<button id="eo-ot-add-update" class="btn btn-warning mx-2">' . IMAGE_UPDATE . '</button>';
-    $update_button .= zen_draw_hidden_field('ot_class', $ot_class) . zen_draw_hidden_field('payment_calc_method', 'Manual');
+    $update_button .= zen_draw_hidden_field('ot_class', $ot_class);
     switch ($ot_class) {
         case 'ot_coupon':
 ?>

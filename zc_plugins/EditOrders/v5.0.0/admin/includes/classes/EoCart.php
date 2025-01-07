@@ -364,7 +364,7 @@ class EoCart extends \shoppingCart
     {
         global $eo;
 
-        if (isset($eo) && $eo->productAddInProcess() === true) {
+        if (isset($eo) && $eo->productAddInProcess() === true || ($_POST['payment_calc_method'] ?? '') !== 'Manual') {
             return parent::get_products();
         }
 
