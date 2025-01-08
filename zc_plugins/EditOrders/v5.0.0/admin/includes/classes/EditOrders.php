@@ -1,7 +1,7 @@
 <?php
 // -----
 // Part of the Edit Orders plugin by lat9 (lat9@vinosdefrutastropicales.com).
-// Copyright (C) 2016-2024, Vinos de Frutas Tropicales
+// Copyright (C) 2016-2025, Vinos de Frutas Tropicales
 //
 // Last updated: EO v5.0.0
 //
@@ -211,6 +211,18 @@ class EditOrders
                     ];
                 }
             }
+        }
+
+        // -----
+        // If the storefront-placed order was 'virtual', no shipping address is recorded for the
+        // order. In this case, EO will initialize the original shipping address to reflect the
+        // customer's address ... just in case the order is edited and its content-type changes
+        // from 'virtual' to 'physical' (or 'mixed').
+        //
+        if (empty($this->order->delivery['country']['id'])) {
+            $delivery_address = $this->order->customer;
+            unset($delivery_address['id'], $delivery_address['telephone'], $delivery_address['email_address']);
+            $this->order->delivery = $delivery_address;
         }
 
         // -----
@@ -450,10 +462,18 @@ class EditOrders
 
         $virtual_products = 0;
         foreach ($products as $current_product) {
-            $products_id = (int)$current_product['orders_products_id'];
             if ($current_product['products_virtual'] === 1 || str_starts_with($current_product['model'], 'GIFT')) {
                 $virtual_products++;
-            } elseif (!empty($current_product['attributes'])) {
+            } elseif (empty($current_product['attributes'])) {
+                continue;
+            }
+
+            // -----
+            // If the product was *originally* in the order, then its download-check
+            // is based on information stored in the order itself.
+            //
+            if (isset($current_product['orders_products_id'])) {
+                $products_id = (int)$current_product['orders_products_id'];
                 foreach ($current_product['attributes'] as $current_attribute) {
                     $download_check = $db->Execute(
                         "SELECT opa.orders_products_id
@@ -472,6 +492,31 @@ class EditOrders
                         $virtual_products++;
                         break;  //-Out of foreach attributes loop
                     }
+                }
+                continue;
+            }
+
+            // -----
+            // Otherwise, this product was added via the order's edit so its download-check
+            // is based on information stored for the product rather than the order.
+            //
+            $products_id = (int)$current_product['id'];
+            foreach ($current_product['attributes'] as $current_attribute) {
+                $download_check = $db->Execute(
+                    "SELECT pa.products_id
+                       FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
+                            INNER JOIN " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
+                                ON pad.products_attributes_id = pa.products_attributes_id
+                      WHERE pa.products_id = $products_id
+                        AND pa.options_values_id = " . (int)$current_attribute['value_id'] . "
+                        AND pa.options_id = " . (int)$current_attribute['option_id'] . "
+                      LIMIT 1"
+                );
+
+                if (!$download_check->EOF) {
+                    $this->eoLog("\tProduct $products_id, attribute is download, " . $current_attribute['option_id'] . '/' . $current_attribute['value_id']);
+                    $virtual_products++;
+                    break;  //-Out of foreach attributes loop
                 }
             }
         }
