@@ -113,8 +113,9 @@ class EoCart extends \shoppingCart
     {
         unset($this->contents[$uprid]);
 
-        $this->total -= (($product['quantity'] * $product['final_price']) + $product['onetime_charges']);
-        $this->weight -= $product['quantity'] * $product['products_weight'];
+        $quantity = $product['quantity'] ?? $product['qty'];
+        $this->total -= (($quantity * $product['final_price']) + $product['onetime_charges']);
+        $this->weight -= $quantity * $product['products_weight'];
     }
 
     // -----
