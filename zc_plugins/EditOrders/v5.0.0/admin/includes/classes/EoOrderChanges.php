@@ -232,7 +232,7 @@ class EoOrderChanges
             $changes[ENTRY_CUSTOMER] = $this->getAddressChangedValues('customer');
         }
 
-        if (!empty($updated_order->shipping['changes'])) {
+        if (!empty($updated_order->delivery['changes'])) {
             $changes[ENTRY_SHIPPING_ADDRESS] = $this->getAddressChangedValues('delivery');
         }
 
@@ -623,7 +623,7 @@ class EoOrderChanges
                 if (($_GET['method'] ?? '') !== 'addNewProduct' && $this->isProductAdded($original_uprid) === false) {
                     unset($this->productsChanges[$original_uprid]);
                 }
-                $_SESSION['cart']->calculateTotalAndWeight($this->updated->products);
+                $_SESSION['cart']->calculateTotalAndWeight($this->getUpdatedOrdersProducts());
 
             } elseif ($is_variant_change === true) {
                 $this->changeProductVariant($index, $original_uprid, $updated_uprid, $product_updates, $is_removal);
@@ -735,7 +735,7 @@ class EoOrderChanges
         }
 
         $eo = new EditOrders();
-        $this->updated->content_type = $eo->setContentType($this->updated->products);
+        $this->updated->content_type = $eo->setContentType($this->getUpdatedOrdersProducts());
     }
 
     // -----
@@ -833,6 +833,8 @@ class EoOrderChanges
 
         $this->updated->products[] = $cart_product;
         $this->productsChanges[$uprid] = 'added';
+
+        $this->updated->content_type = $eo->setContentType($this->getUpdatedOrdersProducts());
 
         $eo->createOrderFromCart();
         $eo->setProductBeingAdded(false);
