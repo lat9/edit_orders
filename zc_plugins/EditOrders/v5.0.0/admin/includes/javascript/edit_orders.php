@@ -189,13 +189,22 @@ if (ACCOUNT_STATE === 'true') {
     // field and display the form's "Save" button to enable recording
     // the update into EO's session-based changes.
     //
+    // Note: The management (i.e. which to hide/show) of the state dropdown vs.
+    // state value is done *only* on the address' initial display. Each address'
+    // modal is rendered only once per non-AJAX entry, so any changes made to
+    // an order's address during that order's edit remain in the admin's
+    // session for re-display.
+    //
     $(document).on('shown.bs.modal', '.address-modal', function() {
-        if ($(this).find('.state-select > option').length > 1) {
-            $(this).find('.state-input').parent().hide();
-            $(this).find('.state-select').prop('disabled', false).parent().show();
-        } else {
-            $(this).find('.state-input').parent().show();
-            $(this).find('.state-select').prop('disabled', true).parent().hide();
+        if ($(this).find('.addr-set').text() == 0) {
+            $(this).find('.addr-set').text(1);
+            if ($(this).find('.state-select').prop('disabled')) {
+                $(this).find('.state-input').parent().hide();
+                $(this).find('.state-select').prop('disabled', false).parent().show();
+            } else {
+                $(this).find('.state-input').parent().show();
+                $(this).find('.state-select').prop('disabled', true).parent().hide();
+            }
         }
 
         $(this).find('input:not(:hidden), select').on('change', function() {

@@ -196,6 +196,7 @@ if (ACCOUNT_STATE === 'true') {
     $zone_name = zen_get_zone_code((int)$address_fields['country_id'], (int)$address_fields['zone_id'], TEXT_UNKNOWN);
 ?>
                 <div class="form-group state-wrapper">
+                    <span class="addr-set d-none">0</span>
                     <?= zen_draw_label(ENTRY_CUSTOMER_STATE, $address_name . '_state', 'class="col-sm-3 control-label"') ?>
                     <div class="col-sm-9">
                         <div class="input-group">

@@ -1,7 +1,7 @@
 <?php
 // -----
-// A 'somewhat' modified shopping-cart class, used when editing an
-// order during admin processing.
+// This session-based class keeps track of the various changes made
+// to the order currently being edited.
 //
 // Last updated: EO v5.0.0 (new)
 //
@@ -139,24 +139,53 @@ class EoOrderChanges
         return $this->original->$address_type['labels'];
     }
 
+    public function getBuiltInAddressFields(): array
+    {
+        return [
+            'company' => ENTRY_CUSTOMER_COMPANY,
+            'name' => ENTRY_CUSTOMER_NAME,
+            'street_address' => ENTRY_CUSTOMER_ADDRESS,
+            'suburb' => ENTRY_CUSTOMER_SUBURB,
+            'city' => ENTRY_CUSTOMER_CITY,
+            'postcode' => ENTRY_CUSTOMER_POSTCODE,
+            'country' => ENTRY_CUSTOMER_COUNTRY,
+            'country_id' => ENTRY_CUSTOMER_COUNTRY,
+            'zone_id' => ENTRY_CUSTOMER_STATE,
+            'state' => ENTRY_CUSTOMER_STATE,
+            'telephone' => ENTRY_TELEPHONE_NUMBER,
+            'email_address' => ENTRY_EMAIL_ADDRESS,
+        ];
+    }
+
     public function updateAddressInfo(string $address_type, array $address_info, array $field_labels): int
     {
         if (!isset($this->updated->$address_type['changes'])) {
             $this->updated->$address_type['changes'] = [];
         }
 
-        foreach ($address_info as $key => $value) {
-            if (!isset($this->original->$address_type[$key])) {
+        $original_address = $this->original->$address_type;
+        foreach ($field_labels as $field => $label) {
+            if (!isset($address_info[$field])) {
                 continue;
             }
 
-            if (isset($this->original->$address_type[$key]) && $this->original->$address_type[$key] != $value) {
-                $this->updated->$address_type[$key] = $value;
-                $this->updated->$address_type['changes'][$key] = $field_labels[$key];
+            if (($original_address[$field] ?? '!@#$%') == $address_info[$field]) {
+                unset($this->updated->$address_type['changes'][$field]);
             } else {
-                unset($this->updated->$address_type['changes'][$key]);
+                $this->updated->$address_type[$field] = $address_info[$field];
+                $this->updated->$address_type['changes'][$field] = $label;
             }
         }
+
+        // -----
+        // If a zone-based country's state/province changes, both the zone_id and state
+        // fields are reported as changed; remove the state-related one so that only one
+        // 'State' change is displayed.
+        //
+        if (!empty($address_info['zone_id'])) {
+        }
+
+        $this->updated->$address_type['format_id'] = zen_get_address_format_id($this->updated->$address_type['country_id']);
 
         return count($this->updated->$address_type['changes']);
     }
@@ -232,7 +261,7 @@ class EoOrderChanges
             $changes[ENTRY_CUSTOMER] = $this->getAddressChangedValues('customer');
         }
 
-        if (!empty($updated_order->shipping['changes'])) {
+        if (!empty($updated_order->delivery['changes'])) {
             $changes[ENTRY_SHIPPING_ADDRESS] = $this->getAddressChangedValues('delivery');
         }
 
@@ -623,7 +652,7 @@ class EoOrderChanges
                 if (($_GET['method'] ?? '') !== 'addNewProduct' && $this->isProductAdded($original_uprid) === false) {
                     unset($this->productsChanges[$original_uprid]);
                 }
-                $_SESSION['cart']->calculateTotalAndWeight($this->updated->products);
+                $_SESSION['cart']->calculateTotalAndWeight($this->getUpdatedOrdersProducts());
 
             } elseif ($is_variant_change === true) {
                 $this->changeProductVariant($index, $original_uprid, $updated_uprid, $product_updates, $is_removal);
@@ -734,8 +763,7 @@ class EoOrderChanges
             $_SESSION['cart']->removeProduct($uprid, $this->updated->products[$index]);
         }
 
-        $eo = new EditOrders();
-        $this->updated->content_type = $eo->setContentType($this->updated->products);
+        $this->recordOrdersContentType();
     }
 
     // -----
@@ -834,6 +862,8 @@ class EoOrderChanges
         $this->updated->products[] = $cart_product;
         $this->productsChanges[$uprid] = 'added';
 
+        $this->recordOrdersContentType();
+
         $eo->createOrderFromCart();
         $eo->setProductBeingAdded(false);
 
@@ -844,6 +874,27 @@ class EoOrderChanges
 
             $this->updated->products[$index] = array_merge($this->updated->products[$index], $next_product);
             return $index;
+        }
+    }
+
+    protected function recordOrdersContentType(): void
+    {
+        global $eo;
+
+        $eo ??= new EditOrders($this->getOrderId());
+
+        $this->updated->content_type = $eo->setContentType($this->getUpdatedOrdersProducts());
+
+        // -----
+        // If the storefront-placed order was 'virtual', no shipping address is recorded for the
+        // order. In this case, EO will initialize the original shipping address to reflect the
+        // customer's address ... just in case the order is edited and its content-type changes
+        // from 'virtual' to 'physical' (or 'mixed').
+        //
+        if ($this->original->content_type === 'virtual' && $this->updated->content_type !== 'virtual' && empty($this->updated->delivery['country']['id'])) {
+            $delivery_address = $this->updated->customer;
+            unset($delivery_address['id'], $delivery_address['telephone'], $delivery_address['email_address']);
+            $this->updateAddressInfo('delivery', $delivery_address, $this->getBuiltInAddressFields());
         }
     }
 

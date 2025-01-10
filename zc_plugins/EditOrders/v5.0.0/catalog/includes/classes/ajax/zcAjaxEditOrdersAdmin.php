@@ -26,7 +26,7 @@ class zcAjaxEditOrdersAdmin
         $form_fields = $_POST;
 
         $non_builtin_fields = [];
-        $builtin_names2labels = $this->getBuiltInAddressFields();
+        $builtin_names2labels = $_SESSION['eoChanges']->getBuiltInAddressFields();
         $builtin_address_names = array_keys($builtin_names2labels);
         $error = false;
         $builtin_errors = [];
@@ -61,6 +61,12 @@ class zcAjaxEditOrdersAdmin
             //
             $non_builtin_fields[] = $posted_varname;
         }
+
+        // -----
+        // If the country associated with the submitted address has no zones,
+        // no 'zone_id' value is submitted with the form, so it'll be set to 0.
+        //
+        $address['zone_id'] ??= 0;
 
         // -----
         // If observers have added fields to the address, issue a notification to let
@@ -179,9 +185,9 @@ class zcAjaxEditOrdersAdmin
                 $updated_value = '<code>' . $next_change['updated'] . '</code>';
                 $label = '<strong>' . rtrim($next_change['label'], ':') . '</strong>';
                 $modal_html .=
-                    '<li class="list-group-item">' .
-                        sprintf(TEXT_VALUE_CHANGED, $label, $original_value, $updated_value) .
-                    '</li>';
+                            '<li class="list-group-item">' .
+                                sprintf(TEXT_VALUE_CHANGED, $label, $original_value, $updated_value) .
+                            '</li>';
             }
 
             $modal_html .=
@@ -313,23 +319,6 @@ class zcAjaxEditOrdersAdmin
                 '</div>' .
             '</div>';
         return $modal_html;
-    }
-
-    protected function getBuiltInAddressFields(): array
-    {
-        return [
-            'company' => ENTRY_CUSTOMER_COMPANY,
-            'name' => ENTRY_CUSTOMER_NAME,
-            'street_address' => ENTRY_CUSTOMER_ADDRESS,
-            'suburb' => ENTRY_CUSTOMER_SUBURB,
-            'city' => ENTRY_CUSTOMER_CITY,
-            'postcode' => ENTRY_CUSTOMER_POSTCODE,
-            'country' => ENTRY_CUSTOMER_COUNTRY,
-            'zone_id' => ENTRY_CUSTOMER_STATE,
-            'state' => ENTRY_CUSTOMER_STATE,
-            'telephone' => ENTRY_TELEPHONE_NUMBER,
-            'email_address' => ENTRY_EMAIL_ADDRESS,
-        ];
     }
 
     protected function postedJsonToArray(string $json): array
@@ -836,6 +825,7 @@ class zcAjaxEditOrdersAdmin
         $address_name = 'delivery';
         $address_fields = $order->delivery;
         $address_notifier = 'NOTIFY_EO_ADDL_SHIPPING_ADDRESS_ROWS';
+trigger_error(var_export($address_fields, true));
         require $this->pluginManagerInstalledVersionDirectory . 'admin/' . DIR_WS_MODULES . 'eo_common_address_format.php';
         $shipping_address_html = ob_get_clean();
 

@@ -1,7 +1,7 @@
 <?php
 // -----
 // Part of the Edit Orders plugin by lat9 (lat9@vinosdefrutastropicales.com).
-// Copyright (C) 2016-2024, Vinos de Frutas Tropicales
+// Copyright (C) 2016-2025, Vinos de Frutas Tropicales
 //
 // Last updated: EO v5.0.0
 //
@@ -115,8 +115,32 @@ class EditOrders
 
     public function addProductToCart(string $uprid, array $product): array
     {
+        global $db;
+
         $qty = $this->convertToIntOrFloat($product['qty']);
         $cart_product = $_SESSION['cart']->addProduct($uprid, $product['attributes'] ?? [], $qty);
+        $cart_product['is_virtual'] = ($cart_product['products_virtual'] === 1 || str_starts_with($cart_product['model'], 'GIFT'));
+        if (!empty($cart_product['attributes'])) {
+            foreach ($cart_product['attributes'] as $option_id => $value_id) {
+                $products_id = (int)$cart_product['id'];
+                $download_check = $db->Execute(
+                    "SELECT pa.products_attributes_id
+                       FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
+                            INNER JOIN " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
+                                ON pad.products_attributes_id = pa.products_attributes_id
+                      WHERE pa.products_id = $products_id
+                        AND pa.options_values_id = " . (int)$value_id . "
+                        AND pa.options_id = " . (int)$option_id . "
+                      LIMIT 1"
+                );
+
+                if (!$download_check->EOF) {
+                    $this->eoLog("\tProduct $products_id, attribute is download, $option_id/$value_id");
+                    $cart_product['is_virtual'] = true;
+                    break;
+                }
+            }
+        }
 
         $this->notify('NOTIFY_EO_ADD_PRODUCT_TO_CART',
             [
@@ -376,7 +400,11 @@ class EditOrders
             $next_product['products_quantity_order_max'] = (float)$next_product['products_quantity_order_max'];
             $next_product['products_quantity_mixed'] = (int)$next_product['products_quantity_mixed'];
             $next_product['products_mixed_discount_quantity'] = (int)$next_product['products_mixed_discount_quantity'];
-            $next_product['uprid'] = $uprids[$next_product['orders_products_id']];
+
+            $uprid = $uprids[$next_product['orders_products_id']];
+            $next_product['uprid'] = $uprid;
+
+            $next_product['is_virtual'] = ($next_product['products_virtual'] === 1 || str_starts_with($next_product['model'], 'GIFT'));
 
             if (!isset($next_product['attributes'])) {
                 continue;
@@ -409,6 +437,23 @@ class EditOrders
                     return false;
                 }
                 $next_product['attributes'][$i]['option_id'] = $option_id;
+
+                $download_check = $db->Execute(
+                    "SELECT opa.orders_products_id
+                       FROM " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . " opa
+                            INNER JOIN " . TABLE_ORDERS_PRODUCTS_DOWNLOAD . " opd
+                                ON opd.products_attributes_id = opa.orders_products_attributes_id
+                      WHERE opa.products_prid = '$uprid'
+                        AND opa.orders_id = " . (int)$this->orders_id . "
+                        AND opa.products_options_values_id = $value_id
+                        AND opa.products_options_id = $option_id
+                      LIMIT 1"
+                );
+
+                if (!$download_check->EOF) {
+                    $this->eoLog("\tProduct $products_id, attribute is download, $option_id/$value_id");
+                    $next_product['is_virtual'] = true;
+                }
             }
         }
 
@@ -444,35 +489,14 @@ class EditOrders
     // Return the order's 'content_type', checking whether each product is virtual, is
     // a gift-certificate or includes a downloadable product.
     //
+    // Note: The above determination has been previously handled by the EditOrders class.
+    //
     public function setContentType(array $products): string
     {
-        global $db;
-
         $virtual_products = 0;
         foreach ($products as $current_product) {
-            $products_id = (int)$current_product['orders_products_id'];
-            if ($current_product['products_virtual'] === 1 || str_starts_with($current_product['model'], 'GIFT')) {
+            if ($current_product['is_virtual'] === true) {
                 $virtual_products++;
-            } elseif (!empty($current_product['attributes'])) {
-                foreach ($current_product['attributes'] as $current_attribute) {
-                    $download_check = $db->Execute(
-                        "SELECT opa.orders_products_id
-                           FROM " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . " opa
-                                INNER JOIN " . TABLE_ORDERS_PRODUCTS_DOWNLOAD . " opd
-                                    ON opd.products_attributes_id = opa.orders_products_attributes_id
-                          WHERE opa.orders_products_id = $products_id
-                            AND opa.orders_id = " . (int)$this->orders_id . "
-                            AND opa.products_options_values_id = " . (int)$current_attribute['value_id'] . "
-                            AND opa.products_options_id = " . (int)$current_attribute['option_id'] . "
-                          LIMIT 1"
-                    );
-
-                    if (!$download_check->EOF) {
-                        $this->eoLog("\tProduct $products_id, attribute is download, " . $current_attribute['option_id'] . '/' . $current_attribute['value_id']);
-                        $virtual_products++;
-                        break;  //-Out of foreach attributes loop
-                    }
-                }
             }
         }
 
