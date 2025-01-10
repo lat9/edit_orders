@@ -1,8 +1,8 @@
 # edit_orders
 
-## Current Version: 4.7.1
+## Current Version: 5.0.0-beta1
 
-Edit Orders: Updates for continued operation on **Zen Cart v1.5.8 and v2.0.0**.
+Edit Orders: Updates for continued operation on **Zen Cart v2.1.0**
 
 - _**Download from Zen Cart**_: https://www.zen-cart.com/downloads.php?do=file&id=1513
 - _**Zen Cart Support Thread**_: https://www.zen-cart.com/showthread.php?200407

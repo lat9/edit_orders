@@ -36,14 +36,15 @@ ul li ul { padding-left: 0; }
 </head>
 
 <body>
-    <h1 id="title">Edit Orders for Zen Cart&reg;</h1>
-    <p>Version 5.0.0.  Copyright &copy; 2015-2024, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
+    <h1 id="title">Edit Orders<sup>5</sup> for Zen Cart&reg;</h1>
+    <p>Version 5.0.0.  Copyright &copy; 2015-2025, <a href="https://vinosdefrutastropicales.com" target="_blank">Vinos de Frutas Tropicales</a>.</p>
     <p>Current Support Thread on the Zen Cart forums: <a href="https://www.zen-cart.com/showthread.php?200407" target="_blank">https://www.zen-cart.com/showthread.php?200407</a></p>
     <p>Released under the General Public License (see the file named <code>LICENSE</code> in the plugin's distribution for full details). This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>
 
     <p><strong>Usage Notes:</strong></p>
     <ol>
-        <li>A working copy of Zen Cart (v2.0.0 or later) running on a PHP version &gt;= 8.0.2 is required by Edit Orders v5.0.0 and later.</li>
+        <li>This version of <em>Edit Orders</em> is delivered as a Zen Cart <var>encapsulated plugin</var>.</li>
+        <li>A working copy of Zen Cart (v2.1.0 or later) running on a PHP version &gt;= 8.0.2 is required by Edit Orders v5.0.0 and later.</li>
         <li>Some <code>order-total</code> modules are incompatibile with <em>EO</em>, especially if they require storefront conditions to perform their processing.</li>
         <li>Products added to an order via <em>EO</em> cannot include a &quot;file-upload&quot; option as that option-type is not currently supported.</li>
         <li>If your store's shipping-tax rate is different from the products' tax-rate, the setting <b><em>My Store :: Show Split Tax Lines</em></b> must be set to <code>true</code> to enable <em>EO</em> to correctly locate the shipping-tax rate on an order's initial edit.</li>
@@ -58,77 +59,42 @@ ul li ul { padding-left: 0; }
         <li>Modify product attributes</li>
         <li>Add, delete, and edit order totals</li>
     </ul>
-    <p>See <em>Edit Order</em>'s <a href="https://github.com/lat9/edit_orders/wiki" target="_blank">Wiki</a> for additional information.</p>
+    <p>See <em>Edit Orders</em>' <a href="https://github.com/lat9/edit_orders/wiki" target="_blank">Wiki</a> for additional information.</p>
 
     <h2>Installing, Upgrading or Uninstalling</h2>
     <p>This section identifies the processes you'll use to initially install <em>Edit Orders</em>, upgrade or uninstall <em>EO</em> entirely.</p>
     <p><i class="fas fa-exclamation-circle fa-5x red"></i><strong class="red">Notes:</strong></p>
     <ol>
-        <li>Before you install <em>EO</em> v5.0.0 (or later), you'll need a working copy of Zen Cart 2.0.0 or later (2.1.0 recommended), running on a PHP version &gt;= 8.0.2.</li>
-        <li>Edit Orders provides an additional admin-sanitization script so that its inputs don't get over-sanitized by the zc155+ sanitizer. This, unfortunately, affects stores that have both EO installed and a cron-job set up to run the <code>/admin/currency_cron.php</code> script; see <a href="https://github.com/zencart/zencart/issues/2849" target="_blank">this</a> Zen Cart issue for details.</li>
+        <li>Before you install <em>EO</em> v5.0.0 (or later), you'll need a working copy of Zen Cart 2.1.0 or later, running on a PHP version &gt;= 8.0.2. In addition, any previous installation of EO<sup>4</sup> must be removed.</li>
     </ol>
 
     <h3>Initial Installation or Upgrade</h3>
-    <p>Unzip the plugin's package file and then:</p>
-    <ol type="A">
-        <li>Rename the YOUR_ADMIN sub-directory to match your custom admin sub-directory's name.</li>
-        <li>Sign into your Zen Cart's admin panel.</li>
-        <li>Copy the plugin's files to your store's directory structure:<ol>
-            <li>/includes/languages/english/modules/order_total/lang.ot_onetime_discount.php</li>
-            <li>/includes/languages/english/modules/order_total/lang.ot_misc_cost.php</li>
-            <li>/includes/modules/order_total/ot_onetime_discount.php</li>
-            <li>/includes/modules/order_total/ot_misc_cost.php</li>
-            <li>/YOUR_ADMIN/edit_orders.php</li>
-            <li>/YOUR_ADMIN/includes/auto_loaders/config.eo.php</li>
-            <li>/YOUR_ADMIN/includes/auto_loaders/config.eo_cautions.php <span class="smaller">(Added in v4.3.5)</span></li>
-            <li>/YOUR_ADMIN/includes/classes/attributes.php</li>
-            <li>/YOUR_ADMIN/includes/classes/editOrders.php</li>
-            <li>/YOUR_ADMIN/includes/classes/EditOrdersOtShippingStub.php <span class="smaller">(Added in v4.5.4)</span></li>
-            <li>/YOUR_ADMIN/includes/classes/EditOrdersQueryCache.php</li>
-            <li>/YOUR_ADMIN/includes/classes/mock_cart.php</li>
-            <li>/YOUR_ADMIN/includes/classes/observers/EditOrdersAdminObserver.php <span class="smaller">(Added in v4.2.0)</span></li>
-            <li>/YOUR_ADMIN/includes/extra_datafiles/edit_orders_defines.php</li>
-            <li>/YOUR_ADMIN/includes/extra_datafiles/eo_sanitization.php</li>
-            <li>/YOUR_ADMIN/includes/functions/extra_functions/edit_orders_functions.php</li>
-            <li>/YOUR_ADMIN/includes/init_includes/edit_orders_cautions.php <span class="smaller">(Added in v4.3.5)</span></li>
-            <li>/YOUR_ADMIN/includes/init_includes/init_eo_config.php</li>
-            <li>/YOUR_ADMIN/includes/languages/english/lang.edit_orders.php</li>
-            <li>/YOUR_ADMIN/includes/languages/english/extra_definitions/lang.edit_orders.php</li>
-            <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_add_prdct_action_display.php <span class="smaller">(Added in v4.6.0)</span></li>
-            <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_add_prdct_action_processing.php <span class="smaller">(Added in v4.6.0)</span></li>
-            <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_common_address_format.php <span class="smaller">(Added in v4.6.0)</span></li>
-            <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_addresses_display.php <span class="smaller">(Added in v4.6.0)</span></li>
-            <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_display.php <span class="smaller">(Added in v4.6.0)</span></li>
-            <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_osh_table_display.php <span class="smaller">(Added in v4.6.0)</span></li>
-            <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_edit_action_ot_table_display.php <span class="smaller">(Added in v4.6.0)</span></li>
-            <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_update_order_action_processing.php <span class="smaller">(Added in v4.6.0)</span></li>
-            <li>/YOUR_ADMIN/includes/modules/edit_orders/eo_navigation.php <span class="smaller">(Added in v4.6.0)</span></li>
-        </ol></li>
-        <li>Click the &quot;Admin Home&quot; link in your Zen Cart's top admin menu.  This action will cause the plugin's installation script to run.</li>
-    </ol>
-
-    <h4><span class="red">Optional Core-File Overwrites</span></h4>
-    <p>If your site uses either <em>Coupons</em> (<code>ot_coupon</code>) or <em>Customer Group Pricing</em> (<code>ot_group_pricing</code>), you have a higher probability of orders with &quot;penny-off rounding&quot; issues.  That is, where an order's total value doesn't equal the sum of its individual order-total elements.</p>
-    <p>EO v4.7.0 (and later) provides <em>optional</em> updates to each of those order-total modules in an attempt to alleviate those situations. Please note:</p>
+    <p>Start by copying the <em>Edit Orders</em> distribution's <code>zc_plugins</code> directory (and all its files) to the root of your site's file-system. You should see a <code>zc_plugins/EditOrders</code> sub-directory when completed and &hellip;</p>
     <ol>
-        <li>The change-basis for each module is that currently present in the <code>master</code> branch of Zen Cart's <a href="https://github.com/zencart/zencart" target="_blank">GitHub repository</a>.</li>
-        <li>There are no change-related comments in either of these modules.</li>
-        <li>I have not tested these changes on a site that &quot;displays prices with tax&quot;.</li>
-    </ol>
-    <p>If you <em>choose</em> to install these overwrites, be sure to make a backup copy of the as-shipped Zen Cart version of each file.  <b>Do not</b> simply rename a file, as that will lead to PHP errors on both your storefront and admin's <em>Modules :: Order Totals</em> tool!  Choose a file extension that you'll remember, but don't use <code>.php~</code> or <code>.bak</code> as those can lead to issues with PCI compliance.</p>
-    <p>Once the base files have been renamed, copy the updated versions from EO's <code>/optional-core-overwrites</code> sub-directory to the like-named sub-directory of your site's file-system:</p>
-    <ol>
-        <li>/includes/languages/english/modules/order_total/lang.ot_group_pricing.php <span class="smaller">(Added in v4.7.1)</span></li>
-        <li>/includes/modules/order_total/ot_coupon.php</li>
-        <li>/includes/modules/order_total/ot_group_pricing.php</li>
+        <li>Login to your Zen Cart's admin</li>
+        <li>Navigate to <em>Modules :: Plugin Manager</em>.</li>
+        <li>Click on the row that displays a <code>Plugin Key</code> of <b>EditOrders</b> and click the associated <b>Install</b> button.</li>
+        <li>All finished! You'll now see new configuration settings and buttons/icons when viewing <em>Customers :: Orders</em> (either the listing or an individual order) via which you can edit that order.</li>
     </ol>
 
     <h3>Uninstalling</h3>
-    <p>First, delete the files that were copied to your Zen Cart's file-system (restoring any <span class="corefile">core-file overwrites</span>), then copy the contents of the plugin's <code>/docs/edit_orders/uninstall/uninstall_eo.sql</code> to your clipboard and paste into your admin's <em>Tools-&gt;Install SQL Patches</em> to complete the uninstall process.</p>
+    <p>To uninstall <em>Edit Orders</em> &hellip;</p>
+    <ol>
+        <li>Navigate to your Zen Cart admin's <em>Modules :: Plugin Manager</em>.</li>
+        <li>Click on the row that displays a <code>Plugin Key</code> of <b>EditOrders</b> and click the associated <b>Un-Install</b> button.</li>
+        <li>From the confirmation form, click that <b>Un-Install</b> button.<ul>
+            <li>That button-click will remove all the plugin's configuration settings and &quot;inactivate&quot; the plugin.</li>
+            <li>By default, the <em>Database Changes</em> (see below) are <b>not</b> removed.</li>
+        </ul></li>
+        <li>If you also want to remove the files associated with the plugin, click the <b>Clean Up</b> button.</li>
+    </ol>
 
     <h2>Change History</h3>
     <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
     <ul>
+        <li>v5.0.0-beta1, 2025-01-10 (lat9)<ul>
+            <li><b>CHANGE:</b> Totally restructured, now delivered as a Zen Cart encapsulated plugin.</li>
+        </ul></li>
         <li>v4.7.1, 2024-03-19 (lat9)<ul>
             <li>BUGFIX: Correct &quot;naggy&quot; status-history messages when an address has html-special-characters.</li>
             <li>BUGFIX: FA icons don't display on zc158a installation.</li>
