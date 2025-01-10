@@ -122,12 +122,13 @@ class EditOrders
         $cart_product['is_virtual'] = ($cart_product['products_virtual'] === 1 || str_starts_with($cart_product['model'], 'GIFT'));
         if (!empty($cart_product['attributes'])) {
             foreach ($cart_product['attributes'] as $option_id => $value_id) {
+                $products_id = (int)$cart_product['id'];
                 $download_check = $db->Execute(
                     "SELECT pa.products_attributes_id
                        FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
                             INNER JOIN " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
                                 ON pad.products_attributes_id = pa.products_attributes_id
-                      WHERE pa.products_id = " . (int)$cart_product['id'] . "
+                      WHERE pa.products_id = $products_id
                         AND pa.options_values_id = " . (int)$value_id . "
                         AND pa.options_id = " . (int)$option_id . "
                       LIMIT 1"
@@ -234,18 +235,6 @@ class EditOrders
                     ];
                 }
             }
-        }
-
-        // -----
-        // If the storefront-placed order was 'virtual', no shipping address is recorded for the
-        // order. In this case, EO will initialize the original shipping address to reflect the
-        // customer's address ... just in case the order is edited and its content-type changes
-        // from 'virtual' to 'physical' (or 'mixed').
-        //
-        if (empty($this->order->delivery['country']['id'])) {
-            $delivery_address = $this->order->customer;
-            unset($delivery_address['id'], $delivery_address['telephone'], $delivery_address['email_address']);
-            $this->order->delivery = $delivery_address;
         }
 
         // -----
