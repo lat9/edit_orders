@@ -825,7 +825,7 @@ class zcAjaxEditOrdersAdmin
         $address_name = 'delivery';
         $address_fields = $order->delivery;
         $address_notifier = 'NOTIFY_EO_ADDL_SHIPPING_ADDRESS_ROWS';
-trigger_error(var_export($address_fields, true));
+
         require $this->pluginManagerInstalledVersionDirectory . 'admin/' . DIR_WS_MODULES . 'eo_common_address_format.php';
         $shipping_address_html = ob_get_clean();
 
