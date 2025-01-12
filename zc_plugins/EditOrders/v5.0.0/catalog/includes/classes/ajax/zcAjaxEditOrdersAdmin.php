@@ -688,10 +688,10 @@ class zcAjaxEditOrdersAdmin
         if (!is_numeric($_POST['qty']) || $_POST['qty'] < 0) {
             $messages['qty'] = ERROR_QTY_INVALID;
         } elseif (STOCK_ALLOW_CHECKOUT === 'false') {
-            $original_product = $_SESSION['eoChanges']->getOriginalProductByUprid($_POST['uprid']);
+            $original_product = $_SESSION['eoChanges']->getOriginalProductByUprid($_POST['uprid'] ?? $_POST['prid']);
             $original_qty = $original_product['qty'] ?? 0;
             $qty_required = $eo->convertToIntOrFloat($_POST['qty']) - $original_qty;
-            $available_qty = $eo->getProductsAvailableStock($_POST['uprid'], $_POST['id'] ?? []);
+            $available_qty = $eo->getProductsAvailableStock($_POST['uprid'] ?? $_POST['prid'], $_POST['id'] ?? []);
             if ($qty_required > $available_qty) {
                 $messages['qty'] = sprintf(ERROR_QTY_INSUFFICIENT, (string)$available_qty);
             }
