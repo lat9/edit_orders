@@ -368,6 +368,7 @@ class zcAjaxEditOrdersAdmin
     {
         $parameters = [
             'prid' => 0,
+            'initial_display' => true,
         ];
         return $this->getModalContent('eo_prod_add_modal.php', $parameters);
     }
@@ -443,32 +444,32 @@ class zcAjaxEditOrdersAdmin
         $choose_form = $_POST['choose_form'];
         $price_entry_disabled = 'disabled';
         $modal_variables = ['prid', 'price_entry_disabled', 'choose_form'];
-        if ($prid !== 0) {
+        if ($prid > 0) {
             $attributes = $this->getNewProductDefaultAttributes($prid);
             if (count($attributes) !== 0) {
                 $uprid = zen_get_uprid($prid, $attributes);
                 $modal_variables += ['uprid', 'attributes'];
             }
-        }
 
-        $product = [
-            'qty' => '1',
-            'attributes' => $attributes ?? [],
-        ];
-        $eo->setProductBeingAdded(true);
-        $cart_product = $eo->addProductToCart($uprid ?? $prid, $product);
+            $product = [
+                'qty' => '1',
+                'attributes' => $attributes,
+            ];
+            $eo->setProductBeingAdded(true);
+            $cart_product = $eo->addProductToCart($uprid ?? $prid, $product);
 
-        $eo->createOrderFromCart();
-        $eo->setProductBeingAdded(false);
+            $eo->createOrderFromCart();
+            $eo->setProductBeingAdded(false);
 
-        foreach ($order->products as $next_product) {
-            if ($next_product['id'] != ($uprid ?? $prid)) {
-                continue;
+            foreach ($order->products as $next_product) {
+                if ($next_product['id'] != ($uprid ?? $prid)) {
+                    continue;
+                }
+                $new_product = $next_product;
+                $new_product['uprid'] = $next_product['id'];
+                $modal_variables[] = 'new_product';
+                break;
             }
-            $new_product = $next_product;
-            $new_product['uprid'] = $next_product['id'];
-            $modal_variables[] = 'new_product';
-            break;
         }
 
         $parameters = compact($modal_variables);

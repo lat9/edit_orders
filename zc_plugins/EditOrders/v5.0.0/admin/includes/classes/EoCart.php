@@ -173,8 +173,11 @@ class EoCart extends \shoppingCart
         ];
 
         $cart_products = parent::get_products(false);
-
         $this->contents = $saved_contents;
+        if (empty($cart_products)) {
+            return [];
+        }
+
         $this->contents[$uprid] = $uprid_contents;
 
         $new_product = $cart_products[0];
@@ -237,7 +240,11 @@ class EoCart extends \shoppingCart
      */
     protected function removeUprid($uprid)
     {
-        $this->isUnsupportedMethod();
+        global $eo;
+
+        if (!isset($eo) || $eo->productAddInProcess() === false) {
+            $this->isUnsupportedMethod();
+        }
     }
 
     /**
@@ -365,7 +372,7 @@ class EoCart extends \shoppingCart
     {
         global $eo;
 
-        if (isset($eo) && $eo->productAddInProcess() === true || ($_POST['payment_calc_method'] ?? '') !== 'Manual') {
+        if ((isset($eo) && $eo->productAddInProcess() === true) || ($_POST['payment_calc_method'] ?? '') !== 'Manual') {
             return parent::get_products();
         }
 

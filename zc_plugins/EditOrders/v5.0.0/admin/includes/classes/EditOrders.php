@@ -119,6 +119,10 @@ class EditOrders
 
         $qty = $this->convertToIntOrFloat($product['qty']);
         $cart_product = $_SESSION['cart']->addProduct($uprid, $product['attributes'] ?? [], $qty);
+        if (empty($cart_product)) {
+            return [];
+        }
+
         $cart_product['is_virtual'] = ($cart_product['products_virtual'] === 1 || str_starts_with($cart_product['model'], 'GIFT'));
         if (!empty($cart_product['attributes'])) {
             foreach ($cart_product['attributes'] as $option_id => $value_id) {

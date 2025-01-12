@@ -2,7 +2,7 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2024 The zen-cart developers
+// Copyright (c) 2024-2025 The zen-cart developers
 //
 // Last modified v5.0.0
 //
@@ -24,7 +24,14 @@
                     <div class="form-group mt-3">
                         <label class="control-label col-sm-2" for="prod-id-prid"><?= rtrim(TEXT_PRODUCTS_ID, ' :') ?>:</label>
                         <div class="col-sm-8">
-                            <?= zen_draw_input_field('prid', ($prid === 0) ? '' : $prid, 'id="prod-id-prid" class="form-control"') ?>
+                            <?= zen_draw_input_field('prid', ($prid > 0) ? $prid : '', 'id="prod-id-prid" class="form-control"') ?>
+<?php
+if (($prid <= 0 && !isset($initial_display)) || ($prid > 0 && !isset($new_product))) {
+?>
+                            <span class="text-danger mt-3"><?= ERROR_NO_MATCHING_PRODUCT ?></span>
+<?php
+}
+?>
                         </div>
                         <div class="col-sm-2 text-center">
                             <button class="btn btn-primary prod-add"><?= BUTTON_CHOOSE ?></button>
