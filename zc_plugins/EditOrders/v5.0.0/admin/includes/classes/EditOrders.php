@@ -710,6 +710,15 @@ class EditOrders
             return false;
         }
 
+        // -----
+        // If the site displays prices inclusive of tax, the order's shipping-cost currently
+        // includes that tax.  Back the tax out of that cost for recording in the order
+        // so that the tax doesn't improperly get re-added if/when the order's recalculated.
+        //
+        if (DISPLAY_PRICE_WITH_TAX === 'true') {
+            $shipping_cost = round((float)($shipping_cost / (1 + $shipping_tax_rate / 100)), 6);
+        }
+
         $this->order->info['shipping_tax_rate'] = $shipping_tax_rate;
         $this->order->info['shipping_cost'] = $shipping_cost;
         $this->order->info['shipping_tax'] = zen_calculate_tax($shipping_cost, $shipping_tax_rate);
