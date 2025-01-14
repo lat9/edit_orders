@@ -25,6 +25,7 @@ class EditOrders
 
     protected \order $order;
     protected \order_total $orderTotals;
+    protected \shipping $shippingModules;
 
     public function __construct(int $orders_id = 0)
     {
@@ -683,6 +684,9 @@ class EditOrders
         $shipping_cost = $this->getOrderTotalValue('ot_shipping');
         $this->orderHasShipping = ($shipping_cost !== null);
         if ($shipping_cost === null) {
+            $this->order->info['shipping_cost'] = 0;
+            $this->order->info['shipping_tax_rate'] = 0;
+            $this->order->info['shipping_tax'] = 0;
             return true;
         }
 
@@ -690,8 +694,9 @@ class EditOrders
         // The storefront free-shipping determination doesn't set the order's shipping_tax_rate; if that's
         // the case, set the tax-rate to 0.
         //
-        if ($this->order->info['shipping_module_code'] === 'free') {
+        if ($this->order->info['shipping_module_code'] === 'free' || $this->getOrderTotalValue('ot_tax') == 0) {
             $this->order->info['shipping_tax_rate'] = 0;
+            $this->order->info['shipping_tax'] = 0;
         }
 
         // -----
@@ -710,20 +715,18 @@ class EditOrders
             return false;
         }
 
+        $this->order->info['shipping_tax_rate'] = $shipping_tax_rate;
+        $this->order->info['shipping_cost'] = $shipping_cost;
+        $this->order->info['shipping_tax_description'] = $shipping_tax_description;
+
         // -----
         // If the site displays prices inclusive of tax, the order's shipping-cost currently
-        // includes that tax.  Back the tax out of that cost for recording in the order
-        // so that the tax doesn't improperly get re-added if/when the order's recalculated.
+        // includes that tax. Back the tax out of that cost for the shipping-tax recalculation.
         //
         if (DISPLAY_PRICE_WITH_TAX === 'true') {
             $shipping_cost = round((float)($shipping_cost / (1 + $shipping_tax_rate / 100)), 6);
         }
-
-        $this->order->info['shipping_tax_rate'] = $shipping_tax_rate;
-        $this->order->info['shipping_cost'] = $shipping_cost;
         $this->order->info['shipping_tax'] = zen_calculate_tax($shipping_cost, $shipping_tax_rate);
-        $this->order->info['shipping_tax_description'] = $shipping_tax_description;
-
         $this->addCostToTaxGroup($shipping_tax_description, $shipping_cost);
 
         return true;
@@ -794,8 +797,8 @@ class EditOrders
 
         $use_strip_tags = (defined('EO_SHIPPING_DROPDOWN_STRIP_TAGS') && EO_SHIPPING_DROPDOWN_STRIP_TAGS === 'true');
         $module_selections = [];
-        $shipping_modules = new \shipping();
-        foreach ($shipping_modules->modules as $module) {
+        $this->shippingModules ??= new \shipping();
+        foreach ($this->shippingModules->modules as $module) {
             $class = pathinfo($module, PATHINFO_FILENAME);
             if ($class === $order_shipping_module) {
                 $shipping_unknown = [];
