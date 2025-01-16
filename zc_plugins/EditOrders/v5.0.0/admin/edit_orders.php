@@ -43,6 +43,13 @@ require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
 $order = new order($oID);
 
 // -----
+// Initialize session-based customer variables expected by the storefront
+// order-creation processing.
+//
+$_SESSION['customer_id'] = $order->info['customer_id'];
+$_SESSION['customers_ip_address'] = '.';
+
+// -----
 // Check, first, to see that the submitted order was found. If not, silently redirect
 // back to the orders' listing.
 //
@@ -51,28 +58,12 @@ if (empty($order->info)) {
 }
 
 // -----
-// Now, make sure that the 'environment' in which EO is running supports
-// its order-update calculations. If any critical issues are found, the
-// method will redirect back to the base orders' processing.
+// Initialize the overall EO helper class for the current order.
 //
 $eo = new EditOrders($oID);
 
 $action = $_GET['action'] ?? 'edit';
 $eo->eoLog("Edit Orders entered action ($action). Enabled Order Totals: " . MODULE_ORDER_TOTAL_INSTALLED, 'with-date');
-
-$eo->checkEnvironment();
-
-// -----
-// Make the modifications needed to coerce the recorded/queried order into
-// its storefront 'cart' format. The method returns an indication as to whether/not
-// it could successfully 'divine' that information.
-//
-// When the method returns false, its processing has set any messages to be displayed
-// to the admin on the subsequent redirect back to the order's listing.
-//
-if ($eo->queryOrder($order) === false) {
-    zen_redirect(zen_href_link(FILENAME_ORDERS, zen_get_all_get_params()));
-}
 
 // -----
 // Gather the two arrays for the order's status display.
@@ -210,9 +201,30 @@ switch ($action) {
         zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
         break;
 
+    case 'edit':
     default:
         $action = 'edit';
         break; 
+}
+
+$eo->checkEnvironment();
+
+// -----
+// Instantiate EO's cart-override into the session for use by storefront
+// shipping- and order-total-module handling.
+//
+$_SESSION['cart'] = new EoCart($order);
+
+// -----
+// Make the modifications needed to coerce the recorded/queried order into
+// its storefront 'cart' format. The method returns an indication as to whether/not
+// it could successfully 'divine' that information.
+//
+// When the method returns false, its processing has set any messages to be displayed
+// to the admin on the subsequent redirect back to the order's listing.
+//
+if ($eo->queryOrder($order) === false) {
+    zen_redirect(zen_href_link(FILENAME_ORDERS, zen_get_all_get_params()));
 }
 
 // -----
@@ -233,13 +245,6 @@ if (empty($order->customer['country_id']) || empty($order->billing['country_id']
     $messageStack->add_session(sprintf(ERROR_ADDRESS_COUNTRY_NOT_FOUND, $oID), 'error');
     zen_redirect(zen_href_link(FILENAME_ORDERS, zen_get_all_get_params()));
 }
-
-// -----
-// Initialize session-based customer variables expected by the storefront
-// order-creation processing.
-//
-$_SESSION['customer_id'] = $order->info['customer_id'];
-$_SESSION['customers_ip_address'] = '.';
 
 // -----
 // Initialize the session-based values for shipping and payment used in the
@@ -285,10 +290,9 @@ foreach ($order->totals as $next_total) {
 }
 
 // -----
-// Instantiate EO's cart-override into the session for use by storefront
-// shipping- and order-total-module handling.
+// Initialize EO's pseudo-cart to contain the products in this to-be-edited
+// order.
 //
-$_SESSION['cart'] = new EoCart();
 $_SESSION['cart']->loadFromOrder($order);
 ?>
 <!doctype html>

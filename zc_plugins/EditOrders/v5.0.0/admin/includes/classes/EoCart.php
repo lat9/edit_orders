@@ -21,9 +21,26 @@ class EoCart extends \shoppingCart
 {
     const UNSUPPORTED_LOG_MESSAGE = 'Call to unsupported shopping-cart method during Edit Orders processing.';
 
-    public function __construct()
+    protected bool $isInitialized = false;
+    protected int $numberOfProducts;
+
+    // -----
+    // The cart/order/changes classes are co-dependent. When the order is initially
+    // constructed, the shipping modules (which are loaded to get their respective tax
+    // rates) call zen_get_shipping_enabled which, in turn, requests the number of free
+    // shipping items, the overall product count and the order's weight to determine
+    // whether the order's shipping (by default) is free.
+    //
+    // On the cart's initial construction, save pertinent information which is used until
+    // the subsequent call to the loadFromOrder method (see below). Note that the order-object
+    // input is unmodified from the order class' query.
+    //
+    public function __construct(\order $order)
     {
         parent::__construct();
+
+        $this->weight = $order->info['order_weight'];
+        $this->numberOfProducts = count($order->products);
     }
 
     // -----
@@ -35,6 +52,8 @@ class EoCart extends \shoppingCart
     //
     public function loadFromOrder(\order $order): void
     {
+        $this->isInitialized = true;
+
         $this->content_type = $order->content_type;
         $option_types = [];
         foreach ($order->products as $i => $product) {
@@ -260,6 +279,9 @@ class EoCart extends \shoppingCart
      */
     public function count_contents()
     {
+        if ($this->isInitialized === false) {
+            return $this->numberOfProducts;
+        }
         return parent::count_contents();
     }
 
