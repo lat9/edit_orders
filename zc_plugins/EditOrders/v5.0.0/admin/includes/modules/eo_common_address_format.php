@@ -45,12 +45,16 @@ $max_email_length = 'maxlength="' . zen_field_length(TABLE_ORDERS, 'customers_em
         </div>
         <div class="panel-body">
 <?php
+$delivery_address_displayed = true;
 if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 'storepickup' || $order->content_type === 'virtual')) {
+    $delivery_address_displayed = false;
     $no_shipping_text = ($order->content_type === 'virtual') ? TEXT_VIRTUAL_NO_SHIP_ADDR : TEXT_STOREPICKUP_NO_SHIP_ADDR;
 ?>
             <p class="text-center"><?= $no_shipping_text ?></p>
 <?php
 } else {
+    $address_fields_for_format = $address_fields;
+    unset($address_fields_for_format['country_id']);
 ?>
             <div class="col-md-6">
                 <div class="btn-group btn-group-sm mt-2">
@@ -66,7 +70,7 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
             <div class="col-md-6">
                 <address class="mb-0">
                     <div id="address-<?= $address_name ?>" class="eo-address border p-2">
-                        <?= zen_address_format($address_fields['format_id'], $address_fields, 1, '', '<br>') ?>
+                        <?= zen_address_format($address_fields['format_id'], $address_fields_for_format, true, '', '<br>') ?>
                         <div class="mt-2">
                             <?= $address_fields['telephone'] ?? '&nbsp;' ?>
                             <br>
@@ -81,7 +85,11 @@ if ($address_name === 'delivery' && ($order->info['shipping_module_code'] === 's
         </div>
     </div>
 </div>
-
+<?php
+if ($delivery_address_displayed === false) {
+    return;
+}
+?>
 <div id="<?= $modal_id ?>" class="modal fade address-modal" role="dialog">
     <div class="modal-dialog"><form class="form-horizontal">
         <?= zen_draw_hidden_field($address_name . '_changed', '0', 'class="eo-changed"') ?>
@@ -193,7 +201,7 @@ $country_name = zen_get_country_name((int)$address_fields['country']['id']);
                 </div>
 <?php
 if (ACCOUNT_STATE === 'true') {
-    $zone_name = zen_get_zone_code((int)$address_fields['country_id'], (int)$address_fields['zone_id'], TEXT_UNKNOWN);
+    $zone_name = zen_get_zone_name((int)$address_fields['country_id'], (int)$address_fields['zone_id'], TEXT_UNKNOWN);
 ?>
                 <div class="form-group state-wrapper">
                     <span class="addr-set d-none">0</span>
