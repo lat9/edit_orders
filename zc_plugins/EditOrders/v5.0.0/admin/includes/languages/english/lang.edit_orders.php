@@ -29,6 +29,7 @@ $define = [
     'TEXT_UPDATED_ORDER' => 'Updated Order',
     'TEXT_VALUE_CHANGED' => '%1$s was changed from %2$s to %3$s',   //- Used by the AJAX processing and for OSH record
     'TEXT_VALUE_UNKNOWN' => 'Unknown [%s]',  //- %s is filled in with the unknown 'entity'
+    'TEXT_SHIPPING_TAX_RATE_INITIALIZED' => 'The shipping tax-rate for the order was initialized to %s.',
 
 // Table Headings
     'TABLE_HEADING_STATUS_HISTORY' => 'Order Status History &amp; Comments',

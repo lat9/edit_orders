@@ -140,7 +140,7 @@ class EditOrders
                 );
 
                 if (!$download_check->EOF) {
-                    $this->eoLog("\tProduct $products_id, attribute is download, $option_id/$value_id");
+                    $this->eoLog("\nAdded product $products_id, attribute is download, $option_id/$value_id");
                     $cart_product['is_virtual'] = true;
                     break;
                 }
@@ -282,7 +282,7 @@ class EditOrders
 
         $order = clone $this->order;
         unset($order->statuses);
-        $this->eoLog("\tqueryOrder, on exit\n" . json_encode($order, JSON_PRETTY_PRINT));
+        $this->eoLog("\nqueryOrder, on exit\n" . json_encode($order, JSON_PRETTY_PRINT));
 
         return $tax_groups_created;
     }
@@ -456,7 +456,7 @@ class EditOrders
                 );
 
                 if (!$download_check->EOF) {
-                    $this->eoLog("\tProduct $products_id, attribute is download, $option_id/$value_id");
+                    $this->eoLog("\naddOrConvertOrderFields: Product $products_id, attribute is download, $option_id/$value_id");
                     $next_product['is_virtual'] = true;
                 }
             }
@@ -506,7 +506,7 @@ class EditOrders
         }
 
         $product_count = count($products);
-        $this->eoLog("\tsetContentType: Order contains $product_count unique products, $virtual_products of those are virtual");
+        $this->eoLog("\nEditOrders::setContentType: Order contains $product_count unique products, $virtual_products of those are virtual");
 
         if ($virtual_products === 0) {
             $content_type = 'physical';
@@ -689,34 +689,18 @@ class EditOrders
             $this->order->info['shipping_tax'] = 0;
             return true;
         }
+        $this->order->info['shipping_cost'] = $shipping_cost;
 
-        // -----
-        // The storefront free-shipping determination doesn't set the order's shipping_tax_rate; if that's
-        // the case, set the tax-rate to 0.
-        //
-        if ($this->order->info['shipping_module_code'] === 'free' || $this->getOrderTotalValue('ot_tax') == 0) {
-            $this->order->info['shipping_tax_rate'] = 0;
-            $this->order->info['shipping_tax'] = 0;
-        }
+        [$this->order->info['shipping_tax'], $shipping_tax_rate] = $this->getOrderShippingTax($this->order);
 
-        // -----
-        // For the order to be reconstructed, its shipping_tax_rate **must** have been recorded
-        // when the order was created.
-        //
-        if ($this->order->info['shipping_tax_rate'] === null) {
-            $messageStack->add_session(sprintf(ERROR_SHIPPING_TAX_RATE_MISSING, $this->orders_id), 'error');
-            return false;
-        }
-
-        $shipping_tax_rate = $this->convertToIntOrFloat($this->order->info['shipping_tax_rate']);
+        $shipping_tax_rate = $this->convertToIntOrFloat((string)$shipping_tax_rate);
         $shipping_tax_description = $this->findTaxGroupNameFromValue($shipping_tax_rate);
         if ($shipping_tax_description === '') {
-            $messageStack->add_session(sprintf(ERROR_NO_SHIPPING_TAX_DESCRIPTION, $this->orders_id, $this->order->info['shipping_tax_rate']), 'error');
+            $messageStack->add_session(sprintf(ERROR_NO_SHIPPING_TAX_DESCRIPTION, $this->orders_id, $shipping_tax_rate), 'error');
             return false;
         }
 
         $this->order->info['shipping_tax_rate'] = $shipping_tax_rate;
-        $this->order->info['shipping_cost'] = $shipping_cost;
         $this->order->info['shipping_tax_description'] = $shipping_tax_description;
 
         // -----
@@ -730,6 +714,82 @@ class EditOrders
         $this->addCostToTaxGroup($shipping_tax_description, $shipping_cost);
 
         return true;
+    }
+
+    // -----
+    // Determine the tax-rate and associated tax for the order's shipping, giving a watching
+    // observer the opportunity to override the calculations.
+    //
+    // Returns a simple array containing the shipping-tax and shipping-tax-rate.
+    //
+    protected function getOrderShippingTax(\order|\stdClass $order): array
+    {
+        $shipping_tax = false;
+        $shipping_tax_rate = false;
+        $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX', $order, $shipping_tax, $shipping_tax_rate);
+        if ($shipping_tax !== false && $shipping_tax_rate !== false) {
+            $this->eoLog("calculateOrderShippingTax, override returning $shipping_tax, rate = $shipping_tax_rate.");
+            return [$shipping_tax, $shipping_tax_rate];
+        }
+
+        // -----
+        // If the order's shipping tax-rate was previously recorded, that tax rate is used.
+        //
+        if (isset($order->info['shipping_tax_rate'])) {
+            $shipping_tax_rate = $order->info['shipping_tax_rate'];
+            $shipping_tax = zen_calculate_tax((float)$order->info['shipping_cost'], (float)$shipping_tax_rate);
+
+            $this->eoLog("calculateOrderShippingTax, using existing tax-rate, returning $shipping_tax, rate = $shipping_tax_rate.");
+            return [$shipping_tax, $shipping_tax_rate];
+        }
+
+        // -----
+        // Otherwise, this order was created prior to the order class' recording of
+        // the shipping-tax-rate in the database. It'll be initialized and recorded at
+        // this time, with a hidden order-status comment indicating that change.
+        //
+        $this->shippingModules ??= new \shipping();
+
+        $shipping_tax_rate = 0;
+        $shipping_module = $order->info['shipping_module_code'];
+        if (!empty($GLOBALS[$shipping_module]) && is_object($GLOBALS[$shipping_module]) && !empty($GLOBALS[$shipping_module]->tax_class)) {
+            $tax_location = $this->getTaxLocations($order, ($order->content_type === 'virtual'));
+            $shipping_tax_rate = zen_get_tax_rate($GLOBALS[$shipping_module]->tax_class, $tax_location['country_id'], $tax_location['zone_id']);
+        }
+
+        global $db;
+        $order_id = (int)$order->info['order_id'];
+        $db->Execute(
+            "UPDATE " . TABLE_ORDERS . "
+                SET shipping_tax_rate = $shipping_tax_rate
+              WHERE orders_id = $order_id
+              LIMIT 1"
+        );
+
+        $tax_rate_message = sprintf(TEXT_SHIPPING_TAX_RATE_INITIALIZED, (string)$shipping_tax_rate);
+        zen_update_orders_history($order_id, $tax_rate_message);
+        zen_redirect(zen_href_link(FILENAME_EDIT_ORDERS, zen_get_all_get_params(['action']) . 'action=edit'));
+    }
+    public function getTaxLocations(\order|\stdClass $order, bool $is_virtual_order): array
+    {
+        if (STORE_PRODUCT_TAX_BASIS === 'Store') {
+            $customer_country_id = STORE_COUNTRY;
+            $customer_zone_id = STORE_ZONE;
+        } elseif (STORE_PRODUCT_TAX_BASIS === 'Billing' || $is_virtual_order === true) {
+            $customer_country_id = $order->billing['country']['id'];
+            $customer_zone_id = $order->billing['zone_id'];
+        } else {
+            $customer_country_id = $order->delivery['country']['id'];
+            $customer_zone_id = $order->delivery['zone_id'];
+        }
+
+        $_SESSION['customer_country_id'] = $customer_country_id;
+        $_SESSION['customer_zone_id'] = $customer_zone_id;
+
+        return [
+            'zone_id' => $customer_zone_id,
+            'country_id' => $customer_country_id,
+        ];
     }
     protected function findTaxGroupNameFromValue(int|float $value): string
     {
@@ -854,7 +914,7 @@ class EditOrders
         $shipping_tax_rate = false;
         $this->notify('NOTIFY_EO_GET_ORDER_SHIPPING_TAX_RATE', $order, $shipping_tax_rate);
         if ($shipping_tax_rate !== false) {
-            $this->eoLog("\teoGetShippingTaxRate, override returning rate = $shipping_tax_rate.", 'tax');
+            $this->eoLog("\nEditOrders::eoGetShippingTaxRate, override returning rate = $shipping_tax_rate.", 'tax');
             return (empty($shipping_tax_rate)) ? 0 : $shipping_tax_rate;
         }
 

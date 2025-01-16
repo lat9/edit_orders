@@ -139,7 +139,7 @@ class EditOrdersAdminObserver extends base
     protected function notify_ot_shipping_tax_calcs(&$class, string $e, $x, bool &$external_shipping_tax_handler, &$shipping_tax, string &$shipping_tax_description): void
     {
         $this->detach($this, ['NOTIFY_OT_SHIPPING_TAX_CALCS']);
-        if ($external_shipping_tax_handler !== false) {
+        if ($external_shipping_tax_handler !== false || !isset($_SESSION['eoChanges'])) {
             return;
         }
 
@@ -166,7 +166,7 @@ class EditOrdersAdminObserver extends base
     }
     protected function notify_zen_in_guest_checkout(&$class, string $e, $x, bool &$in_guest_checkout)
     {
-        $in_guest_checkout = $_SESSION['eoChanges']->isGuestCheckout();
+        $in_guest_checkout = (isset($_SESSION['eoChanges'])) ? $_SESSION['eoChanges']->isGuestCheckout() : false;
     }
 
     // -----
@@ -301,27 +301,11 @@ class EditOrdersAdminObserver extends base
             // $p2 ... (r/w) A reference to the $tax_address array to be returned (containing a 'country_id' and 'zone_id').
             //
             case 'ZEN_GET_TAX_LOCATIONS':
-                global $order, $customer_country_id, $customer_zone_id;
+                global $order, $eo;
 
+                $eo ??= new EditOrders($_SESSION['eoChanges']->getOrderId());
                 $is_virtual_order = ($_SESSION['eoChanges']->getUpdatedOrder()->content_type === 'virtual');
-                if (STORE_PRODUCT_TAX_BASIS === 'Store') {
-                    $customer_country_id = STORE_COUNTRY;
-                    $customer_zone_id = STORE_ZONE;
-                } elseif (STORE_PRODUCT_TAX_BASIS === 'Billing' || $is_virtual_order === true) {
-                    $customer_country_id = $order->billing['country']['id'];
-                    $customer_zone_id = $order->billing['zone_id'];
-                } else {
-                    $customer_country_id = $order->delivery['country']['id'];
-                    $customer_zone_id = $order->delivery['zone_id'];
-                }
-
-                $_SESSION['customer_country_id'] = $customer_country_id;
-                $_SESSION['customer_zone_id'] = $customer_zone_id;
-
-                $p2 = [
-                    'zone_id' => $customer_zone_id,
-                    'country_id' => $customer_country_id,
-                ];
+                $p2 = $eo->getTaxLocations($order, $is_virtual_product);
                 break;
 
             // -----
