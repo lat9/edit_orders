@@ -2,7 +2,7 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2003-2024 The zen-cart developers
+// Copyright (c) 2003-2025 The zen-cart developers
 //
 // Last modified v5.0.0
 //
@@ -141,8 +141,8 @@ foreach ($order->totals as $next_total) {
             if (DISPLAY_PRICE_WITH_TAX === 'true') {
                 $shipping_net = $next_total['value'] / (1 + ($shipping_tax_rate / 100));
 ?>
-    <td>
-        <?= (string)$shipping_net ?>
+    <td class="text-right">
+        <?= $currencies->format($shipping_net, true, $order->info['currency'], $order->info['currency_value']) ?>
     </td>
 <?php
             }

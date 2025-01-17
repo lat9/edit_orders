@@ -621,7 +621,7 @@ class zcAjaxEditOrdersAdmin
                 $_SESSION['shipping'] = [
                     'id' => $_POST['module'] . '_',
                     'title' => $_POST['title'],
-                    'cost' => $_POST['value'],
+                    'cost' => $_SESSION['eoChanges']->getUpdatedOrder()->info['shipping_cost'],
                 ];
                 break;
 
@@ -756,7 +756,7 @@ class zcAjaxEditOrdersAdmin
             $_SESSION['eoChanges']->recordCreatedProductChanges($order->products[$index]['uprid'], $order->products[$index]);
         }
 
-        $eo->eoLog("processOrderUpdate, products:\n" . $eo->eoFormatArray($order->products));
+        $eo->eoLog("processOrderUpdate, info:\n" . $eo->eoFormatArray($order->info) . "\nproducts:\n" . $eo->eoFormatArray($order->products));
 
         $order_total_modules = $eo->getOrderTotalsObject();
         if (isset($_POST['dc_redeem_code'], $GLOBALS['ot_coupon']) && $_POST['dc_redeem_code'] !== $order->info['coupon_code']) {
