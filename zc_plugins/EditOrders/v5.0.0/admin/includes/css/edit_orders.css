@@ -43,6 +43,9 @@
 .ml-auto {
     margin-left: auto!important;
 }
+.overflow-x-scroll {
+    overflow-x: scroll;
+}
 .smallText a {
     font-size: 9px;
     text-decoration: underline;

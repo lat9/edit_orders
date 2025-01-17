@@ -390,7 +390,7 @@ class zcAjaxEditOrdersAdmin
 
         $pulldown = new \productPulldown();
         $pulldown->showModel(true)->showPrice(true)->onlyActive(true)->showID(true);
-        $product_dropdown = $pulldown->generatePulldownHtml('prid', 'id="select-search-prid" class="form-control" size="15"');
+        $product_dropdown = $pulldown->generatePulldownHtml('prid', 'id="select-search-prid" class="form-control overflow-x-scroll" size="15"');
         $matching_products = substr_count($product_dropdown, '</option>');
         if ($matching_products === 0) {
             $product_dropdown = '';
@@ -419,7 +419,7 @@ class zcAjaxEditOrdersAdmin
 
         $pulldown = new \productPulldown();
         $pulldown->showModel(true)->showPrice(true)->onlyActive(true)->setCategory((int)($_POST['categories_id'] ?? '0'))->showID(true);
-        $product_dropdown = $pulldown->generatePulldownHtml('prid', 'id="select-cat-prid" class="form-control" size="15"');
+        $product_dropdown = $pulldown->generatePulldownHtml('prid', 'id="select-cat-prid" class="form-control overflow-x-scroll" size="15"');
         $matching_products = substr_count($product_dropdown, '</option>');
         if ($matching_products === 0) {
             $product_dropdown = '';
