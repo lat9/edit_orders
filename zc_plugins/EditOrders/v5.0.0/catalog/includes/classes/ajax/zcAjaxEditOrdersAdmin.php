@@ -25,6 +25,12 @@ class zcAjaxEditOrdersAdmin
     {
         $form_fields = $_POST;
 
+        // -----
+        // If the country associated with the submitted address has no zones,
+        // no 'zone_id' value is submitted with the form, so it'll be set to 0.
+        //
+        $form_fields['zone_id'] ??= '0';
+
         $non_builtin_fields = [];
         $builtin_names2labels = $_SESSION['eoChanges']->getBuiltInAddressFields();
         $builtin_address_names = array_keys($builtin_names2labels);
@@ -61,12 +67,6 @@ class zcAjaxEditOrdersAdmin
             //
             $non_builtin_fields[] = $posted_varname;
         }
-
-        // -----
-        // If the country associated with the submitted address has no zones,
-        // no 'zone_id' value is submitted with the form, so it'll be set to 0.
-        //
-        $address['zone_id'] ??= 0;
 
         // -----
         // If observers have added fields to the address, issue a notification to let
@@ -116,9 +116,13 @@ class zcAjaxEditOrdersAdmin
         $google_map_address = urlencode($address['street_address'] . ',' . $address['city'] . ',' . $state . ',' . $address['postcode']);
 
         $address_format_id = zen_get_address_format_id($address['country_id']);
+        $address['country'] = zen_get_country_name($address['country_id']);
+        $address['state'] = $state;
+        unset($address['country_id']);
+
         $address_return = [
             'status' => $status,
-            'address' => zen_address_format($address_format_id, $address, false, '', '<br>'),
+            'address' => zen_address_format($address_format_id, $address, true, '', '<br>'),
             'google_map_link' => 'https://maps.google.com/maps/search/?api=1&amp;query=' . $google_map_address,
             'address_changes' => $address_changes,
             'error_messages' => array_merge($builtin_errors, $non_builtin_errors),
