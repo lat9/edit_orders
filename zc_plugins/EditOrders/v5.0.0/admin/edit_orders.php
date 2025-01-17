@@ -106,7 +106,7 @@ switch ($action) {
             $order_table_updates = $eo->getOrderInfoUpdateSql($original_order->info, $updated_order->info);
         }
         if (!empty($updated_order->customer['changes'])) {
-            $order_table_updates = array_merge($order_table_updates, $eo->getAddressUpdateSql('customer_', $original_order->customer, $updated_order->customer));
+            $order_table_updates = array_merge($order_table_updates, $eo->getAddressUpdateSql('customers_', $original_order->customer, $updated_order->customer));
         }
         if (!empty($updated_order->delivery['changes'])) {
             $order_table_updates = array_merge($eo->getAddressUpdateSql('delivery_', $original_order->delivery, $updated_order->delivery));
