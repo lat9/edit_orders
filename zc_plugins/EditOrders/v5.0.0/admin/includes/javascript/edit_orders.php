@@ -198,7 +198,7 @@ if (ACCOUNT_STATE === 'true') {
     $(document).on('shown.bs.modal', '.address-modal', function() {
         if ($(this).find('.addr-set').text() == 0) {
             $(this).find('.addr-set').text(1);
-            if ($(this).find('.state-select').prop('disabled')) {
+            if ($(this).find('.state-select > option').length > 1) {
                 $(this).find('.state-input').parent().hide();
                 $(this).find('.state-select').prop('disabled', false).parent().show();
             } else {

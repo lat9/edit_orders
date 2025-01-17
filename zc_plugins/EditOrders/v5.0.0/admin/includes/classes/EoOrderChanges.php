@@ -177,14 +177,6 @@ class EoOrderChanges
             }
         }
 
-        // -----
-        // If a zone-based country's state/province changes, both the zone_id and state
-        // fields are reported as changed; remove the state-related one so that only one
-        // 'State' change is displayed.
-        //
-        if (!empty($address_info['zone_id'])) {
-        }
-
         $this->updated->$address_type['format_id'] = zen_get_address_format_id($this->updated->$address_type['country_id']);
 
         return count($this->updated->$address_type['changes']);
@@ -346,6 +338,7 @@ class EoOrderChanges
     protected function getAddressChangedValues(string $address_type): array
     {
         $address_changes = [];
+        $zone_or_state_updated = false;
         foreach ($this->updated->$address_type['changes'] as $next_field => $label) {
             $original_value = $this->original->$address_type[$next_field];
             $updated_value = $this->updated->$address_type[$next_field];
@@ -353,20 +346,46 @@ class EoOrderChanges
                 $original_value = zen_get_country_name((int)$this->original->$address_type['country_id']);
                 $updated_value = zen_get_country_name((int)$this->updated->$address_type['country_id']);
             } elseif ($next_field === 'zone_id') {
-                if (isset($this->updated->$address_type['changes']['country_id'])) {
-                    $country_id = (int)$this->updated->$address_type['country_id'];
-                } else {
-                    $country_id = (int)$this->original->$address_type['country_id'];
-                }
-                $updated_value = zen_get_zone_name($country_id, (int)$this->updated->$address_type['zone_id']);
-                $original_value = zen_get_zone_name((int)$this->original->$address_type['country_id'], (int)$this->original->$address_type['zone_id']);
+                $zone_or_state_updated = true;
+                continue;
+            } elseif ($next_field === 'state') {
+                $zone_or_state_updated = true;
+                continue;
             }
+
             $address_changes[] = [
                 'label' => $label,
                 'original' => $original_value,
                 'updated' => $updated_value,
             ];
         }
+
+        if ($zone_or_state_updated === true) {
+            if (isset($this->updated->$address_type['changes']['country_id'])) {
+                $country_id = (int)$this->updated->$address_type['country_id'];
+            } else {
+                $country_id = (int)$this->original->$address_type['country_id'];
+            }
+
+            if ($this->updated->$address_type['zone_id'] == 0) {
+                $updated_value = $this->updated->$address_type['state'];
+            } else {
+                $updated_value = zen_get_zone_name($country_id, (int)$this->updated->$address_type['zone_id']);
+            }
+
+            if ($this->original->$address_type['zone_id'] == 0) {
+                $original_value = $this->original->$address_type['state'];
+            } else {
+                $original_value = zen_get_zone_name((int)$this->original->$address_type['country_id'], (int)$this->original->$address_type['zone_id']);
+            }
+            
+            $address_changes[] = [
+                'label' => $this->updated->$address_type['changes']['state'] ?? $this->updated->$address_type['changes']['zone_id'],
+                'original' => $original_value,
+                'updated' => $updated_value,
+            ];
+        }
+
         return $address_changes;
     }
 
