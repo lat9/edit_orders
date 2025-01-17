@@ -273,7 +273,7 @@ foreach ($order->totals as $next_total) {
             $_SESSION['shipping'] = [
                 'id' => $order->info['shipping_module_code'] . '_',
                 'title' => $order->info['shipping_method'],
-                'cost' => $next_total['value'],
+                'cost' => $order->info['shipping_cost'],
             ];
             break;
 

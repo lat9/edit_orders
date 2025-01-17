@@ -2,7 +2,7 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2003-2024 The zen-cart developers
+// Copyright (c) 2003-2025 The zen-cart developers
 //
 // Last modified v5.0.0
 //
@@ -120,7 +120,7 @@ foreach ($order->products as $next_product) {
         $final_price = $gross_price;
 ?>
                 <td class="dataTableContent text-right">
-                    <?= $gross_price ?>
+                    <?= $currencies->format($gross_price, true, $order->info['currency'], $order->info['currency_value']) ?>
                 </td>
 <?php
     }

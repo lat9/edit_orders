@@ -710,6 +710,7 @@ class EditOrders
         if (DISPLAY_PRICE_WITH_TAX === 'true') {
             $shipping_cost = round((float)($shipping_cost / (1 + $shipping_tax_rate / 100)), 6);
         }
+        $this->order->info['shipping_cost'] = $shipping_cost;
         $this->order->info['shipping_tax'] = zen_calculate_tax($shipping_cost, $shipping_tax_rate);
         $this->addCostToTaxGroup($shipping_tax_description, $shipping_cost);
 
