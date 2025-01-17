@@ -801,11 +801,24 @@ class EoOrderChanges
     //
     public function recordCreatedProductChanges(string $uprid, array $product): void
     {
-        $updated_fields = [];
-        foreach (['tax', 'final_price', 'onetime_charges'] as $field) {
-            $updated_fields[$field] = round((float)$product[$field], 6);
+        $index = $this->upridMapping[$uprid] ?? null;
+        if ($index === null) {
+            return;
         }
-        $this->updateProductInOrder($uprid, $updated_fields);
+
+        $changes = false;
+        foreach (['tax', 'final_price', 'onetime_charges'] as $field) {
+            $value = round((float)$product[$field], 6);
+            $this->updated->products[$index][$field] = $value;
+            if (isset($this->original->products[$index][$field]) && $this->original->products[$index][$field] != $value) {
+                $changes = true;
+                $this->productsChanges[$uprid] ??= 'updated';
+            }
+        }
+
+        if ($changes === true) {
+            $_SESSION['cart']->calculateTotalAndWeight($this->getUpdatedOrdersProducts());
+        }
     }
 
     // -----

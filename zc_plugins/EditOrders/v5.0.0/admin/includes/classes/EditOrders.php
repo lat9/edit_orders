@@ -1244,7 +1244,7 @@ class EditOrders
                         );
                     }
 
-                    if (isset($updated_product['attributes'])) {
+                    if (!empty($updated_product['attributes'])) {
                         if (DOWNLOAD_ENABLED === 'false') {
                             $additional_selects = '';
                             $additional_join = '';
