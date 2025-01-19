@@ -8,6 +8,7 @@
 use Zencart\Plugins\Admin\EditOrders\EditOrders;
 use Zencart\Plugins\Admin\EditOrders\EoAttributes;
 use Zencart\Plugins\Admin\EditOrders\EoOrderChanges;
+use Zencart\Plugins\Admin\EditOrders\EoProductPulldown;
 use Zencart\Traits\InteractsWithPlugins;
 use Zencart\Traits\NotifierManager;
 
@@ -388,7 +389,7 @@ class zcAjaxEditOrdersAdmin
         }
         $currencies ??= new \currencies();
 
-        $pulldown = new \productPulldown();
+        $pulldown = new EoProductPulldown();
         $pulldown->showModel(true)->showPrice(true)->onlyActive(true)->showID(true);
         $product_dropdown = $pulldown->generatePulldownHtml('prid', 'id="select-search-prid" class="form-control overflow-x-scroll" size="15"');
         $matching_products = substr_count($product_dropdown, '</option>');
@@ -417,7 +418,7 @@ class zcAjaxEditOrdersAdmin
         }
         $currencies ??= new \currencies();
 
-        $pulldown = new \productPulldown();
+        $pulldown = new EoProductPulldown();
         $pulldown->showModel(true)->showPrice(true)->onlyActive(true)->setCategory((int)($_POST['categories_id'] ?? '0'))->showID(true);
         $product_dropdown = $pulldown->generatePulldownHtml('prid', 'id="select-cat-prid" class="form-control overflow-x-scroll" size="15"');
         $matching_products = substr_count($product_dropdown, '</option>');
