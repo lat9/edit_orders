@@ -305,7 +305,7 @@ class EditOrdersAdminObserver extends base
 
                 $eo ??= new EditOrders($_SESSION['eoChanges']->getOrderId());
                 $is_virtual_order = ($_SESSION['eoChanges']->getUpdatedOrder()->content_type === 'virtual');
-                $p2 = $eo->getTaxLocations($order, $is_virtual_product);
+                $p2 = $eo->getTaxLocations($order, $is_virtual_order);
                 break;
 
             // -----
