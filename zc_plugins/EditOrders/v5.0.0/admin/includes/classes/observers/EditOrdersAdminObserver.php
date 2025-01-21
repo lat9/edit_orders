@@ -1,7 +1,7 @@
 <?php
 // -----
 // Admin-level observer class, adds "Edit Orders" buttons and links to Customers->Orders processing.
-// Copyright (C) 2017-2024, Vinos de Frutas Tropicales.
+// Copyright (C) 2017-2025, Vinos de Frutas Tropicales.
 //
 // Last updated: EO v5.0.0
 //
@@ -224,7 +224,7 @@ class EditOrdersAdminObserver extends base
     protected function notify_order_cart_add_product_list(&$order, string $e, array $index_product, &$attributes_handled): void
     {
         global $eo;
-        if ($eo->productAddInProcess() === true || ($_POST['payment_calc_method'] ?? '') !== 'Manual') {
+        if ($eo->productAddInProcess() === true || ($_SESSION['eo_price_calculations'] ?? '') !== 'Manual') {
             return;
         }
 
@@ -251,7 +251,7 @@ class EditOrdersAdminObserver extends base
         // tax calculations are used.
         //
         global $eo;
-        if ($eo->productAddInProcess() === true || ($_POST['payment_calc_method'] ?? '') !== 'Manual') {
+        if ($eo->productAddInProcess() === true || ($_SESSION['eo_price_calculations'] ?? '') !== 'Manual') {
             return;
         }
 

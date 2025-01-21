@@ -2,7 +2,7 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2024 The zen-cart developers
+// Copyright (c) 2024-2025 The zen-cart developers
 //
 // Last modified v5.0.0
 //
@@ -131,7 +131,7 @@ if (empty($original_product) && empty($updated_product)) {
     // -----
     // Determine whether prices can be manually updated.
     //
-    $price_entry_disabled = ($_POST['payment_calc_method'] === 'Manual') ? '' : 'disabled';
+    $price_entry_disabled = ($_SESSION['eo_price_calculations'] === 'Manual') ? '' : 'disabled';
 
     // -----
     // Initialize the attributes for product-related input fields.

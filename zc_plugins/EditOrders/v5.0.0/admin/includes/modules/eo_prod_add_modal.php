@@ -154,13 +154,18 @@ if (!empty($new_product)) {
                 </div>
             </div>
 <?php
+    // -----
+    // Determine whether prices can be manually updated.
+    //
+    $price_entry_disabled = ($_SESSION['eo_price_calculations'] === 'Manual') ? '' : 'disabled';
+
     $final_price = $new_product['final_price'];
     $final_price_label = rtrim((DISPLAY_PRICE_WITH_TAX === 'true') ? TABLE_HEADING_UNIT_PRICE_NET : TABLE_HEADING_UNIT_PRICE, ':');
 ?>
             <div class="form-group">
                 <label class="control-label col-sm-2" for="prod-price-net"><?= $final_price_label ?>:</label>
                 <div class="col-sm-10">
-                    <?= zen_draw_input_field('final_price', $final_price, 'id="prod-price-net" class="form-control" disabled', false, 'number') ?>
+                    <?= zen_draw_input_field('final_price', $final_price, 'id="prod-price-net" class="form-control" ' . $price_entry_disabled, false, 'number') ?>
                 </div>
             </div>
 <?php
@@ -170,7 +175,7 @@ if (!empty($new_product)) {
             <div class="form-group">
                 <label class="control-label col-sm-2" for="prod-price-gross"><?= rtrim(TABLE_HEADING_UNIT_PRICE_GROSS, ':') ?>:</label>
                 <div class="col-sm-10">
-                    <?= zen_draw_input_field('gross_price', $gross_price, 'id="prod-price-gross" class="form-control" disabled', false, 'number') ?>
+                    <?= zen_draw_input_field('gross_price', $gross_price, 'id="prod-price-gross" class="form-control" ' . $price_entry_disabled, false, 'number') ?>
                 </div>
             </div>
 <?php
