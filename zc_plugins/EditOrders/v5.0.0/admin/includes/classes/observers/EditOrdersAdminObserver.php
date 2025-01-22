@@ -234,6 +234,10 @@ class EditOrdersAdminObserver extends base
             $attributes_handled = true;
             $order->products[$index]['attributes'] = $product['attributes'];
         }
+
+        $updated_product = $_SESSION['eoChanges']->getUpdatedProductByUprid($order->products[$index]['id']);
+        $order->products[$index]['final_price'] = $updated_product['final_price'] ?? 0;
+        $order->products[$index]['onetime_charges'] = $updated_product['onetime_charges'] ?? 0;
     }
 
     protected function notify_order_cart_external_tax_rate_lookup(&$order, string $e, $x, &$products, int &$loop, int &$index, &$taxCountryId, &$taxZoneId, &$taxRates): void
