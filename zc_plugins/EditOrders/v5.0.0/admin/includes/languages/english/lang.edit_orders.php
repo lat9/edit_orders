@@ -146,6 +146,8 @@ $define = [
     'TEXT_LABEL_MODULE' => 'Module:',
     'TEXT_LABEL_TITLE' => 'Title:',
     'TEXT_LABEL_VALUE' => 'Value:',
+    'TEXT_LABEL_COST_INCL' => 'Cost (incl):',
+    'TEXT_LABEL_COST_EXCL' => 'Cost (excl):',
     'TEXT_OT_ADD_MODAL_TITLE' => 'Add Order Total (%s)',
     'TEXT_OT_UPDATE_MODAL_TITLE' => 'Editing Order Total (%s)',    //- %s is filled in with the order-total's class, e.g. ot_shipping
 

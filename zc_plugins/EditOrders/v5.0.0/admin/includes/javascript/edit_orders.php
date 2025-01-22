@@ -12,24 +12,27 @@ if (DISPLAY_PRICE_WITH_TAX === 'true') {
 ?>
 <script>
 $(function() {
-    $('.price-net, .price-tax').on('keyup', function(e) {
-        var opi = $(this).attr('data-opi');
-        updateProductGross(opi);
+    $(document).on('keyup change', '#prod-price-net, #prod-tax', function(e) {
+        let taxRate = getValidatedTaxRate($(document).find('#prod-tax').val());
+        let grossPrice = $(document).find('#prod-price-net').val();
+        if (taxRate > 0) {
+            grossPrice *= ((taxRate / 100) + 1);
+        }
+        $(document).find('#prod-price-gross').val(doRound(grossPrice, 4));
     });
 
-    $('.price-gross').on('keyup', function(e) {
-        var opi = $(this).attr('data-opi');
-        updateProductNet(opi);
+    $(document).on('keyup change', '#prod-price-gross', function(e) {
+        let taxRate = getValidatedTaxRate($(document).find('#prod-tax').val());
+        let netPrice = $(document).find('#prod-price-gross').val();
+        if (taxRate > 0) {
+            netPrice /= ((taxRate / 100) + 1);
+        }
+        $(document).find('#prod-price-net').val(doRound(netPrice, 4));
     });
 
     function doRound(x, places)
     {
         return Math.round(x * Math.pow(10, places)) / Math.pow(10, places);
-    }
-
-    function getProductTaxRate(opi)
-    {
-        return getValidatedTaxRate($('input[name="update_products['+opi+'][tax]"]').val());
     }
     function getValidatedTaxRate(taxRate)
     {
@@ -37,59 +40,22 @@ $(function() {
         return (regex.test(taxRate)) ? taxRate : 0;
     }
 
-    function updateProductGross(opi)
-    {
-        var taxRate = getProductTaxRate(opi);
-        var gross = $('input[name="update_products['+opi+'][final_price]"]').val();
-
+    $(document).on('keyup change', '#ship-tax, #ship-net', function(e) {
+        let taxRate = getValidatedTaxRate($(document).find('#ship-tax').val());
+        let grossPrice = $(document).find('#ship-net').val();
         if (taxRate > 0) {
-            gross = gross * ((taxRate / 100) + 1);
+            grossPrice *= ((taxRate / 100) + 1);
         }
-        $('input[name="update_products['+opi+'][gross]"]').val(doRound(gross, 4));
-    }
-
-    function updateProductNet(opi)
-    {
-        var taxRate = getProductTaxRate(opi);
-        var net = $('input[name="update_products['+opi+'][gross]"]').val();
-
-        if (taxRate > 0) {
-            net = net / ((taxRate / 100) + 1);
-        }
-        $('input[name="update_products['+opi+'][final_price]"]').val(doRound(net, 4));
-    }
-
-    $('#ship-tax, #ship-net').on('keyup', function(e) {
-        updateShippingGross();
+        $(document).find('#ship-gross').val(doRound(grossPrice, 4));
     });
-    $('#ship-gross').on('keyup', function(e) {
-        updateShippingNet();
+    $(document).on('keyup change', '#ship-gross', function(e) {
+        let taxRate = getValidatedTaxRate($(document).find('#ship-tax').val());
+        let netPrice = $(document).find('#ship-gross').val();
+        if (taxRate > 0) {
+            netPrice /= ((taxRate / 100) + 1);
+        }
+        $(document).find('#ship-net').val(doRound(netPrice, 4));
     });
-
-    function getShippingTaxRate()
-    {
-        return getValidatedTaxRate($('#ship-tax').val());
-    }
-
-    function updateShippingGross()
-    {
-        var taxRate = getShippingTaxRate();
-        var gross = $('#ship-net').val();
-        if (taxRate > 0) {
-            gross = gross * ((taxRate / 100) + 1);
-        }
-        $('#ship-gross').val(doRound(gross, 4));
-    }
-
-    function updateShippingNet()
-    {
-        var taxRate = getShippingTaxRate();
-        var net = $('#ship-gross').val();
-        if (taxRate > 0) {
-            net = net / ((taxRate / 100) + 1);
-        }
-        $('#ship-net').val(doRound(net, 4));
-    }
 });
 </script>
 <?php
@@ -445,17 +411,7 @@ if (ACCOUNT_STATE === 'true') {
             $('#ot-changes').val(response.ot_changes).trigger('change');
         });
     });
-/*
-        $('<input>').attr({
-            type: 'hidden',
-            name: 'ot_changed',
-            value: $(this).attr('name')
-        }).appendTo(closestRow);
-        console.log(closestRow.find(':input').serializeArray());
-        $('input[type="hidden"][name="ot_class"], input[type="hidden"][name="ot_changed"').remove();
-        console.log(closestRow.find(':input').serializeArray());
-    });
-*/
+
     $('#eo-no-shipping').parent().hide();
 <?php
 // --------------------
