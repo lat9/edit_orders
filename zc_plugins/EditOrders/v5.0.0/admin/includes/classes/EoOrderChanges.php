@@ -498,15 +498,6 @@ class EoOrderChanges
             }
         }
 
-        // -----
-        // If the site displays prices inclusive of tax, the order's shipping-cost currently
-        // includes that tax.  Back the tax out of that cost for recording in the order
-        // so that the tax doesn't improperly get re-added when/if the order's recalculated.
-        //
-        if (DISPLAY_PRICE_WITH_TAX === 'true') {
-            $this->updated->info['shipping_cost'] = round((float)($this->updated->info['shipping_cost'] / (1 + $this->updated->info['shipping_tax_rate'] / 100)), 6);
-        }
-
         return $this->updated->info;
     }
 

@@ -2,7 +2,7 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2024 The zen-cart developers
+// Copyright (c) 2024-2025 The zen-cart developers
 //
 // Last modified v5.0.0
 //
@@ -57,7 +57,7 @@ if (!in_array($ot_class, $module_list)) {
                 <div class="form-group">
                     <label class="control-label col-sm-3" for="ot-title-o"><?= TEXT_LABEL_COUPON_CODE ?></label>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field('dc_redeem_code', $original_order->info['coupon_code'], 'id="ot-title-o" class="form-control" disabled') ?>
+                        <?= zen_draw_input_field('unused', $original_order->info['coupon_code'], 'id="ot-title-o" class="form-control" disabled') ?>
                     </div>
                 </div>
             </div>
@@ -82,27 +82,49 @@ if (!in_array($ot_class, $module_list)) {
                 <div class="form-group">
                     <label class="control-label col-sm-3" for="ot-module-o"><?= TEXT_LABEL_MODULE ?></label>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field('module', $original_order->info['shipping_module_code'], 'id="ot-module-o" class="form-control" disabled') ?>
+                        <?= zen_draw_input_field('unused', $original_order->info['shipping_module_code'], 'id="ot-module-o" class="form-control" disabled') ?>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="control-label col-sm-3" for="ot-title-o"><?= TEXT_LABEL_METHOD ?></label>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field('title', $original_order->info['shipping_method'], 'id="ot-title-o" class="form-control" disabled') ?>
+                        <?= zen_draw_input_field('unused', $original_order->info['shipping_method'], 'id="ot-title-o" class="form-control" disabled') ?>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="control-label col-sm-3" for="ot-module-o"><?= TEXT_LABEL_TAX ?></label>
+                    <label class="control-label col-sm-3" for="ot-tax-o"><?= TEXT_LABEL_TAX ?></label>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field('tax', $original_order->info['shipping_tax_rate'], 'id="ot-tax-o" class="form-control" disabled') ?>
+                        <?= zen_draw_input_field('unused', $original_order->info['shipping_tax_rate'], 'id="ot-tax-o" class="form-control" disabled') ?>
                     </div>
                 </div>
+<?php
+    // -----
+    // If the store displays prices with tax, the shipping-cost currently contains the associated
+    // tax.  Back that out for the display.
+    //
+    if (DISPLAY_PRICE_WITH_TAX === 'true') {
+        $ot_value_o = $ot_value_o / (1 + $original_order->info['shipping_tax_rate'] / 100);
+    }
+?>
                 <div class="form-group">
-                    <label class="control-label col-sm-3" for="ot-value-o"><?= TEXT_LABEL_VALUE ?></label>
+                    <label class="control-label col-sm-3" for="ot-value-o"><?= TEXT_LABEL_COST_EXCL ?></label>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field('value', $ot_value_o, 'id="ot-value-o" class="form-control" disabled') ?>
+                        <?= zen_draw_input_field('unused', $ot_value_o, 'id="ot-value-o" class="form-control" disabled') ?>
                     </div>
                 </div>
+<?php
+    if (DISPLAY_PRICE_WITH_TAX === 'true') {
+        $cost_incl = zen_add_tax($ot_value_o, $original_order->info['shipping_tax_rate']);
+?>
+                <div class="form-group">
+                    <label class="control-label col-sm-3" for="ship-gross-o"><?= TEXT_LABEL_COST_INCL ?></label>
+                    <div class="col-sm-9">
+                        <?= zen_draw_input_field('unused', $cost_incl, 'id="ship-gross-o" class="form-control" disabled', false, 'number') ?>
+                    </div>
+                </div>
+<?php
+    }
+?>
             </div>
 <?php
     $available_modules = $eo->getAvailableShippingModules($original_order);
@@ -123,17 +145,39 @@ if (!in_array($ot_class, $module_list)) {
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="control-label col-sm-3" for="ot-module-u"><?= TEXT_LABEL_TAX ?></label>
+                    <label class="control-label col-sm-3" for="ship-tax"><?= TEXT_LABEL_TAX ?></label>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field('tax', $updated_order->info['shipping_tax_rate'], 'id="ot-tax-u" class="form-control"') ?>
+                        <?= zen_draw_input_field('tax', $updated_order->info['shipping_tax_rate'], 'id="ship-tax" class="form-control" min="0" max="100" step="any"', false, 'number') ?>
                     </div>
                 </div>
+<?php
+    // -----
+    // If the store displays prices with tax, the shipping-cost currently contains the associated
+    // tax.  Back that out for the display.
+    //
+    if (DISPLAY_PRICE_WITH_TAX === 'true') {
+        $ot_value_u = $ot_value_u / (1 + $updated_order->info['shipping_tax_rate'] / 100);
+    }
+?>
                 <div class="form-group">
-                    <label class="control-label col-sm-3" for="ot-value-u"><?= TEXT_LABEL_VALUE ?></label>
+                    <label class="control-label col-sm-3" for="ship-net"><?= TEXT_LABEL_COST_EXCL ?></label>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field('value', $ot_value_u, 'id="ot-value-u" class="form-control"') ?>
+                        <?= zen_draw_input_field('value', $ot_value_u, 'id="ship-net" class="form-control" min="0"', false, 'number') ?>
                     </div>
                 </div>
+<?php
+    if (DISPLAY_PRICE_WITH_TAX === 'true') {
+        $cost_incl = zen_add_tax($ot_value_u, $updated_order->info['shipping_tax_rate']);
+?>
+                <div class="form-group">
+                    <label class="control-label col-sm-3" for="ship-gross"><?= TEXT_LABEL_COST_INCL ?></label>
+                    <div class="col-sm-9">
+                        <?= zen_draw_input_field('gross_price', $cost_incl, 'id="ship-gross" class="form-control" min="0"', false, 'number') ?>
+                    </div>
+                </div>
+<?php
+    }
+?>
             </div>
         </div>
 <?php
@@ -147,13 +191,13 @@ if (!in_array($ot_class, $module_list)) {
                 <div class="form-group">
                     <label class="control-label col-sm-3" for="ot-title-o"><?= TEXT_LABEL_TITLE ?></label>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field('title', $ot_title_o, 'id="ot-title-o" class="form-control" disabled') ?>
+                        <?= zen_draw_input_field('unused', $ot_title_o, 'id="ot-title-o" class="form-control" disabled') ?>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="control-label col-sm-3" for="ot-value-o"><?= TEXT_LABEL_VALUE ?></label>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field('value', $ot_value_o, 'id="ot-value-o" class="form-control" disabled') ?>
+                        <?= zen_draw_input_field('unused', $ot_value_o, 'id="ot-value-o" class="form-control" disabled') ?>
                     </div>
                 </div>
             </div>
