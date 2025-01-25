@@ -64,7 +64,7 @@ class ot_misc_cost
             return;
         }
         $this->tax_class_id = (int)MODULE_ORDER_TOTAL_MISC_COST_TAX_CLASS;
-        $this->enabled = (IS_ADMIN_FLAG === true && $current_page === 'edit_orders.php');
+        $this->enabled = (IS_ADMIN_FLAG === true);
 
         $this->output = [];
     }

@@ -75,7 +75,7 @@ class ot_onetime_discount
             return;
         }
 
-        $this->enabled = (IS_ADMIN_FLAG === true && $current_page === 'edit_orders.php');
+        $this->enabled = (IS_ADMIN_FLAG === true);
         $this->output = [];
     }
 
