@@ -51,7 +51,8 @@ class ot_onetime_discount
     /**
     * Indicates that the module can be added via Edit Orders.
     */
-    public bool $eoCanBeAdded = true;
+    public bool $credit_class = true;
+    public array $eoInfo = [];
 
     /**
      * The output from this Order Total Module
@@ -65,8 +66,6 @@ class ot_onetime_discount
      */
     public function __construct()
     {
-        global $current_page;
-
         $this->code = 'ot_onetime_discount';
         $this->title = MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_TITLE;
         $this->description = MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_DESCRIPTION;
@@ -76,47 +75,85 @@ class ot_onetime_discount
         }
 
         $this->enabled = (IS_ADMIN_FLAG === true);
+
+        $this->eoInfo = [
+            'installed' => false,
+            'title' => $this->title,
+            'value' => 0,
+        ];
+
         $this->output = [];
     }
 
     public function process()
     {
-        if ($this->enabled === false) {
+        if ($this->enabled === false || $this->eoInfo['installed'] === false) {
+            $this->enabled = false;
             return;
         }
 
         global $currencies, $order;
 
-        if (isset($_POST['ot_class']) && $_POST['ot_class'] === $this->code) {
-            $value = is_numeric($_POST['value']) ? $_POST['value'] : 0;
-            if (MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_DEDUCTION_ONLY === 'true' && $value > 0) {
-                $value *= -1;
-            }
+        $title = $this->eoInfo['title'];
+        $value = $this->eoInfo['value'];
 
-            if (MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_CHANGE_TITLE === 'false') {
-                $title = $this->title;
-            } else {
-                $title = $_POST['title'];
-            }
-            if ($value == 0 || $title === '') {
-                unset($_SESSION['eo-totals']['ot_onetime_discount']);
-                return;
-            }
-            $_SESSION['eo-totals']['ot_onetime_discount'] = ['value' => $value, 'title' => $title,];
-        }
-
-        if (!isset($_SESSION['eo-totals']['ot_onetime_discount'])) {
-            return;
-        }
-
-        $order->info['total'] += $_SESSION['eo-totals']['ot_onetime_discount']['value'];
+        $order->info['total'] += $value;
 
         // Output the order total information
         $this->output[] = [
-            'title' => rtrim($_SESSION['eo-totals']['ot_onetime_discount']['title'], ' :') . ':',
-            'text' => $currencies->format($_SESSION['eo-totals']['ot_onetime_discount']['value'], true, $order->info['currency'], $order->info['currency_value']),
-            'value' => $_SESSION['eo-totals']['ot_onetime_discount']['value'],
+            'title' => rtrim($title, ' :') . ':',
+            'text' => $currencies->format($value, true, $order->info['currency'], $order->info['currency_value']),
+            'value' => $value,
         ];
+    }
+
+    public function credit_selection(): array
+    {
+        if ($this->enabled === false) {
+            return [];
+        }
+
+        if (MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_CHANGE_TITLE === 'true') {
+            $fields = [
+                [
+                    'tag' => 'title-' . $this->code,
+                    'field' => zen_draw_input_field('title', $this->eoInfo['title'], 'id="title-' . $this->code . '" class="form-control"'),
+                    'title' => TEXT_LABEL_TITLE,
+                ],
+            ];
+        }
+        $fields[] = [
+            'tag' => 'val-' . $this->code,
+            'field' => zen_draw_input_field('value', $this->eoInfo['value'], 'id="val-' . $this->code . '" class="form-control"'),
+            'title' => TEXT_LABEL_VALUE,
+        ];
+
+        $selection = [
+            'id' => $this->code,
+            'module' => $this->title,
+            'fields' => $fields,
+        ];
+        return $selection;
+    }
+
+    public function collect_posts(): void
+    {
+        if (($_POST['ot_class'] ?? '') === $this->code) {
+            $this->eoInfo['value'] = (strpos($_POST['value'], '.') === false) ? (int)$_POST['value'] : (float)$_POST['value'];
+            if (MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_DEDUCTION_ONLY === 'true' && $this->eoInfo['value'] > 0) {
+                $this->eoInfo['value'] *= -1;
+            }
+            
+            if (MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_CHANGE_TITLE === 'true') {
+                $this->eoInfo['title'] = $_POST['title'];
+            }
+            $this->enabled = ($this->eoInfo['value'] != 0 && $this->eoInfo['title'] !== '');
+            $this->eoInfo['installed'] = $this->enabled;
+        }
+    }
+
+    public function clear_posts(): void
+    {
     }
 
     public function check()

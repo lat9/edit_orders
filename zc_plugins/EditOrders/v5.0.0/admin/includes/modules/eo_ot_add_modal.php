@@ -33,6 +33,8 @@ switch ($ot_class) {
     default:
         $unused_order_totals = $eo->getUnusedOrderTotalModules($updated_order);
         $ot_title = $GLOBALS[$ot_class]->title ?? 'Unknown';
+        $credit_selections = $eo->getCreditSelections($ot_class);
+        if (empty($credit_selections)) {
 ?>
         <div class="form-group">
             <label class="control-label col-sm-3" for="ot-title"><?= TEXT_LABEL_TITLE ?></label>
@@ -40,10 +42,7 @@ switch ($ot_class) {
                 <?= zen_draw_input_field('title', $ot_title, 'id="ot-title" class="form-control"') ?>
             </div>
         </div>
-<?php
-        $credit_selections = $eo->getCreditSelections($ot_class);
-        if (empty($credit_selections)) {
-?>
+
         <div class="form-group">
             <label class="control-label col-sm-3" for="ot-value"><?= TEXT_LABEL_VALUE ?></label>
             <div class="col-sm-9">

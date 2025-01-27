@@ -610,7 +610,7 @@ class zcAjaxEditOrdersAdmin
     //
     public function addOrUpdateOrderTotal(): array
     {
-        $_POST['title'] = rtrim($_POST['title'] ?? $_POST['dc_redeem_code'], ' :');
+        $_POST['title'] = rtrim($_POST['title'] ?? $_POST['dc_redeem_code'] ?? '', ' :');
         switch ($_POST['ot_class']) {
             case 'ot_shipping':
                 $_SESSION['eoChanges']->updateShippingInfo(
@@ -760,30 +760,28 @@ class zcAjaxEditOrdersAdmin
         $eo->eoLog("processOrderUpdate, info:\n" . $eo->eoFormatArray($order->info) . "\nproducts:\n" . $eo->eoFormatArray($order->products));
 
         $order_total_modules = $eo->getOrderTotalsObject();
-        if (isset($_POST['dc_redeem_code'], $GLOBALS['ot_coupon']) && $_POST['dc_redeem_code'] !== $order->info['coupon_code']) {
-            if (strtoupper($_POST['dc_redeem_code']) === TEXT_COMMAND_TO_DELETE_CURRENT_COUPON_FROM_ORDER) {
-                unset($_SESSION['cc_id']);
-                $order->info['coupon_code'] = '';
-            } else {
-                $coupon_id = $GLOBALS['ot_coupon']->performValidations($_POST['dc_redeem_code']);
-                $coupon_errors = $GLOBALS['ot_coupon']->getValidationErrors();
-                if (count($coupon_errors) === 0) {
-                    $_SESSION['cc_id'] = $coupon_id;
-                    $order->info['coupon_code'] = $_POST['dc_redeem_code'];
-                } else {
-                    $messages = [];
-                    foreach ($coupon_errors as $next_message) {
-                        $messages[] = ['params' => 'messageStackAlert alert alert-warning', 'text' => '<i class="fa-solid fa-2x fa-hand-stop-o"></i> ' . $next_message];
-                    }
-                    $table_block = new boxTableBlock();
-                    return [
-                        'status' => 'error',
-                        'message_html' => $table_block->tableBlock($messages),
-                    ];
-                }
-            }
-        } else {
+        if (!isset($_POST['dc_redeem_code'], $GLOBALS['ot_coupon']) || $_POST['dc_redeem_code'] === $order->info['coupon_code']) {
             $order_total_modules->collect_posts();
+        } elseif (strtoupper($_POST['dc_redeem_code']) === TEXT_COMMAND_TO_DELETE_CURRENT_COUPON_FROM_ORDER) {
+            unset($_SESSION['cc_id']);
+            $order->info['coupon_code'] = '';
+        } else {
+            $coupon_id = $GLOBALS['ot_coupon']->performValidations($_POST['dc_redeem_code']);
+            $coupon_errors = $GLOBALS['ot_coupon']->getValidationErrors();
+            if (count($coupon_errors) === 0) {
+                $_SESSION['cc_id'] = $coupon_id;
+                $order->info['coupon_code'] = $_POST['dc_redeem_code'];
+            } else {
+                $messages = [];
+                foreach ($coupon_errors as $next_message) {
+                    $messages[] = ['params' => 'messageStackAlert alert alert-warning', 'text' => '<i class="fa-solid fa-2x fa-hand-stop-o"></i> ' . $next_message];
+                }
+                $table_block = new boxTableBlock();
+                return [
+                    'status' => 'error',
+                    'message_html' => $table_block->tableBlock($messages),
+                ];
+            }
         }
         $order->totals = $order_total_modules->process();
 

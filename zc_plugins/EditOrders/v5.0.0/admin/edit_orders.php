@@ -63,7 +63,8 @@ if (empty($order->info)) {
 $eo = new EditOrders($oID);
 
 $action = $_GET['action'] ?? 'edit';
-$eo->eoLog("Edit Orders entered action ($action). Enabled Order Totals: " . MODULE_ORDER_TOTAL_INSTALLED, 'with-date');
+$with_without = (DISPLAY_PRICE_WITH_TAX === 'true') ? 'with' : 'without';
+$eo->eoLog("Edit Orders entered action ($action). Prices are being displayed $with_without tax. Enabled Order Totals: " . MODULE_ORDER_TOTAL_INSTALLED, 'with-date');
 
 // -----
 // Gather the two arrays for the order's status display.
