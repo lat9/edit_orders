@@ -99,7 +99,19 @@ class EoOrderChanges
 
     public function getUpdatedOrder(): \stdClass
     {
-        return clone $this->updated;
+        $updated_order = clone $this->updated;
+        foreach ($updated_order->totals as $index => $total) {
+            if (($this->totalsChanges[$index] ?? 'no-change') === 'removed') {
+                unset($updated_order->totals[$index]);
+            }
+        }
+
+        // -----
+        // Sneaky way of re-indexing the array after possibly removing elements.
+        //
+        $updated_order->totals = array_merge($updated_order->totals);
+
+        return $updated_order;
     }
 
     public function getUpdatedOrdersProducts(): array
@@ -538,6 +550,7 @@ class EoOrderChanges
             //
             if ($ot_index === -1) {
                 $ot_index = count($this->updated->totals);
+                $next_total['class'] = $next_total['code'];
                 $this->updated->totals[] = $next_total;
                 $this->totalsChanges[$ot_index] = 'added';
                 continue;

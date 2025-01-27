@@ -209,12 +209,30 @@ if (!in_array($ot_class, $module_list)) {
                         <?= zen_draw_input_field('title', $ot_title_u, 'id="ot-title-u" class="form-control"') ?>
                     </div>
                 </div>
+<?php
+                $credit_selections = $eo->getCreditSelections($ot_class);
+                if (empty($credit_selections)) {
+?>
                 <div class="form-group">
                     <label class="control-label col-sm-3" for="ot-value-u"><?= TEXT_LABEL_VALUE ?></label>
                     <div class="col-sm-9">
                         <?= zen_draw_input_field('value', $ot_value_u, 'id="ot-value-u" class="form-control"') ?>
                     </div>
                 </div>
+<?php
+                } else {
+                    foreach ($credit_selections['fields'] as $next_field) {
+?>
+                <div class="form-group">
+                    <label class="control-label col-sm-3" for="<?= $next_field['tag'] ?>"><?= $next_field['title'] ?></label>
+                    <div class="col-sm-9">
+                        <?= $next_field['field'] ?>
+                    </div>
+                </div>
+<?php
+                    }
+                }
+?>
             </div>
         </div>
 <?php

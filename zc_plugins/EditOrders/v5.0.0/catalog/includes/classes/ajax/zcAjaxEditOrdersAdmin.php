@@ -782,6 +782,8 @@ class zcAjaxEditOrdersAdmin
                     ];
                 }
             }
+        } else {
+            $order_total_modules->collect_posts();
         }
         $order->totals = $order_total_modules->process();
 
