@@ -63,7 +63,8 @@ if (empty($order->info)) {
 $eo = new EditOrders($oID);
 
 $action = $_GET['action'] ?? 'edit';
-$eo->eoLog("Edit Orders entered action ($action). Enabled Order Totals: " . MODULE_ORDER_TOTAL_INSTALLED, 'with-date');
+$with_without = (DISPLAY_PRICE_WITH_TAX === 'true') ? 'with' : 'without';
+$eo->eoLog("Edit Orders entered action ($action). Prices are being displayed $with_without tax. Enabled Order Totals: " . MODULE_ORDER_TOTAL_INSTALLED, 'with-date');
 
 // -----
 // Gather the two arrays for the order's status display.
@@ -130,9 +131,8 @@ switch ($action) {
         }
 
         $ot_updates = '';
-        $totals_changes = $_SESSION['eoChanges']->getTotalsChanges();
-        if (!empty($totals_changes)) {
-            $ot_updates = $eo->updateOrderTotalsInDb($oID, $changed_values['order_totals'], $totals_changes);
+        if (!empty($changed_values['order_totals'])) {
+            $ot_updates = $eo->updateOrderTotalsInDb($oID, $changed_values['order_totals']);
         }
 
         if (!empty($updated_order->statuses['changes'])) {
@@ -175,6 +175,13 @@ switch ($action) {
             $order_changed_message = TEXT_OSH_CHANGED_VALUES . "\n<ol>" . $order_changed_message . '</ol>';
             zen_update_orders_history((int)$oID, $order_changed_message);
         }
+
+        // -----
+        // Ensure that any session variables associated with order-totals are cleared.
+        //
+        $order = $updated_order;
+        $order_total_modules = $eo->getOrderTotalsObject();
+        $order_total_modules->clear_posts();
 
         // -----
         // Note: Currently replicated in /includes/init_includes/init_eo_config.php, covering the
@@ -267,6 +274,7 @@ if (!empty($order->info['coupon_code'])) {
 
 $_SESSION['payment'] = $order->info['payment_module_code'];
 
+unset($_SESSION['eo-totals']);
 foreach ($order->totals as $next_total) {
     switch ($next_total['class']) {
         case 'ot_shipping':
@@ -277,12 +285,15 @@ foreach ($order->totals as $next_total) {
             ];
             break;
 
+        case 'ot_coupon':
+            break;
+
         case 'ot_gv':
             $_SESSION['cot_gv'] = (string)$next_total['value'];
             break;
 
         default:
-            if (!empty($GLOBALS[$next_total['class']]->eoCanBeAdded)) {
+            if (!empty($GLOBALS[$next_total['class']]->eoCanBeAdded) || !empty($GLOBALS[$next_total['class']]->credit_class)) {
                 $_SESSION['eo-totals'][$next_total['class']] = ['title' => $next_total['title'], 'value' => $next_total['value']];
             }
             break;

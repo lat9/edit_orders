@@ -92,7 +92,7 @@ foreach ($order->totals as $next_total) {
 
         // Allow changing the title / text, but not the value. Typically used
         // for order total modules which handle the value based upon another condition
-        case 'ot_coupon': 
+        case 'ot_coupon':
 ?>
     <td colspan="<?= $columns - 3 ?>"></td>
     <td class="text-right">
@@ -157,7 +157,7 @@ foreach ($order->totals as $next_total) {
             break;
 
         default:
-            if (empty($GLOBALS[$total_class]->eoCanBeAdded)) {
+            if (empty($GLOBALS[$total_class]->eoCanBeAdded) && empty($GLOBALS[$total_class]->credit_class)) {
 ?>
     <td colspan="<?= $columns - 2 ?>"></td>
  

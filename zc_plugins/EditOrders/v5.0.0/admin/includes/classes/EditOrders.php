@@ -42,6 +42,14 @@ class EditOrders
         if (!isset($this->orderTotals)) {
             $this->orderTotals = new \order_total();
         }
+
+        foreach ($this->orderTotals->modules as $module_file) {
+            $class = pathinfo($module_file, PATHINFO_FILENAME);
+            if (isset($GLOBALS[$class]->eoInfo)) {
+                $GLOBALS[$class]->eoInfo['installed'] = isset($_SESSION['eo-totals'][$class]);
+            }
+        }
+
         return $this->orderTotals;
     }
 
@@ -111,6 +119,9 @@ class EditOrders
     {
         $order = $this->order;
         unset($this->order);
+
+        $this->getUnusedOrderTotalModules($order);
+
         return $order;
     }
 
@@ -175,6 +186,13 @@ class EditOrders
             require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
         }
         $order = new \order();
+
+        // -----
+        // While the unused order-total modules aren't used here, the method
+        // is called to reset the session-based array of credit-class totals
+        // that are currently present in the order.
+        //
+        $this->getUnusedOrderTotalModules($order);
     }
 
     public function queryOrder(\order $order): bool
@@ -272,6 +290,11 @@ class EditOrders
         // Set the content type for this order.
         //
         $this->order->content_type = $this->setContentType($this->order->products);
+
+        // -----
+        // Ensure that the order's current country/zone are set into the session.
+        //
+        $this->getTaxLocations($order, ($order->content_type === 'virtual'));
 
         // -----
         // An order's query (as pulled from the database) doesn't match the storefront
@@ -773,7 +796,7 @@ class EditOrders
     }
     public function getTaxLocations(\order|\stdClass $order, bool $is_virtual_order): array
     {
-        if (STORE_PRODUCT_TAX_BASIS === 'Store') {
+        if (STORE_PRODUCT_TAX_BASIS === 'Store' || $order->info['shipping_module_code'] === 'storepickup') {
             $customer_country_id = STORE_COUNTRY;
             $customer_zone_id = STORE_ZONE;
         } elseif (STORE_PRODUCT_TAX_BASIS === 'Billing' || $is_virtual_order === true) {
@@ -884,10 +907,16 @@ class EditOrders
         $order_totals = $this->getOrderTotalsObject();
 
         $totals_to_skip = ['ot_group_pricing', 'ot_tax', 'ot_loworderfee', 'ot_purchaseorder', 'ot_gv', 'ot_voucher', 'ot_cod_fee'];
+        unset($_SESSION['eo-totals']);
         foreach ($order->totals as $next_ot) {
             $class = $next_ot['class'] ?? $next_ot['code'];
             $totals_to_skip[] = $class;
-            if (!empty($GLOBALS[$class]->eoCanBeAdded)) {
+            if (!empty($GLOBALS[$class]->eoCanBeAdded) || isset($GLOBALS[$class]->eoInfo)) {
+                if (isset($GLOBALS[$class]->eoInfo)) {
+                    $GLOBALS[$class]->eoInfo['installed'] = true;
+                    $GLOBALS[$class]->eoInfo['value'] = $next_ot['value'];
+                }
+
                 $_SESSION['eo-totals'][$class] = ['title' => $next_ot['title'], 'value' => $next_ot['value'],];
             }
         }
@@ -899,15 +928,31 @@ class EditOrders
                 continue;
             }
 
-            if ($class === 'ot_coupon' || !empty($GLOBALS[$class]->eoCanBeAdded)) {
+            if (!empty($GLOBALS[$class]->eoCanBeAdded) || isset($GLOBALS[$class]->eoInfo)) {
+                if (isset($GLOBALS[$class]->eoInfo)) {
+                    $GLOBALS[$class]->eoInfo['installed'] = false;
+                }
                 $unused_totals[] = [
                     'id' => $class,
                     'text' => $GLOBALS[$class]->title,
                 ];
             }
         }
-
         return $unused_totals;
+    }
+
+    public function getCreditSelections(string $ot_class): array
+    {
+        global $order;
+
+        $order = $_SESSION['eoChanges']->getUpdatedOrder();
+        $order_totals = $this->getOrderTotalsObject();
+
+        $credit_selections = [];
+        if (isset($GLOBALS[$ot_class]) && method_exists($GLOBALS[$ot_class], 'credit_selection')) {
+            $credit_selections = $GLOBALS[$ot_class]->credit_selection();
+        }
+        return (is_array($credit_selections)) ? $credit_selections : [];
     }
 
     public function eoGetShippingTaxRate($order)
@@ -1096,7 +1141,7 @@ class EditOrders
         return $address_updates;
     }
 
-    public function updateOrderTotalsInDb(int $oID, array $ot_changes, array $totals_changes): string
+    public function updateOrderTotalsInDb(int $oID, array $ot_changes): string
     {
         global $db;
 
@@ -1104,9 +1149,12 @@ class EditOrders
         $ot_updates .= '<ol type="a">';
 
         $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
-        foreach ($totals_changes as $ot_index => $change_type) {
-            $updated_total = $updated_order->totals[$ot_index];
+
+        foreach ($ot_changes as $ot_index => $ot_info) {
+            $change_type = $ot_info['status'];
+            $ot_class = $ot_info['label'];
             if ($change_type === 'added') {
+                $updated_total = $this->getOrderTotalByClass($updated_order->totals, $ot_class);
                 $ot = [
                     ['fieldName' => 'orders_id', 'value' => $oID, 'type' => 'integer'],
                     ['fieldName' => 'title', 'value' => $updated_total['title'], 'type' => 'string'],
@@ -1116,31 +1164,33 @@ class EditOrders
                     ['fieldName' => 'sort_order', 'value' => $updated_total['sort_order'], 'type' => 'integer'],
                 ];
                 $db->perform(TABLE_ORDERS_TOTAL, $ot);
-                $ot_updates .= '<li>' . sprintf(TEXT_ORDER_TOTAL_ADDED, $updated_total['code'], $ot_changes[$ot_index]['updated']) . '</li>';
+                $ot_updates .= '<li>' . sprintf(TEXT_ORDER_TOTAL_ADDED, $ot_class, $ot_info['updated']) . '</li>';
                 continue;
             }
 
             if ($change_type === 'removed') {
-                if ($updated_total['class'] !== 'ot_tax') {
+                if ($ot_class !== 'ot_tax') {
                     $db->Execute(
                         "DELETE FROM " . TABLE_ORDERS_TOTAL . "
                           WHERE orders_id = " . (int)$oID . "
-                            AND `class` = '" . $updated_total['class'] . "'
+                            AND `class` = '" . $ot_class . "'
                           LIMIT 1"
                     );
                 } else {
+                    $original_total = $_SESSION['eoChanges']->getOriginalOrder()->totals[$ot_index];
                     $db->Execute(
                         "DELETE FROM " . TABLE_ORDERS_TOTAL . "
                           WHERE orders_id = " . (int)$oID . "
-                            AND `class` = '" . $updated_total['class'] . "'
-                            AND `title` = '" . zen_db_input($updated_total['title']) . "'
+                            AND `class` = '" . $ot_class . "'
+                            AND `title` = '" . zen_db_input($original_total['title']) . "'
                           LIMIT 1"
                     );
                 }
-                $ot_updates .= '<li>' . sprintf(TEXT_ORDER_TOTAL_REMOVED, $updated_total['class'], $ot_changes[$ot_index]['original']) . '</li>';
+                $ot_updates .= '<li>' . sprintf(TEXT_ORDER_TOTAL_REMOVED, $ot_class, $ot_info['original']) . '</li>';
                 continue;
             }
 
+            $updated_total = $this->getOrderTotalByClass($updated_order->totals, $ot_class);
             $and_clause = ($updated_total['class'] === 'ot_tax') ? (" AND `title` = '" . zen_db_input($updated_total['title']) . "'") : '';
             $ot = [
                 ['fieldName' => 'title', 'value' => $updated_total['title'], 'type' => 'string'],
@@ -1151,13 +1201,22 @@ class EditOrders
                 TABLE_ORDERS_TOTAL,
                 $ot,
                 'update',
-                'orders_id = ' . (int)$oID . " AND `class` = '" . $updated_total['class'] . "'" . $and_clause . ' LIMIT 1'
+                'orders_id = ' . (int)$oID . " AND `class` = '" . $ot_class . "'" . $and_clause . ' LIMIT 1'
             );
-            $ot_updates .= '<li>' . sprintf(TEXT_VALUE_CHANGED, $updated_total['class'], $ot_changes[$ot_index]['original'], $ot_changes[$ot_index]['updated']) . '</li>';
+            $ot_updates .= '<li>' . sprintf(TEXT_VALUE_CHANGED, $ot_class, $ot_info['original'], $ot_info['updated']) . '</li>';
         }
 
         $ot_updates .= '</ol>';
         return $ot_updates;
+    }
+    protected function getOrderTotalByClass(array $order_totals, string $ot_class): array
+    {
+        foreach ($order_totals as $next_total) {
+            if ($next_total['class'] === $ot_class) {
+                return $next_total;
+            }
+        }
+        return [];
     }
 
     public function updateOrderedProductsInDb(int $oID, array $products_changes): string

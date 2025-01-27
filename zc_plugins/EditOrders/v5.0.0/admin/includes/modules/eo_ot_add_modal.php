@@ -2,7 +2,7 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2024 The zen-cart developers
+// Copyright (c) 2024-2025 The zen-cart developers
 //
 // Last modified v5.0.0
 //
@@ -32,13 +32,9 @@ switch ($ot_class) {
 
     default:
         $unused_order_totals = $eo->getUnusedOrderTotalModules($updated_order);
-        $ot_title = 'Unknown';
-        foreach ($unused_order_totals as $i => $next_total) {
-            if ($next_total['id'] === $ot_class) {
-                $ot_title = $next_total['text'];
-                break;
-            }
-        }
+        $ot_title = $GLOBALS[$ot_class]->title ?? 'Unknown';
+        $credit_selections = $eo->getCreditSelections($ot_class);
+        if (empty($credit_selections)) {
 ?>
         <div class="form-group">
             <label class="control-label col-sm-3" for="ot-title"><?= TEXT_LABEL_TITLE ?></label>
@@ -46,6 +42,7 @@ switch ($ot_class) {
                 <?= zen_draw_input_field('title', $ot_title, 'id="ot-title" class="form-control"') ?>
             </div>
         </div>
+
         <div class="form-group">
             <label class="control-label col-sm-3" for="ot-value"><?= TEXT_LABEL_VALUE ?></label>
             <div class="col-sm-9">
@@ -53,6 +50,19 @@ switch ($ot_class) {
             </div>
         </div>
 <?php
+            break;
+        }
+
+        foreach ($credit_selections['fields'] as $next_field) {
+?>
+        <div class="form-group">
+            <label class="control-label col-sm-3" for="<?= $next_field['tag'] ?>"><?= $next_field['title'] ?></label>
+            <div class="col-sm-9">
+                <?= $next_field['field'] ?>
+            </div>
+        </div>
+<?php
+        }
         break;
 }
 ?>
