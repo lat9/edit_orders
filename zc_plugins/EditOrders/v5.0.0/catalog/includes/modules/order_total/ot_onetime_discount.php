@@ -143,7 +143,7 @@ class ot_onetime_discount
             if (MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_DEDUCTION_ONLY === 'true' && $this->eoInfo['value'] > 0) {
                 $this->eoInfo['value'] *= -1;
             }
-            
+
             if (MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_CHANGE_TITLE === 'true') {
                 $this->eoInfo['title'] = $_POST['title'];
             }
