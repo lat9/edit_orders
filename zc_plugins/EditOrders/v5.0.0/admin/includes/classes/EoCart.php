@@ -106,6 +106,9 @@ class EoCart extends \shoppingCart
     {
         $this->total = 0;
         $this->weight = 0;
+        $this->free_shipping_item = 0;
+        $this->free_shipping_price = 0;
+        $this->free_shipping_weight = 0;
         foreach ($ordered_products as $product) {
             if (empty($product)) {
                 continue;
@@ -119,9 +122,22 @@ class EoCart extends \shoppingCart
                 }
             }
 
-            $this->contents[$uprid]['qty'] = (float)$product['qty'];
-            $this->total += ($product['qty'] * $product['final_price']) + $product['onetime_charges'];
-            $this->weight += $product['qty'] * $product['products_weight'];
+            $qty = (float)$product['qty'];
+            $this->contents[$uprid]['qty'] = $qty;
+
+            $products_total = zen_add_tax(($qty * $product['final_price']) + $product['onetime_charges'], $product['tax']);
+            $products_weight = $qty * $product['products_weight'];
+
+            $this->total += $products_total;
+            $this->weight += $products_weight;
+
+            $is_free_shipping = $this->productIsVirtual($product, $this->contents[$uprid]['attributes'] ?? []);
+            $is_free_shipping |= ($product['product_is_always_free_shipping'] === 1);
+            if ($is_free_shipping === true) {
+                $this->free_shipping_item += $qty;
+                $this->free_shipping_price += $products_total;
+                $this->free_shipping_weight += $products_weight;
+            }
         }
     }
 
@@ -132,9 +148,19 @@ class EoCart extends \shoppingCart
     {
         unset($this->contents[$uprid]);
 
-        $quantity = $product['quantity'] ?? $product['qty'];
-        $this->total -= (($quantity * $product['final_price']) + $product['onetime_charges']);
-        $this->weight -= $quantity * $product['products_weight'];
+        $qty = $product['quantity'] ?? $product['qty'];
+
+        $products_total = zen_add_tax(($qty * $product['final_price']) + $product['onetime_charges'], $product['tax']);
+        $products_weight = $qty * $product['products_weight'];
+
+        $this->total -= $products_total;
+        $this->weight -= $products_weight;
+
+        if ($product['is_virtual'] === true || $product['product_is_always_free_shipping'] === 1) {
+            $this->free_shipping_item -= $qty;
+            $this->free_shipping_price -= $products_total;
+            $this->free_shipping_weight -= $products_weight;
+        }
     }
 
     // -----
@@ -204,11 +230,49 @@ class EoCart extends \shoppingCart
         $new_product['qty'] = $qty;
         $new_product['products_weight'] = $new_product['weight'];
         $new_product['cart_contents'] = $uprid_contents;
+        $new_product['is_virtual'] ??= $this->productIsVirtual($new_product, $cart_attributes);
 
-        $this->total += (($qty * $new_product['final_price']) + $new_product['onetime_charges']);
-        $this->weight += $qty * $new_product['products_weight'];
+        $products_total = zen_add_tax(($qty * $new_product['final_price']) + $new_product['onetime_charges'], $new_product['tax']);
+        $products_weight = $qty * $new_product['products_weight'];
+
+        $this->total += $products_total;
+        $this->weight += $products_weight;
+
+        if ($product['is_virtual'] === true || $product['product_is_always_free_shipping'] === 1) {
+            $this->free_shipping_item += $qty;
+            $this->free_shipping_price += $products_total;
+            $this->free_shipping_weight += $products_weight;
+        }
 
         return $new_product;
+    }
+
+    protected function productIsVirtual(array $product, array $attributes): bool
+    {
+        if ($product['products_virtual'] === 1 || str_starts_with($product['model'], 'GIFT')) {
+            return true;
+        }
+
+        global $db;
+
+        $products_id = (int)$product['id'];
+        foreach ($attributes as $option_id => $value_id) {
+            $download_check = $db->Execute(
+                "SELECT pa.products_attributes_id
+                   FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
+                        INNER JOIN " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
+                            ON pad.products_attributes_id = pa.products_attributes_id
+                  WHERE pa.products_id = $products_id
+                    AND pa.options_values_id = " . (int)$value_id . "
+                    AND pa.options_id = " . (int)$option_id . "
+                  LIMIT 1"
+            );
+            if (!$download_check->EOF) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected function isUnsupportedMethod()
@@ -513,16 +577,17 @@ class EoCart extends \shoppingCart
         return parent::gv_only(); 
     }
 
-    // -----
-    // Called by zen_get_shipping_enabled, which is called by "most"
-    // shipping modules to see if they should display. EO's cart
-    // **always** responds with a cost of 0.0, so that any currently-
-    // selected shipping modules' names will display in the dropdown
-    // on the main EO page.
-    //
     public function free_shipping_items()
     {
-        return 0.0;
+        return $this->free_shipping_items;
+    }
+    public function free_shipping_prices()
+    {
+        return $this->free_shipping_price;
+    }
+    public function free_shipping_weight()
+    {
+        return $this->free_shipping_weight;
     }
 
     // -----
@@ -530,16 +595,6 @@ class EoCart extends \shoppingCart
     // the shipping quote determination and "should not" be required
     // during an order's edit.
     //
-    public function free_shipping_prices()
-    {
-        $this->isUnsupportedMethod();
-        return 0.0;
-    }
-    public function free_shipping_weight()
-    {
-        $this->isUnsupportedMethod();
-        return 0.0;
-    }
     public function download_counts()
     {
         $this->isUnsupportedMethod();

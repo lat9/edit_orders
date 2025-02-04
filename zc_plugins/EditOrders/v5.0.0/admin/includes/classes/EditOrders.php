@@ -47,6 +47,10 @@ class EditOrders
             $class = pathinfo($module_file, PATHINFO_FILENAME);
             if (isset($GLOBALS[$class]->eoInfo)) {
                 $GLOBALS[$class]->eoInfo['installed'] = isset($_SESSION['eo-totals'][$class]);
+                if (isset($_SESSION['eo-totals'][$class])) {
+                    $GLOBALS[$class]->eoInfo['value'] = $_SESSION['eo-totals'][$class]['value'];
+                    $GLOBALS[$class]->eoInfo['title'] = $_SESSION['eo-totals'][$class]['title'];
+                }
             }
         }
 
@@ -135,29 +139,6 @@ class EditOrders
             return [];
         }
 
-        $cart_product['is_virtual'] = ($cart_product['products_virtual'] === 1 || str_starts_with($cart_product['model'], 'GIFT'));
-        if (!empty($cart_product['attributes'])) {
-            foreach ($cart_product['attributes'] as $option_id => $value_id) {
-                $products_id = (int)$cart_product['id'];
-                $download_check = $db->Execute(
-                    "SELECT pa.products_attributes_id
-                       FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
-                            INNER JOIN " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
-                                ON pad.products_attributes_id = pa.products_attributes_id
-                      WHERE pa.products_id = $products_id
-                        AND pa.options_values_id = " . (int)$value_id . "
-                        AND pa.options_id = " . (int)$option_id . "
-                      LIMIT 1"
-                );
-
-                if (!$download_check->EOF) {
-                    $this->eoLog("\nAdded product $products_id, attribute is download, $option_id/$value_id");
-                    $cart_product['is_virtual'] = true;
-                    break;
-                }
-            }
-        }
-
         $this->notify('NOTIFY_EO_ADD_PRODUCT_TO_CART',
             [
                 'uprid' => $uprid,
@@ -186,13 +167,6 @@ class EditOrders
             require DIR_FS_CATALOG . DIR_WS_CLASSES . 'order.php';
         }
         $order = new \order();
-
-        // -----
-        // While the unused order-total modules aren't used here, the method
-        // is called to reset the session-based array of credit-class totals
-        // that are currently present in the order.
-        //
-        $this->getUnusedOrderTotalModules($order);
     }
 
     public function queryOrder(\order $order): bool
@@ -911,11 +885,10 @@ class EditOrders
         foreach ($order->totals as $next_ot) {
             $class = $next_ot['class'] ?? $next_ot['code'];
             $totals_to_skip[] = $class;
-            if (!empty($GLOBALS[$class]->eoCanBeAdded) || isset($GLOBALS[$class]->eoInfo)) {
-                if (isset($GLOBALS[$class]->eoInfo)) {
-                    $GLOBALS[$class]->eoInfo['installed'] = true;
-                    $GLOBALS[$class]->eoInfo['value'] = $next_ot['value'];
-                }
+            if (isset($GLOBALS[$class]->eoInfo)) {
+                $GLOBALS[$class]->eoInfo['installed'] = true;
+                $GLOBALS[$class]->eoInfo['value'] = $next_ot['value'];
+                $GLOBALS[$class]->eoInfo['title'] = $next_ot['title'];
 
                 $_SESSION['eo-totals'][$class] = ['title' => $next_ot['title'], 'value' => $next_ot['value'],];
             }
@@ -928,16 +901,15 @@ class EditOrders
                 continue;
             }
 
-            if (!empty($GLOBALS[$class]->eoCanBeAdded) || isset($GLOBALS[$class]->eoInfo)) {
-                if (isset($GLOBALS[$class]->eoInfo)) {
-                    $GLOBALS[$class]->eoInfo['installed'] = false;
-                }
+            if (isset($GLOBALS[$class]->eoInfo)) {
+                $GLOBALS[$class]->eoInfo['installed'] = false;
                 $unused_totals[] = [
                     'id' => $class,
                     'text' => $GLOBALS[$class]->title,
                 ];
             }
         }
+        $this->eoLog("getUnusedOrderTotalModules(" . ($_GET['act'] ?? 'n/a') . "). Totals on entry:\n" . $this->eoFormatArray($order->totals) . "\nSession eo-totals:\n" . $this->eoFormatArray($_SESSION['eo-totals'] ?? []));
         return $unused_totals;
     }
 
