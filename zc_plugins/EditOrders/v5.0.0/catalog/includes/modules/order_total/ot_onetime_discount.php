@@ -156,6 +156,14 @@ class ot_onetime_discount
     {
     }
 
+    public function update_credit_account($i): void
+    {
+    }
+
+    public function apply_credit(): void
+    {
+    }
+
     public function check()
     {
         global $db;
