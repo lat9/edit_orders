@@ -95,6 +95,17 @@ class ScriptedInstaller extends ScriptedInstallBase
         ]);
 
         $this->deleteConfigurationGroup($this->configGroupTitle, true);
+
+        // -----
+        // Since ot_onetime_discount and ot_misc_cost are distributed as part
+        // of this plugin, when EO is uninstalled any configuration settings
+        // for those order-total modules are also removed.
+        //
+        $this->executeInstallerSql(
+            "DELETE FROM " . TABLE_CONFIGURATION . "
+              WHERE configuration_key LIKE 'MODULE\_ORDER\_TOTAL\_ONETIME_DISCOUNT\_%'
+                 OR configuration_key LIKE 'MODULE\_ORDER\_TOTAL\_MISC\_COST\_%'"
+        );
     }
 
     protected function nonEncapsulatedVersionPresent(): bool
