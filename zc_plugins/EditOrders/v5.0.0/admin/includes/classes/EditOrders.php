@@ -1117,9 +1117,7 @@ class EditOrders
     {
         global $db;
 
-        $ot_updates = '<li>' . TEXT_OT_CHANGES . '</li>';
-        $ot_updates .= '<ol type="a">';
-
+        $ot_updates = '<li>' . TEXT_OT_CHANGES . '<ol type="a">';
         $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
 
         foreach ($ot_changes as $ot_index => $ot_info) {
@@ -1178,7 +1176,7 @@ class EditOrders
             $ot_updates .= '<li>' . sprintf(TEXT_VALUE_CHANGED, $ot_class, $ot_info['original'], $ot_info['updated']) . '</li>';
         }
 
-        $ot_updates .= '</ol>';
+        $ot_updates .= '</ol></li>';
         return $ot_updates;
     }
     protected function getOrderTotalByClass(array $order_totals, string $ot_class): array
@@ -1195,9 +1193,7 @@ class EditOrders
     {
         global $db;
 
-        $products_updates = '<li>' . TEXT_PRODUCT_CHANGES . '</li>';
-        $products_updates .= '<ol type="a">';
-
+        $products_updates = '<li>' . TEXT_PRODUCT_CHANGES . '<ol type="a">';
         foreach ($products_changes as $uprid => $changes) {
             $products_updates .= '<li>' . $changes['label'] . '</li>';
 
@@ -1414,7 +1410,7 @@ class EditOrders
             }
         }
 
-        $products_updates .= '</ol>';
+        $products_updates .= '</ol></li>';
         return $products_updates;
     }
 

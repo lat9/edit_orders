@@ -161,15 +161,14 @@ switch ($action) {
                 continue;
             }
 
-            $order_changed_message .= '<li>' . $title . '</li>';
-            $order_changed_message .= '<ol type="a">';
+            $order_changed_message .= '<li>' . $title . '<ol type="a">';
             foreach ($changes as $next_change) {
                 $original_value = '"' . $next_change['original'] . '"';
                 $updated_value = '"' . $next_change['updated'] . '"';
                 $label = rtrim($next_change['label'], ':');
                 $order_changed_message .= '<li>' . sprintf(TEXT_VALUE_CHANGED, $label, $original_value, $updated_value) . '</li>';
             }
-            $order_changed_message .= '</ol>';
+            $order_changed_message .= '</ol></li>';
         }
         if ($order_changed_message !== '') {
             $order_changed_message = TEXT_OSH_CHANGED_VALUES . "\n<ol>" . $order_changed_message . '</ol>';
