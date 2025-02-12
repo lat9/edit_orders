@@ -204,7 +204,7 @@ $define = [
 // Required for various added zen_cart functions
     'PULL_DOWN_DEFAULT' => 'Please Choose Your Country',
 
-    'TEXT_UNKNOWN_TAX_RATE_MANUAL' => 'Sales Tax (%s%%)',
+    'TEXT_UNKNOWN_TAX_RATE_MANUAL' => 'Sales Tax %s%%',
     'TEXT_UNKNOWN_TAX_RATE' => 'Sales Tax',
 
 // Other elements

@@ -319,6 +319,7 @@ class EoOrderChanges
                 $ot_changes[$ot_index] = [
                     'status' => 'removed',
                     'label' => $this->original->totals[$ot_index]['class'],
+                    'title' => $this->original->totals[$ot_index]['title'],
                     'original' => $this->formatOrderTotalChanges($this->original->totals[$ot_index]),
                 ];
                 continue;
@@ -328,6 +329,10 @@ class EoOrderChanges
                 $ot_changes[$ot_index] = [
                     'status' => 'added',
                     'label' => $this->updated->totals[$ot_index]['code'],
+                    'title' => $this->updated->totals[$ot_index]['title'],
+                    'value' => $this->updated->totals[$ot_index]['value'],
+                    'text' => $this->updated->totals[$ot_index]['text'],
+                    'sort_order' => $this->updated->totals[$ot_index]['sort_order'],
                     'updated' => $this->formatOrderTotalChanges($this->updated->totals[$ot_index]),
                 ];
                 continue;
@@ -336,6 +341,9 @@ class EoOrderChanges
             $ot_changes[$ot_index] = [
                 'status' => 'updated',
                 'label' => $this->updated->totals[$ot_index]['class'],
+                'title' => $this->updated->totals[$ot_index]['title'],
+                'value' => $this->updated->totals[$ot_index]['value'],
+                'text' => $this->updated->totals[$ot_index]['text'],
                 'original' => $this->formatOrderTotalChanges($this->original->totals[$ot_index]),
                 'updated' => $this->formatOrderTotalChanges($this->updated->totals[$ot_index]),
             ];
@@ -673,6 +681,14 @@ class EoOrderChanges
 
                 if (($this->original->products[$index][$field] ?? $this->updated->products[$index][$field]) != $value) {
                     $changes++;
+
+                    // -----
+                    // If the product's tax-rate has changed, need to also adjust the product's
+                    // tax-groups array and tax-description string.
+                    //
+                    if ($field === 'tax') {
+                        $this->updateProductTaxGroupDescription($index, $value);
+                    }
                 }
 
                 if ($field === 'qty' && $value == 0) {
@@ -694,6 +710,24 @@ class EoOrderChanges
                 $this->recordProductChanges($changes, $index, $original_uprid, $is_removal);
             }
         }
+    }
+    protected function updateProductTaxGroupDescription(int $index, int|float $tax_rate): void
+    {
+        foreach ($this->updated->info['tax_subtotals'] as $description => $tax_info) {
+            if ($tax_info['tax_rate'] == $tax_rate) {
+                $this->updated->products[$index]['tax_description'] = $description;
+                $this->updated->products[$index]['tax_groups'][$description] = $tax_rate;
+                return;
+            }
+        }
+
+        // -----
+        // Still here?  There was no pre-recorded tax description associated with the submitted
+        // tax-rate, so a new one is added.
+        //
+        $description = sprintf(TEXT_UNKNOWN_TAX_RATE_MANUAL, (string)$tax_rate);
+        $this->updated->products[$index]['tax_description'] = $description;
+        $this->updated->products[$index]['tax_groups'][$description] = $tax_rate;
     }
 
     // -----

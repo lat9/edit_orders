@@ -459,6 +459,26 @@ class EditOrders
             }
         }
 
+        // -----
+        // Finally, the order's query doesn't pull in the sort_order of the order's various
+        // order-total modules, requery the totals to ensure that that field is present.
+        //
+        $totals = $db->Execute(
+            "SELECT title, text, class, value, sort_order
+               FROM " . TABLE_ORDERS_TOTAL . "
+              WHERE orders_id = " . (int)$this->orders_id . "
+              ORDER BY sort_order"
+        );
+        foreach ($totals as $next_total) {
+            $next_total_match = $next_total['title'] . $next_total['text'] . $next_total['class'] . $next_total['value'];
+            foreach ($this->order->totals as $index => $ot) {
+                if ($next_total_match === $ot['title'] . $ot['text'] . $ot['class'] . $ot['value']) {
+                    $this->order->totals[$index]['sort_order'] = $next_total['sort_order'];
+                    break;
+                }
+            }
+        }
+
         return true;
     }
 
@@ -1118,20 +1138,17 @@ class EditOrders
         global $db;
 
         $ot_updates = '<li>' . TEXT_OT_CHANGES . '<ol type="a">';
-        $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
-
         foreach ($ot_changes as $ot_index => $ot_info) {
             $change_type = $ot_info['status'];
             $ot_class = $ot_info['label'];
             if ($change_type === 'added') {
-                $updated_total = $this->getOrderTotalByClass($updated_order->totals, $ot_class);
                 $ot = [
                     ['fieldName' => 'orders_id', 'value' => $oID, 'type' => 'integer'],
-                    ['fieldName' => 'title', 'value' => $updated_total['title'], 'type' => 'string'],
-                    ['fieldName' => 'text', 'value' => $updated_total['text'], 'type' => 'string'],
-                    ['fieldName' => 'value', 'value' => $updated_total['value'], 'type' => 'float'],
-                    ['fieldName' => 'class', 'value' => $updated_total['code'], 'type' => 'string' ],
-                    ['fieldName' => 'sort_order', 'value' => $updated_total['sort_order'], 'type' => 'integer'],
+                    ['fieldName' => 'title', 'value' => $ot_info['title'], 'type' => 'string'],
+                    ['fieldName' => 'text', 'value' => $ot_info['text'], 'type' => 'string'],
+                    ['fieldName' => 'value', 'value' => $ot_info['value'], 'type' => 'float'],
+                    ['fieldName' => 'class', 'value' => $ot_class, 'type' => 'string'],
+                    ['fieldName' => 'sort_order', 'value' => $ot_info['sort_order'], 'type' => 'integer'],
                 ];
                 $db->perform(TABLE_ORDERS_TOTAL, $ot);
                 $ot_updates .= '<li>' . sprintf(TEXT_ORDER_TOTAL_ADDED, $ot_class, $ot_info['updated']) . '</li>';
@@ -1147,12 +1164,11 @@ class EditOrders
                           LIMIT 1"
                     );
                 } else {
-                    $original_total = $_SESSION['eoChanges']->getOriginalOrder()->totals[$ot_index];
                     $db->Execute(
                         "DELETE FROM " . TABLE_ORDERS_TOTAL . "
                           WHERE orders_id = " . (int)$oID . "
                             AND `class` = '" . $ot_class . "'
-                            AND `title` = '" . zen_db_input($original_total['title']) . "'
+                            AND `title` = '" . zen_db_input($ot_info['title']) . "'
                           LIMIT 1"
                     );
                 }
@@ -1160,12 +1176,11 @@ class EditOrders
                 continue;
             }
 
-            $updated_total = $this->getOrderTotalByClass($updated_order->totals, $ot_class);
-            $and_clause = ($updated_total['class'] === 'ot_tax') ? (" AND `title` = '" . zen_db_input($updated_total['title']) . "'") : '';
+            $and_clause = ($ot_class === 'ot_tax') ? (" AND `title` = '" . zen_db_input($ot_info['title']) . "'") : '';
             $ot = [
-                ['fieldName' => 'title', 'value' => $updated_total['title'], 'type' => 'string'],
-                ['fieldName' => 'text', 'value' => $updated_total['text'], 'type' => 'string'],
-                ['fieldName' => 'value', 'value' => $updated_total['value'], 'type' => 'float'],
+                ['fieldName' => 'title', 'value' => $ot_info['title'], 'type' => 'string'],
+                ['fieldName' => 'text', 'value' => $ot_info['text'], 'type' => 'string'],
+                ['fieldName' => 'value', 'value' => $ot_info['value'], 'type' => 'float'],
             ];
             $db->perform(
                 TABLE_ORDERS_TOTAL,
@@ -1178,15 +1193,6 @@ class EditOrders
 
         $ot_updates .= '</ol></li>';
         return $ot_updates;
-    }
-    protected function getOrderTotalByClass(array $order_totals, string $ot_class): array
-    {
-        foreach ($order_totals as $next_total) {
-            if ($next_total['class'] === $ot_class) {
-                return $next_total;
-            }
-        }
-        return [];
     }
 
     public function updateOrderedProductsInDb(int $oID, array $products_changes): string
