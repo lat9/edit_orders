@@ -146,19 +146,19 @@ if (!empty($new_product)) {
                     <?= zen_draw_input_field('name', $new_product['name'], 'id="prod-name" class="form-control" ' . $name_params) ?>
                 </div>
             </div>
-
+<?php
+    // -----
+    // Determine whether prices and taxes can be manually updated.
+    //
+    $price_entry_disabled = ($_SESSION['eo_price_calculations'] === 'Manual') ? '' : 'disabled';
+?>
             <div class="form-group">
                 <label class="control-label col-sm-2" for="prod-tax"><?= TEXT_LABEL_TAX ?></label>
                 <div class="col-sm-10">
-                    <?= zen_draw_input_field('tax', $new_product['tax'], 'id="prod-tax" class="form-control" disabled', false, 'number') ?>
+                    <?= zen_draw_input_field('tax', $new_product['tax'], 'id="prod-tax" class="form-control" min="0" max="100" step="any" ' . $price_entry_disabled, false, 'number') ?>
                 </div>
             </div>
 <?php
-    // -----
-    // Determine whether prices can be manually updated.
-    //
-    $price_entry_disabled = ($_SESSION['eo_price_calculations'] === 'Manual') ? '' : 'disabled';
-
     $final_price = $new_product['final_price'];
     $final_price_label = rtrim((DISPLAY_PRICE_WITH_TAX === 'true') ? TABLE_HEADING_UNIT_PRICE_NET : TABLE_HEADING_UNIT_PRICE, ':');
 ?>

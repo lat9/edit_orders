@@ -181,7 +181,7 @@ if (empty($original_product) && empty($updated_product)) {
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="prod-tax"><?= TEXT_LABEL_TAX ?></label>
                     <div class="col-sm-10">
-                        <?= zen_draw_input_field('tax', $updated_product['tax'], 'id="prod-tax" class="form-control" min="0" max="100" step="any"', false, 'number') ?>
+                        <?= zen_draw_input_field('tax', $updated_product['tax'], 'id="prod-tax" class="form-control" min="0" max="100" step="any" ' . $price_entry_disabled, false, 'number') ?>
                     </div>
                 </div>
 <?php

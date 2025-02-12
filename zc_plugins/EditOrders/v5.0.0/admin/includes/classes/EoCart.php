@@ -232,13 +232,17 @@ class EoCart extends \shoppingCart
         $new_product['cart_contents'] = $uprid_contents;
         $new_product['is_virtual'] ??= $this->productIsVirtual($new_product, $cart_attributes);
 
-        $products_total = zen_add_tax(($qty * $new_product['final_price']) + $new_product['onetime_charges'], $new_product['tax']);
+        // -----
+        // Note: 'tax' isn't present for a newly-added product; it'll be calculated (as will total/weight)
+        // at a later time.
+        //
+        $products_total = zen_add_tax(($qty * $new_product['final_price']) + $new_product['onetime_charges'], $new_product['tax'] ?? 0);
         $products_weight = $qty * $new_product['products_weight'];
 
         $this->total += $products_total;
         $this->weight += $products_weight;
 
-        if ($product['is_virtual'] === true || $product['product_is_always_free_shipping'] === 1) {
+        if ($new_product['is_virtual'] === true || $new_product['product_is_always_free_shipping'] === 1) {
             $this->free_shipping_item += $qty;
             $this->free_shipping_price += $products_total;
             $this->free_shipping_weight += $products_weight;
