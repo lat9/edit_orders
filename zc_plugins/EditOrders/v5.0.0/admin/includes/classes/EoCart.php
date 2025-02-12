@@ -579,7 +579,7 @@ class EoCart extends \shoppingCart
 
     public function free_shipping_items()
     {
-        return $this->free_shipping_items;
+        return $this->free_shipping_item;
     }
     public function free_shipping_prices()
     {
