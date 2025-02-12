@@ -393,7 +393,7 @@ class EditOrders
             $next_product['tax'] = (float)$next_product['tax'];
             $next_product['final_price'] = (float)$next_product['final_price'];
             $next_product['onetime_charges'] = $this->convertToIntOrFloat($next_product['onetime_charges']);
-            $next_product['weight'] = $this->convertToIntOrFloat($next_product['products_weight']);
+            $next_product['weight'] = $this->convertToIntOrFloat((string)$next_product['products_weight']);
             $next_product['products_weight'] = (float)$next_product['products_weight'];
             $next_product['products_virtual'] = (int)$next_product['products_virtual'];
             $next_product['product_is_always_free_shipping'] = (int)$next_product['product_is_always_free_shipping'];
