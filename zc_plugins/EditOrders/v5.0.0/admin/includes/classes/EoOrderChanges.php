@@ -316,12 +316,14 @@ class EoOrderChanges
         $ot_changes = [];
         foreach ($this->totalsChanges as $ot_index => $ot_status) {
             if ($ot_status === 'removed') {
-                $ot_changes[$ot_index] = [
-                    'status' => 'removed',
-                    'label' => $this->original->totals[$ot_index]['class'],
-                    'title' => $this->original->totals[$ot_index]['title'],
-                    'original' => $this->formatOrderTotalChanges($this->original->totals[$ot_index]),
-                ];
+                if (isset($this->original->totals[$ot_index])) {
+                    $ot_changes[$ot_index] = [
+                        'status' => 'removed',
+                        'label' => $this->original->totals[$ot_index]['class'],
+                        'title' => $this->original->totals[$ot_index]['title'],
+                        'original' => $this->formatOrderTotalChanges($this->original->totals[$ot_index]),
+                    ];
+                }
                 continue;
             }
 

@@ -144,7 +144,7 @@ class EditOrdersAdminObserver extends base
         }
 
         $external_shipping_tax_handler = true;
-        
+
         $updated_order = $_SESSION['eoChanges']->getUpdatedOrder();
         $shipping_tax = $updated_order->info['shipping_tax_rate'];
         $shipping_tax_description = $updated_order->info['shipping_tax_description'];

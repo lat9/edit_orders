@@ -293,6 +293,15 @@ class zcAjaxEditOrdersAdmin
         return $modal_html;
     }
 
+    protected function loadCurrencies(): void
+    {
+        global $currencies;
+        if (!class_exists('currencies')) {
+            require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
+        }
+        $currencies ??= new \currencies();
+    }
+
     protected function getOrderTotalsChangesModal(array $fields_changed): string
     {
         $modal_html =
@@ -346,6 +355,8 @@ class zcAjaxEditOrdersAdmin
     //
     public function getOrderTotalUpdateModal(): array
     {
+        $this->loadCurrencies();
+
         return $this->getModalContent('eo_ot_update_modal.php');
     }
 
@@ -354,6 +365,8 @@ class zcAjaxEditOrdersAdmin
     //
     public function getOrderTotalAddModal(): array
     {
+        $this->loadCurrencies();
+
         return $this->getModalContent('eo_ot_add_modal.php');
     }
 
@@ -383,11 +396,7 @@ class zcAjaxEditOrdersAdmin
     //
     public function newProductSearch(): array
     {
-        global $currencies;
-        if (!class_exists('currencies')) {
-            require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
-        }
-        $currencies ??= new \currencies();
+        $this->loadCurrencies();
 
         $pulldown = new EoProductPulldown();
         $pulldown->showModel(true)->showPrice(true)->onlyActive(true)->showID(true);
@@ -412,11 +421,7 @@ class zcAjaxEditOrdersAdmin
     //
     public function getProductsInCategory(): array
     {
-        global $currencies;
-        if (!class_exists('currencies')) {
-            require DIR_FS_CATALOG . DIR_WS_CLASSES . 'currencies.php';
-        }
-        $currencies ??= new \currencies();
+        $this->loadCurrencies();
 
         $pulldown = new EoProductPulldown();
         $pulldown->showModel(true)->showPrice(true)->onlyActive(true)->setCategory((int)($_POST['categories_id'] ?? '0'))->showID(true);
@@ -760,12 +765,12 @@ class zcAjaxEditOrdersAdmin
         $eo->eoLog("processOrderUpdate, info:\n" . $eo->eoFormatArray($order->info) . "\nproducts:\n" . $eo->eoFormatArray($order->products));
 
         $order_total_modules = $eo->getOrderTotalsObject();
-        if (!isset($_POST['dc_redeem_code'], $GLOBALS['ot_coupon']) || $_POST['dc_redeem_code'] === $order->info['coupon_code']) {
+        if (!isset($_POST['dc_redeem_code']) || $_POST['dc_redeem_code'] === $order->info['coupon_code']) {
             $order_total_modules->collect_posts();
         } elseif (strtoupper($_POST['dc_redeem_code']) === TEXT_COMMAND_TO_DELETE_CURRENT_COUPON_FROM_ORDER) {
             unset($_SESSION['cc_id']);
             $order->info['coupon_code'] = '';
-        } else {
+        } elseif (isset($GLOBALS['ot_coupon'])) {
             $coupon_id = $GLOBALS['ot_coupon']->performValidations($_POST['dc_redeem_code']);
             $coupon_errors = $GLOBALS['ot_coupon']->getValidationErrors();
             if (count($coupon_errors) === 0) {

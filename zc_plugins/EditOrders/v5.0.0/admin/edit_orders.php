@@ -292,7 +292,7 @@ foreach ($order->totals as $next_total) {
             break;
 
         default:
-            if (!empty($GLOBALS[$next_total['class']]->eoCanBeAdded) || !empty($GLOBALS[$next_total['class']]->credit_class)) {
+            if (!empty($GLOBALS[$next_total['class']]->credit_class)) {
                 $_SESSION['eo-totals'][$next_total['class']] = ['title' => $next_total['title'], 'value' => $next_total['value']];
             }
             break;

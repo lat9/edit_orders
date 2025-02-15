@@ -157,7 +157,7 @@ foreach ($order->totals as $next_total) {
             break;
 
         default:
-            if (empty($GLOBALS[$total_class]->eoCanBeAdded) && empty($GLOBALS[$total_class]->credit_class)) {
+            if (empty($GLOBALS[$total_class]->credit_class)) {
 ?>
     <td colspan="<?= $columns - 2 ?>"></td>
  
