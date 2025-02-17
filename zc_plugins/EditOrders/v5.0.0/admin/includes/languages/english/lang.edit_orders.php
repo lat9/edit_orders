@@ -142,7 +142,7 @@ $define = [
     'TEXT_COMMAND_TO_DELETE_CURRENT_COUPON_FROM_ORDER' => 'REMOVE',     //- ALWAYS uppercased!
     'TEXT_COUPON_LINK_TITLE' => 'see the Coupon conditions',
     'TEXT_LABEL_COUPON_CODE' => 'Coupon Code:',
-    'TEXT_LABEL_METHOD' => 'Method:',
+    'TEXT_LABEL_METHOD' => 'Method (required):',
     'TEXT_LABEL_MODULE' => 'Module:',
     'TEXT_LABEL_TITLE' => 'Title:',
     'TEXT_LABEL_VALUE' => 'Value:',
@@ -150,6 +150,7 @@ $define = [
     'TEXT_LABEL_COST_EXCL' => 'Cost (excl):',
     'TEXT_OT_ADD_MODAL_TITLE' => 'Add Order Total (%s)',
     'TEXT_OT_UPDATE_MODAL_TITLE' => 'Editing Order Total (%s)',    //- %s is filled in with the order-total's class, e.g. ot_shipping
+    'TEXT_FIELD_CANNOT_BE_EMPTY' => 'This field cannot be empty.',
 
 // Adding/updating a product
     'ERROR_PRODUCT_NOT_FOUND' => 'The requested product (%s) is not present in the order.',

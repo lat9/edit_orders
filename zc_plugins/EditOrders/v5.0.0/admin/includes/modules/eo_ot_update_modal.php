@@ -141,7 +141,7 @@ if (!in_array($ot_class, $module_list)) {
                 <div class="form-group">
                     <label class="control-label col-sm-3" for="ot-title-u"><?= TEXT_LABEL_METHOD ?></label>
                     <div class="col-sm-9">
-                        <?= zen_draw_input_field('title', $updated_order->info['shipping_method'], 'id="ot-title-u" class="form-control"') ?>
+                        <?= zen_draw_input_field('title', $updated_order->info['shipping_method'], 'id="ot-title-u" class="form-control" placeholder="' . TEXT_FIELD_CANNOT_BE_EMPTY . '"') ?>
                     </div>
                 </div>
                 <div class="form-group">

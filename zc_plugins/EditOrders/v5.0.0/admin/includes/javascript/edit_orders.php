@@ -398,6 +398,11 @@ if (ACCOUNT_STATE === 'true') {
     });
 
     $(document).on('click', '#eo-ot-add-update', function() {
+        if ($('input[name="ot_class"]').val() == 'ot_shipping' && $('input[name="title"]').val().trim() == '') {
+            $('input[name="title"]').val('').addClass('border-danger')
+            return;
+        }
+
         zcJS.ajax({
             url: 'ajax.php?act=ajaxEditOrdersAdmin&method=addOrUpdateOrderTotal',
             data: $('#ot-edit-modal form').serializeArray()
