@@ -156,7 +156,7 @@ class EoCart extends \shoppingCart
         $this->total -= $products_total;
         $this->weight -= $products_weight;
 
-        if ($product['is_virtual'] === true || $product['product_is_always_free_shipping'] === 1) {
+        if ($this->productIsVirtual($product, $product['attributes'] ?? []) === true || $product['product_is_always_free_shipping'] === 1) {
             $this->free_shipping_item -= $qty;
             $this->free_shipping_price -= $products_total;
             $this->free_shipping_weight -= $products_weight;
@@ -179,9 +179,6 @@ class EoCart extends \shoppingCart
             }
 
             if (str_starts_with($key, 'txt_')) {
-                if (empty($value)) {
-                    continue;
-                }
                 $options_id = str_replace('txt_', '', $key);
                 $cart_attributes[$options_id] = '0';
                 $cart_attributes_values[$options_id] = $value;
@@ -253,7 +250,7 @@ class EoCart extends \shoppingCart
 
     protected function productIsVirtual(array $product, array $attributes): bool
     {
-        if ($product['products_virtual'] === 1 || str_starts_with($product['model'], 'GIFT')) {
+        if ($product['products_virtual'] === 1 || str_starts_with((string)$product['model'], 'GIFT')) {
             return true;
         }
 

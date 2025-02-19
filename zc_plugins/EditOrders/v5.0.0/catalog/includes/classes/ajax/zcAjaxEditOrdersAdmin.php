@@ -461,6 +461,10 @@ class zcAjaxEditOrdersAdmin
                 $modal_variables += ['uprid', 'attributes'];
             }
 
+            // -----
+            // To determine the to-be-added product's pricing, temporarily
+            // add it to the cart and create the associated order.
+            //
             $product = [
                 'qty' => '1',
                 'attributes' => $attributes,
@@ -480,6 +484,14 @@ class zcAjaxEditOrdersAdmin
                 $modal_variables[] = 'new_product';
                 break;
             }
+
+            // -----
+            // Now, remove that newly-added product from the cart until
+            // the admin commits the change.
+            //
+            if (!empty($new_product)) {
+                $_SESSION['cart']->removeProduct($new_product['uprid'], $new_product);
+            }
         }
 
         $parameters = compact($modal_variables);
@@ -495,7 +507,12 @@ class zcAjaxEditOrdersAdmin
 
         $default_attributes = [];
         foreach ($options_values as $option_id => $option_values) {
-            if (in_array($option_values['type'], [PRODUCTS_OPTIONS_TYPE_TEXT, PRODUCTS_OPTIONS_TYPE_FILE])) {
+            if ($option_values['type'] === PRODUCTS_OPTIONS_TYPE_FILE) {
+                continue;
+            }
+
+            if ($option_values['type'] === PRODUCTS_OPTIONS_TYPE_TEXT) {
+                $default_attributes['txt_' . $option_id] = '';
                 continue;
             }
 

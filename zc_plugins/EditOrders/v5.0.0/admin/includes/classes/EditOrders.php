@@ -406,7 +406,7 @@ class EditOrders
             $uprid = $uprids[$next_product['orders_products_id']];
             $next_product['uprid'] = $uprid;
 
-            $next_product['is_virtual'] = ($next_product['products_virtual'] === 1 || str_starts_with($next_product['model'], 'GIFT'));
+            $next_product['is_virtual'] = ($next_product['products_virtual'] === 1 || str_starts_with((string)$next_product['model'], 'GIFT'));
 
             if (!isset($next_product['attributes'])) {
                 continue;
