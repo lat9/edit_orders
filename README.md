@@ -1,6 +1,6 @@
 # edit_orders
 
-## Current Version: 5.0.0-beta4
+## Current Version: 5.0.0-rc1
 
 Edit Orders: Updates for continued operation on **Zen Cart v2.1.0**
 
