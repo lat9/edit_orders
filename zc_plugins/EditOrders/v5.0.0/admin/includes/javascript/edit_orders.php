@@ -466,6 +466,24 @@ if (ACCOUNT_STATE === 'true') {
 // START OVERALL HANDLING
 // --------------------
 ?>
+    $(document).on('change', '#pymt-method', function() {
+        zcJS.ajax({
+            url: 'ajax.php?act=ajaxEditOrdersAdmin&method=setPaymentMethod',
+            data: {
+                payment_method: this.value,
+            }
+        }).done(function(response) {
+            if (response.status === 'ok') {
+                if (response.changed == 1) {
+                    $('#pymt-method').addClass('border-warning');
+                } else {
+                    $('#pymt-method').removeClass('border-warning')
+                }
+                $('#pm-changed').val(response.changed).trigger('change');
+            }
+        });
+    });
+
     $('#calc-method').on('change', function() {
         if (this.value === 'Manual') {
             $('.price-net, .price-gross').removeAttr('disabled');

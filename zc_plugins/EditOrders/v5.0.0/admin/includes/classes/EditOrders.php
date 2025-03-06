@@ -1057,7 +1057,8 @@ class EditOrders
                 case 'subtotal':
                     break;
                 default:
-                    $order_info_updates[] = ['fieldName' => $key, 'value' => $updated_values[$key], 'type' => 'stringIgnoreNull',];
+                    $updated_value = is_string($updated_values[$key]) ? substr($updated_values[$key], 0, zen_field_length(TABLE_ORDERS, $key)) : $updated_values[$key];
+                    $order_info_updates[] = ['fieldName' => $key, 'value' => $updated_value, 'type' => 'stringIgnoreNull',];
                     break;
             }
         }

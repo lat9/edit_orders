@@ -7,10 +7,10 @@
 // Last modified v5.0.0
 //
 ?>
-<div class="panel panel-default">
-    <div class="panel-heading">
+<details class="panel panel-default">
+    <summary class="panel-heading">
         <span class="h3"><?= TEXT_PANEL_HEADER_ADDL_INFO ?></span>
-    </div>
+    </summary>
     <div class="panel-body">
 <?php
 // -----
@@ -96,8 +96,13 @@ switch ($order->info['is_wholesale'] ?? '2') {
             <div class="col-sm-8"><?= zen_output_string_protected($order->info['payment_module_code']) ?></div>
         </div>
         <div class="row my-2">
-            <div class="col-sm-4 fw-bold"><?= ENTRY_PAYMENT_METHOD ?></div>
-            <div class="col-sm-8"><?= zen_output_string_protected($order->info['payment_method']) ?></div>
+            <div class="form-group">
+                <label class="control-label col-sm-4" for="pymt-method"><?= ENTRY_PAYMENT_METHOD ?></label>
+                <div class="col-sm-8">
+                    <?= zen_draw_input_field('payment_method', $order->info['payment_method'], 'id="pymt-method" class="form-control"') ?>
+                    <?= zen_draw_hidden_field('pm_changed', '0', 'id="pm-changed" class="eo-changed"') ?>
+                </div>
+            </div>
         </div>
 <?php
 if (!empty($order->info['cc_type']) || !empty($order->info['cc_owner']) || !empty($order->info['cc_number'])) {
@@ -153,4 +158,4 @@ if (!empty($order->info['po_number'])) {
 }
 ?>
     </div>
-</div>
+</details>
