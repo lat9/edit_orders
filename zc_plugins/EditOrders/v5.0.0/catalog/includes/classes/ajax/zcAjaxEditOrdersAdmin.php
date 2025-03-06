@@ -142,6 +142,14 @@ class zcAjaxEditOrdersAdmin
         ];
     }
 
+    public function setPaymentMethod(): array
+    {
+        return [
+            'status' => 'ok',
+            'changed' => $_SESSION['eoChanges']->updatePaymentMethod($_POST['payment_method'] ?? ''),
+        ];
+    }
+
     public function addComment(): array
     {
         $_SESSION['eoChanges']->addComment($_POST);

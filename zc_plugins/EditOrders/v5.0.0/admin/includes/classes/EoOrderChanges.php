@@ -494,6 +494,17 @@ class EoOrderChanges
         return $name;
     }
 
+    public function updatePaymentMethod(string $payment_method): int
+    {
+        if ($this->original->info['payment_method'] === $payment_method) {
+            unset($this->updated->info['changes']['payment_method']);
+            return 0;
+        }
+        $this->updated->info['payment_method'] = $payment_method;
+        $this->updated->info['changes']['payment_method'] = 'payment_method';
+        return 1;
+    }
+
     public function updateShippingInfo(string $shipping_module_code, string $shipping_method, string $shipping_cost, string $shipping_tax_rate): array
     {
         $shipping_info_fields = ['shipping_method', 'shipping_module_code', 'shipping_cost', 'shipping_tax_rate'];
