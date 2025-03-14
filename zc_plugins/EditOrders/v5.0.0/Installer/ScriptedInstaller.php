@@ -32,8 +32,6 @@ class ScriptedInstaller extends ScriptedInstallBase
              VALUES
                 ('Addresses, Display Order', 'EO_ADDRESSES_DISPLAY_ORDER', 'CSB', 'In what order, left-to-right, should <em>Edit Orders</em> display an order\'s addresses?  Choose <b>CSB</b> to display <em>Customer</em>, <em>Shipping</em> and then <em>Billing</em>; choose <b>CBS</b> to display <em>Customer</em>, <em>Billing</em> and then <em>Shipping</em>.', $cgi, 1, now(), NULL, 'zen_cfg_select_option([\'CSB\', \'CBS\'],'),
 
-                ('Reset Totals on Update &mdash; Default', 'EO_TOTAL_RESET_DEFAULT', 'off', 'Choose the default value for the <em>Reset totals prior to update</em> checkbox.  If your store uses order-total modules that perform tax-related recalculations (like &quot;Group Pricing&quot;), set this value to <b>on</b>.', $cgi, 5, now(), NULL, 'zen_cfg_select_option([\'on\', \'off\'],'),
-
                 ('Strip tags from the shipping module name?', 'EO_SHIPPING_DROPDOWN_STRIP_TAGS', 'true', 'When enabled, HTML and PHP tags present in the title of a shipping module are removed from the text displayed in the shipping dropdown menu.<br><br>If partial or broken tags are present in the title it may result in the removal of more text than expected. If this happens, you will need to update the affected shipping module(s) or disable this option.', $cgi, 11, now(), NULL, 'zen_cfg_select_option([\'true\', \'false\'],'),
 
                 ('Product Price Calculation &mdash; Method', 'EO_PRODUCT_PRICE_CALC_METHOD', 'AutoSpecials', 'Choose the <em>method</em> that &quot;EO&quot; uses to calculate product prices when an order is updated, one of:<ol><li><b>AutoSpecials</b>: Each product-price is re-calculated as if placing the order on the storefront. If your products have attributes, this enables changes to a product\'s attributes to automatically update the associated product-price.</li><li><b>Manual</b>: Each product-price is based on the <b><i>admin-entered price</i></b> for the product.</li><li><b>Choose</b>: The product-price calculation method varies on an order-by-order basis, via the &quot;tick&quot; of a checkbox.  The default method used  is defined by the <em>Product Price Calculation &mdash; Default</em> setting.</li></ol>', $cgi, 20, now(), NULL, 'zen_cfg_select_option([\'AutoSpecials\', \'Manual\', \'Choose\'],'),
@@ -54,10 +52,6 @@ class ScriptedInstaller extends ScriptedInstallBase
         // -----
         // Record the plugin's base tools in the admin menus.
         //
-        zen_deregister_admin_pages([
-            'editOrders',
-            'configEditOrders',
-        ]);
         if (!zen_page_key_exists('editOrders')) {
             zen_register_admin_page('editOrders', 'BOX_CONFIGURATION_EDIT_ORDERS', 'FILENAME_EDIT_ORDERS', '', 'customers', 'N');
         }
@@ -72,6 +66,15 @@ class ScriptedInstaller extends ScriptedInstallBase
         if (defined('EO_VERSION')) {
             $this->updateFromNonEncapsulatedVersion();
         }
+
+        // -----
+        // Remove the no-longer-used configuration setting.
+        //
+        $this->executeInstallerSql(
+            "DELETE FROM " . TABLE_CONFIGURATION . "
+              WHERE configuration_key = 'EO_TOTAL_RESET_DEFAULT'
+              LIMIT 1"
+        );
 
         return true;
     }
@@ -180,7 +183,6 @@ class ScriptedInstaller extends ScriptedInstallBase
     {
         $key_to_sort = [
             'EO_ADDRESSES_DISPLAY_ORDER' => 1,
-            'EO_TOTAL_RESET_DEFAULT' => 5,
             'EO_SHIPPING_DROPDOWN_STRIP_TAGS' => 11,
             'EO_PRODUCT_PRICE_CALC_METHOD' => 20,
             'EO_PRODUCT_PRICE_CALC_DEFAULT' => 24,
