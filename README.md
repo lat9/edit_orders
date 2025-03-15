@@ -1,15 +1,12 @@
 # edit_orders
 
-## Current Version: 4.6.2
+## Current Version: 5.0.0-rc1
 
-Edit Orders: Updates for continued operation on **Zen Cart v1.5.6 and later**.  If your store is running an earlier version of Zen Cart, please use _EO_ v4.5.7.
+Edit Orders: Updates for continued operation on **Zen Cart v2.1.0**
 
 - _**Download from Zen Cart**_: https://www.zen-cart.com/downloads.php?do=file&id=1513
 - _**Zen Cart Support Thread**_: https://www.zen-cart.com/showthread.php?200407
 
-Additional documentation in this GitHub repository:
+Additional documentation in this GitHub repository: https://github.com/lat9/edit_orders/wiki
 
-- [Shipping Tax Handling](./pages/shipping_tax_handling.md) for EO version 4.4.0 and later.
-- Interoperation
-  - [Notifiers Watched](./pages/notifiers_watched.md)
-  - [Notifications Issued](./pages/notifications_issued.md)
+HTML to Markdown conversion provided by https://www.convertsimple.com/convert-html-to-markdown/

@@ -1,0 +1,88 @@
+/**
+ * @copyright Copyright 2003-2006 Zen Cart Development Team
+ * @copyright Portions Copyright 2003 osCommerce
+ * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
+ * @version $Id: edit_orders.css 5454 2006-12-29 20:10:17Z drbyte $
+ */
+.border {
+    border: 1px solid #dee2e6;
+}
+.border-warning {
+    border-color: #ffc107;
+}
+.border-danger {
+    border-color: #dc3545;
+}
+.d-inline {
+    display: inline;
+}
+.d-inline-block {
+    display: inline-block;
+}
+.form-control-sm {
+    height: calc(1.5em + .5rem + 2px);
+    padding: .25rem .5rem;
+    font-size: .875rem;
+    line-height: 1.5;
+    border-radius: .2rem;
+}
+.text-nowrap {
+    white-space: nowrap;
+}
+.attribs-list {
+    font-size: smaller;
+}
+.eo-label,
+.fw-bold {
+    font-weight: bold;
+}
+.model,
+.w-auto {
+    width: auto;
+}
+.ml-auto {
+    margin-left: auto!important;
+}
+.overflow-x-scroll {
+    overflow-x: scroll;
+}
+.smallText a {
+    font-size: 9px;
+    text-decoration: underline;
+}
+.tax-percentage {
+    float: right;
+}
+.tooltip {
+    z-index: 10000000;
+}
+.w-50 {
+    width: 50%!important;
+}
+
+hr {
+    border-top: 1px solid #ddd;
+}
+input.amount, #add-ot-value {
+    text-align: right;
+    float: right;
+    width: 10rem;
+}
+input.amount-onetime, input.prod-qty {
+    text-align: right;
+    width: 10rem;
+}
+details > summary {
+    cursor: pointer;
+}
+
+#products-listing select, #ship-title {
+    display: inherit;
+    width: auto;
+}
+
+@media (min-width: 992px) {
+    .modal-lg {
+        width: 80vw;
+    }
+}
