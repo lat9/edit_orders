@@ -1,7 +1,7 @@
 <?php
 // -----
 // Admin-level installation script for the "encapsulated" Edit Orders plugin for Zen Cart, by lat9.
-// Copyright (C) 2018-2024, Vinos de Frutas Tropicales.
+// Copyright (C) 2018-2025, Vinos de Frutas Tropicales.
 //
 // Last updated: v5.0.0 (new)
 //
@@ -13,8 +13,7 @@ class ScriptedInstaller extends ScriptedInstallBase
 
     protected function executeInstall()
     {
-        if ($this->nonEncapsulatedVersionPresent() === true) {
-            $this->errorContainer->addError('error', ZC_PLUGIN_EO_INSTALL_REMOVE_PREVIOUS, true);
+        if (!$this->purgeOldFiles()) {
             return false;
         }
 
@@ -111,19 +110,16 @@ class ScriptedInstaller extends ScriptedInstallBase
         );
     }
 
-    protected function nonEncapsulatedVersionPresent(): bool
+    protected function purgeOldFiles(): bool
     {
-        $log_messages = [];
-        if (defined('FILENAME_EDIT_ORDERS')) {
-            $log_messages[] = "'FILENAME_EDIT_ORDERS' definition is present";
-        }
-
-        $file_found_message = 'Non-encapsulated admin file (%s) must be removed before this plugin can be installed.';
-        if (file_exists(DIR_FS_ADMIN . 'edit_orders.php')) {
-            $log_messages[] = sprintf($file_found_message, 'edit_orders.php');
-        }
-
+        // -----
+        // First, look for and remove the non-encapsulated versions' admin-directory
+        // files.
+        //
         $files_to_check = [
+            '' => [
+                'edit_orders.php',
+            ],
             'includes/auto_loaders/' => [
                 'config.eo.php',
                 'config.eo_cautions.php',
@@ -136,6 +132,9 @@ class ScriptedInstaller extends ScriptedInstallBase
                 'mock_cart.php',
                 'observers/EditOrdersAdminObserver.php',
             ],
+            'includes/css/' => [
+                'edit_orders.css',
+            ],
             'includes/extra_datafiles/' => [
                 'edit_orders_defines.php',
                 'eo_sanitization.php',
@@ -146,6 +145,12 @@ class ScriptedInstaller extends ScriptedInstallBase
             'includes/init_includes/' => [
                 'edit_orders_cautions.php',
                 'init_eo_config.php',
+            ],
+            'includes/languages/english/' => [
+                'extra_definitions/edit_orders_extra_definitions.php',
+                'extra_definitions/lang.edit_orders_extra_definitions.php',
+                'edit_orders.php',
+                'lang.edit_orders.php',
             ],
             'includes/modules/edit_orders/' => [
                 'eo_add_prdct_action_display.php',
@@ -159,20 +164,66 @@ class ScriptedInstaller extends ScriptedInstallBase
                 'eo_navigation.php',
             ],
         ];
+
+        $errorOccurred = false;
         foreach ($files_to_check as $dir => $files) {
             $current_dir = DIR_FS_ADMIN . $dir;
             foreach ($files as $next_file) {
-                if (file_exists($current_dir . $next_file)) {
-                    $log_messages[] = sprintf($file_found_message, $dir . $next_file);
+                $current_file = $current_dir . $next_file;
+                if (file_exists($current_file)) {
+                    $result = unlink($current_file);
+                    if (!$result && file_exists($current_file)) {
+                        $errorOccurred = true;
+                        $this->errorContainer->addError(
+                            0,
+                            sprintf(ERROR_UNABLE_TO_DELETE_FILE, $current_file),
+                            false,
+                            // this str_replace has to do DIR_FS_ADMIN before CATALOG because catalog is contained within admin, so results are wrong.
+                            // also, '[admin_directory]' is used to obfuscate the admin dir name, in case the user copy/pastes output to a public forum for help.
+                            sprintf(ERROR_UNABLE_TO_DELETE_FILE, str_replace([DIR_FS_ADMIN, DIR_FS_CATALOG], ['[admin_directory]/', ''], $current_file))
+                        );
+                    }
                 }
             }
         }
 
-        if (count($log_messages) !== 0) {
-            trigger_error(implode("\n", $log_messages), E_USER_NOTICE);
-            return true;
+        // -----
+        // Next, locate and attempt to remove the storefront order_total files.
+        //
+        $files_to_check = [
+            'includes/languages/english/modules/order_total/' => [
+                'lang.ot_misc_cost.php',
+                'lang.ot_onetime_discount.php',
+                'ot_misc_cost.php',
+                'ot_onetime_discount.php',
+            ],
+            'includes/modules/order_total/' => [
+                'ot_misc_cost.php',
+                'ot_onetime_discount.php',
+            ],
+        ];
+        foreach ($files_to_check as $dir => $files) {
+            $current_dir = DIR_FS_CATALOG . $dir;
+            foreach ($files as $next_file) {
+                $current_file = $current_dir . $next_file;
+                if (file_exists($current_file)) {
+                    $result = unlink($current_file);
+                    if (!$result && file_exists($current_file)) {
+                        $errorOccurred = true;
+                        $this->errorContainer->addError(
+                            0,
+                            sprintf(ERROR_UNABLE_TO_DELETE_FILE, $current_file),
+                            false,
+                            // this str_replace has to do DIR_FS_ADMIN before CATALOG because catalog is contained within admin, so results are wrong.
+                            // also, '[admin_directory]' is used to obfuscate the admin dir name, in case the user copy/pastes output to a public forum for help.
+                            sprintf(ERROR_UNABLE_TO_DELETE_FILE, str_replace([DIR_FS_ADMIN, DIR_FS_CATALOG], ['[admin_directory]/', ''], $current_file))
+                        );
+                    }
+                }
+            }
         }
-        return false;
+
+        return !$errorOccurred;
     }
 
     // -----
