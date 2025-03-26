@@ -3,7 +3,7 @@
 // Part of the Edit Orders plugin by lat9 (lat9@vinosdefrutastropicales.com).
 // Copyright (C) 2016-2025, Vinos de Frutas Tropicales
 //
-// Last updated: EO v5.0.0
+// Last updated: EO v5.0.1
 //
 namespace Zencart\Plugins\Admin\EditOrders;
 
@@ -1095,6 +1095,8 @@ class EditOrders
                 case 'suburb':
                 case 'city':
                 case 'postcode':
+                case 'telephone':
+                case 'email_address':
                     $address_updates[] = ['fieldName' => $field_prefix . $key, 'value' => $updated_values[$key], 'type' => 'stringIgnoreNull',];
                     break;
 
