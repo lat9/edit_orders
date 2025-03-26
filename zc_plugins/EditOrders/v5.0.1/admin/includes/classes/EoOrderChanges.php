@@ -3,7 +3,7 @@
 // This session-based class keeps track of the various changes made
 // to the order currently being edited.
 //
-// Last updated: EO v5.0.0 (new)
+// Last updated: EO v5.0.1
 //
 namespace Zencart\Plugins\Admin\EditOrders;
 
@@ -25,7 +25,7 @@ class EoOrderChanges
     use NotifierManager;
 
     protected \stdClass $original;
-    public \stdClass $updated;
+    protected \stdClass $updated;
     protected int $orderId;
 
     protected array $upridMapping = [];
