@@ -2,9 +2,9 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2024 The zen-cart developers
+// Copyright (c) 2024-2025 The zen-cart developers
 //
-// Last modified v5.0.0
+// Last modified v5.0.2
 //
 use Zencart\Plugins\Admin\EditOrders\EoAttributes;
 ?>
@@ -114,7 +114,7 @@ foreach ($attribs->getOptionsValues() as $option_id => $option_info) {
 
         case PRODUCTS_OPTIONS_TYPE_READONLY:
             foreach ($option_info['values'] as $values_id => $values_name) {
-                $option_value = $values_name . TEXT_ATTRIBUTE_READONLY;
+                $option_value = $values_name . TEXT_ATTRIBUTES_READONLY;
                 break;
             }
 ?>
