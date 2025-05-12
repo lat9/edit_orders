@@ -3,7 +3,7 @@
 // Part of the "Edit Orders" plugin by Cindy Merkin
 // Copyright (c) 2024-2025 Vinos de Frutas Tropicales
 //
-// Last updated: v5.0.0 (new)
+// Last updated: v5.0.2
 //
 use Zencart\Plugins\Admin\EditOrders\EditOrders;
 use Zencart\Plugins\Admin\EditOrders\EoAttributes;
@@ -883,7 +883,9 @@ class zcAjaxEditOrdersAdmin
     //
     protected function disableGzip()
     {
-        ob_end_clean();
+        if (ob_get_length() !== false) {
+            ob_end_clean();
+        }
         ini_set('zlib.output_compression', '0');
     }
 }
