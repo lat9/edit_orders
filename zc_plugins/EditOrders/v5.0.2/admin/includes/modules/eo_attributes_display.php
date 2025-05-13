@@ -113,10 +113,11 @@ foreach ($attribs->getOptionsValues() as $option_id => $option_info) {
                     break;
 
         case PRODUCTS_OPTIONS_TYPE_READONLY:
+            $option_values = [];
             foreach ($option_info['values'] as $values_id => $values_name) {
-                $option_value = $values_name . TEXT_ATTRIBUTES_READONLY;
-                break;
+                $option_values[] = is_array($values_name) ? $values_name['name'] : $values_name;
             }
+            $option_value = implode(', ', $option_values) . TEXT_ATTRIBUTES_READONLY;
 ?>
                         <div class="form-group">
                             <label class="control-label col-sm-2" for="<?= $for ?>"><?= $option_info['name'] ?></label>
