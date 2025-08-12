@@ -2,7 +2,7 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-// Last modified: EO v5.0.0
+// Last modified: EO v5.0.2
 //
 namespace Zencart\Plugins\Admin\EditOrders;
 
@@ -47,7 +47,8 @@ class EoAttributes
         $sql =
             "SELECT DISTINCT po.products_options_id AS `id`, po.products_options_name AS `name`,
                     po.products_options_type AS `type`, po.products_options_length AS `length`,
-                    po.products_options_size AS `size`, po.products_options_rows AS `rows`
+                    po.products_options_size AS `size`, po.products_options_rows AS `rows`,
+                    po.products_options_sort_order
                FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
                     INNER JOIN " . TABLE_PRODUCTS_OPTIONS . " po
                         ON po.products_options_id = pa.options_id
