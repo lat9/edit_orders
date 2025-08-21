@@ -3,7 +3,7 @@
 // Admin-level installation script for the "encapsulated" Edit Orders plugin for Zen Cart, by lat9.
 // Copyright (C) 2018-2025, Vinos de Frutas Tropicales.
 //
-// Last updated: v5.0.0 (new)
+// Last updated: v5.0.3
 //
 use Zencart\PluginSupport\ScriptedInstaller as ScriptedInstallBase;
 
@@ -75,6 +75,8 @@ class ScriptedInstaller extends ScriptedInstallBase
               LIMIT 1"
         );
 
+        parent::executeInstall();
+
         return true;
     }
 
@@ -87,6 +89,7 @@ class ScriptedInstaller extends ScriptedInstallBase
     //
     protected function executeUpgrade($oldVersion)
     {
+        parent::executeUpgrade($oldVersion);
     }
 
     protected function executeUninstall()
@@ -108,6 +111,8 @@ class ScriptedInstaller extends ScriptedInstallBase
               WHERE configuration_key LIKE 'MODULE\_ORDER\_TOTAL\_ONETIME_DISCOUNT\_%'
                  OR configuration_key LIKE 'MODULE\_ORDER\_TOTAL\_MISC\_COST\_%'"
         );
+
+        parent::executeUninstall();
     }
 
     protected function purgeOldFiles(): bool
