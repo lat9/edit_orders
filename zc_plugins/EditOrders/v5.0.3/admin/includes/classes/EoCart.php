@@ -3,7 +3,7 @@
 // A 'somewhat' modified shopping-cart class, used when editing an
 // order during admin processing.
 //
-// Last updated: EO v5.0.0 (new)
+// Last updated: EO v5.0.3
 //
 namespace Zencart\Plugins\Admin\EditOrders;
 
@@ -156,6 +156,9 @@ class EoCart extends \shoppingCart
         $this->total -= $products_total;
         $this->weight -= $products_weight;
 
+        if (empty($product['attributes'])) {
+            $product['attributes'] = [];
+        }
         if ($this->productIsVirtual($product, $product['attributes'] ?? []) === true || $product['product_is_always_free_shipping'] === 1) {
             $this->free_shipping_item -= $qty;
             $this->free_shipping_price -= $products_total;
