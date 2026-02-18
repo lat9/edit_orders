@@ -2,7 +2,7 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-// Last updated: EO v5.0.3
+// Last updated: EO v5.0.0
 //
 
 // -----
@@ -74,19 +74,6 @@ function eo_debug_action_level_list($level)
 
     $level = ($level == 0) ? $level : 1;
 
-    if (version_compare(zen_get_zcversion(), '2.2.0-alpha', '<')) {
-        $field_name = 'configuration_value';
-    } else {
-        global $db;
-        $result = $db->Execute(
-            "SELECT configuration_id
-               FROM " . TABLE_CONFIGURATION . "
-              WHERE configuration_key = 'EO_DEBUG_ACTION_LEVEL'
-              LIMIT 1"
-        );
-        $field_name = 'configuration[cfg_' . $result->fields['configuration_id'] . ']';
-    }
-
     // Generate the configuration pulldown
-    return zen_draw_pull_down_menu($field_name, $levels, $level);
+    return zen_draw_pull_down_menu('configuration_value', $levels, $level);
 }
