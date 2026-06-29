@@ -1,9 +1,9 @@
 <?php
 // -----
 // Admin-level observer class, adds "Edit Orders" buttons and links to Customers->Orders processing.
-// Copyright (C) 2017-2025, Vinos de Frutas Tropicales.
+// Copyright (C) 2017-2026, Vinos de Frutas Tropicales.
 //
-// Last updated: EO v5.0.0
+// Last updated: EO v5.0.3
 //
 use Zencart\Plugins\Admin\EditOrders\EditOrdersOtShippingStub;
 
@@ -62,6 +62,7 @@ class EditOrdersAdminObserver extends base
                     'NOTIFY_ORDER_CART_ADD_PRODUCT_LIST',
                     'NOTIFY_ORDER_CART_EXTERNAL_TAX_RATE_LOOKUP',
                     'NOTIFY_ORDER_CART_FINISHED',
+                    'NOTIFY_ORDER_QUERY_ADD_PRODUCT',
                 ]
             );
         }
@@ -284,6 +285,34 @@ class EditOrdersAdminObserver extends base
     protected function notify_order_cart_finished(&$order, string $e): void
     {
         $order->info['order_weight'] = $_SESSION['cart']->show_weight();
+    }
+
+    // -----
+    // Issued on each product's addition to a queried order. If the product's
+    // 'category' (i.e. its master-categories-id) isn't set (it's not currently),
+    // add that to the ordered product for order-totals (like ot_quantity_discount)
+    // that count on its presence.
+    //
+    // @since v5.0.3
+    //
+    protected function notify_order_query_add_product(&$order, string $e, array $product, int &$index, array &$ordered_product): void
+    {
+        if (isset($product['category']) || !isset($product['id'])) {
+            return;
+        }
+
+        global $db;
+        $products_id = (int)$product['id'];
+        $master_category = $db->Execute(
+            "SELECT master_categories_id
+               FROM " . TABLE_PRODUCTS . "
+              WHERE products_id = $products_id
+              LIMIT 1"
+        );
+        if ($master_category->EOF) {
+            return;
+        }
+        $order->products[$index]['category'] = $master_category->fields['master_categories_id'];
     }
 
     // -----
