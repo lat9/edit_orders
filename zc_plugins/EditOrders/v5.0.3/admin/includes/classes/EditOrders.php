@@ -1,9 +1,9 @@
 <?php
 // -----
 // Part of the Edit Orders plugin by lat9 (lat9@vinosdefrutastropicales.com).
-// Copyright (C) 2016-2025, Vinos de Frutas Tropicales
+// Copyright (C) 2016-2026, Vinos de Frutas Tropicales
 //
-// Last updated: EO v5.0.1
+// Last updated: EO v5.0.3
 //
 namespace Zencart\Plugins\Admin\EditOrders;
 
@@ -32,7 +32,7 @@ class EditOrders
         $this->eo_action_level = (int)EO_DEBUG_ACTION_LEVEL;
         $this->logfile_name = DIR_FS_LOGS . '/eo_debug_' . $orders_id . date('_Ymd') . '.log';
 
-        $this->orders_id = (int)$orders_id;
+        $this->orders_id = $orders_id;
         $this->tax_updated = false;
         $this->product_tax_descriptions = [];
     }
@@ -813,7 +813,7 @@ class EditOrders
     {
         $num_tax_groups = count($this->order->info['tax_subtotals']);
         foreach ($this->order->info['tax_subtotals'] as $group_name => $tax_info) {
-            if ($num_tax_groups === 1 || ($tax_info['tax_rate'] !== false && $tax_info['tax_rate'] == $value)) {
+            if ($tax_info['tax_rate'] !== false && $tax_info['tax_rate'] == $value) {
                 return $group_name;
             }
         }
