@@ -1,9 +1,9 @@
 <?php
 // -----
 // Admin-level initialization script for the Edit Orders plugin for Zen Cart, by lat9.
-// Copyright (C) 2018-2025, Vinos de Frutas Tropicales.
+// Copyright (C) 2018-2026, Vinos de Frutas Tropicales.
 //
-// Last updated: v5.0.0
+// Last updated: v5.0.3
 //
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
@@ -51,5 +51,6 @@ unset(
     $_SESSION['payment'],
     $_SESSION['shipping'],
     $_SESSION['shipping_tax_description'],
+    $_SESSION['shipping_tax_amount'],
     $_SESSION['valid_to_checkout'],
 );

@@ -2,9 +2,9 @@
 // -----
 // Part of the Edit Orders encapsulated plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2003, 2025 The zen-cart developers
+// Copyright (c) 2003, 2026 The zen-cart developers
 //
-// Last modified v5.0.0
+// Last modified v5.0.3
 //
 use Zencart\Plugins\Admin\EditOrders\EditOrders;
 use Zencart\Plugins\Admin\EditOrders\EditOrdersQueryCache;
@@ -200,6 +200,7 @@ switch ($action) {
             $_SESSION['payment'],
             $_SESSION['shipping'],
             $_SESSION['shipping_tax_description'],
+            $_SESSION['shipping_tax_amount'],
             $_SESSION['valid_to_checkout'],
         );
 
