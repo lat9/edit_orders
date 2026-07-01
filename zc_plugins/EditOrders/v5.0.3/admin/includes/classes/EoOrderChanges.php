@@ -436,7 +436,7 @@ class EoOrderChanges
                             TEXT_STATUS_PRODUCT_REMOVED,
                             (string)$product['qty'],
                             $this->getChangedProductName($product),
-                            $product['model'],
+                            !empty($product['model']) ? '[' . $product['model'] . ']' : '',
                             (string)$product['final_price'],
                             (string)$product['tax']
                         ),
@@ -451,7 +451,7 @@ class EoOrderChanges
                             TEXT_STATUS_PRODUCT_ADDED,
                             (string)$product['qty'],
                             $this->getChangedProductName($product),
-                            $product['model'],
+                            !empty($product['model']) ? '[' . $product['model'] . ']' : '',
                             (string)$product['final_price'],
                             (string)$product['tax']
                         ),
@@ -472,7 +472,7 @@ class EoOrderChanges
                             $changed_message,
                             ($changed_qty == 0) ? 'n/a' : (string)abs($changed_qty),
                             $this->getChangedProductName($product),
-                            $product['model'],
+                            !empty($product['model']) ? '[' . $product['model'] . ']' : '',
                             (string)$product['final_price'],
                             (string)$product['tax']
                         ),

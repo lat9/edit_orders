@@ -2,7 +2,7 @@
 // -----
 // Language constants used by the /admin/edit_orders.php processing (Edit Orders).
 //
-// Last modified v5.0.0
+// Last modified v5.0.3
 //
 $define = [
 // Page / Section Headings and common button names and other constants.
@@ -190,11 +190,11 @@ $define = [
     //- These three constants define the message to be recorded for products' changes. All 3
     //  use the same sprintf values:
     //
-    // %1$s (qty), %2$s (name), %3$s (model), %4$s (final price), %5$s (tax rate)
+    // %1$s (qty), %2$s (name), %3$s (model, including square brackets if not empty!), %4$s (final price), %5$s (tax rate)
     //
-    'TEXT_STATUS_PRODUCT_ADDED' => 'Added: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
-    'TEXT_STATUS_PRODUCT_CHANGED' => 'Some product details were changed from: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
-    'TEXT_STATUS_PRODUCT_REMOVED' => 'Removed: %1$s x %2$s [%3$s] @ %4$s (tax-rate %5$s%%)',
+    'TEXT_STATUS_PRODUCT_ADDED' => 'Added: %1$s x %2$s %3$s @ %4$s (tax-rate %5$s%%)',
+    'TEXT_STATUS_PRODUCT_CHANGED' => 'Some product details were changed from: %1$s x %2$s %3$s @ %4$s (tax-rate %5$s%%)',
+    'TEXT_STATUS_PRODUCT_REMOVED' => 'Removed: %1$s x %2$s %3$s @ %4$s (tax-rate %5$s%%)',
 
 // Navigation Display
     'BUTTON_TO_LIST' => 'Order List',
