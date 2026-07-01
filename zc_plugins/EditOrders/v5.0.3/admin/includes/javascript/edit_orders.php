@@ -2,9 +2,9 @@
 // -----
 // Part of the Edit Orders encapsulated plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2003-2024 The zen-cart developers
+// Copyright (c) 2003-2026 The zen-cart developers
 //
-// Last modified v5.0.0
+// Last modified v5.0.3
 //
 // For versions prior to v5.0.0, this code was in-line in /admin/edit_orders.php.
 //
@@ -64,6 +64,19 @@ $(function() {
 //- Comparing an array of objects: https://stackoverflow.com/questions/27030/comparing-arrays-of-objects-in-javascript
 ?>
 <script>
+// -----
+// Add an event listener for beforeunload.  If changes have been made,
+// the browser will display a "stay/leave" confirmation ... unless the
+// admin timeout is active.
+//
+window.addEventListener('beforeunload', function (e) {
+    if ($('#update-verify').is(':visible')) {
+        if ($.jTimeout().getSecondsTillExpiration() > 0) {
+            e.preventDefault();
+        }
+    }
+});
+
 $(function() {
     // -----
     // Initialize the variout 'tooltip' elements.
