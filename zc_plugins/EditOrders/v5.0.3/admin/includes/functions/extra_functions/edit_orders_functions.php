@@ -64,33 +64,6 @@ if (!function_exists('zen_get_country_list')) {
     }
 }
 
-// Start Edit Orders configuration functions
-function eo_debug_action_level_list($level)
-{
-    $levels = [
-        ['id' => '0', 'text' => 'Off'],
-        ['id' => '1', 'text' => 'On'],
-    ];
-
-    $level = ($level == 0) ? $level : 1;
-
-    if (version_compare(zen_get_zcversion(), '2.2.0', '<')) {
-        $field_name = 'configuration_value';
-    } else {
-        global $db;
-        $result = $db->Execute(
-            "SELECT configuration_id
-               FROM " . TABLE_CONFIGURATION . "
-              WHERE configuration_key = 'EO_DEBUG_ACTION_LEVEL'
-              LIMIT 1"
-        );
-        $field_name = 'configuration[cfg_' . $result->fields['configuration_id'] . ']';
-    }
-
-    // Generate the configuration pulldown
-    return zen_draw_pull_down_menu($field_name, $levels, $level);
-}
-
 if (!function_exists('zen_config')) {
     // -----
     // Uses, if present, or emulates otherwise the zc300+ "zen_config"

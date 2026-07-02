@@ -1,7 +1,7 @@
 <?php
 // -----
 // Admin-level installation script for the "encapsulated" Edit Orders plugin for Zen Cart, by lat9.
-// Copyright (C) 2018-2025, Vinos de Frutas Tropicales.
+// Copyright (C) 2018-2026, Vinos de Frutas Tropicales.
 //
 // Last updated: v5.0.3
 //
@@ -45,7 +45,7 @@ class ScriptedInstaller extends ScriptedInstallBase
 
                 ('Edit Button Location on Sidebox', 'EO_SHOW_EDIT_ORDER_BUTTON', 'Both', 'At which position(s) should the <em>Edit</em> button be displayed on the currently-selected order\'s sidebox display, relative to the order\'s information?  Default: <b>Both</b>', $cgi, 52, now(), NULL, 'zen_cfg_select_option([\'Both\', \'Top Only\', \'Bottom Only\', \'Neither\'],'),
 
-                ('Debug Action Level', 'EO_DEBUG_ACTION_LEVEL', '0', 'When enabled when actions are performed by Edit Orders additional debugging information will be stored in a log file.<br><br>Enabling debugging will result in a large number of created log files and may adversely affect server performance. Only enable this if absolutely necessary!', $cgi, 999, now(), NULL, 'eo_debug_action_level_list(')";
+                ('Debug Action Level', 'EO_DEBUG_ACTION_LEVEL', '0', 'When enabled when actions are performed by Edit Orders additional debugging information will be stored in a log file.<br><br>Enabling debugging will result in a large number of created log files and may adversely affect server performance. Only enable this if absolutely necessary!', $cgi, 999, now(), NULL, 'zen_cfg_select_drop_down([[\'id\'=>\'0\', \'text\'=>\'Off\'], [\'id\'=>\'1\', \'text\'=>\'On\']],')";
         $this->executeInstallerSql($sql);
 
         // -----
@@ -89,6 +89,16 @@ class ScriptedInstaller extends ScriptedInstallBase
     //
     protected function executeUpgrade($oldVersion)
     {
+        // -----
+        // v5.0.3: Update EO's debug setting to use a built-in Zen Cart configuration
+        // function.
+        //
+        $this->executeInstallerSql(
+            "UPDATE " . TABLE_CONFIGURATION . "
+                SET set_function = 'zen_cfg_select_drop_down([[\'id\'=>\'0\', \'text\'=>\'Off\'], [\'id\'=>\'1\', \'text\'=>\'On\']],'
+              WHERE configuration_key = 'EO_DEBUG_ACTION_LEVEL'
+              LIMIT 1"
+        );
         parent::executeUpgrade($oldVersion);
     }
 
