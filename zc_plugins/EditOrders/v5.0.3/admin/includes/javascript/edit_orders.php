@@ -539,6 +539,7 @@ if (zen_config('ACCOUNT_STATE') === 'true') {
     });
     
     $(document).on('click', '#commit-changes', function() {
+        $('#update-verify').hide();
         $('#update-form').submit();
     });
 <?php
