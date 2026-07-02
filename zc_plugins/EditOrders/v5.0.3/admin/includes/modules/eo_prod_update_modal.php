@@ -2,9 +2,9 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2024-2025 The zen-cart developers
+// Copyright (c) 2024-2026 The zen-cart developers
 //
-// Last modified v5.0.0
+// Last modified v5.0.3
 //
 $uprid = $_POST['uprid'] ?? '';
 
@@ -74,7 +74,7 @@ if (empty($original_product) && empty($updated_product)) {
                 </div>
 <?php
         $final_price = $original_product['final_price'];
-        $final_price_label = rtrim((DISPLAY_PRICE_WITH_TAX === 'true') ? TABLE_HEADING_UNIT_PRICE_NET : TABLE_HEADING_UNIT_PRICE, ':');
+        $final_price_label = rtrim((zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') ? TABLE_HEADING_UNIT_PRICE_NET : TABLE_HEADING_UNIT_PRICE, ':');
 ?>
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="prod-price-net-o"><?= $final_price_label ?>:</label>
@@ -83,7 +83,7 @@ if (empty($original_product) && empty($updated_product)) {
                     </div>
                 </div>
 <?php
-        if (DISPLAY_PRICE_WITH_TAX === 'true') {
+        if (zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') {
             $gross_price = zen_add_tax($final_price, $original_product['tax']);
 ?>
                 <div class="form-group">
@@ -155,7 +155,7 @@ if (empty($original_product) && empty($updated_product)) {
                 <div id="prod-messages"></div>
 <?php
     $max_qty = '';
-    if (STOCK_ALLOW_CHECKOUT === 'false') {
+    if (zen_config('STOCK_ALLOW_CHECKOUT') === 'false') {
         $max_qty = ' max="' . ($original_product['qty'] ?? 0) + $qty_available . '"';
     }
 ?>
@@ -186,7 +186,7 @@ if (empty($original_product) && empty($updated_product)) {
                 </div>
 <?php
     $final_price = $updated_product['final_price'];
-    $final_price_label = rtrim((DISPLAY_PRICE_WITH_TAX === 'true') ? TABLE_HEADING_UNIT_PRICE_NET : TABLE_HEADING_UNIT_PRICE, ':');
+    $final_price_label = rtrim((zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') ? TABLE_HEADING_UNIT_PRICE_NET : TABLE_HEADING_UNIT_PRICE, ':');
 ?>
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="prod-price-net"><?= $final_price_label ?>:</label>
@@ -195,7 +195,7 @@ if (empty($original_product) && empty($updated_product)) {
                     </div>
                 </div>
 <?php
-    if (DISPLAY_PRICE_WITH_TAX === 'true') {
+    if (zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') {
         $gross_price = zen_add_tax($final_price, $updated_product['tax']);
 ?>
                 <div class="form-group">

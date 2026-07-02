@@ -2,7 +2,7 @@
 // -----
 // An order-total module to gather any miscellaneous cost associated with an order, created by lat9 (https://vinosdefrutastropicales.com).
 //
-// Last modified EO v5.0.0
+// Last modified EO v5.0.3
 //
 class ot_misc_cost
 {
@@ -58,11 +58,14 @@ class ot_misc_cost
         $this->title = MODULE_ORDER_TOTAL_MISC_COST_TITLE;
         $this->description = MODULE_ORDER_TOTAL_MISC_COST_DESCRIPTION;
 
-        $this->sort_order = (defined('MODULE_ORDER_TOTAL_MISC_COST_SORT_ORDER')) ? ((int)MODULE_ORDER_TOTAL_MISC_COST_SORT_ORDER) : null;
-        if (null === $this->sort_order) {
+        $sort_order = $this->zenConfig('MODULE_ORDER_TOTAL_MISC_COST_SORT_ORDER');
+        if (null === $sort_order) {
+            $this->sort_order = null;
             return;
         }
-        $this->tax_class_id = (int)MODULE_ORDER_TOTAL_MISC_COST_TAX_CLASS;
+
+        $this->sort_order = (int)$sort_order;
+        $this->tax_class_id = (int)$this->zenConfig('MODULE_ORDER_TOTAL_MISC_COST_TAX_CLASS');
         $this->enabled = (IS_ADMIN_FLAG === true);
 
         $this->eoInfo = [
@@ -115,7 +118,7 @@ class ot_misc_cost
             return [];
         }
 
-        if (MODULE_ORDER_TOTAL_MISC_COST_CHANGE_TITLE === 'true') {
+        if ($this->zenConfig('MODULE_ORDER_TOTAL_MISC_COST_CHANGE_TITLE') === 'true') {
             $fields = [
                 [
                     'tag' => 'title-' . $this->code,
@@ -142,7 +145,7 @@ class ot_misc_cost
     {
         if (($_POST['ot_class'] ?? '') === $this->code) {
             $this->eoInfo['value'] = (strpos($_POST['value'], '.') === false) ? (int)$_POST['value'] : (float)$_POST['value'];
-            if (MODULE_ORDER_TOTAL_MISC_COST_CHANGE_TITLE === 'true') {
+            if ($this->zenConfig('MODULE_ORDER_TOTAL_MISC_COST_CHANGE_TITLE') === 'true') {
                 $this->eoInfo['title'] = $_POST['title'];
             }
             $this->enabled = ($this->eoInfo['value'] != 0 && $this->eoInfo['title'] !== '');
@@ -224,5 +227,29 @@ class ot_misc_cost
             "DELETE FROM " . TABLE_CONFIGURATION . "
               WHERE configuration_key IN (" . $keys . ")"
         );
+    }
+
+    // -----
+    // Uses, if present, or emulates otherwise the zc300+ "zen_config"
+    // function.
+    //
+    // @since v5.0.3
+    //
+    private function zenConfig(string $key, mixed $default = null): mixed
+    {
+        static $zen_config_present;
+        if (!isset($zen_config_present)) {
+            $zen_config_present = function_exists('zen_config');
+        }
+
+        if ($zen_config_present) {
+            return zen_config($key, $default);
+        }
+
+        if (defined($key)) {
+            return constant($key);
+        }
+
+        return ($default_value !== null) ? $default_value : null;
     }
 }

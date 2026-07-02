@@ -2,9 +2,9 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2003-2025 The zen-cart developers
+// Copyright (c) 2003-2026 The zen-cart developers
 //
-// Last modified v5.0.0
+// Last modified v5.0.3
 //
 // Declaring the EditOrders.php class' instance as global, since this module is also
 // used during AJAX processing when an order-total field is updated.
@@ -33,7 +33,7 @@ if (!empty($display_only_totals_list)) {
 // The number of columns displayed in this section depends on whether/not the store displays prices
 // with tax.  If so, both the net- and gross-prices are displayed; otherwise, simply the net.
 //
-$columns = ((DISPLAY_PRICE_WITH_TAX === 'true') ? 7 : 6) - 2;
+$columns = ((zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') ? 7 : 6) - 2;
 
 $add_product_button = '<button id="add-product" class="btn btn-sm btn-info">' . TEXT_ADD_NEW_PRODUCT . '</button>';
 

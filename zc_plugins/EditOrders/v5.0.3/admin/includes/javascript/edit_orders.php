@@ -8,7 +8,7 @@
 //
 // For versions prior to v5.0.0, this code was in-line in /admin/edit_orders.php.
 //
-if (DISPLAY_PRICE_WITH_TAX === 'true') {
+if (zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') {
 ?>
 <script>
 $(function() {
@@ -93,7 +93,7 @@ $(function() {
 // Note: The HTML structure that these jQuery methods are 'working with' is
 // created by the eo_common_address_format.php module.
 //
-if (ACCOUNT_STATE === 'true') {
+if (zen_config('ACCOUNT_STATE') === 'true') {
     // -----
     // Create the array that identifies the various zones for the currently-active countries.
     //

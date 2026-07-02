@@ -196,7 +196,7 @@ class EditOrdersAdminObserver extends base
         $shipto_country = $updated_order->delivery['country_id'];
         $shipto_zone_id = $updated_order->delivery['zone_id'];
 
-        switch (STORE_PRODUCT_TAX_BASIS) {
+        switch (zen_config('STORE_PRODUCT_TAX_BASIS')) {
             case 'Shipping':
                 if ($updated_order->content_type === 'virtual') {
                     $taxCountryId = $billto_country;
@@ -211,7 +211,7 @@ class EditOrdersAdminObserver extends base
                 $taxZoneId = $billto_zone_id;
                 break;
             case 'Store':
-                if ($billto_zone_id == STORE_ZONE || $updated_order->content_type === 'virtual') {
+                if ((int)$billto_zone_id === (int)zen_config('STORE_ZONE') || $updated_order->content_type === 'virtual') {
                     $taxCountryId = $billto_country;
                     $taxZoneId = $billto_zone_id;
                 } else {

@@ -2,9 +2,9 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2024-2025 The zen-cart developers
+// Copyright (c) 2024-2026 The zen-cart developers
 //
-// Last modified v5.0.2
+// Last modified v5.0.3
 //
 use Zencart\Plugins\Admin\EditOrders\EoAttributes;
 ?>
@@ -33,10 +33,10 @@ $attribs = new EoAttributes((int)$uprid, $updated_product['attributes']);
 foreach ($attribs->getOptionsValues() as $option_id => $option_info) {
     $for = "attrib-$option_id";
     switch ($option_info['type']) {
-        case PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID:
-        case PRODUCTS_OPTIONS_TYPE_RADIO:
-        case PRODUCTS_OPTIONS_TYPE_SELECT:
-        case PRODUCTS_OPTIONS_TYPE_SELECT_SBA:
+        case zen_config('PRODUCTS_OPTIONS_TYPE_ATTRIBUTE_GRID'):
+        case zen_config('PRODUCTS_OPTIONS_TYPE_RADIO'):
+        case zen_config('PRODUCTS_OPTIONS_TYPE_SELECT'):
+        case zen_config('PRODUCTS_OPTIONS_TYPE_SELECT_SBA'):
             $options_values_array = [];
             $default_option = $attribs->getOptionCurrentValueId($option_id);
             foreach ($option_info['values'] as $value_id => $value_info) {
@@ -56,7 +56,7 @@ foreach ($attribs->getOptionsValues() as $option_id => $option_info) {
 <?php
             break;
 
-        case PRODUCTS_OPTIONS_TYPE_CHECKBOX:
+        case zen_config('PRODUCTS_OPTIONS_TYPE_CHECKBOX'):
 ?>
                         <div class="form-group">
                             <label class="control-label col-sm-2"><?= $option_info['name'] ?></label>
@@ -77,7 +77,7 @@ foreach ($attribs->getOptionsValues() as $option_id => $option_info) {
 <?php
             break;
 
-        case PRODUCTS_OPTIONS_TYPE_TEXT:
+        case zen_config('PRODUCTS_OPTIONS_TYPE_TEXT'):
             $text = zen_output_string_protected($attribs->getOptionCurrentValue($option_id));
             $size = $option_info['size'];
             $length = $option_info['length'];
@@ -99,7 +99,7 @@ foreach ($attribs->getOptionsValues() as $option_id => $option_info) {
 <?php
             break;
 
-        case PRODUCTS_OPTIONS_TYPE_FILE:
+        case zen_config('PRODUCTS_OPTIONS_TYPE_FILE'):
             $option_value = $attribs->getOptionCurrentValue($option_id);
 ?>
                         <div class="form-group">
@@ -112,7 +112,7 @@ foreach ($attribs->getOptionsValues() as $option_id => $option_info) {
 <?php
                     break;
 
-        case PRODUCTS_OPTIONS_TYPE_READONLY:
+        case zen_config('PRODUCTS_OPTIONS_TYPE_READONLY'):
             $option_values = [];
             foreach ($option_info['values'] as $values_id => $values_name) {
                 $option_values[] = is_array($values_name) ? $values_name['name'] : $values_name;

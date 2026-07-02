@@ -229,7 +229,7 @@ class EoOrderChanges
     {
         $this->updated->info['orders_status'] = $this->original->info['orders_status'];
         unset($this->updated->statuses['changes'], $this->updated->info['changes']['orders_status']);
-        switch (EO_CUSTOMER_NOTIFICATION_DEFAULT) {
+        switch (zen_config('EO_CUSTOMER_NOTIFICATION_DEFAULT')) {
             case 'Hidden':
                 $notify_default = '-1';
                 break;
@@ -581,8 +581,6 @@ class EoOrderChanges
 
     public function saveOrderTotalsChanges(array $order_totals): int
     {
-        $eo = new EditOrders($this->orderId);
-
         $remaining_totals = $this->updated->totals;
         foreach ($order_totals as $next_total) {
             $ot_index = $this->getOrderTotalIndex($next_total);

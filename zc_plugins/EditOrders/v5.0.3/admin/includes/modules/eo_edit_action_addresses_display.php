@@ -1,9 +1,9 @@
 <?php
 // -----
 // Part of the Edit Orders plugin, v4.5.0 and later, provided by lat9.
-// Copyright 2019-2025, Vinos de Frutas Tropicales.
+// Copyright 2019-2026, Vinos de Frutas Tropicales.
 //
-// Last modified v5.0.0
+// Last modified v5.0.3
 //
 // This module is loaded in global scope by /admin/edit_orders.php.
 //
@@ -26,7 +26,7 @@ require 'eo_common_address_format.php';
 // -----
 // Set variables for common address-format display, based on the site's preferential order.
 //
-if (EO_ADDRESSES_DISPLAY_ORDER === 'CBS') {
+if (zen_config('EO_ADDRESSES_DISPLAY_ORDER') === 'CBS') {
     $address_icon = 'fa-regular fa fa-credit-card';
     $address_label = ENTRY_BILLING_ADDRESS;
     $address_name = 'billing';
@@ -49,7 +49,7 @@ if (EO_ADDRESSES_DISPLAY_ORDER === 'CBS') {
 // -----
 // Set variables for common address-format display, based on the site's preferential order.
 //
-if (EO_ADDRESSES_DISPLAY_ORDER === 'CBS') {
+if (zen_config('EO_ADDRESSES_DISPLAY_ORDER') === 'CBS') {
     $address_icon = 'fa-solid fa fa-truck';
     $address_label = ENTRY_SHIPPING_ADDRESS;
     $address_name = 'delivery';

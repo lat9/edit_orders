@@ -29,7 +29,7 @@ class EditOrders
 
     public function __construct(int $orders_id = 0)
     {
-        $this->eo_action_level = (int)EO_DEBUG_ACTION_LEVEL;
+        $this->eo_action_level = (int)zen_config('EO_DEBUG_ACTION_LEVEL');
         $this->logfile_name = DIR_FS_LOGS . '/eo_debug_' . $orders_id . date('_Ymd') . '.log';
 
         $this->orders_id = $orders_id;
@@ -70,7 +70,7 @@ class EditOrders
         // Ensure that some 'base' hidden configuration elements are present; they've been removed at times
         // by plugins' uninstall SQL scripts.
         //
-        $reload = (!defined('PRODUCTS_OPTIONS_TYPE_SELECT') || !defined('UPLOAD_PREFIX') || !defined('TEXT_PREFIX'));
+        $reload = zen_config('PRODUCTS_OPTIONS_TYPE_SELECT') === null || zen_config('UPLOAD_PREFIX') === null || zen_config('TEXT_PREFIX') === null;
         if ($reload === true) {
             $db->Execute(
                 "INSERT IGNORE INTO " . TABLE_CONFIGURATION . "
@@ -99,7 +99,7 @@ class EditOrders
         // admin and storefront; otherwise, any update to the order's information
         // would be suspect.
         //
-        if (DISPLAY_PRICE_WITH_TAX_ADMIN !== DISPLAY_PRICE_WITH_TAX) {
+        if (zen_config('DISPLAY_PRICE_WITH_TAX_ADMIN') !== zen_config('DISPLAY_PRICE_WITH_TAX')) {
             $messageStack->add_session(ERROR_DISPLAY_PRICE_WITH_TAX, 'error');
             zen_redirect(zen_href_link(FILENAME_ORDERS, zen_get_all_get_params()));
         }
@@ -724,7 +724,7 @@ class EditOrders
         // If the site displays prices inclusive of tax, the order's shipping-cost currently
         // includes that tax. Back the tax out of that cost for the shipping-tax recalculation.
         //
-        if (DISPLAY_PRICE_WITH_TAX === 'true') {
+        if (zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') {
             $shipping_cost = round((float)($shipping_cost / (1 + $shipping_tax_rate / 100)), 6);
         }
         $this->order->info['shipping_cost'] = $shipping_cost;
@@ -790,10 +790,10 @@ class EditOrders
     }
     public function getTaxLocations(\order|\stdClass $order, bool $is_virtual_order): array
     {
-        if (STORE_PRODUCT_TAX_BASIS === 'Store' || $order->info['shipping_module_code'] === 'storepickup') {
-            $customer_country_id = STORE_COUNTRY;
-            $customer_zone_id = STORE_ZONE;
-        } elseif (STORE_PRODUCT_TAX_BASIS === 'Billing' || $is_virtual_order === true) {
+        if (zen_config('STORE_PRODUCT_TAX_BASIS') === 'Store' || $order->info['shipping_module_code'] === 'storepickup') {
+            $customer_country_id = zen_config('STORE_COUNTRY');
+            $customer_zone_id = zen_config('STORE_ZONE');
+        } elseif (zen_config('STORE_PRODUCT_TAX_BASIS') === 'Billing' || $is_virtual_order === true) {
             $customer_country_id = $order->billing['country']['id'];
             $customer_zone_id = $order->billing['zone_id'];
         } else {
@@ -869,11 +869,11 @@ class EditOrders
             ];
         }
 
-        if (!defined('MODULE_SHIPPING_INSTALLED') || empty(MODULE_SHIPPING_INSTALLED)) {
+        if (empty(zen_config('MODULE_SHIPPING_INSTALLED'))) {
             return $shipping_unknown;
         }
 
-        $use_strip_tags = (defined('EO_SHIPPING_DROPDOWN_STRIP_TAGS') && EO_SHIPPING_DROPDOWN_STRIP_TAGS === 'true');
+        $use_strip_tags = zen_config('EO_SHIPPING_DROPDOWN_STRIP_TAGS') === 'true';
         $module_selections = [];
         $this->shippingModules ??= new \shipping();
         foreach ($this->shippingModules->modules as $module) {
@@ -914,7 +914,7 @@ class EditOrders
             }
         }
 
-        $module_list = explode(';', str_replace('.php', '', MODULE_ORDER_TOTAL_INSTALLED));
+        $module_list = explode(';', str_replace('.php', '', zen_config('MODULE_ORDER_TOTAL_INSTALLED')));
         $unused_totals = [];
         foreach ($module_list as $class) {
             if (in_array($class, $totals_to_skip)) {
@@ -1225,7 +1225,7 @@ class EditOrders
 
                     $product_quantity_updated = false;
                     $this->notify('NOTIFY_EO_PRODUCT_REMOVED', ['orders_products_id' => $orders_products_id, 'original_product' => $changes['original']], $product_quantity_updated);
-                    if (STOCK_LIMITED === 'true' && $product_quantity_updated === false) {
+                    if (zen_config('STOCK_LIMITED') === 'true' && $product_quantity_updated === false) {
                         $original_qty = $changes['original']['qty'];
                         $products_id = (int)$changes['original']['id'];
                         $db->Execute(
@@ -1271,7 +1271,7 @@ class EditOrders
                     $this->notify('NOTIFY_EO_PRODUCT_ADDED', ['sql' => $sql_data_array, 'updated_product' => $updated_product], $product_quantity_updated);
 
                     $products_id = (int)$updated_product['id'];
-                    if (STOCK_LIMITED === 'true' && $product_quantity_updated === false) {
+                    if (zen_config('STOCK_LIMITED') === 'true' && $product_quantity_updated === false) {
                         $db->Execute(
                             "UPDATE " . TABLE_PRODUCTS . "
                                 SET products_quantity = products_quantity - " . $updated_product['qty'] . "
@@ -1281,7 +1281,7 @@ class EditOrders
                     }
 
                     if (!empty($updated_product['attributes'])) {
-                        if (DOWNLOAD_ENABLED === 'false') {
+                        if (zen_config('DOWNLOAD_ENABLED') === 'false') {
                             $additional_selects = '';
                             $additional_join = '';
                         } else {
@@ -1353,7 +1353,7 @@ class EditOrders
                             $sql_data_array['orders_products_attributes_id'] = $opa_insert_id;
                             $this->notify('NOTIFY_EO_PRODUCT_ATTRIBUTE_ADDED', ['sql' => $sql_data_array, 'attribute' => $attribute, 'attribute_db_values' => $attributes_values]);
 
-                            if (DOWNLOAD_ENABLED === 'true' && !empty($attributes_values['products_attributes_filename'])) {
+                            if (zen_config('DOWNLOAD_ENABLED') === 'true' && !empty($attributes_values['products_attributes_filename'])) {
                                 $sql_data_array = [
                                     'orders_id' => $oID,
                                     'orders_products_id' => $orders_products_id,
@@ -1397,7 +1397,7 @@ class EditOrders
                         ],
                         $product_quantity_updated
                     );
-                    if (STOCK_LIMITED === 'true' && $product_quantity_updated === false) {
+                    if (zen_config('STOCK_LIMITED') === 'true' && $product_quantity_updated === false) {
                         $products_id = (int)$changes['updated']['id'];
                         if ($changed_qty >= 0) {
                             $db->Execute(

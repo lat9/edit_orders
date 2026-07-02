@@ -1,9 +1,9 @@
 <?php
 // -----
 // Part of the "Edit Orders" plugin by Cindy Merkin
-// Copyright (c) 2024-2025 Vinos de Frutas Tropicales
+// Copyright (c) 2024-2026 Vinos de Frutas Tropicales
 //
-// Last updated: v5.0.2
+// Last updated: v5.0.3
 //
 use Zencart\Plugins\Admin\EditOrders\EditOrders;
 use Zencart\Plugins\Admin\EditOrders\EoAttributes;
@@ -515,16 +515,16 @@ class zcAjaxEditOrdersAdmin
 
         $default_attributes = [];
         foreach ($options_values as $option_id => $option_values) {
-            if ($option_values['type'] === PRODUCTS_OPTIONS_TYPE_FILE) {
+            if ($option_values['type'] === zen_config('PRODUCTS_OPTIONS_TYPE_FILE')) {
                 continue;
             }
 
-            if ($option_values['type'] === PRODUCTS_OPTIONS_TYPE_TEXT) {
+            if ($option_values['type'] === zen_config('PRODUCTS_OPTIONS_TYPE_TEXT')) {
                 $default_attributes['txt_' . $option_id] = '';
                 continue;
             }
 
-            $is_checkbox_option = ($option_values['type'] === PRODUCTS_OPTIONS_TYPE_CHECKBOX);
+            $is_checkbox_option = ($option_values['type'] === zen_config('PRODUCTS_OPTIONS_TYPE_CHECKBOX'));
             unset($default);
             foreach ($option_values['values'] as $option_value_id => $value_info) {
                 if ($is_checkbox_option === true) {
@@ -723,7 +723,7 @@ class zcAjaxEditOrdersAdmin
 
         if (!is_numeric($_POST['qty']) || $_POST['qty'] < 0) {
             $messages['qty'] = ERROR_QTY_INVALID;
-        } elseif (STOCK_ALLOW_CHECKOUT === 'false') {
+        } elseif (zen_config('STOCK_ALLOW_CHECKOUT') === 'false') {
             $original_product = $_SESSION['eoChanges']->getOriginalProductByUprid($_POST['uprid'] ?? $_POST['prid']);
             $original_qty = $original_product['qty'] ?? 0;
             $qty_required = $eo->convertToIntOrFloat($_POST['qty']) - $original_qty;

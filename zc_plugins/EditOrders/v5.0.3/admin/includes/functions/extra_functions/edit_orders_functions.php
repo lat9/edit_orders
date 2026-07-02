@@ -21,10 +21,10 @@ if (!function_exists('zen_get_country_list')) {
         $countries = zen_get_countries();
 
         // Set some default entries at top of list:
-        if (SHOW_CREATE_ACCOUNT_DEFAULT_COUNTRY !== '' && STORE_COUNTRY !== SHOW_CREATE_ACCOUNT_DEFAULT_COUNTRY) {
-            $countriesAtTopOfList[] = SHOW_CREATE_ACCOUNT_DEFAULT_COUNTRY;
+        if (zen_config('SHOW_CREATE_ACCOUNT_DEFAULT_COUNTRY') !== '' && zen_config('STORE_COUNTRY') !== zen_config('SHOW_CREATE_ACCOUNT_DEFAULT_COUNTRY')) {
+            $countriesAtTopOfList[] = zen_config('SHOW_CREATE_ACCOUNT_DEFAULT_COUNTRY');
         }
-        $countriesAtTopOfList[] = STORE_COUNTRY;
+        $countriesAtTopOfList[] = zen_config('STORE_COUNTRY');
         // IF YOU WANT TO ADD MORE DEFAULTS TO THE TOP OF THIS LIST, SIMPLY ENTER THEIR NUMBERS HERE.
         // Duplicate more lines as needed
         // Example: Canada is 108, so use 108 as shown:
@@ -89,4 +89,21 @@ function eo_debug_action_level_list($level)
 
     // Generate the configuration pulldown
     return zen_draw_pull_down_menu($field_name, $levels, $level);
+}
+
+if (!function_exists('zen_config')) {
+    // -----
+    // Uses, if present, or emulates otherwise the zc300+ "zen_config"
+    // function.
+    //
+    // @since v5.0.3
+    //
+    function zen_config(string $key, mixed $default = null): mixed
+    {
+        if (defined($key)) {
+            return constant($key);
+        }
+
+        return ($default_value !== null) ? $default_value : null;
+    }
 }

@@ -2,7 +2,7 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-// Last modified: EO v5.0.0
+// Last modified: EO v5.0.3
 //
 namespace Zencart\Plugins\Admin\EditOrders;
 
@@ -21,7 +21,7 @@ class EoProductPulldown extends \productPulldown
     {
         parent::__construct();
 
-        if (STOCK_ALLOW_CHECKOUT === 'false') {
+        if (zen_config('STOCK_ALLOW_CHECKOUT') === 'false') {
             $this->condition = ' AND p.products_quantity > 0 ';
         }
     }

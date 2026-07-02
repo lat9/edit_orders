@@ -2,7 +2,7 @@
 /*
  * This file is part of the "Onetime Discount" order total module for Zen Cart.
  *
- * Last updated: EO 5.0.0
+ * Last updated: EO 5.0.3
  *
  * "Onetime Discount" is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,10 +69,13 @@ class ot_onetime_discount
         $this->code = 'ot_onetime_discount';
         $this->title = MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_TITLE;
         $this->description = MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_DESCRIPTION;
-        $this->sort_order = (defined('MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_SORT_ORDER')) ? (int)MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_SORT_ORDER : null;
-        if (null === $this->sort_order) {
+
+        $sort_order = $this->zenConfig('MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_SORT_ORDER');
+        if (null === $sort_order) {
+            $this->sort_order = null;
             return;
         }
+        $this->sort_order = (int)$sort_order;
 
         $this->enabled = (IS_ADMIN_FLAG === true);
 
@@ -113,7 +116,7 @@ class ot_onetime_discount
             return [];
         }
 
-        if (MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_CHANGE_TITLE === 'true') {
+        if ($this->zenConfig('MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_CHANGE_TITLE') === 'true') {
             $fields = [
                 [
                     'tag' => 'title-' . $this->code,
@@ -140,11 +143,11 @@ class ot_onetime_discount
     {
         if (($_POST['ot_class'] ?? '') === $this->code) {
             $this->eoInfo['value'] = (strpos($_POST['value'], '.') === false) ? (int)$_POST['value'] : (float)$_POST['value'];
-            if (MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_DEDUCTION_ONLY === 'true' && $this->eoInfo['value'] > 0) {
+            if ($this->zenConfig('MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_DEDUCTION_ONLY') === 'true' && $this->eoInfo['value'] > 0) {
                 $this->eoInfo['value'] *= -1;
             }
 
-            if (MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_CHANGE_TITLE === 'true') {
+            if ($this->zenConfig('MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_CHANGE_TITLE') === 'true') {
                 $this->eoInfo['title'] = $_POST['title'];
             }
             $this->enabled = ($this->eoInfo['value'] != 0 && $this->eoInfo['title'] !== '');
@@ -226,5 +229,29 @@ class ot_onetime_discount
         global $db;
         $keys = "'" . implode("', '", $this->keys()) . "'";
         $db->Execute("DELETE FROM " . TABLE_CONFIGURATION . " WHERE configuration_key IN (" . $keys . ")");
+    }
+
+    // -----
+    // Uses, if present, or emulates otherwise the zc300+ "zen_config"
+    // function.
+    //
+    // @since v5.0.3
+    //
+    private function zenConfig(string $key, mixed $default = null): mixed
+    {
+        static $zen_config_present;
+        if (!isset($zen_config_present)) {
+            $zen_config_present = function_exists('zen_config');
+        }
+
+        if ($zen_config_present) {
+            return zen_config($key, $default);
+        }
+
+        if (defined($key)) {
+            return constant($key);
+        }
+
+        return ($default_value !== null) ? $default_value : null;
     }
 }

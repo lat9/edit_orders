@@ -63,8 +63,8 @@ if (empty($order->info)) {
 $eo = new EditOrders($oID);
 
 $action = $_GET['action'] ?? 'edit';
-$with_without = (DISPLAY_PRICE_WITH_TAX === 'true') ? 'with' : 'without';
-$eo->eoLog("Edit Orders entered action ($action). Prices are being displayed $with_without tax. Enabled Order Totals: " . MODULE_ORDER_TOTAL_INSTALLED, 'with-date');
+$with_without = (zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') ? 'with' : 'without';
+$eo->eoLog("Edit Orders entered action ($action). Prices are being displayed $with_without tax. Enabled Order Totals: " . zen_config('MODULE_ORDER_TOTAL_INSTALLED'), 'with-date');
 
 // -----
 // Gather the two arrays for the order's status display.
@@ -348,12 +348,12 @@ $_SESSION['cart']->loadFromOrder($order);
         </div>
 <?php
 $display_payment_calc_label = false;
-if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
+if (zen_config('EO_PRODUCT_PRICE_CALC_METHOD') === 'Choose') {
     $choices = [
         ['id' => 'AutoSpecials', 'text' => PAYMENT_CALC_AUTOSPECIALS],
         ['id' => 'Manual', 'text' => PAYMENT_CALC_MANUAL]
     ];
-    $default = EO_PRODUCT_PRICE_CALC_DEFAULT;
+    $default = zen_config('EO_PRODUCT_PRICE_CALC_DEFAULT');
     if (isset($_SESSION['eo_price_calculations']) && in_array($_SESSION['eo_price_calculations'], ['AutoSpecials', 'Manual'])) {
         $default = $_SESSION['eo_price_calculations'];
     }
@@ -362,7 +362,7 @@ if (EO_PRODUCT_PRICE_CALC_METHOD === 'Choose') {
     $display_payment_calc_label = true;
     $payment_calc_choice = zen_draw_pull_down_menu('payment_calc_method', $choices, $default, 'id="calc-method" class="form-control w-auto"');
 
-} elseif (EO_PRODUCT_PRICE_CALC_METHOD === 'AutoSpecials') {
+} elseif (zen_config('EO_PRODUCT_PRICE_CALC_METHOD') === 'AutoSpecials') {
     $_SESSION['eo_price_calculations'] = 'AutoSpecials';
     $payment_calc_choice = '<p class="text-center">' . PRODUCT_PRICES_CALC_AUTOSPECIALS . '</p>';
 

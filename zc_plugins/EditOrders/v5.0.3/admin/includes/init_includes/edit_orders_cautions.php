@@ -26,7 +26,9 @@
 // If one of those conditions is detected, this module's processing informs the admin user via caution message that
 // the order, once edited, might cause issues.
 //
-if (basename($_SERVER['PHP_SELF']) == 'edit_orders.php' && isset($_GET['oID'])) {
+// Last updated: v5.0.3
+//
+if (basename($_SERVER['PHP_SELF']) === 'edit_orders.php' && isset($_GET['oID'])) {
     $check_oid = (int)$_GET['oID'];
     
     $eo_op = $db->Execute(
@@ -35,11 +37,11 @@ if (basename($_SERVER['PHP_SELF']) == 'edit_orders.php' && isset($_GET['oID'])) 
           WHERE orders_id = $check_oid
        ORDER BY orders_products_id ASC"
     );
-    while (!$eo_op->EOF) {
-        $eoOpID = $eo_op->fields['orders_products_id'];
-        $eoPID = $eo_op->fields['products_id'];
-        $eo_product_name = $eo_op->fields['products_name'];
-        $eo_product_qty = $eo_op->fields['products_quantity'];
+    foreach ($eo_op as $next_op) {
+        $eoOpID = $next_op['orders_products_id'];
+        $eoPID = $next_op['products_id'];
+        $eo_product_name = $next_op['products_name'];
+        $eo_product_qty = $next_op['products_quantity'];
         $eo_check = $db->Execute(
             "SELECT products_status, products_quantity
                FROM " . TABLE_PRODUCTS . "
@@ -49,7 +51,7 @@ if (basename($_SERVER['PHP_SELF']) == 'edit_orders.php' && isset($_GET['oID'])) 
         if ($eo_check->EOF) {
             $messageStack->add("Caution: The product ($eo_product_name) no longer exists in the store.  Updating the order <em>might</em> result in the product's name being removed from the order.");
         } else {
-            if ($eo_check->fields['products_status'] == 0 && STOCK_LIMITED == 'true' && SHOW_PRODUCTS_SOLD_OUT == '0' && $eo_product_qty + $eo_check->fields['products_quantity'] > 0) {
+            if ($eo_check->fields['products_status'] === '0' && zen_config('STOCK_LIMITED') === 'true' && zen_config('SHOW_PRODUCTS_SOLD_OUT') === '0' && $eo_product_qty + $eo_check->fields['products_quantity'] > 0) {
                 $messageStack->add("Caution: The product ($eo_product_name) is currently disabled.  Updating the order will re-enable that product.");
             }
             
@@ -60,21 +62,19 @@ if (basename($_SERVER['PHP_SELF']) == 'edit_orders.php' && isset($_GET['oID'])) 
                     AND orders_products_id = $eoOpID
                ORDER BY orders_products_attributes_id ASC"
             );
-            while (!$eo_opa->EOF) {
+            foreach ($eo_opa as $next_opa) {
                 $eo_attrib_check = $db->Execute(
                     "SELECT products_attributes_id
                        FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
                       WHERE products_id = $eoPID
-                        AND options_id = {$eo_opa->fields['products_options_id']}
-                        AND options_values_id = {$eo_opa->fields['products_options_values_id']}
+                        AND options_id = {$next_opa['products_options_id']}
+                        AND options_values_id = {$next_opa['products_options_values_id']}
                       LIMIT 1"
                 );
                 if ($eo_attrib_check->EOF) {
-                    $messageStack->add("Caution: The attribute ({$eo_opa->fields['products_options']}: {$eo_opa->fields['products_options_values']}) no longer exists for the product ($eo_product_name).  Updating the order will <b>replace that attribute</b> in the order."); 
+                    $messageStack->add("Caution: The attribute ({$next_opa['products_options']}: {$next_opa['products_options_values']}) no longer exists for the product ($eo_product_name).  Updating the order will <b>replace that attribute</b> in the order."); 
                 }
-                $eo_opa->MoveNext();
             }
         }
-        $eo_op->MoveNext();
     }
 }
