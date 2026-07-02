@@ -120,10 +120,17 @@ class zcAjaxEditOrdersAdmin
         $address['country'] = zen_get_country_name($address['country_id']);
         $address['state'] = $state;
         unset($address['country_id']);
-
+        
+        $formatted_address =
+            zen_address_format($address_format_id, $address, true, '', '<br>') .
+            '<div class="mt-2">' .
+                ($address['telephone'] ?? '&nbsp;') .
+                '<br>' .
+                ($address['email_address'] ?? '&nbsp;') .
+            '</div>';
         $address_return = [
             'status' => $status,
-            'address' => zen_address_format($address_format_id, $address, true, '', '<br>'),
+            'address' => $formatted_address,
             'google_map_link' => 'https://maps.google.com/maps/search/?api=1&amp;query=' . $google_map_address,
             'address_changes' => $address_changes,
             'error_messages' => array_merge($builtin_errors, $non_builtin_errors),
