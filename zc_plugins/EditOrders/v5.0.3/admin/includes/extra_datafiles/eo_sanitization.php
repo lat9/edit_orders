@@ -27,10 +27,10 @@ $group = [
 $eo_sanitizer->addSimpleSanitization('WORDS_AND_SYMBOLS_REGEX', $group);
 
 $group = ['email_address'];
-$sanitizer->addSimpleSanitization('SANITIZE_EMAIL', $group);
+$eo_sanitizer->addSimpleSanitization('SANITIZE_EMAIL', $group);
 
 $group = ['prid'];
-$sanitizer->addSimpleSanitization('CONVERT_INT', $group);
+$eo_sanitizer->addSimpleSanitization('CONVERT_INT', $group);
 
 $group = ['tax', 'value', 'qty', 'final_price', 'gross_price'];
-$sanitizer->addSimpleSanitization('FLOAT_VALUE_REGEX', $group);
+$eo_sanitizer->addSimpleSanitization('FLOAT_VALUE_REGEX', $group);
