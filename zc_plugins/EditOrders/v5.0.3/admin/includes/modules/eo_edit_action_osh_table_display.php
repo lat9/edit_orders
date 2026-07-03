@@ -2,9 +2,9 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2003-2024 The zen-cart developers
+// Copyright (c) 2003-2026 The zen-cart developers
 //
-// Last modified v5.0.0
+// Last modified v5.0.3
 //
 ?>
 <hr class="my-2">
@@ -32,12 +32,12 @@ if (empty($order->statuses)) {
     // -----
     // A watching observer can provide an associative array in the form:
     //
-    // $extra_headings = array(
-    //     array(
+    // $extra_headings = [
+    //     [
     //       'align' => $alignment,    // One of 'center', 'right', or 'left' (optional)
     //       'text' => $value
-    //     ),
-    // );
+    //     ],
+    // ];
     //
     // Observer note:  Be sure to check that the $p2/$extra_headings value is specifically (bool)false before initializing, since
     // multiple observers might be injecting content!
@@ -86,12 +86,12 @@ if (empty($order->statuses)) {
         // -----
         // A watching observer can provide an associative array in the form:
         //
-        // $extra_data = array(
-        //     array(
+        // $extra_data = [
+        //     [
         //       'align' => $alignment,    // One of 'center', 'right' or 'left' (optional)
         //       'text' => $value
-        //     ),
-        // );
+        //     ],
+        // ];
         //
         // Observer note:  Be sure to check that the $p2/$extra_data value is specifically (bool)false before initializing, since
         // multiple observers might be injecting content!
@@ -156,7 +156,7 @@ $zco_notifier->notify('NOTIFY_ADMIN_ORDERS_ADDL_HISTORY_INPUTS', []);
 // Determine the default setting for the customer notification, based on the configuration
 // setting added in v4.4.0.
 //
-switch (EO_CUSTOMER_NOTIFICATION_DEFAULT) {
+switch (zen_config('EO_CUSTOMER_NOTIFICATION_DEFAULT')) {
     case 'Hidden':
         $notify_email = false;
         $notify_no_email = false;

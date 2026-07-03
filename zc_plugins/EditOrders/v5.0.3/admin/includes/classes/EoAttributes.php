@@ -2,7 +2,7 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-// Last modified: EO v5.0.2
+// Last modified: EO v5.0.3
 //
 namespace Zencart\Plugins\Admin\EditOrders;
 
@@ -38,7 +38,7 @@ class EoAttributes
         // -----
         // Preset the "ORDER BY" clause for the products' options.
         //
-        if (PRODUCTS_OPTIONS_SORT_ORDER === '0') {
+        if (zen_config('PRODUCTS_OPTIONS_SORT_ORDER') === '0') {
             $options_order_by = "LPAD(po.products_options_sort_order, 11, '0'), po.products_options_name";
         } else {
             $options_order_by = 'po.products_options_name';
@@ -59,8 +59,8 @@ class EoAttributes
         $sql = $db->bindVars($sql, ':language_id', $_SESSION['languages_id'], 'integer');
 
         // Don't include READONLY attributes if product can be added to cart without them
-        if (PRODUCTS_OPTIONS_TYPE_READONLY_IGNORED === '0') {
-            $sql .= ' AND po.products_options_type != ' . (int)PRODUCTS_OPTIONS_TYPE_READONLY;
+        if (zen_config('PRODUCTS_OPTIONS_TYPE_READONLY_IGNORED') === '0') {
+            $sql .= ' AND po.products_options_type != ' . (int)zen_config('PRODUCTS_OPTIONS_TYPE_READONLY');
         }
 
         $sql .= ' ORDER BY ' . $options_order_by;
@@ -69,7 +69,7 @@ class EoAttributes
         // -----
         // Preset the "ORDER BY" clause for the products' options' values.
         //
-       if (PRODUCTS_OPTIONS_SORT_BY_PRICE === '1') {
+       if (zen_config('PRODUCTS_OPTIONS_SORT_BY_PRICE') === '1') {
             $options_values_order_by = "LPAD(pa.products_options_sort_order, 11, '0'), pov.products_options_values_name";
         } else {
             $options_values_order_by = "LPAD(pa.products_options_sort_order, 11, '0'), pa.options_values_price";

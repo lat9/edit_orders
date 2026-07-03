@@ -1,9 +1,9 @@
 <?php
 // -----
 // Part of the Edit Orders plugin, v4.5.0 and later, provided by lat9.
-// Copyright 2019-2024, Vinos de Frutas Tropicales.
+// Copyright 2019-2026, Vinos de Frutas Tropicales.
 //
-// Last modified v5.0.0
+// Last modified v5.0.3
 //
 // This module is loaded in global scope by /admin/includes/modules/edit_orders/eo_edit_action_display.php and also
 // in function scope by /catalog/includes/classes/ajax/zcAjaxEditOrdersAdmin.php.
@@ -200,7 +200,7 @@ $country_name = zen_get_country_name((int)$address_fields['country']['id']);
                     </div>
                 </div>
 <?php
-if (ACCOUNT_STATE === 'true') {
+if (zen_config('ACCOUNT_STATE') === 'true') {
     $zone_name = zen_get_zone_name((int)$address_fields['country_id'], (int)$address_fields['zone_id'], TEXT_UNKNOWN);
 ?>
                 <div class="form-group state-wrapper">

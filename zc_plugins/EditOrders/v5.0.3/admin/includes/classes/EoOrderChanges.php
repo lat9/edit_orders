@@ -3,7 +3,10 @@
 // This session-based class keeps track of the various changes made
 // to the order currently being edited.
 //
-// Last updated: EO v5.0.1
+// Part of the "Edit Orders" plugin by Cindy Merkin
+// Copyright (c) 2024-2026 Vinos de Frutas Tropicales
+//
+// Last updated: v5.0.3
 //
 namespace Zencart\Plugins\Admin\EditOrders;
 
@@ -226,7 +229,7 @@ class EoOrderChanges
     {
         $this->updated->info['orders_status'] = $this->original->info['orders_status'];
         unset($this->updated->statuses['changes'], $this->updated->info['changes']['orders_status']);
-        switch (EO_CUSTOMER_NOTIFICATION_DEFAULT) {
+        switch (zen_config('EO_CUSTOMER_NOTIFICATION_DEFAULT')) {
             case 'Hidden':
                 $notify_default = '-1';
                 break;
@@ -433,7 +436,7 @@ class EoOrderChanges
                             TEXT_STATUS_PRODUCT_REMOVED,
                             (string)$product['qty'],
                             $this->getChangedProductName($product),
-                            $product['model'],
+                            !empty($product['model']) ? '[' . $product['model'] . ']' : '',
                             (string)$product['final_price'],
                             (string)$product['tax']
                         ),
@@ -448,7 +451,7 @@ class EoOrderChanges
                             TEXT_STATUS_PRODUCT_ADDED,
                             (string)$product['qty'],
                             $this->getChangedProductName($product),
-                            $product['model'],
+                            !empty($product['model']) ? '[' . $product['model'] . ']' : '',
                             (string)$product['final_price'],
                             (string)$product['tax']
                         ),
@@ -469,7 +472,7 @@ class EoOrderChanges
                             $changed_message,
                             ($changed_qty == 0) ? 'n/a' : (string)abs($changed_qty),
                             $this->getChangedProductName($product),
-                            $product['model'],
+                            !empty($product['model']) ? '[' . $product['model'] . ']' : '',
                             (string)$product['final_price'],
                             (string)$product['tax']
                         ),
@@ -523,22 +526,47 @@ class EoOrderChanges
             $value = $this->convertToIntOrFloat($value);
             if ($this->original->info[$field_name] == $value) {
                 unset($this->updated->info['changes'][$field_name]);
-            } else {
-                $this->updated->info[$field_name] = $value;
-                if ($field_name !== 'shipping_cost') {
-                    $this->updated->info['changes'][$field_name] = $field_name;
-                }
+            } elseif ($field_name !== 'shipping_cost') {
+                $this->updated->info['changes'][$field_name] = $field_name;
+            }
+
+            $this->updated->info[$field_name] = $value;
+        }
+
+        // -----
+        // Locate the tax-description that matches the order's current
+        // shipping tax, recording that in the updated order.
+        //
+        // If the tax-rate isn't found, create a new tax description,
+        // recording it as the updated order's shipping_tax_description.
+        // The ot_shipping module will "take care" of creating the necessary
+        // tax_groups entry for the order.
+        //
+        foreach ($this->updated->info['tax_subtotals'] as $description => $tax_info) {
+            if ($tax_info['tax_rate'] == $shipping_tax_rate) {
+                $this->updated->info['shipping_tax_description'] = $description;
+                return $this->updated->info;
             }
         }
+        $this->updated->info['shipping_tax_description'] = sprintf(TEXT_UNKNOWN_TAX_RATE_MANUAL, $shipping_tax_rate);
 
         return $this->updated->info;
     }
 
     public function saveOrderInfoChanges(array $order_info): int
     {
-        $info_total_fields = ['subtotal', 'total', 'tax', 'order_weight', 'coupon_code', 'shipping_method', 'shipping_module_code', 'shipping_tax_rate'];
-        foreach ($info_total_fields as $field_name) {
-            if (is_float($order_info[$field_name])) {
+        $info_total_fields = [
+            'subtotal' => 'float',
+            'total' => 'float',
+            'tax' => 'float',
+            'order_weight' => 'float',
+            'coupon_code' => 'string',
+            'shipping_method' => 'string',
+            'shipping_module_code' => 'string',
+            'shipping_tax_rate' => 'float',
+        ];
+        foreach ($info_total_fields as $field_name => $field_type) {
+            if ($field_type === 'float') {
                 $order_info[$field_name] = round($order_info[$field_name], 4);
             }
             if ($this->original->info[$field_name] == $order_info[$field_name]) {
@@ -553,8 +581,6 @@ class EoOrderChanges
 
     public function saveOrderTotalsChanges(array $order_totals): int
     {
-        $eo = new EditOrders($this->orderId);
-
         $remaining_totals = $this->updated->totals;
         foreach ($order_totals as $next_total) {
             $ot_index = $this->getOrderTotalIndex($next_total);
@@ -627,7 +653,7 @@ class EoOrderChanges
         //
         foreach ($remaining_totals as $ot_index => $removed_total) {
             if (($this->totalsChanges[$ot_index] ?? '') === 'added') {
-                unset($this->totalsChanges[$ot_index]);
+                unset($this->totalsChanges[$ot_index], $this->updated->totals[$ot_index]);
                 continue;
             }
             $this->totalsChanges[$ot_index] = 'removed';

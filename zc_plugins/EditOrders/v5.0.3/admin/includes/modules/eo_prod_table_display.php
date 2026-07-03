@@ -2,9 +2,9 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2003-2025 The zen-cart developers
+// Copyright (c) 2003-2026 The zen-cart developers
 //
-// Last modified v5.0.0
+// Last modified v5.0.3
 //
 // Declaring the EditOrders.php class' instance as global, since this module is also
 // used during AJAX processing when an order-total field is updated.
@@ -115,7 +115,7 @@ foreach ($order->products as $next_product) {
                     <?= $currencies->format($final_price, true, $order->info['currency'], $order->info['currency_value']) ?>
                 </td>
 <?php
-    if (DISPLAY_PRICE_WITH_TAX === 'true') {
+    if (zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') {
         $gross_price = zen_add_tax($final_price, $next_product['tax']);
         $final_price = $gross_price;
 ?>

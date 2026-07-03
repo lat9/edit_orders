@@ -2,9 +2,9 @@
 // -----
 // Part of the Edit Orders plugin for Zen Cart, provided by lat9 and others.
 //
-// Copyright (c) 2024-2025 The zen-cart developers
+// Copyright (c) 2024-2026 The zen-cart developers
 //
-// Last modified v5.0.0
+// Last modified v5.0.3
 //
 $ot_class = $_POST['ot_class'] ?? 'Unknown';
 ?>
@@ -17,7 +17,7 @@ $ot_class = $_POST['ot_class'] ?? 'Unknown';
     <div class="modal-body">
         <div id="eo-ot-messages"></div>
 <?php
-$module_list = explode(';', str_replace('.php', '', MODULE_ORDER_TOTAL_INSTALLED));
+$module_list = explode(';', str_replace('.php', '', zen_config('MODULE_ORDER_TOTAL_INSTALLED')));
 if (!in_array($ot_class, $module_list)) {
     $update_button = '';
 ?>
@@ -102,7 +102,7 @@ if (!in_array($ot_class, $module_list)) {
     // If the store displays prices with tax, the shipping-cost currently contains the associated
     // tax.  Back that out for the display.
     //
-    if (DISPLAY_PRICE_WITH_TAX === 'true') {
+    if (zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') {
         $ot_value_o = $ot_value_o / (1 + $original_order->info['shipping_tax_rate'] / 100);
     }
 ?>
@@ -113,7 +113,7 @@ if (!in_array($ot_class, $module_list)) {
                     </div>
                 </div>
 <?php
-    if (DISPLAY_PRICE_WITH_TAX === 'true') {
+    if (zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') {
         $cost_incl = zen_add_tax($ot_value_o, $original_order->info['shipping_tax_rate']);
 ?>
                 <div class="form-group">
@@ -155,7 +155,7 @@ if (!in_array($ot_class, $module_list)) {
     // If the store displays prices with tax, the shipping-cost currently contains the associated
     // tax.  Back that out for the display.
     //
-    if (DISPLAY_PRICE_WITH_TAX === 'true') {
+    if (zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') {
         $ot_value_u = $ot_value_u / (1 + $updated_order->info['shipping_tax_rate'] / 100);
     }
 ?>
@@ -166,7 +166,7 @@ if (!in_array($ot_class, $module_list)) {
                     </div>
                 </div>
 <?php
-    if (DISPLAY_PRICE_WITH_TAX === 'true') {
+    if (zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') {
         $cost_incl = zen_add_tax($ot_value_u, $updated_order->info['shipping_tax_rate']);
 ?>
                 <div class="form-group">

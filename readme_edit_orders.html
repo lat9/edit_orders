@@ -90,11 +90,23 @@ ul li ul { padding-left: 0; }
     <h2>Change History</h3>
     <p>You can view the details of these changes on the plugin's <a href="https://github.com/lat9/edit_orders/issues" target="_blank">GitHub repository.</a></p>
     <ul>
-        <li>v5.0.3-beta2, 2026-02-16 (lat9)<ul>
+        <li>v5.0.3-beta5, 2026-07-02 (lat9, daphilli224)<ul>
             <li>BUGFIX: Callback to parent class on install/upgrade/uninstall to prevent potential PHP logs.<ul>
                 <li><b>Note:</b> Also requires core-file changes as described in <a href="https://gist.github.com/lat9/9deb64d3325081d18bb0db5534bcf142#ensure-core-updates-are-applied" target="_blank">this</a> GitHub gist.</li>
-            <li>BUGFIX: Adding and then removing (by setting its quantity to 0) a product results in a PHP error.</li>
             </ul></li>
+            <li>BUGFIX: Adding and then removing (by setting its quantity to 0) a product results in a PHP error.</li>
+            <li>BUGFIX: Adapt <code>eo_debug_action_level_list</code> to zc220+ full-page configuration edits.</li>
+            <li>BUGFIX: Add <var>category</var> element to each product; required for some order-total modules.</li>
+            <li>BUGFIX: Correct tax calculations when multiple tax-classes are present in the order.</li>
+            <li>BUGFIX: Correct management of shipping-related totals.</li>
+            <li>BUGFIX: Ensure that all session-related values are removed when an order's edit is completed.</li>
+            <li>BUGFIX: Reset all 'core' order-total session values.</li>
+            <li>BUGFIX: Don't include brackets around empty model numbers.</li>
+            <li>BUGFIX: Instruct the browser to display a stay/leave message if changes have been made and the admin clicks to leave the <em>Edit Orders</em> tool.</li>
+            <li>INTROP: Adding support for zc300+ <code>zen_config</code>.</li>
+            <li>BUGFIX: Correcting admin sanitization.</li>
+            <li>BUGFIX: Display telephone and email address in customer's address block after update.</li>
+            <li>INTROP: Use 'core' Zen Cart function for EO's debug on/off configuration setting.</li>
         </ul></li>
         <li>v5.0.2, 2025-08-16 (lat9)<ul>
             <li>BUGFIX: Correct constant misspelling for read-only attributes (causing PHP missing-constant error).</li>

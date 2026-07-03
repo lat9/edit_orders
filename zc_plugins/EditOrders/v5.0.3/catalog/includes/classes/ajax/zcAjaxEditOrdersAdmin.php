@@ -1,9 +1,9 @@
 <?php
 // -----
 // Part of the "Edit Orders" plugin by Cindy Merkin
-// Copyright (c) 2024-2025 Vinos de Frutas Tropicales
+// Copyright (c) 2024-2026 Vinos de Frutas Tropicales
 //
-// Last updated: v5.0.2
+// Last updated: v5.0.3
 //
 use Zencart\Plugins\Admin\EditOrders\EditOrders;
 use Zencart\Plugins\Admin\EditOrders\EoAttributes;
@@ -120,10 +120,17 @@ class zcAjaxEditOrdersAdmin
         $address['country'] = zen_get_country_name($address['country_id']);
         $address['state'] = $state;
         unset($address['country_id']);
-
+        
+        $formatted_address =
+            zen_address_format($address_format_id, $address, true, '', '<br>') .
+            '<div class="mt-2">' .
+                ($address['telephone'] ?? '&nbsp;') .
+                '<br>' .
+                ($address['email_address'] ?? '&nbsp;') .
+            '</div>';
         $address_return = [
             'status' => $status,
-            'address' => zen_address_format($address_format_id, $address, true, '', '<br>'),
+            'address' => $formatted_address,
             'google_map_link' => 'https://maps.google.com/maps/search/?api=1&amp;query=' . $google_map_address,
             'address_changes' => $address_changes,
             'error_messages' => array_merge($builtin_errors, $non_builtin_errors),
@@ -515,16 +522,16 @@ class zcAjaxEditOrdersAdmin
 
         $default_attributes = [];
         foreach ($options_values as $option_id => $option_values) {
-            if ($option_values['type'] === PRODUCTS_OPTIONS_TYPE_FILE) {
+            if ($option_values['type'] === zen_config('PRODUCTS_OPTIONS_TYPE_FILE')) {
                 continue;
             }
 
-            if ($option_values['type'] === PRODUCTS_OPTIONS_TYPE_TEXT) {
+            if ($option_values['type'] === zen_config('PRODUCTS_OPTIONS_TYPE_TEXT')) {
                 $default_attributes['txt_' . $option_id] = '';
                 continue;
             }
 
-            $is_checkbox_option = ($option_values['type'] === PRODUCTS_OPTIONS_TYPE_CHECKBOX);
+            $is_checkbox_option = ($option_values['type'] === zen_config('PRODUCTS_OPTIONS_TYPE_CHECKBOX'));
             unset($default);
             foreach ($option_values['values'] as $option_value_id => $value_info) {
                 if ($is_checkbox_option === true) {
@@ -723,7 +730,7 @@ class zcAjaxEditOrdersAdmin
 
         if (!is_numeric($_POST['qty']) || $_POST['qty'] < 0) {
             $messages['qty'] = ERROR_QTY_INVALID;
-        } elseif (STOCK_ALLOW_CHECKOUT === 'false') {
+        } elseif (zen_config('STOCK_ALLOW_CHECKOUT') === 'false') {
             $original_product = $_SESSION['eoChanges']->getOriginalProductByUprid($_POST['uprid'] ?? $_POST['prid']);
             $original_qty = $original_product['qty'] ?? 0;
             $qty_required = $eo->convertToIntOrFloat($_POST['qty']) - $original_qty;
