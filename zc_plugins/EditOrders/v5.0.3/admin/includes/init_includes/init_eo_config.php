@@ -1,9 +1,9 @@
 <?php
 // -----
 // Admin-level initialization script for the Edit Orders plugin for Zen Cart, by lat9.
-// Copyright (C) 2018-2025, Vinos de Frutas Tropicales.
+// Copyright (C) 2018-2026, Vinos de Frutas Tropicales.
 //
-// Last updated: v5.0.0
+// Last updated: v5.0.3
 //
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
@@ -23,17 +23,12 @@ if ($current_page === 'ajax.php' && ($_GET['act'] ?? '') === 'ajaxEditOrdersAdmi
     return;
 }
 
-if ($current_page === 'keepalive.php' || $current_page === 'edit_orders.php') {
+if ($current_page === 'keepalive.php' || $current_page === FILENAME_EDIT_ORDERS . '.php') {
     return;
 }
 
 // Do not let background/login/session-check requests wipe an active Edit Orders session.
-if (isset($_SESSION['eoChanges']) && $current_page === 'login.php') {
-    return;
-}
-
-// Do not let MailBeez admin/background requests wipe an active Edit Orders session.
-if (isset($_SESSION['eoChanges']) && $current_page === 'mailbeez.php') {
+if (isset($_SESSION['eoChanges']) && in_array($current_page, ['login.php', 'mailbeez.php'], true)) {
     return;
 }
 
@@ -64,5 +59,6 @@ unset(
     $_SESSION['payment'],
     $_SESSION['shipping'],
     $_SESSION['shipping_tax_description'],
+    $_SESSION['shipping_tax_amount'],
     $_SESSION['valid_to_checkout'],
 );
