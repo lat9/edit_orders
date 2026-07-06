@@ -64,7 +64,7 @@ $eo = new EditOrders($oID);
 
 $action = $_GET['action'] ?? 'edit';
 $with_without = (zen_config('DISPLAY_PRICE_WITH_TAX') === 'true') ? 'with' : 'without';
-$eo->eoLog("Edit Orders entered action ($action). Prices are being displayed $with_without tax. Enabled Order Totals: " . zen_config('MODULE_ORDER_TOTAL_INSTALLED'), 'with-date');
+$eo->eoLog("Edit Orders entered action ($action). Prices are being displayed $with_without tax. Installed Order Totals: " . zen_config('MODULE_ORDER_TOTAL_INSTALLED'), 'with-date');
 
 // -----
 // Gather the two arrays for the order's status display.

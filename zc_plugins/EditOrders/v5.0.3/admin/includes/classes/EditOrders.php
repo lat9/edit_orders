@@ -898,8 +898,16 @@ class EditOrders
     //
     public function getUnusedOrderTotalModules(\order|\stdClass $order): array
     {
-        $order_totals = $this->getOrderTotalsObject();
+        // -----
+        // Create an instance of the order_total class which, in turn, loads all
+        // the active order-total modules.
+        //
+        $this->getOrderTotalsObject();
 
+        // -----
+        // Order-total modules that are already in the order aren't unused. Note that
+        // the in-core auto-calculating totals are automatically included in this list!
+        //
         $totals_to_skip = ['ot_group_pricing', 'ot_tax', 'ot_loworderfee', 'ot_purchaseorder', 'ot_gv', 'ot_voucher', 'ot_cod_fee'];
         unset($_SESSION['eo-totals']);
         foreach ($order->totals as $next_ot) {
@@ -914,6 +922,10 @@ class EditOrders
             }
         }
 
+        // -----
+        // Now, cycle through each of the currently-installed order-total modules to see
+        // if any qualify to being added to the order.
+        //
         $module_list = explode(';', str_replace('.php', '', zen_config('MODULE_ORDER_TOTAL_INSTALLED')));
         $unused_totals = [];
         foreach ($module_list as $class) {
@@ -923,13 +935,20 @@ class EditOrders
 
             if (isset($GLOBALS[$class]->eoInfo)) {
                 $GLOBALS[$class]->eoInfo['installed'] = false;
-                $unused_totals[] = [
-                    'id' => $class,
-                    'text' => $GLOBALS[$class]->title,
-                ];
+                if ($GLOBALS[$class]->enabled === true) {
+                    $unused_totals[] = [
+                        'id' => $class,
+                        'text' => $GLOBALS[$class]->title,
+                    ];
+                }
             }
         }
-        $this->eoLog("getUnusedOrderTotalModules(" . ($_GET['act'] ?? 'n/a') . "). Totals on entry:\n" . $this->eoFormatArray($order->totals) . "\nSession eo-totals:\n" . $this->eoFormatArray($_SESSION['eo-totals'] ?? []));
+        $this->eoLog(
+            "getUnusedOrderTotalModules(" . ($_GET['act'] ?? 'n/a') . ':' . ($_GET['method'] ?? 'n/a') . "). Totals on entry:\n" . $this->eoFormatArray($order->totals) .
+            "\nSession eo-totals:\n" . $this->eoFormatArray($_SESSION['eo-totals'] ?? []) .
+            "\nSkipped totals:\n" . $this->eoFormatArray($totals_to_skip) .
+            "\nUnused totals:\n" . $this->eoFormatArray($unused_totals)
+        );
         return $unused_totals;
     }
 

@@ -796,6 +796,10 @@ class zcAjaxEditOrdersAdmin
 
         $eo->eoLog("processOrderUpdate, info:\n" . $eo->eoFormatArray($order->info) . "\nproducts:\n" . $eo->eoFormatArray($order->products));
 
+        // -----
+        // Retrieving the order's totals' object also updates any order_total's eoInfo
+        // array to contain any session-recorded values from the eo-totals array.
+        //
         $order_total_modules = $eo->getOrderTotalsObject();
         if (!isset($_POST['dc_redeem_code']) || $_POST['dc_redeem_code'] === $order->info['coupon_code']) {
             $order_total_modules->collect_posts();
@@ -818,6 +822,21 @@ class zcAjaxEditOrdersAdmin
                     'status' => 'error',
                     'message_html' => $table_block->tableBlock($messages),
                 ];
+            }
+        }
+
+        // -----
+        // For any of the order-total modules that have requested that EO keep track
+        // of their state, refresh the session-kept values that might have been
+        // updated via the call to the module's collect_posts method, above.
+        //
+        foreach ($order_total_modules->modules as $module_file) {
+            $class = pathinfo($module_file, PATHINFO_FILENAME);
+            if (isset($GLOBALS[$class]->eoInfo)) {
+                if (!empty($GLOBALS[$class]->enabled) && $GLOBALS[$class]->eoInfo['installed'] === true) {
+                    $_SESSION['eo-totals'][$class]['value'] = $GLOBALS[$class]->eoInfo['value'];
+                    $_SESSION['eo-totals'][$class]['title'] = $GLOBALS[$class]->eoInfo['title'];
+                }
             }
         }
         $order->totals = $order_total_modules->process();

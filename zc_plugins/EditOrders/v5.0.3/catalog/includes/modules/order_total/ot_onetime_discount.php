@@ -91,7 +91,6 @@ class ot_onetime_discount
     public function process()
     {
         if ($this->enabled === false || $this->eoInfo['installed'] === false) {
-            $this->enabled = false;
             return;
         }
 
@@ -150,8 +149,7 @@ class ot_onetime_discount
             if ($this->zenConfig('MODULE_ORDER_TOTAL_ONETIME_DISCOUNT_CHANGE_TITLE') === 'true') {
                 $this->eoInfo['title'] = $_POST['title'];
             }
-            $this->enabled = ($this->eoInfo['value'] != 0 && $this->eoInfo['title'] !== '');
-            $this->eoInfo['installed'] = $this->enabled;
+            $this->eoInfo['installed'] = ($this->eoInfo['value'] != 0 && $this->eoInfo['title'] !== '');
         }
     }
 

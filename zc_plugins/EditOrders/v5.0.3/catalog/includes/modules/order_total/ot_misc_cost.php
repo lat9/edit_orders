@@ -80,7 +80,6 @@ class ot_misc_cost
     public function process(): void
     {
         if ($this->enabled === false || $this->eoInfo['installed'] === false) {
-            $this->enabled = false;
             return;
         }
 
@@ -148,8 +147,7 @@ class ot_misc_cost
             if ($this->zenConfig('MODULE_ORDER_TOTAL_MISC_COST_CHANGE_TITLE') === 'true') {
                 $this->eoInfo['title'] = $_POST['title'];
             }
-            $this->enabled = ($this->eoInfo['value'] != 0 && $this->eoInfo['title'] !== '');
-            $this->eoInfo['installed'] = $this->enabled;
+            $this->eoInfo['installed'] = ($this->eoInfo['value'] != 0 && $this->eoInfo['title'] !== '');
         }
     }
 
@@ -249,7 +247,6 @@ class ot_misc_cost
         if (defined($key)) {
             return constant($key);
         }
-
-        return ($default_value !== null) ? $default_value : null;
+        return $default_value;
     }
 }
