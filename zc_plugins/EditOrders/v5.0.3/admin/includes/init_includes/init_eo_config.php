@@ -16,19 +16,19 @@ global $PHP_SELF;
 // as 'edit_orders' for EO's AJAX processing, so that the associated language
 // constants will be pulled in for EO during its AJAX processing.
 //
-$current_page = basename($PHP_SELF ?? '');
+$eo_page_check = basename($PHP_SELF ?? '');
 
-if ($current_page === 'ajax.php' && ($_GET['act'] ?? '') === 'ajaxEditOrdersAdmin') {
+if ($eo_page_check === 'ajax.php' && ($_GET['act'] ?? '') === 'ajaxEditOrdersAdmin') {
     $PHP_SELF = FILENAME_EDIT_ORDERS . '.php';
     return;
 }
 
-if ($current_page === 'keepalive.php' || $current_page === FILENAME_EDIT_ORDERS . '.php') {
+if ($eo_page_check === 'keepalive.php' || $eo_page_check === FILENAME_EDIT_ORDERS . '.php') {
     return;
 }
 
 // Do not let background/login/session-check requests wipe an active Edit Orders session.
-if (isset($_SESSION['eoChanges']) && in_array($current_page, ['login.php', 'mailbeez.php'], true)) {
+if (isset($_SESSION['eoChanges']) && in_array($eo_page_check, ['login.php', 'mailbeez.php'], true)) {
     return;
 }
 
