@@ -3,7 +3,7 @@
 // Admin-level observer class, adds "Edit Orders" buttons and links to Customers->Orders processing.
 // Copyright (C) 2017-2026, Vinos de Frutas Tropicales.
 //
-// Last updated: EO v5.0.3
+// Last updated: EO v5.0.4
 //
 use Zencart\Plugins\Admin\EditOrders\EditOrdersOtShippingStub;
 
@@ -293,9 +293,11 @@ class EditOrdersAdminObserver extends base
     // add that to the ordered product for order-totals (like ot_quantity_discount)
     // that count on its presence.
     //
+    // Note: Additional parameters intentional missing as they're unused.
+    //
     // @since v5.0.3
     //
-    protected function notify_order_query_add_product(&$order, string $e, array $product, int &$index, array &$ordered_product): void
+    protected function notify_order_query_add_product(&$order, string $e, array $product, int &$index): void
     {
         if (isset($product['category']) || !isset($product['id'])) {
             return;
