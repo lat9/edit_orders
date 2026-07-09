@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2003-2026 The zen-cart developers
 //
-// Last modified v5.0.3
+// Last modified v5.0.4
 //
 // For versions prior to v5.0.0, this code was in-line in /admin/edit_orders.php.
 //
@@ -411,7 +411,7 @@ if (zen_config('ACCOUNT_STATE') === 'true') {
     });
 
     $(document).on('click', '#eo-ot-add-update', function() {
-        if ($('input[name="ot_class"]').val() == 'ot_shipping' && $('input[name="title"]').val().trim() == '') {
+        if ($('input[name="ot_class"]').val() === 'ot_shipping' && $('input[name="title"]').val().trim() === '') {
             $('input[name="title"]').val('').addClass('border-danger')
             return;
         }
@@ -421,12 +421,16 @@ if (zen_config('ACCOUNT_STATE') === 'true') {
             data: $('#ot-edit-modal form').serializeArray()
         }).done(function(response) {
             $('#ot-edit-modal').modal('hide');
-            $('#eo-shipping-address').html(response.shipping_address_html);
-            $('#products-listing tr.eo-prod, #products-listing tr.eo-ot').remove();
-            $('#products-listing > tbody').append(response.prod_table_html);
-            $('#products-listing > tbody').append(response.ot_table_html);
-            $('#product-changes').val(response.prod_changes).trigger('change');
-            $('#ot-changes').val(response.ot_changes).trigger('change');
+            if (response.status === 'error') {
+                $('#eo-messages').html(response.message_html);
+            } else {
+                $('#eo-shipping-address').html(response.shipping_address_html);
+                $('#products-listing tr.eo-prod, #products-listing tr.eo-ot').remove();
+                $('#products-listing > tbody').append(response.prod_table_html);
+                $('#products-listing > tbody').append(response.ot_table_html);
+                $('#product-changes').val(response.prod_changes).trigger('change');
+                $('#ot-changes').val(response.ot_changes).trigger('change');
+            }
         });
     });
 

@@ -63,6 +63,9 @@ class EditOrdersAdminObserver extends base
                     'NOTIFY_ORDER_CART_EXTERNAL_TAX_RATE_LOOKUP',
                     'NOTIFY_ORDER_CART_FINISHED',
                     'NOTIFY_ORDER_QUERY_ADD_PRODUCT',
+
+                    /* From /includes/modules/order_total/ot_coupon.php */
+                    'NOTIFY_OT_COUPON_GENERATE_POPUP_LINK',
                 ]
             );
         }
@@ -315,6 +318,16 @@ class EditOrdersAdminObserver extends base
             return;
         }
         $order->products[$index]['category'] = $master_category->fields['master_categories_id'];
+    }
+
+    // -----
+    // Issued by ot_coupon for inclusion in messages; no link's used for EO, just the coupon's code.
+    //
+    // @since v5.0.4
+    //
+    protected function NOTIFY_OT_COUPON_GENERATE_POPUP_LINK(&$class, string $e, array $coupon_id_code, string &$couponLink): void
+    {
+        $couponLink = $coupon_id_code['coupon_code'];
     }
 
     // -----

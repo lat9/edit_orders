@@ -4,7 +4,7 @@
 //
 // Copyright (c) 2003, 2026 The zen-cart developers
 //
-// Last modified v5.0.3
+// Last modified v5.0.4
 //
 use Zencart\Plugins\Admin\EditOrders\EditOrders;
 use Zencart\Plugins\Admin\EditOrders\EditOrdersQueryCache;
@@ -412,6 +412,7 @@ if ($display_payment_calc_label === false) {
                     <div id="update-modal" class="modal fade address-modal" role="dialog"></div>
                 </div>
             </div>
+            <div id="eo-messages" class="mb-2"></div>
         </div>
     </div>
 

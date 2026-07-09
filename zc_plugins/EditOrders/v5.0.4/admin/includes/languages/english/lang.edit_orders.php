@@ -2,7 +2,7 @@
 // -----
 // Language constants used by the /admin/edit_orders.php processing (Edit Orders).
 //
-// Last modified v5.0.3
+// Last modified v5.0.4
 //
 $define = [
 // Page / Section Headings and common button names and other constants.
@@ -228,5 +228,16 @@ $define = [
     'EO_MESSAGE_PRODUCT_ATTRIBS_ADDED' => ', with options (%s)',
 
     'TEXT_PANEL_HEADER_UPDATE_INFO' => 'Order-Update Information',
+
+// ot_coupon messages, present in the storefront main language file
+    'TEXT_INVALID_COUPON_ORDER_LIMIT' => 'You have exceeded the total number of orders permitted (%2$u), to use the Coupon "%1$s".',
+    'TEXT_INVALID_COUPON_PRODUCT' => 'The Coupon "%1$s" is not valid for any product in your shopping cart.',
+    'TEXT_INVALID_FINISHDATE_COUPON' => 'The Coupon "%1$s" is no longer valid (expired %2$s).',
+    'TEXT_INVALID_REDEEM_COUPON' => 'Coupon code "%s" is not a valid code.',
+    'TEXT_INVALID_REDEEM_COUPON_MINIMUM' => 'You must spend at least %2$s to redeem Coupon "%1$s".',
+    'TEXT_INVALID_STARTDATE_COUPON' => 'The Coupon "%1$s" is not valid for use until %2$s.',
+    'TEXT_INVALID_USES_COUPON' => 'Coupon "%1$s" has already been used the maximum permitted times (%2$u).',
+    'TEXT_INVALID_USES_USER_COUPON' => 'You have used Coupon "%1$s" the maximum number of times allowed per customer (%2$u).',
+    'TEXT_REMOVE_REDEEM_COUPON_ZONE' => 'The Coupon "%s" is not valid for the address you have selected.',
 ];
 return $define;

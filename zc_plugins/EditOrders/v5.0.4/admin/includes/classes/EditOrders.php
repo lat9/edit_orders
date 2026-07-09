@@ -3,7 +3,7 @@
 // Part of the Edit Orders plugin by lat9 (lat9@vinosdefrutastropicales.com).
 // Copyright (C) 2016-2026, Vinos de Frutas Tropicales
 //
-// Last updated: EO v5.0.3
+// Last updated: EO v5.0.4
 //
 namespace Zencart\Plugins\Admin\EditOrders;
 
@@ -933,9 +933,11 @@ class EditOrders
                 continue;
             }
 
-            if (isset($GLOBALS[$class]->eoInfo)) {
-                $GLOBALS[$class]->eoInfo['installed'] = false;
-                if ($GLOBALS[$class]->enabled === true) {
+            if (isset($GLOBALS[$class]->eoInfo) || $class === 'ot_coupon') {
+                if (property_exists($GLOBALS[$class], 'eoInfo')) {
+                    $GLOBALS[$class]->eoInfo['installed'] = false;
+                }
+                if ($class === 'ot_coupon' || $GLOBALS[$class]->enabled === true) {
                     $unused_totals[] = [
                         'id' => $class,
                         'text' => $GLOBALS[$class]->title,
@@ -1014,29 +1016,6 @@ class EditOrders
             $stock_quantity = ($check->EOF) ? '0' : $check->fields['products_quantity'];
         }
         return $this->convertToIntOrFloat((string)$stock_quantity);
-    }
-
-    // -----
-    // This method, called during a product addition, records the coupon-id associated
-    // with the order into the session, so that the coupon is processed during that
-    // addition.
-    //
-    public function eoSetCouponForOrder($oID): void
-    {
-        unset($_SESSION['cc_id']);
-        $oID = (int)$oID;
-        
-        $check = $GLOBALS['db']->Execute(
-            "SELECT c.coupon_id
-               FROM " . TABLE_ORDERS . " o
-                    INNER JOIN " . TABLE_COUPONS . " c
-                        ON o.coupon_code = c.coupon_code
-              WHERE o.orders_id = $oID
-              LIMIT 1"
-        );
-        if (!$check->EOF) {
-            $_SESSION['cc_id'] = $check->fields['coupon_id'];
-        }
     }
 
     // -----
