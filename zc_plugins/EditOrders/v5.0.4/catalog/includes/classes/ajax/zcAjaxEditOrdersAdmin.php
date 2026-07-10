@@ -3,7 +3,7 @@
 // Part of the "Edit Orders" plugin by Cindy Merkin
 // Copyright (c) 2024-2026 Vinos de Frutas Tropicales
 //
-// Last updated: v5.0.3
+// Last updated: v5.0.4
 //
 use Zencart\Plugins\Admin\EditOrders\EditOrders;
 use Zencart\Plugins\Admin\EditOrders\EoAttributes;
@@ -847,13 +847,53 @@ class zcAjaxEditOrdersAdmin
         $order->info['shipping_module_code'] = rtrim($order->info['shipping_module_code'], '_');
 
         // -----
+        // A gift-voucher used as payment on the storefront can't be reduced,
+        // since the value has already been deducted from the customers gv/gc
+        // account. At the start of EO's order-editing, the original value has
+        // been recorded in EO's session for use by ot_gv's 'process' method.
+        // That amount acts like the value entered by the customer during
+        // storefront operations and is used as a maximum-value to apply to
+        // the order.
+        //
+        // If there's a change in the GV amount just calculated and that in the
+        // original order, the GV amount is restored to its original value and
+        // the order's overall total (both in the 'info' element and in the ot_total
+        // value) is adjusted. This calculation might result in a negative order
+        // amount, implying that the store needs to refund the customer.
+        //
+        $original_totals = $_SESSION['eoChanges']->getOriginalOrder()->totals;
+        $index = array_search('ot_gv', array_column($original_totals, 'class'));
+        if ($index !== false) {
+            $original_ot_gv = $original_totals[$index];
+            $totals_codes = array_column($order->totals, 'code');
+            $index = array_search('ot_gv', $totals_codes);
+            if ($index !== false) {
+                $updated_ot_gv = $order->totals[$index];
+                if ($original_ot_gv['value'] > $updated_ot_gv['value']) {
+                    $ot_gv_difference = $original_ot_gv['value'] - $updated_ot_gv['value'];
+                    $order->totals[$index] = $original_ot_gv;
+                    $order->info['total'] -= $ot_gv_difference;
+                    $index = array_search('ot_total', $totals_codes);
+                    if ($index !== false) {
+                        $order->totals[$index]['value'] -= $ot_gv_difference;
+                        $total_value = $order->totals[$index]['value'];
+                        $order->totals[$index]['text'] = $currencies->format(abs($total_value));
+                        if ($total_value < 0) {
+                            $order->totals[$index]['text'] = '&#8209;' . $order->totals[$index]['text'];
+                        }
+                    }
+                }
+            }
+        }
+
+        // -----
         // Record any changes to the order's info and totals.
         //
         $ot_changes = $_SESSION['eoChanges']->saveOrderInfoChanges($order->info);
         $ot_changes += $_SESSION['eoChanges']->saveOrderTotalsChanges($order->totals);
         $eo->eoLog(
             "Order totals updated.\nOriginal:\n" .
-            $eo->eoFormatArray($_SESSION['eoChanges']->getOriginalOrder()->totals) .
+            $eo->eoFormatArray($original_totals) .
             "\nUpdated:\n" .
             $eo->eoFormatArray($_SESSION['eoChanges']->getUpdatedOrder()->totals) .
             "\nChanges:\n" .
