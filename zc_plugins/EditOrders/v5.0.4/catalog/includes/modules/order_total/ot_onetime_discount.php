@@ -2,7 +2,7 @@
 /*
  * This file is part of the "Onetime Discount" order total module for Zen Cart.
  *
- * Last updated: EO 5.0.3
+ * Last updated: EO 5.0.4
  *
  * "Onetime Discount" is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -246,10 +246,6 @@ class ot_onetime_discount
             return zen_config($key, $default);
         }
 
-        if (defined($key)) {
-            return constant($key);
-        }
-
-        return ($default_value !== null) ? $default_value : null;
+        return (defined($key)) ? constant($key) : $default;
     }
 }

@@ -2,7 +2,7 @@
 // -----
 // An order-total module to gather any miscellaneous cost associated with an order, created by lat9 (https://vinosdefrutastropicales.com).
 //
-// Last modified EO v5.0.3
+// Last modified EO v5.0.4
 //
 class ot_misc_cost
 {
@@ -244,9 +244,7 @@ class ot_misc_cost
             return zen_config($key, $default);
         }
 
-        if (defined($key)) {
-            return constant($key);
-        }
-        return $default_value;
+
+        return (defined($key)) ? constant($key) : $default;
     }
 }
