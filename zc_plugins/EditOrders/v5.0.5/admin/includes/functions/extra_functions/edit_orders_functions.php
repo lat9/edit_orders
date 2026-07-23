@@ -2,7 +2,7 @@
 // -----
 // Part of the "Edit Orders" plugin for Zen Cart.
 //
-// Last updated: EO v5.0.3
+// Last updated: EO v5.0.5
 //
 
 // -----
@@ -66,7 +66,7 @@ if (!function_exists('zen_get_country_list')) {
 
 if (!function_exists('zen_config')) {
     // -----
-    // Uses, if present, or emulates otherwise the zc300+ "zen_config"
+    // Uses, if present (when the function exists), or emulates otherwise the zc300+ "zen_config"
     // function.
     //
     // @since v5.0.3
@@ -76,7 +76,6 @@ if (!function_exists('zen_config')) {
         if (defined($key)) {
             return constant($key);
         }
-
-        return ($default_value !== null) ? $default_value : null;
+        return $default;
     }
 }
