@@ -3,7 +3,7 @@
 // Part of the Edit Orders plugin by lat9 (lat9@vinosdefrutastropicales.com).
 // Copyright (C) 2016-2026, Vinos de Frutas Tropicales
 //
-// Last updated: EO v5.0.4
+// Last updated: EO v5.0.5
 //
 namespace Zencart\Plugins\Admin\EditOrders;
 
@@ -593,8 +593,9 @@ class EditOrders
     //    depending on the setting for 'Configuration :: My Store :: Show Split Tax Lines'.
     // 2. An order might not have any tax recorded, depending on the order's taxation and the
     //    setting for 'Configuration :: My Store :: Sales Tax Display Status'.
-    // 3. If an order has multiple tax-groups recorded, each **must** include a textual indication
-    //    of the associated tax-rate, e.g. FL Sales Tax (7%).
+    // 3. Each tax-group's description **must** either include a textual indication of its
+    //    tax-rate, e.g. FL Sales Tax (7%) or still be registered in the
+    //    `tax_rates`/`tax_rates_description` database tables.
     //
     protected function addTaxGroups(): bool
     {
@@ -611,12 +612,23 @@ class EditOrders
 
             $tax_location_names = explode(' + ', $next_total['title']);
             foreach ($tax_location_names as $next_name) {
-                $next_name = rtrim($next_name, ':');
+                $next_name = trim(rtrim($next_name, ':'));
                 $this->order->info['tax_groups'][$next_name] = 0.0;
                 if (preg_match('/(\d+\.?\d*%)/', $next_name, $matches) === 1) {
                     $tax_rate = $this->convertToIntOrFloat(rtrim($matches[1], '%'));
                 } elseif ($next_total['value'] == 0) {
                     $tax_rate = 0;
+                } else {
+                    // -----
+                    // Zen Cart normally records an order's tax-group title using the
+                    // tax-rate's description, but that description is not required to
+                    // contain the numeric percentage.  Resolve descriptions such as
+                    // "North Carolina Food Tax" from the configured tax-rate record.
+                    //
+                    // Without this lookup, a valid order containing a single tax-group
+                    // whose description omits the percentage cannot be edited.
+                    //
+                    $tax_rate = $this->findConfiguredTaxRateFromDescription($next_name);
                 }
                 $this->order->info['tax_subtotals'][$next_name] = [
                     'tax_rate' => $tax_rate ?? false,
@@ -636,6 +648,28 @@ class EditOrders
                 'tax_rate' => 0,
                 'subtotal' => 0.0,
             ];
+        }
+
+        // -----
+        // If exactly one description remains unresolved, use the one recorded
+        // positive order tax-rate that has not already been assigned.  This
+        // also supports historical orders if a configured description or rate
+        // has changed since the order was placed.
+        //
+        $unresolved_groups = [];
+        $assigned_rates = [];
+        foreach ($this->order->info['tax_subtotals'] as $group_name => $tax_info) {
+            if ($tax_info['tax_rate'] === false) {
+                $unresolved_groups[] = $group_name;
+            } elseif ($tax_info['tax_rate'] > 0) {
+                $assigned_rates[(string)$tax_info['tax_rate']] = true;
+            }
+        }
+        if (count($unresolved_groups) === 1) {
+            $remaining_rates = array_diff_key($this->getRecordedOrderTaxRates(), $assigned_rates);
+            if (count($remaining_rates) === 1) {
+                $this->order->info['tax_subtotals'][$unresolved_groups[0]]['tax_rate'] = reset($remaining_rates);
+            }
         }
 
         // -----
@@ -680,6 +714,71 @@ class EditOrders
         }
 
         return true;
+    }
+
+    // -----
+    // Return the configured tax-rate associated with an order-total tax
+    // description.  The order's recorded product/shipping rates are used to
+    // disambiguate duplicate descriptions.  A single configured rate is used
+    // directly only when the order contains no recorded positive tax-rate.
+    //
+    protected function findConfiguredTaxRateFromDescription(string $description): int|float|false
+    {
+        if (array_key_exists($description, $this->product_tax_descriptions)) {
+            return $this->product_tax_descriptions[$description];
+        }
+
+        global $db;
+
+        $sql =
+            "SELECT tr.tax_rate
+               FROM " . TABLE_TAX_RATES . " tr
+                    INNER JOIN " . TABLE_TAX_RATES_DESCRIPTION . " trd
+                        ON trd.tax_rates_id = tr.tax_rates_id
+                       AND trd.language_id = :languageId:
+              WHERE trd.tax_description = :taxDescription:";
+        $sql = $db->bindVars($sql, ':languageId:', (int)$_SESSION['languages_id'], 'integer');
+        $sql = $db->bindVars($sql, ':taxDescription:', $description, 'string');
+        $tax_rate_records = $db->Execute($sql);
+
+        $configured_rates = [];
+        foreach ($tax_rate_records as $next_record) {
+            $tax_rate = $this->convertToIntOrFloat((string)$next_record['tax_rate']);
+            $configured_rates[(string)$tax_rate] = $tax_rate;
+        }
+
+        $recorded_rates = $this->getRecordedOrderTaxRates();
+
+        $matching_rates = array_intersect_key($configured_rates, $recorded_rates);
+        if (count($matching_rates) === 1) {
+            $tax_rate = reset($matching_rates);
+        } elseif (count($configured_rates) === 1 && count($recorded_rates) === 0) {
+            $tax_rate = reset($configured_rates);
+        } else {
+            $tax_rate = false;
+        }
+
+        $this->product_tax_descriptions[$description] = $tax_rate;
+        return $tax_rate;
+    }
+
+    protected function getRecordedOrderTaxRates(): array
+    {
+        $recorded_rates = [];
+        foreach ($this->order->products as $product) {
+            $tax_rate = $this->convertToIntOrFloat((string)$product['tax']);
+            if ($tax_rate > 0) {
+                $recorded_rates[(string)$tax_rate] = $tax_rate;
+            }
+        }
+        if (isset($this->order->info['shipping_tax_rate'])) {
+            $shipping_tax_rate = $this->convertToIntOrFloat((string)$this->order->info['shipping_tax_rate']);
+            if ($shipping_tax_rate > 0) {
+                $recorded_rates[(string)$shipping_tax_rate] = $shipping_tax_rate;
+            }
+        }
+
+        return $recorded_rates;
     }
 
     // -----
