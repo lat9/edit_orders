@@ -2,7 +2,7 @@
 // -----
 // Language constants used by the /admin/edit_orders.php processing (Edit Orders).
 //
-// Last modified v5.0.4
+// Last modified v5.0.5
 //
 $define = [
 // Page / Section Headings and common button names and other constants.
@@ -205,6 +205,7 @@ $define = [
 // Required for various added zen_cart functions
     'PULL_DOWN_DEFAULT' => 'Please Choose Your Country',
 
+    'TAX_EXEMPT_DESCRIPTION' => 'Tax Exempt',
     'TEXT_UNKNOWN_TAX_RATE_MANUAL' => 'Sales Tax %s%%',
     'TEXT_UNKNOWN_TAX_RATE' => 'Sales Tax',
 
