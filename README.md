@@ -1,6 +1,6 @@
 # Edit Orders<sup>5</sup> for Zen Cart
 
-## Current Version: 5.0.4
+## Current Version: 5.0.5
 
 Edit Orders: Updates for continued operation on **Zen Cart v2.1.0** and later
 
